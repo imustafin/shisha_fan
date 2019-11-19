@@ -14,6 +14,13 @@ public class Post {
     private int repostsCount;
     private List<Comment> comments;
 
+    public Post(int id, String text, int likesCount, int repostsCount) {
+        this.id = id;
+        this.text = text;
+        this.likesCount = likesCount;
+        this.repostsCount = repostsCount;
+    }
+
     public Post() {
     }
 
