@@ -6,17 +6,9 @@ package com.project.shishafan.drivers;
 
 import com.project.shishafan.drivers.models.Post;
 import com.project.shishafan.services.VkService;
-import com.project.shishafan.utils.PropertiesUtils;
 import com.project.shishafan.utils.WriterUtils;
-import com.vk.api.sdk.client.actors.ServiceActor;
-import com.vk.api.sdk.exceptions.ApiException;
-import com.vk.api.sdk.exceptions.ClientException;
-import com.vk.api.sdk.objects.enums.WallFilter;
-import com.vk.api.sdk.objects.wall.responses.GetResponse;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 
 public class MainDriver extends BaseDriver {
 
