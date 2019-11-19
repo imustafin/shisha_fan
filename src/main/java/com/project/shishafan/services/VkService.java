@@ -78,6 +78,7 @@ public class VkService {
                     iteration++;
                 } while (remains > 0);
                 post.setComments(postComments);
+                post.setCommentsCount(postComments.size());
             }
         }
         return wallPosts;
