@@ -6,7 +6,7 @@ package com.project.shishafan.drivers;
 
 public abstract class BaseDriver implements AppDriver {
 
-    private String[] args;
+    protected String[] args;
 
     public BaseDriver(String[] args) {
         this.args = args;
