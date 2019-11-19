@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.shishafan.drivers.models.Comment;
 import com.project.shishafan.drivers.models.Post;
 import com.project.shishafan.services.interfaces.AuthService;
+import com.project.shishafan.services.interfaces.GroupService;
 import com.project.shishafan.services.interfaces.WallService;
 import com.vk.api.sdk.client.VkApiClient;
 import com.vk.api.sdk.httpclient.HttpTransportClient;
@@ -21,6 +22,7 @@ public class VkService {
     private VkApiClient vk;
     private AuthService authService;
     private WallService wallService;
+    private GroupService groupService;
 
     private final int POSTS_FETCH_SIZE = 100;
     private final int COMMENTS_FETCH_SIZE = 100;
@@ -30,6 +32,7 @@ public class VkService {
         this.vk = new VkApiClient(HttpTransportClient.getInstance());
         this.authService = new MainAuthService();
         this.wallService = new MainWallService(vk.wall(), authService.getServiceActor());
+        this.groupService = new MainGroupService(vk.groups(), authService.getServiceActor());
     }
 
     public VkApiClient api() {
@@ -78,5 +81,9 @@ public class VkService {
             }
         }
         return wallPosts;
+    }
+
+    public Integer getGroupIdByName(String name){
+        return groupService.getGroupIdByName(name);
     }
 }
