@@ -13,6 +13,12 @@ public class Comment {
     public Comment() {
     }
 
+    public Comment(int id, String text, int likesCount) {
+        this.id = id;
+        this.text = text;
+        this.likesCount = likesCount;
+    }
+
     public int getId() {
         return id;
     }
@@ -36,4 +42,6 @@ public class Comment {
     public void setLikesCount(int likesCount) {
         this.likesCount = likesCount;
     }
+
+
 }
