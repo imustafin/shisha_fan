@@ -4,12 +4,9 @@ package com.project.shishafan.services.interfaces;
  *  Date: 17.11.2019
  */
 
-import com.project.shishafan.drivers.models.Comment;
-import com.project.shishafan.drivers.models.Post;
-import com.vk.api.sdk.exceptions.ClientException;
+import com.project.shishafan.models.Comment;
+import com.project.shishafan.models.Post;
 import com.vk.api.sdk.objects.enums.WallFilter;
-import com.vk.api.sdk.objects.wall.responses.GetCommentsResponse;
-import com.vk.api.sdk.objects.wall.responses.GetResponse;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.project.shishafan.drivers.models;
+package com.project.shishafan.models;
 /* Created by Kuyan Kirill
  *  Email: progingisfun@gmail.com
  *  Date: 17.11.2019

@@ -4,7 +4,7 @@ package com.project.shishafan.drivers;
  *  Date: 01.11.2019
  */
 
-import com.project.shishafan.drivers.models.Post;
+import com.project.shishafan.models.Post;
 import com.project.shishafan.services.VkService;
 import com.project.shishafan.utils.WriterUtils;
 

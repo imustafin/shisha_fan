@@ -4,9 +4,8 @@ package com.project.shishafan.services;
  *  Date: 07.11.2019
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.shishafan.drivers.models.Comment;
-import com.project.shishafan.drivers.models.Post;
+import com.project.shishafan.models.Comment;
+import com.project.shishafan.models.Post;
 import com.project.shishafan.services.interfaces.AuthService;
 import com.project.shishafan.services.interfaces.GroupService;
 import com.project.shishafan.services.interfaces.WallService;
