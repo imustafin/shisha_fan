@@ -38,7 +38,7 @@ public class MainWallService implements WallService {
         int postsCount = 0;
 
         try {
-            ClientResponse clientResponse = wall.get(serviceActor).ownerId(ownerId).filter(wallFilter).executeAsRaw();
+            ClientResponse clientResponse = wall.get(serviceActor).ownerId(-ownerId).filter(wallFilter).executeAsRaw();
             String content = clientResponse.getContent();
             postsCount = mapper.readTree(content).get("response").get("count").asInt();
         } catch (ClientException | JsonProcessingException e) {
@@ -55,7 +55,7 @@ public class MainWallService implements WallService {
 
         try {
             ClientResponse clientResponse = wall.getComments(serviceActor)
-                    .ownerId(ownerId).postId(postId).needLikes(false).offset(0).count(0).executeAsRaw();
+                    .ownerId(-ownerId).postId(postId).needLikes(false).offset(0).count(0).executeAsRaw();
             String content = clientResponse.getContent();
             commentsCount = mapper.readTree(content).get("response").get("count").asInt();
         } catch (ClientException | JsonProcessingException e) {
@@ -72,7 +72,7 @@ public class MainWallService implements WallService {
 
         try {
             ClientResponse clientResponse = wall.get(serviceActor)
-                    .ownerId(ownerId).count(count).offset(offset).filter(filter).executeAsRaw();
+                    .ownerId(-ownerId).count(count).offset(offset).filter(filter).executeAsRaw();
             String content = clientResponse.getContent();
             JsonNode items = getItemsFromJsonString(content);
             posts = getPostsFromItemsJson(items);
@@ -91,7 +91,7 @@ public class MainWallService implements WallService {
 
         try {
             ClientResponse clientResponse = wall.getComments(serviceActor)
-                    .ownerId(ownerId).postId(postId).needLikes(likes).offset(offset).count(count).executeAsRaw();
+                    .ownerId(-ownerId).postId(postId).needLikes(likes).offset(offset).count(count).executeAsRaw();
             String content = clientResponse.getContent();
             JsonNode items = getItemsFromJsonString(content);
             comments = getCommentsFromItemsJson(items);
@@ -135,7 +135,7 @@ public class MainWallService implements WallService {
             int id = idNode != null ? idNode.asInt() : -1;
             String text = textNode != null ? textNode.asText() : "";
             int likes = likesNode != null ? (likesNode.get("count") != null ? likesNode.get("count").asInt() : -1) : -1;
-            
+
             comments.add(new Comment(id, text, likes));
         }
 

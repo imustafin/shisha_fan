@@ -6,7 +6,6 @@ package com.project.shishafan.services;
 
 import com.project.shishafan.services.interfaces.AuthService;
 import com.project.shishafan.utils.PropertiesUtils;
-import com.vk.api.sdk.client.VkApiClient;
 import com.vk.api.sdk.client.actors.ServiceActor;
 
 import java.util.Properties;
