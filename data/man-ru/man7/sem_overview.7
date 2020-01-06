@@ -1,0 +1,117 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SEM_OVERVIEW 7 2017\-05\-03 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sem_overview \- обзор семафоров POSIX
+.SH ОПИСАНИЕ
+Семафоры POSIX позволяют процессам и нитям синхронизировать свою работу.
+.PP
+Семафор представляет собой целое число, значение которого никогда не будет
+меньше нуля. Над семафорами выполняются две операции: увеличение значения
+семафора на единицу (\fBsem_post\fP(3)) и уменьшение значения семафора на
+единицу (\fBsem_wait\fP(3)). Если значение семафора равно нулю, то операция
+\fBsem_wait\fP(3) блокирует работу до тех пор, пока значение не станет больше
+нуля.
+.PP
+Есть два вида семафоров POSIX: именованные семафоры и безымянные семафоры.
+.TP 
+\fBИменованные семафоры\fP
+.\" glibc allows the initial slash to be omitted, and makes
+.\" multiple initial slashes equivalent to a single slash.
+.\" This differs from the implementation of POSIX message queues.
+.\" glibc allows subdirectory components in the name, in which
+.\" case the subdirectory tree must exist under /dev/shm, and
+.\" the fist subdirectory component must exist as the name
+.\" sem.name, and all of the subdirectory components must allow the
+.\" required permissions if a user wants to create a semaphore
+.\" object in a subdirectory.
+Именованные семафоры отличают по именам вида \fI/имя\fP — строка (с null в
+конце) до \fBNAME_MAX\fP\fI\-4\fP (т. е., 251) символов, состоящая из начальной
+косой черты и одного или нескольких символов (символ косой черты не
+допускается). Два процесса могут работать с одним семафором указав его имя в
+\fBsem_open\fP(3).
+.IP
+Функция \fBsem_open\fP(3) создаёт новый именованный семафор или открывает
+существующий. После открытия семафора с ним можно работать посредством
+\fBsem_post\fP(3) и \fBsem_wait\fP(3). Когда процесс закончил использовать
+семафор, его можно закрыть с помощью \fBsem_close\fP(3). Когда все процессы
+закончили использовать семафор, его можно удалить из системы с помощью
+\fBsem_unlink\fP(3).
+.TP 
+\fBБезымянные семафоры (семафоры в памяти)\fP
+Безымянные семафоры не имеют имени. Семафор размещается в области памяти,
+которая доступна нескольким нитям (\fIобщий семафор для нитей)\fP или процессам
+(\fIобщий семафор для процессов\fP). Общий семафор для нитей размещается в
+области памяти, которая доступна из нитей процесса, например в глобальной
+переменной. Общий семафор для процессов должен размещаться в области общей
+памяти (например, в сегменте общей памяти System V, созданной с помощью
+\fBshmget\fP(2), или в объекте общей памяти POSIX, созданном с помощью
+\fBshm_open\fP(3)).
+.IP
+Перед началом использования безымянный семафор должны быть
+проинициализирован с помощью \fBsem_init\fP(3). После этого с ним можно
+работать через \fBsem_post\fP(3) и \fBsem_wait\fP(3). Если семафор больше не
+нужен, то семафор нужно уничтожить с помощью \fBsem_destroy\fP(3) (но до
+освобождения выделенной для него памяти).
+.PP
+Далее в разделе описываются особенности реализации семафоров POSIX в Linux.
+.SS Версии
+До ядра версии 2.6, в Linux поддерживались только безымянные общие семафоры
+для нитей. В системах с Linux 2.6 и glibc, предоставляющей реализацию нитей
+NPTL, имеется полная реализация семафоров POSIX.
+.SS Устойчивость
+Именованные семафоры POSIX располагаются в ядре. Пока семафор не удалён с
+помощью \fBsem_unlink\fP(3), он остаётся в системе до её выключения.
+.SS Компоновка
+Программы, в которых используется программный интерфейс семафоров POSIX, для
+компоновки с библиотекой реального времени \fIlibrt\fP должны компилироваться с
+помощью \fIcc \-pthread\fP.
+.SS "Доступ к именованным семафорам через файловую систему"
+В Linux, именованные семафоры создаются в виртуальной файловой системе,
+обычно монтируемой в \fI/dev/shm\fP, с именами вида \fBsem.\fP\fIимя\fP (по этой
+причине длина имени семафора ограничена \fBNAME_MAX\fP\fI\-4\fP, а не \fBNAME_MAX\fP
+символами).
+.PP
+Начиная с Linux 2.6.19, для управления доступом к объектам конкретным
+пользователям или группам на файлы в этом каталоге могут быть применены ACL.
+.SH ЗАМЕЧАНИЯ
+Семафоры System V (\fBsemget\fP(2), \fBsemop\fP(2) и т. п.) — это старый
+программный интерфейс семафоров. Семафоры POSIX предоставляют более простой
+и продуманный интерфейс чем семафоры System V; с другой стороны, семафоры
+POSIX не так широко распространены (особенно в старых системах), по
+сравнению с семафорами System V.
+.SH ПРИМЕР
+Пример использования функций семафоров POSIX показан в \fBsem_wait\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsem_close\fP(3), \fBsem_destroy\fP(3), \fBsem_getvalue\fP(3), \fBsem_init\fP(3),
+\fBsem_open\fP(3), \fBsem_post\fP(3), \fBsem_unlink\fP(3), \fBsem_wait\fP(3),
+\fBpthreads\fP(7), \fBshm_overview\fP(7)

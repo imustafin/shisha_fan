@@ -1,0 +1,143 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1997 Nicolás Lichtmaier <nick@debian.org>
+.\" Created Thu Aug  7 00:44:00 ART 1997
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Added section stuff, aeb, 2002-04-22.
+.\" Corrected include file, drepper, 2003-06-15.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LOCKF 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+lockf \- устанавливает, проверяет или удаляет блокировку POSIX на открытом
+файле
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint lockf(int \fP\fIfd\fP\fB, int \fP\fIcmd\fP\fB, off_t \fP\fIlen\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBlockf\fP():
+.ad l
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии gibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Устанавливает, проверяет наличие или удаляет блокировку POSIX с области
+открытого файла. Файл задаётся в параметре \fIfd\fP — файловым дескриптором,
+открытым на запись — действие — в \fIcmd\fP, а область указывается как позиции
+байт \fIpos\fP..\fIpos\fP+\fIlen\fP\-1, если \fIlen\fP положительно, и
+\fIpos\fP\-\fIlen\fP..\fIpos\fP\-1, если \fIlen\fP отрицательно, где \fIpos\fP — текущая
+позиция в файле и, если \fIlen\fP равно нулю, то область расширяется от текущей
+позиции файла до бесконечности, охватывая текущую и будущие позиции конца
+файла. Во всех случаях область может расширяться за текущий конец файла.
+.PP
+В Linux \fBlockf\fP() — всего лишь более удобный способ вызова \fBfcntl\fP(2) для
+блокировки. Во многих других системах реализация \fBlockf\fP() сделана подобным
+образом, но заметим, что в POSIX.1 нет явной связи между блокировками
+\fBlockf\fP() и \fBfcntl\fP(2). Переносимое приложение, вероятно, должно избегать
+использования этих двух вызовов одновременно.
+.PP
+Список существующих операций приведён ниже:
+.TP 
+\fBF_LOCK\fP
+Устанавливает исключительную блокировку указанной области файла. Если эта
+область (или её часть) уже блокирована, то вызов заблокирует выполнение до
+тех пор, пока не будет снята предыдущая блокировка. Если эта область
+перекрывается с ранее заблокированной областью, то они
+объединяются. Файловые блокировки снимаются сразу после того, как
+установивший их процесс закрывает файловый дескриптор. Дочерние процессы не
+наследуют подобные блокировки.
+.TP 
+\fBF_TLOCK\fP
+То же самое, что и \fBF_LOCK\fP, но вызов никогда не блокирует выполнение и
+возвращает ошибку, если файл уже заблокирован.
+.TP 
+\fBF_ULOCK\fP
+Снимает блокировку с заданной области файла. Может привести к тому, что
+блокируемая область будет поделена на две заблокированные области.
+.TP 
+\fBF_TEST\fP
+Проверяет наличие блокировки: возвращает 0, если указанная область не
+заблокирована или заблокирована вызвавшим процессом; возвращает \-1, меняет
+значение \fIerrno\fP на \fBEAGAIN\fP (в некоторых системах на \fBEACCES\fP), если
+блокировка установлена другим процессом.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP или \fBEAGAIN\fP
+Файл блокирован и указана операция \fBF_TLOCK\fP или \fBF_TEST\fP, или операция
+запрещена, так как файл отображён в память другим процессом.
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является открытым файловым дескриптором, или значение
+\fIcmd\fP равно \fBF_LOCK\fP или \fBF_TLOCK\fP и файловый дескриптор \fIfd\fP не открыт
+на запись.
+.TP 
+\fBEDEADLK\fP
+Вызвана операция \fBF_LOCK\fP, которая приводит к вечной блокировке (deadlock).
+.TP 
+\fBEINTR\fP
+При ожидании получения блокировки вызов был прерван сигналом, пришедшим в
+обработчик; смотрите \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+В \fIcmd\fP указана неправильная операция.
+.TP 
+\fBENOLCK\fP
+Открыто слишком много областей для блокировки, таблица блокировок
+переполнена.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBlockf\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfcntl\fP(2), \fBflock\fP(2)
+.PP
+Смотрите также файлы \fIlocks.txt\fP и \fImandatory\-locking.txt\fP из каталога
+\fIDocumentation/filesystems\fP с исходным кодом ядра Linux (в старых ядрах эти
+файлы были в каталоге \fIDocumentation\fP, а \fImandatory\-locking.txt\fP назывался
+\fImandatory.txt\fP).

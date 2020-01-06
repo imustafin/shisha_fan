@@ -1,0 +1,152 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1990, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"	@(#)mpool.3	8.1 (Berkeley) 6/4/93
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MPOOL 3 2017\-09\-15 "" "Руководство программиста Linux"
+.UC 7
+.SH ИМЯ
+mpool \- общий массив буферов памяти
+.SH ОБЗОР
+.nf
+\fB#include <db.h>\fP
+\fB#include <mpool.h>\fP
+.PP
+\fBMPOOL *mpool_open(DBT *\fP\fIkey\fP\fB, int \fP\fIfd\fP\fB, pgno_t \fP\fIpagesize\fP\fB, pgno_t \fP\fImaxcache\fP\fB);\fP
+.PP
+\fBvoid mpool_filter(MPOOL *\fP\fImp\fP\fB, void (*pgin)(void *, pgno_t, void *),\fP
+\fB                  void (*\fP\fIpgout\fP\fB)(void *, pgno_t, void *),\fP
+\fB                  void *\fP\fIpgcookie\fP\fB);\fP
+.PP
+\fBvoid *mpool_new(MPOOL *\fP\fImp\fP\fB, pgno_t *\fP\fIpgnoaddr\fP\fB);\fP
+.PP
+\fBvoid *mpool_get(MPOOL *\fP\fImp\fP\fB, pgno_t \fP\fIpgno\fP\fB, unsigned int \fP\fIflags\fP\fB);\fP
+.PP
+\fBint mpool_put(MPOOL *\fP\fImp\fP\fB, void *\fP\fIpgaddr\fP\fB, unsigned int \fP\fIflags\fP\fB);\fP
+.PP
+\fBint mpool_sync(MPOOL *\fP\fImp\fP\fB);\fP
+.PP
+\fBint mpool_close(MPOOL *\fP\fImp\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fIПримечание\fP: В этой странице описаны интерфейсы, предоставляемые glibc до
+версии 2.1. Начиная с версии 2.2, glibc больше не поддерживает эти
+интерфейсы. Вероятно, вы ищите API, предоставляемое библиотекой \fIlibdb\fP.
+.PP
+Целью библиотечного интерфейса \fImpool\fP является обеспечение управления
+буферными страницами файлов. Буферы могут использоваться несколькими
+процессами.
+.PP
+Функция \fBmpool_open\fP()  инициализирует массив памяти. Параметр \fIkey\fP
+является строкой байтов для согласования процессов, желающих совместно
+использовать буферы. Если файловые буферы отображены в общей памяти, то все
+процессы, использующие данный одинаковый параметр, будут совместно
+использовать буферы. Если параметр \fIkey\fP равен NULL, то буферы отображаются
+в локальной (private) памяти. Параметр \fIfd\fP является файловым дескриптором
+связанного файла, который должен быть доступен для поиска. Если значение
+\fIkey\fP не равно NULL и совпадает с уже отображённым файлом, то параметр
+\fIfd\fP игнорируется.
+.PP
+В параметре \fIpagesize\fP указывается размер (в байтах) страниц, в которых
+располагается файл. В параметре \fImaxcache\fP задаётся максимальное количество
+страниц файла, которое можно кэшировать в любой момент времени. Это значение
+не связано с количеством процессов, которые совместно используют буферы
+файла, но будет наибольшим значением из определённых процессами, совместно
+использующими файл.
+.PP
+Функция \fBmpool_filter\fP() предназначена для создания прозрачной обработки
+операций ввода и вывода доступных страниц. Если задана функция \fIpgin\fP, то
+она вызывается каждый раз, когда данные буфера считываются в память массива
+из внешнего файла. Если задана функция \fIpgout\fP, то она вызывается каждый
+раз, когда данные буфера записываются во внешний файл. Обе функции
+вызываются с указателем \fIpgcookie\fP, номером страницы и указателем на
+страницу, используемую для чтения или записи.
+.PP
+Параметрами функции \fBmpool_new\fP() являются указатель \fIMPOOL\fP и адрес. Если
+может быть выделена новая страница, то возвращается указатель на страницу и
+номер страницы сохраняется по адресу \fIpgnoaddr\fP. В противном случае
+возвращается NULL и изменяется \fIerrno\fP.
+.PP
+Параметрами функции \fBmpool_get\fP() являются указатель и номер страницы. Если
+страница существует, то возвращается указатель на страницу. Иначе
+возвращается NULL и меняется значение переменной \fIerrno\fP. Параметр \fIflags\fP
+пока не используется.
+.PP
+Функция \fBmpool_put\fP() открепляет страницу, на которую указывает
+\fIpgaddr\fP. В \fIpgaddr\fP должен быть указан адрес, который был возвращён
+\fBmpool_get\fP() или \fBmpool_new\fP() ранее. Значением флага являются любые
+объединённые следующие значения:
+.TP 
+\fBMPOOL_DIRTY\fP
+Страница была изменена и должна быть записана обратно в файл.
+.PP
+При успешном выполнении функция \fBmpool_put\fP() возвращает 0, а при ошибках
+возвращает \-1.
+.PP
+Функция \fBmpool_sync\fP() записывает все изменённые страницы, связанные с
+указателем \fIMPOOL\fP, обратно в файл. При успешном выполнении \fBmpool_sync\fP()
+возвращает 0 и \-1 при ошибке.
+.PP
+Функция \fBmpool_close\fP() освобождает любую выделенную память, связанную с
+идентификатором массива памяти. Изменённые страницы \fBне\fP записываются
+обратно в файл. При успешном выполнении \fBmpool_close\fP() возвращает 0 и \-1
+при ошибке.
+.SH ОШИБКИ
+При ошибках функция \fBmpool_open\fP() устанавливает значение \fIerrno\fP равным
+какому\-либо значению из определённых в \fBmalloc\fP(3).
+.PP
+При ошибках функция \fBmpool_get\fP() устанавливает значение \fIerrno\fP по
+следующим причинам:
+.TP  15
+\fBEINVAL\fP
+Запрошенная запись не существует.
+.PP
+При ошибках функции \fImpool_new\fP() и \fImpool_get\fP присваивают переменной
+\fIerrno\fP любое значение из определённых в библиотечных функциях \fBread\fP(2),
+\fBwrite\fP(2) и \fBmalloc\fP(3).
+.PP
+При ошибках функция \fBmpool_sync\fP() устанавливает значение \fIerrno\fP равным
+значению ошибки из определённых в библиотеке для \fBwrite\fP(2).
+.PP
+При ошибках функция \fBmpool_close\fP() устанавливает значение \fIerrno\fP равным
+значению ошибки из определённых в библиотеке для \fBfree\fP(3).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Не является частью POSIX.1. Присутствует в BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbtree\fP(3), \fBdbopen\fP(3), \fBhash\fP(3), \fBrecno\fP(3)

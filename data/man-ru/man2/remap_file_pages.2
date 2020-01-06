@@ -1,0 +1,125 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2003, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2003-12-10 Initial creation, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" 2004-10-28 aeb, corrected prototype, prot must be 0
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH REMAP_FILE_PAGES 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+remap_file_pages \- создаёт нелинейное файловое отображение
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* Смотрите feature_test_macros(7) */
+\fB#include <sys/mman.h>\fP
+.PP
+\fBint remap_file_pages(void *\fP\fIaddr\fP\fB, size_t \fP\fIsize\fP\fB, int \fP\fIprot\fP\fB,\fP
+\fB                     size_t \fP\fIpgoff\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+.\" commit 33041a0d76d3c3e0aff28ac95a2ffdedf1282dbc
+.\" http://lwn.net/Articles/597632/
+.\" commit c8d78c1823f46519473949d33f0d1d33fe21ea16
+\fBЗамечание\fP: данный системный вызов, начиная с Linux 3.16, устарел. В Linux
+4.0 реализация была заменена на более медленную эмуляцию ядром. В
+приложениях, где он используется, нужно применять альтернативные
+вызовы. Данное изменение было сделано из\-за сложности кода ядра этого
+системного вызова, и считается, что им почти никто или вообще никто не
+пользуется. Какое\-то время он использовался в приложениях баз данных на
+32\-разрядных системах, но этих вариантов использования на 64\-разрядных
+системах замечено не было.
+.PP
+Системный вызов \fBremap_file_pages\fP() используется для создания нелинейного
+отображения, то есть отображения, в котором страницы файла отображаются в
+память непоследовательно. Преимущество использования \fBremap_file_pages\fP()
+по сравнению с повторением вызовов \fBmmap\fP(2) в том, что первый не требует
+от ядра создания дополнительных структур данных VMA (областей виртуальной
+памяти).
+.PP
+Для создания нелинейного отображения выполните следующее:
+.TP  3
+1.
+Создайте отображение (пока линейное) с помощью \fBmmap\fP(2). Данное
+отображение должно создаваться с флагом \fBMAP_SHARED\fP.
+.TP 
+2.
+Выполните переупорядочивание соответствия между страницами отображения и
+страницами файла с помощью одного или нескольких вызовов
+\fBremap_file_pages\fP(). Возможно отображать одну страницу файла в несколько
+мест отображаемой области.
+.PP
+В аргументах \fIpgoff\fP и \fIsize\fP указывается область файла, которая будет
+перенесёна  в отображение: в \fIpgoff\fP задаётся смещение в файле, измеряемое
+в размерах системных страниц; в \fIsize\fP задаётся длина области в байтах.
+.PP
+Аргумент \fIaddr\fP предназначен для двух целей. Во\-первых, им определяется
+отображение, чьи страницы мы хотим перенести. То есть в \fIaddr\fP должен быть
+указан адрес в области, которая была ранее отображена с помощью вызова
+\fBmmap\fP(2). Во\-вторых, в \fIaddr\fP указывается адрес, по которому должны быть
+помещены файловые страницы, заданные \fIpgoff\fP и \fIsize\fP.
+.PP
+.\" This rounding is weird, and not consistent with the treatment of
+.\" the analogous arguments for munmap()/mprotect() and for mlock().
+.\" MTK, 14 Sep 2005
+Значения, указанные в \fIaddr\fP и \fIsize\fP, должны быть кратны размеру
+системной страницы. Если это не так, то ядро округляет \fIоба\fP значения \fIв
+меньшую сторону\fP до ближайшего числа, кратного размеру страницы.
+.PP
+Значение аргумента \fIprot\fP должно быть 0.
+.PP
+Аргумент \fIflags\fP предназначен для того же, что и в \fBmmap\fP(2), но все
+флаги, кроме \fBMAP_NONBLOCK\fP, игнорируются.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При удачном выполнении \fBremap_file_pages\fP() возвращается 0. При ошибке
+возвращается \-1, а значение \fIerrno\fP устанавливается соответствующим
+образом.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Значение \fIaddr\fP не ссылается на допустимое отображение, созданное с флагом
+\fBMAP_SHARED\fP.
+.TP 
+\fBEINVAL\fP
+.\" And possibly others from vma->vm_ops->populate()
+Некорректное значение в \fIaddr\fP, \fIsize\fP, \fIprot\fP или \fIpgoff\fP.
+.SH ВЕРСИИ
+Системный вызов \fBremap_file_pages\fP() появился в Linux 2.5.46; поддержка в
+glibc началась с версии 2.3.3.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Системный вызов \fBremap_file_pages\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+.\" commit 3ee6dafc677a68e461a7ddafc94a580ebab80735
+Начиная с Linux 2.6.23, \fBremap_file_pages\fP() создаёт нелинейные отображения
+только для файловых систем в оперативной памяти, таких как \fBtmpfs\fP(5),
+hugetlbfs или ramfs. Для файловых систем с хранилищем \fBremap_file_pages\fP()
+не намного эффективнее чем \fBmmap\fP(2), так как рассчитывает адреса для
+частей файла.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetpagesize\fP(2), \fBmmap\fP(2), \fBmmap2\fP(2), \fBmprotect\fP(2), \fBmremap\fP(2),
+\fBmsync\fP(2)

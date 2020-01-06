@@ -1,0 +1,124 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 19:35:54 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Mon Oct 16 00:16:29 2000 following Joseph S. Myers
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FNMATCH 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+fnmatch \- сравнивает имя файла или путь
+.SH ОБЗОР
+.nf
+\fB#include <fnmatch.h>\fP
+.PP
+\fBint fnmatch(const char *\fP\fIpattern\fP\fB, const char *\fP\fIstring\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBfnmatch\fP() проверяет, совпадает ли параметр \fIstring\fP с параметром
+\fIpattern\fP, который является подстановочным шаблоном оболочки (смотрите
+\fBglob\fP(7)).
+.PP
+Аргумент \fIflags\fP изменяет поведение; он является битовой маской и может
+содержать следующие флаги:
+.TP 
+\fBFNM_NOESCAPE\fP
+Если этот флаг установлен, то обратная косая черта воспринимается как
+простой символ, а не специальный.
+.TP 
+\fBFNM_PATHNAME\fP
+Если этот флаг установлен, то косая черта в строке \fIstring\fP будет совпадать
+только с косой чертой в шаблоне \fIpattern\fP, но не с метасимволом звёздочка
+(*) или вопросительным знаком (?) и не последовательностью в квадратных
+скобках ([]), содержащую косую черту.
+.TP 
+\fBFNM_PERIOD\fP
+Если этот флаг установлен, то начальная точка в строке \fIstring\fP должна
+сравниваться именно с точкой в шаблоне \fIpattern\fP. Точка считается
+начальной, если она является первым символом в строке \fIstring\fP, или если
+установлен флаг \fBFNM_PATHNAME\fP и точка следует сразу за косой чертой.
+.TP 
+\fBFNM_FILE_NAME\fP
+Синоним \fBFNM_PATHNAME\fP в GNU.
+.TP 
+\fBFNM_LEADING_DIR\fP
+Если этот флаг (расширение GNU) установлен, то строка считается совпавшей с
+шаблоном, если совпадает начальный сегмент строки \fIstring\fP, который следует
+сразу за косой чертой. Этот флаг для внутреннего использования glibc и не
+всегда реализуется.
+.TP 
+\fBFNM_CASEFOLD\fP
+Если этот флаг (расширение GNU) установлен, то выражения сравниваются без
+учёта регистра символов.
+.TP 
+\fBFNM_EXTMATCH\fP
+Если этот флаг (расширение GNU) установлен, то поддерживаются расширенные
+шаблоны из \&'ksh' и теперь поддерживаемые другими оболочками. В расширенном
+формате \fIpattern\-list\fP предоставляет собой список шаблонов, разделённых
+\&'|', входит следующее:
+.TP 
+\&'?(\fIpattern\-list\fP)'
+Шаблон совпадает, если ноль или одно вхождение любого шаблона в
+\fIpattern\-list\fP совпадает с входной строкой \fIstring\fP.
+.TP 
+\&'*(\fIpattern\-list\fP)'
+Шаблон совпадает, если ноль или более вхождений любых шаблонов в
+\fIpattern\-list\fP совпадает с входной строкой \fIstring\fP.
+.TP 
+\&'+(\fIpattern\-list\fP)'
+Шаблон совпадает, если одно или более вхождений любых шаблонов в
+\fIpattern\-list\fP совпадает с входной строкой \fIstring\fP.
+.TP 
+\&'@(\fIpattern\-list\fP)'
+Шаблон совпадает, если только одно вхождение любого шаблона в
+\fIpattern\-list\fP совпадает с входной строкой \fIstring\fP.
+.TP 
+\&'!(\fIpattern\-list\fP)'
+Шаблон совпадает, если входная строка \fIstring\fP не совпадает с каким\-либо
+шаблоном в \fIpattern\-list\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Возвращает ноль, если строка \fIstring\fP совпадает с шаблоном \fIpattern\fP,
+возвращает \fBFNM_NOMATCH\fP, если строка и шаблон не совпадают, или другое
+ненулевое значение, если произошла ошибка.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfnmatch\fP()
+T}	Безвредность в нитях	MT\-Safe env locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, POSIX.2. Флаги \fBFNM_FILE_NAME\fP,
+\fBFNM_LEADING_DIR\fP и \fBFNM_CASEFOLD\fP являются расширениями GNU.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsh\fP(1), \fBglob\fP(3), \fBscandir\fP(3), \fBwordexp\fP(3), \fBglob\fP(7)

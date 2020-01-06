@@ -1,0 +1,147 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2012 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DELETE_MODULE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+delete_module \- выгружает модуль ядра
+.SH ОБЗОР
+.nf
+\fBint delete_module(const char *\fP\fIname\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В заголовочных файлах glibc этой системный вызов отсутствует;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Вызов \fBdelete_module\fP() пытается удалить неиспользуемый загруженный модуль
+с именем \fIname\fP. Если у модуля есть функция \fIexit\fP, то она выполняется
+перед выгрузкой. Аргумент \fIflags\fP используется для изменения поведения
+системного вызова — это описано далее. Данный системный вызов требует особых
+прав.
+.PP
+Удаление модуля выполняется по следующим правилам:
+.IP 1. 4
+Если какой\-то другой модуль зависит от выгружаемого (т.е., использует его
+символы), то вызов завершается с ошибкой.
+.IP 2.
+В противном случае, если счётчик ссылок на модуль (т.е. количество
+процессов, использующих модуль в данный момент) равно нулю, то модуль
+немедленно выгружается.
+.IP 3.
+.\"  	O_TRUNC == KMOD_REMOVE_FORCE in kmod library
+.\"  	O_NONBLOCK == KMOD_REMOVE_NOWAIT in kmod library
+Если у модуля ненулевой счётчик ссылок, то поведение зависит от битов,
+установленных в \fIflags\fP. Обычно (смотрите ЗАМЕЧАНИЯ) всегда указывается
+флаг \fBO_NONBLOCK\fP, а иногда добавляется \fBO_TRUNC\fP.
+.IP
+Различные комбинации значений в \fIflags\fP дают разный эффект:
+.RS 4
+.TP 
+\fBflags == O_NONBLOCK\fP
+Вызов сразу завершается с ошибкой.
+.TP 
+\fBflags == (O_NONBLOCK | O_TRUNC)\fP
+Модуль немедленно выгружается, независимо от того, равен счётчик ссылок 0
+или нет.
+.TP 
+\fB(flags & O_NONBLOCK) == 0\fP
+Если в \fIflags\fP не указан \fBO_NONBLOCK\fP, то выполняются следующие шаги:
+.RS
+.IP * 3
+Модуль помечается, что больше ссылаться на него запрещается.
+.IP *
+Если счётчик ссылок модуля не равен нулю, то вызывающий переходит в
+непрерываемое состояние сна (\fBTASK_UNINTERRUPTIBLE\fP) до тех пор, пока
+счётчик ссылок не станет равным 0 — в этот момент вызов разблокируется.
+.IP *
+Модуль выгружается как обычно.
+.RE
+.RE
+.PP
+Флаг \fBO_TRUNC\fP имеет ещё один эффект на правила, описанные выше. По
+умолчанию, если модуль имеет функцию \fIinit\fP, но не имеет функции \fIexit\fP,
+то попытка удаления модуля завершается с ошибкой. Однако, если указан
+\fBO_TRUNC\fP, то это требование не учитывается.
+.PP
+Использовать флаг \fBO_TRUNC\fP опасно! Если ядро не собрано с параметром
+\fBCONFIG_MODULE_FORCE_UNLOAD\fP, то этот флаг просто игнорируется (обычно
+параметр \fBCONFIG_MODULE_FORCE_UNLOAD\fP включают). Использование этого флага
+приводит к примешиванию (taints) в ядре (TAINT_FORCED_RMMOD).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается ноль. В случае ошибки возвращается \-1,
+а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBUSY\fP
+Модуль не «живой» (т.е., он всё ещё инициализируется или уже помечен для
+удаления); или модуль имеет функцию \fIinit\fP, но не имеет функции \fIexit\fP и в
+\fIflags\fP не указан флаг \fBO_TRUNC\fP.
+.TP 
+\fBEFAULT\fP
+Значение \fIname\fP указывает на расположение вне доступного адресного
+пространства процесса.
+.TP 
+\fBENOENT\fP
+Модуль с таким именем не существует.
+.TP 
+\fBEPERM\fP
+Вызывающий не имеет прав (не имеет мандата \fBCAP_SYS_MODULE\fP), или отключена
+выгрузка модулей\ (смотрите \fI/proc/sys/kernel/modules_disabled\fP в
+\fBproc\fP(5)).
+.TP 
+\fBEWOULDBLOCK\fP
+Другие модули зависят от этого модуля; или в \fIflags\fP указан флаг
+\fBO_NONBLOCK\fP, но счётчик ссылок модуля не равен 0 и в \fIflags\fP не указан
+флаг \fBO_TRUNC\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBdelete_module\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Системный вызов \fBdelete_module\fP() не поддерживается glibc. В заголовочных
+файлах glibc он не объявлен, но в недавнем прошлом glibc до версии 2.23
+экспортировал ABI для этого системного вызова. Поэтому чтобы получить данный
+системный вызов достаточно вручную объявить интерфейс в своём коде; или же
+вы можете вызвать его через \fBsyscall\fP(2).
+.PP
+Непрерываемый сон, который может начаться, если в \fIflags\fP не указан флаг
+\fBO_NONBLOCK\fP, считается нежелательным, так как спящий процесс находится в
+неубиваемом состоянии. В Linux 3.7 указание \fBO_NONBLOCK\fP необязательно, но
+в будущих ядрах, он, вероятно, станет обязательным.
+.SS "Linux версии 2.4 и более ранние"
+В Linux версии 2.4 и более ранних системный вызов принимал один аргумент:
+.PP
+\fB int delete_module(const char *\fP\fIname\fP\fB);\fP
+.PP
+Если значение \fIname\fP равно NULL, то все неиспользуемые модули, помеченные
+для автоматической вычистки, удаляются.
+.PP
+Есть и некоторые другие отличия в поведении \fBdelete_module\fP() в Linux 2.4 и
+более ранних, \fIно\fP они пока не описаны в этой справочной странице.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcreate_module\fP(2), \fBinit_module\fP(2), \fBquery_module\fP(2), \fBlsmod\fP(8),
+\fBmodprobe\fP(8), \fBrmmod\fP(8)

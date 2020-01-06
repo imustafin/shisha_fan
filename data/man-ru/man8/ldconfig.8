@@ -1,0 +1,137 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1999 SuSE GmbH Nuernberg, Germany
+.\" Author: Thorsten Kukuk <kukuk@suse.de>
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_3_PARA)
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of the
+.\" License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+.\" General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified, 6 May 2002, Michael Kerrisk, <mtk.manpages@gmail.com>
+.\"   Change listed order of /usr/lib and /lib
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LDCONFIG 8 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+ldconfig \- настройка связывания времени выполнения в динамическом
+компоновщике
+.SH ОБЗОР
+\fB/sbin/ldconfig\fP [\fB\-nNvXV\fP] [\fB\-f\fP \fIconf\fP] [\fB\-C\fP \fIкэш\fP] [\fB\-r\fP
+\fIкорень\fP] \fIкаталог\fP…
+.PD 0
+.PP
+.PD
+\fB/sbin/ldconfig\fP \fB\-l\fP [\fB\-v\fP] \fIбиблиотека\fP…
+.PD 0
+.PP
+.PD
+\fB/sbin/ldconfig\fP \fB\-p\fP
+.SH ОПИСАНИЕ
+Программа \fBldconfig\fP создаёт необходимые ссылки и кэш для самых новых общих
+библиотек, найденных в каталогах, которые указаны в командной строке, в
+файле \fI/etc/ld.so.conf\fP и в доверенные каталогах \fI/lib\fP и \fI/usr/lib\fP (на
+некоторых 64\-битных архитектурах, таких как x86\-64, \fI/lib\fP и \fI/usr/lib\fP
+являются доверительными каталогами для 32\-битных библиотек, а каталоги
+\fI/lib64\fP и \fI/usr/lib64\fP используются для 64\-битных библиотек).
+.PP
+Кэш используется компоновщиком времени выполнения, \fIld.so\fP или
+\fIld\-linux.so\fP. \fBldconfig\fP проверяет заголовок и имена файлов встречающихся
+библиотек, при определении для каких версий нужно обновить ссылки.
+.PP
+.\" The following sentence looks suspect
+.\" (perhaps historical cruft) -- MTK, Jul 2005
+.\" Therefore, when making dynamic libraries,
+.\" it is wise to explicitly link against libc (use \-lc).
+\fBldconfig\fP будет пытаться вывести заключение о типе библиотек ELF
+(т.е. libc5 или libc6/glibc), основанных на библиотеках языка C и о том
+какая библиотека должна быть связана.
+.PP
+Некоторые существующие библиотеки не содержат необходимую информацию для
+определения их типа. В виду этого, задать ожидаемый тип можно через файл
+\fI/etc/ld.so.conf\fP. Эта возможность используется \fIтолько\fP для тех библиотек
+ELF, с которыми иначе невозможно работать. Формат выглядит как
+«каталог=ТИП», где ТИП может принимать значение libc4, libc5 или libc6
+(данный синтаксис работает также и в командной строке). Пробелы \fIне\fP
+разрешаются. Также смотрите параметр \fB\-p\fP. Программа \fBldconfig\fP обычно
+должна запускаться суперпользователем, так как выполнение может требовать
+прав на запись в некоторые каталоги и файлы, владельцем которых является
+root.
+.SH ПАРАМЕТРЫ
+.TP 
+\fB\-c\fP \fIfmt\fP, \fB\-\-format=\fP\fIfmt\fP
+(начиная с glibc 2.2) Используемые форматы кэша: \fIold\fP, \fInew\fP или
+\fIcompat\fP (по умолчанию).
+.TP 
+\fB\-C \fP\fIкэш\fP
+Использовать \fIкэш\fP вместо \fI/etc/ld.so.cache\fP.
+.TP 
+\fB\-f \fP\fIconf\fP
+.\" FIXME glibc 2.7 added -i
+Использовать \fIconf\fP вместо \fI/etc/ld.so.conf\fP.
+.TP 
+\fB\-i\fP, \fB\-\-ignore\-aux\-cache\fP
+.\"             commit 27d9ffda17df4d2388687afd12897774fde39bcc
+(начиная с glibc 2.7) Игнорировать вспомогательный файл кэша.
+.TP 
+\fB\-l\fP
+(начиная с glibc 2.2) Библиотечный режим. Компоновать отдельные библиотеки
+вручную. Предназначен только для экспертов.
+.TP 
+\fB\-n\fP
+Обрабатывать только каталоги, заданные в командной строке. Не обрабатывать
+доверенные каталоги и заданные в \fI/etc/ld.so.conf\fP. Неявно включает \fB\-N\fP.
+.TP 
+\fB\-N\fP
+Не перестраивать кэш. Если также не указан \fB\-X\fP, то ссылки по\-прежнему
+обновляются.
+.TP 
+\fB\-p\fP, \fB\-\-print\-cache\fP
+Выдать список каталогов и библиотек\-кандидатов, хранящихся в текущем кэше.
+.TP 
+\fB\-r \fP\fIкорень\fP
+Сменить каталог и использовать \fIкорень\fP в качестве корневого каталога.
+.TP 
+\fB\-v\fP, \fB\-\-verbose\fP
+Режим детализации. Выдаётся номер текущей версии, имя каждого каталога,
+который сканируется, и все создаваемые символьные ссылки. Выключает режим
+молчания.
+.TP 
+\fB\-V\fP, \fB\-\-version\fP
+Показать версию программы.
+.TP 
+\fB\-X\fP
+Не обновлять ссылки. Если также не указан \fB\-N\fP, кэш по\-прежнему
+перестраивается.
+.SH ФАЙЛЫ
+.\" FIXME Since glibc-2.3.4, "include" directives are supported in ld.so.conf
+.\"
+.\" FIXME Since glibc-2.4, "hwcap" directives are supported in ld.so.conf
+.PD 0
+.TP 
+\fI/lib/ld.so\fP
+Компоновщик/загрузчик времени выполнения.
+.TP 
+\fI/etc/ld.so.conf\fP
+Файл, содержащий список каталогов (по одному на строку), в которых
+производится поиск библиотек.
+.TP 
+\fI/etc/ld.so.cache\fP
+Файл, содержащий сортированный список библиотек, найденных в каталогах,
+заданных в \fI/etc/ld.so.conf\fP, а также в доверительных каталогах.
+.PD
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBldd\fP(1), \fBld.so\fP(8)

@@ -1,0 +1,140 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\" and Copyright (c) 2004 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 13:32:44 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Mon Jun 23 14:09:52 1997 by aeb - add EINTR.
+.\" Modified Tue Jul  7 12:26:42 1998 by aeb - changed return value wait3
+.\" Modified 2004-11-11, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Rewrote much of this page, and removed much duplicated text,
+.\"		replacing with pointers to wait.2
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WAIT4 2 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+wait3, wait4 \- ожидает смену состояния в стиле BSD
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/time.h>\fP
+\fB#include <sys/resource.h>\fP
+\fB#include <sys/wait.h>\fP
+.PP
+\fBpid_t wait3(int *\fP\fIwstatus\fP\fB, int \fP\fIoptions\fP\fB,\fP
+\fB            struct rusage *\fP\fIrusage\fP\fB);\fP
+.PP
+\fBpid_t wait4(pid_t \fP\fIpid\fP\fB, int *\fP\fIwstatus\fP\fB, int \fP\fIoptions\fP\fB,\fP
+\fB            struct rusage *\fP\fIrusage\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+.\"          || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+\fBwait3\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE || _XOPEN_SOURCE\ >=\ 500
+    glibc 2.19 и старее:
+        _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.br
+\fBwait4\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    glibc 2.19 и старее:
+        _BSD_SOURCE
+.ad
+.SH ОПИСАНИЕ
+Эти функции являются нестандартными; в новых программах используйте
+\fBwaitpid\fP(2) или \fBwaitid\fP(2).
+.PP
+Системные вызовы \fBwait3\fP() и \fBwait4\fP() похожи на \fBwaitpid\fP(2), но
+дополнительно возвращают информацию об использовании ресурсов потомком в
+структуре, указываемой \fIrusage\fP.
+.PP
+Помимо использования аргумента \fIrusage\fP, вызов \fBwait3\fP():
+.PP
+.in +4n
+.EX
+wait3(wstatus, options, rusage);
+.EE
+.in
+.PP
+эквивалентен:
+.PP
+.in +4n
+.EX
+waitpid(\-1, wstatus, options);
+.EE
+.in
+.PP
+Подобно этому, вызов \fBwait4\fP():
+.PP
+.in +4n
+.EX
+wait4(pid, wstatus, options, rusage);
+.EE
+.in
+.PP
+эквивалентен:
+.PP
+.in +4n
+.EX
+waitpid(pid, wstatus, options);
+.EE
+.in
+.PP
+Другими словами, \fBwait3\fP() ожидает любого потомка, а для \fBwait4\fP() может
+быть указан определённый потомок или потомки, которых нужно
+ожидать. Подробней см. \fBwait\fP(2).
+.PP
+Если \fIrusage\fP не равно NULL, то \fIstruct rusage\fP, на которую он указывает,
+будет заполнен информацией о работе потомка. Подробней см. \fBgetrusage\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Как в \fBwaitpid\fP(2).
+.SH ОШИБКИ
+Как в \fBwaitpid\fP(2).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.3BSD.
+.PP
+В SUSv1 определена \fBwait3\fP(); в SUSv2 включена \fBwait3\fP(), но помечена как
+УСТАРЕВШАЯ; удалена в SUSv3.
+.SH ЗАМЕЧАНИЯ
+Включать \fI<sys/time.h>\fP в настоящее время не требуется, но это
+увеличивает переносимость. (Безусловно, в \fI<sys/resource.h>\fP
+определена структура \fIrusage\fP с полями типа \fIstruct timeval\fP, которая
+определена в \fI<sys/time.h>\fP.)
+.SS "Отличия между библиотекой C и ядром"
+В Linux, \fBwait3\fP() является библиотечной функцией, реализованной на основе
+системного вызова \fBwait4\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfork\fP(2), \fBgetrusage\fP(2), \fBsigaction\fP(2), \fBsignal\fP(2), \fBwait\fP(2),
+\fBsignal\fP(7)

@@ -1,0 +1,135 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1995 Jim Van Zandt <jrv@vanzandt.mv.com>
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2002-07-27 by Walter Harms
+.\" 	(walter.harms@informatik.uni-oldenburg.de)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LOG1P 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+log1p, log1pf, log1pl \- логарифм от 1 плюс аргумент
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble log1p(double \fP\fIx\fP\fB);\fP
+\fBfloat log1pf(float \fP\fIx\fP\fB);\fP
+\fBlong double log1pl(long double \fP\fIx\fP\fB);\fP
+.PP
+.fi
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBlog1p\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || _XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.br
+\fBlog1pf\fP(), \fBlog1pl\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Данные функции возвращают значение эквивалентное
+.PP
+.nf
+    log (1 + \fIx\fP)
+.fi
+.PP
+Результат вычисляется методом, выдающим точные значения, даже если значение
+\fIx\fP близко к нулю.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные функции возвращают натуральный логарифм от
+\fI(1\ +\ x)\fP.
+.PP
+Если \fIx\fP равно NaN, будет возвращено NaN.
+.PP
+Если \fIx\fP стремится к плюс бесконечности, то будет возвращена плюс
+бесконечность.
+.PP
+Если \fIx\fP равно \-1, возникнет ошибка особой точки, и функции вернут
+\-\fBHUGE_VAL\fP, \-\fBHUGE_VALF\fP или \-\fBHUGE_VALL\fP, соответственно.
+.PP
+.\" POSIX.1 specifies a possible range error if x is subnormal
+.\" glibc 2.8 doesn't do this
+Если \fIx\fP меньше \-1 (включая минус бесконечность), то будет сгенерирована
+ошибка области, и будет возвращено NaN (Not a Number, не число).
+.SH ОШИБКИ
+Смотрите \fBmath_error\fP(7), чтобы определить, какие ошибки могут возникать
+при вызове этих функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка области: \fIx\fP меньше \-1
+Значение \fIerrno\fP устанавливается в \fBEDOM\fP (но смотрите ДЕФЕКТЫ). Возникает
+исключение неправильной плавающей точки (\fBFE_INVALID\fP).
+.TP 
+Ошибка особой точки: \fIx\fP равно \-1
+Значение \fIerrno\fP устанавливается в \fBERANGE\fP (но смотрите
+ДЕФЕКТЫ). Возникает исключение деления плавающей запятой на ноль
+(\fBFE_DIVBYZERO\fP).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBlog1p\fP(),
+\fBlog1pf\fP(),
+\fBlog1pl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" BSD
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.SH ДЕФЕКТЫ
+.\" https://www.sourceware.org/bugzilla/show_bug.cgi?id=6792
+До версии 2.22 в реализации glibc при возникновении ошибки области \fIerrno\fP
+не присваивалось значение \fBEDOM\fP.
+.PP
+.\" https://www.sourceware.org/bugzilla/show_bug.cgi?id=6792
+До версии 2.22 в реализации glibc при возникновении ошибки диапазона
+\fIerrno\fP не присваивалось значение \fBERANGE\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBexp\fP(3), \fBexpm1\fP(3), \fBlog\fP(3)

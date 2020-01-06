@@ -1,0 +1,96 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) Andreas Gruenbacher, February 2001
+.\" Copyright (C) Silicon Graphics Inc, September 2001
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH REMOVEXATTR 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+removexattr, lremovexattr, fremovexattr \- удаление расширенных атрибутов
+.SH ОБЗОР
+.fam C
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/xattr.h>\fP
+.PP
+\fBint removexattr(const char\ *\fP\fIpath\fP\fB, const char\ *\fP\fIname\fP\fB);\fP
+\fBint lremovexattr(const char\ *\fP\fIpath\fP\fB, const char\ *\fP\fIname\fP\fB);\fP
+\fBint fremovexattr(int \fP\fIfd\fP\fB, const char\ *\fP\fIname\fP\fB);\fP
+.fi
+.fam T
+.SH ОПИСАНИЕ
+Расширенные атрибуты представляют собой пару \fIимя\fP:\fIзначение\fP и
+связываются с записями inode (файлы, каталоги, символьные ссылки и
+т.п.). Они являются расширениями к обычным атрибутам, связанным со всеми
+записями inode в системе (например, данные \fBstat\fP(2)). Полное описание
+модели расширенных атрибутов можно найти в \fBxattr\fP(7).
+.PP
+Вызов \fBremovexattr\fP() удаляет расширенный атрибут с именем, заданным в
+\fIname\fP и связанный с заданным \fIpath\fP в файловой системе.
+.PP
+Вызов \fBlremovexattr\fP() идентичен \fBremovexattr\fP(), за исключением случая
+работы с символьными ссылками; он удаляет расширенный атрибут на ссылке, а
+не на файле, на который она указывает.
+.PP
+Вызов \fBfremovexattr\fP() идентичен \fBremovexattr\fP(), отличием является то,
+что расширенный атрибут удаляется у открытого файла, на который указывает
+\fIfd\fP (возвращаемый \fBopen\fP(2)), а не на указанном в \fIpath\fP.
+.PP
+Имя расширенного атрибута представляет собой строку, заканчивающуюся
+NULL. Имя \fIname\fP включает префикс пространства имён; их может быть
+несколько, разрозненные пространства ассоциируются с разными inode.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается ноль. В случае ошибки возвращается \-1,
+а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBENODATA\fP
+.\" .RB ( ENOATTR
+.\" is defined to be a synonym for
+.\" .BR ENODATA
+.\" in
+.\" .IR <attr/attributes.h> .)
+Указанный атрибут не существует.
+.TP 
+\fBENOTSUP\fP
+Расширенные атрибуты не поддерживаются файловой системой или отключены.
+.PP
+Также могут возникать ошибки, описанные в \fBstat\fP(2).
+.SH ВЕРСИИ
+Данные системные вызовы доступны в Linux начиная с ядра версии 2.4;
+поддержка в glibc появилась в версии 2.3.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" .SH AUTHORS
+.\" Andreas Gruenbacher,
+.\" .RI < a.gruenbacher@computer.org >
+.\" and the SGI XFS development team,
+.\" .RI < linux-xfs@oss.sgi.com >.
+.\" Please send any bug reports or comments to these addresses.
+Данные системные вызовы есть только в Linux.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetfattr\fP(1), \fBsetfattr\fP(1), \fBgetxattr\fP(2), \fBlistxattr\fP(2), \fBopen\fP(2),
+\fBsetxattr\fP(2), \fBstat\fP(2), \fBsymlink\fP(7), \fBxattr\fP(7)

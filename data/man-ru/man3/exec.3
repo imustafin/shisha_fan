@@ -1,0 +1,208 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)exec.3	6.4 (Berkeley) 4/19/91
+.\"
+.\" Converted for Linux, Mon Nov 29 11:12:48 1993, faith@cs.unc.edu
+.\" Updated more for Linux, Tue Jul 15 11:54:18 1997, pacman@cqc.com
+.\" Modified, 24 Jun 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added note on casting NULL
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH EXEC 3 2019\-08\-02 GNU "Руководство программиста Linux"
+.SH ИМЯ
+execl, execlp, execle, execv, execvp, execvpe \- запуск файла на исполнение
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBextern char **environ;\fP
+.PP
+\fBint execl(const char *\fP\fIpathname\fP\fB, const char *\fP\fIarg\fP\fB, ...\fP
+\fB/* (char  *) NULL */);\fP
+\fBint execlp(const char *\fP\fIfile\fP\fB, const char *\fP\fIarg\fP\fB, ...\fP
+\fB/* (char  *) NULL */);\fP
+\fBint execle(const char *\fP\fIpathname\fP\fB, const char *\fP\fIarg\fP\fB, ...\fP
+\fB                /*, (char *) NULL, char * const \fP\fIenvp\fP\fB[] */);\fP
+\fBint execv(const char *\fP\fIpathname\fP\fB, char *const \fP\fIargv\fP\fB[]);\fP
+\fBint execvp(const char *\fP\fIfile\fP\fB, char *const \fP\fIargv\fP\fB[]);\fP
+\fBint execvpe(const char *\fP\fIfile\fP\fB, char *const \fP\fIargv\fP\fB[],\fP
+\fB                char *const \fP\fIenvp\fP\fB[]);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBexecvpe\fP(): _GNU_SOURCE
+.SH ОПИСАНИЕ
+Семейство функций \fBexec\fP() заменяет текущий образ процесса новым. Описанные
+в данной справочной странице функции являются оберткой для \fBexecve\fP(2)
+(подробней о см. замене текущего смотрите в справочной странице
+\fBexecve\fP(2)).
+.PP
+Первый аргумент этих функций \- имя исполняемого файла.
+.PP
+.\"
+Функции можно сгруппировать по символам после префикса «exec».
+.SS "l \- execl(), execlp(), execle()"
+.PP
+Параметр \fIconst char\ *arg\fP и последующие параметры можно воспринимать как
+параметры \fIarg0\fP, \fIarg1\fP, \&..., \fIargn\fP. Все вместе они описывают список
+из одного или нескольких указателей на строки (заканчивающиеся null),
+который представляет собой список параметров, доступных исполняемой
+программе. Первый параметр, по соглашению, должен указывать на имя,
+ассоциированное с файлом, который надо запустить. Список параметров
+\fIдолжен\fP заканчиваться указателем null и, так как это функция с переменным
+числом аргументов, этот указатель должен приводиться к \fI(char\ *) NULL\fP.
+.PP
+.\"
+В отличии от функций «l», функции «v» (далее) передают аргументы командной
+строки исполняемой программе в виде вектора.
+.SS "v \- execv(), execvp(), execvpe()"
+.PP
+Аргумент \fIchar\ *const argv[]\fP — это массив указателей на строки,
+заканчивающиеся null, которые представляют список аргументов, доступный
+новой программе. Первый аргумент, по соглашению, должен указать на имя,
+ассоциированное с файлом, который необходимо запустить. Массив указателей
+\fIдолжен\fP заканчиваться указателем null.
+.SS "e \- execle(), execvpe()"
+.PP
+Окружение вызывающего задаётся через аргумент \fIenvp\fP. Аргумент \fIenvp\fP —
+это массив указателей на строки с null в конце, который \fIдолжен\fP
+заканчиваться указателем null.
+.PP
+Все остальные функции \fBexec\fP() (без «e» в суффиксе) строят окружение нового
+образа процесса из внешней переменной \fIenviron\fP вызывающего процесса.
+.SS "p \- execlp(), execvp(), execvpe()"
+.PP
+Это функции повторяют действия оболочки, относящиеся к поиску исполняемого
+файла, если указанное имя исполняемого файла не содержит символ черты
+(/). Путь поиска задаётся в переменной окружения \fBPATH\fP (список каталогов,
+перечисленных через двоеточие). Если эта переменная не определена, то список
+по по умолчанию состоит из списка каталогов, возвращаемых
+\fIconfstr(_CS_PATH)\fP (обычно возвращает значение «/bin:/usr/bin») и,
+возможно, текущего рабочего каталога; подробности смотрите в ЗАМЕЧАНИЯХ.
+.PP
+Если указанное имя файла содержит в себе символ косой черты, переменная
+\fBPATH\fP будет проигнорирована, и будет запущен файл по указанному пути.
+.PP
+Кроме этого, есть отличия в обработке некоторых ошибок.
+.PP
+Если доступ к файлу запрещён (при попытке исполнения \fBexecve\fP(2)
+возвращается ошибка \fBEACCES\fP), то эти функции будут продолжать поиск в
+оставшихся путях. Однако, если больше никаких файлов не найдено, то они
+присваивают значение глобальной переменной \fIerrno\fP равным \fBEACCES\fP.
+.PP
+Если заголовок файла не распознаётся (при попытке выполнения \fBexecve\fP(2)
+возвращает \fBENOEXEC\fP), то эти функции запускают оболочку (\fI/bin/sh\fP) с
+полным именем файла в качестве первого параметра (если это тоже приводит к
+ошибке, то поиск останавливается).
+.PP
+Все остальные функции \fBexec\fP() (без «p» в суффиксе) в качестве первого
+аргумента используют путь (относительный или абсолютный) к будущей
+исполняемой программе.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBexec\fP() возвращают значение только при возникновении ошибки. При
+этом возвращается \-1, а \fIerrno\fP присваивается код ошибки.
+.SH ОШИБКИ
+Все функции могут завершиться с ошибкой и присвоить \fIerrno\fP значения любых
+ошибок \fBexecve\fP(2).
+.SH ВЕРСИИ
+Функция \fBexecvpe\fP() впервые появилась в glibc 2.11.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw29 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBexecl\fP(),
+\fBexecle\fP(),
+\fBexecv\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBexeclp\fP(),
+\fBexecvp\fP(),
+\fBexecvpe\fP()
+T}	Безвредность в нитях	MT\-Safe env
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.PP
+Функция \fBexecvpe\fP() является расширением GNU.
+.SH ЗАМЕЧАНИЯ
+.\" glibc commit 1eb8930608705702d5746e5491bab4e4429fcb83
+Путь поиска по умолчанию (используемый, если в окружении отсутствует
+переменная \fBPATH\fP) в разных системах отличается. Обычно, он содержит
+\fI/bin\fP и \fI/usr/bin\fP (в таком порядке), а также может содержать текущий
+рабочий каталог. В некоторых системах текущий рабочий каталог добавляется
+после \fI/bin\fP и \fI/usr/bin\fP, чтобы не запустить подложенную программу
+«троянского коня». В реализации glibc долгое время придерживались традиции,
+где текущий рабочий каталог включался в начало пути поиска. Однако, в
+результате переработки кода при разработке glibc 2.24 в путь поиска по
+умолчанию текущий рабочий каталог больше не стали добавлять совсем. Такое
+несущественное изменение посчитали преимуществом и не стали возвращать всё
+назад.
+.PP
+Поведение функций \fBexeclp\fP() и \fBexecvp\fP() при ошибках во время попыток
+исполнения файла сложилось исторически, но при этом оно не описано и не
+определено в стандарте POSIX. В BSD (и, возможно, других системах)
+выполняется автоматическое ожидание и повтор, если возникает ошибка
+\fBETXTBSY\fP. В Linux это воспринимается как невосстановимая ошибка, и она
+сразу возвращается.
+.PP
+Традиционно, функции \fBexeclp\fP() и \fBexecvp\fP() игнорировали все ошибки за
+исключением описанных выше, а также \fBENOMEM\fP и \fBE2BIG\fP, которые они
+возвращают. В Linux эти функции возвращают любую ошибку, помимо
+перечисленных ранее.
+.SH ДЕФЕКТЫ
+.\" https://sourceware.org/bugzilla/show_bug.cgi?id=19534
+.\"
+До glibc 2.24, \fBexecl\fP() и \fBexecle\fP() использовали \fBrealloc\fP(3) и поэтому
+были не безопасны для асинхронных сигналов, что нарушало требования
+POSIX.1. Это было исправлено в glibc 2.24.
+.SS "Специфика некоторых архитектур"
+Для совместимости с SunOS на sparc и sparc64, \fBexecv\fP() предоставляется как
+системный вызов ядра (с прототипом, показанным выше). Он \fIне\fP применяется в
+обёрточной функции \fBexecv\fP() на этих архитектурах.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsh\fP(1), \fBexecve\fP(2), \fBexecveat\fP(2), \fBfork\fP(2), \fBptrace\fP(2),
+\fBfexecve\fP(3), \fBsystem\fP(3), \fBenviron\fP(7)

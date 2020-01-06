@@ -1,0 +1,75 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH REPERTOIREMAP 5 2019\-03\-06 GNU "Руководство пользователя Linux"
+.SH ИМЯ
+repertoiremap \- отображает символические имена символов в кодовые точки
+Юникода
+.SH ОПИСАНИЕ
+Карта набора (repertoire map) определяет отображение между символическими
+именами (мнемониками) символов и кодовыми точками Юникода (Unicode code
+points) при компиляции локали с помощью \fBlocaledef\fP(1). Использование карты
+набора необязательно, она требуется только при использовании символических
+имён вместо предпочтительных теперь кодовых точек Юникода.
+.SS Синтаксис
+Файл repertoiremap начинается с заголовка, который может содержать следующие
+ключевые слова:
+.TP 
+\fIcomment_char\fP
+за которым указывается символ, использующийся в оставшихся строках файла как
+символ комментария. По умолчанию это символ решётки (#).
+.TP 
+\fIescape_char\fP
+за которым указывается символ, использующийся в оставшихся строках файла как
+символ экранирования для пометки символов, которые должны обрабатываться
+особым образом. По умолчанию это символ обратной косой черты (\e).
+.PP
+Раздел отображения начинается с ключевого слова \fICHARIDS\fP в первом столбце.
+.PP
+Строки отображения имеют следующий вид:
+.TP 
+\fI<символическое\-имя> <кодовая\-точка> комментарий\fP
+Одной строкой определяется одно отображение, \fIкомментарий\fP не обязателен.
+.PP
+Раздел отображения заканчивается строкой \fIEND CHARIDS\fP.
+.SH ФАЙЛЫ
+.TP 
+\fI/usr/share/i18n/repertoiremaps\fP
+Обычный путь по умолчанию для файла карты набора.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.2.
+.SH ЗАМЕЧАНИЯ
+Вместо карт набора следует использовать кодовые точки Юникода.
+.SH ПРИМЕР
+Знак евро можно определить следующим образом:
+.PP
+.nf
+<Eu> <U20AC> EURO SIGN
+.fi
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlocale\fP(1), \fBlocaledef\fP(1), \fBcharmap\fP(5), \fBlocale\fP(5)

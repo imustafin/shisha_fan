@@ -1,0 +1,108 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\"
+.\" Modified 1993-03-29, David Metcalfe
+.\" Modified 1993-07-24, Rik Faith (faith@cs.unc.edu)
+.\" Modified 2002-08-10, 2003-11-01 Walter Harms, aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DIV 3 2016\-03\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+div, ldiv, lldiv, imaxdiv \- вычисляет частное и остаток деления целого числа
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBdiv_t div(int \fP\fInumerator\fP\fB, int \fP\fIdenominator\fP\fB);\fP
+\fBldiv_t ldiv(long \fP\fInumerator\fP\fB, long \fP\fIdenominator\fP\fB);\fP
+\fBlldiv_t lldiv(long long \fP\fInumerator\fP\fB, long long \fP\fIdenominator\fP\fB);\fP
+.PP
+\fB#include <inttypes.h>\fP
+.PP
+\fBimaxdiv_t imaxdiv(intmax_t \fP\fInumerator\fP\fB, intmax_t \fP\fIdenominator\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.ad l
+.PP
+\fBlldiv\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBdiv\fP() вычисляет величину \fInumerator\fP/\fIdenominator\fP и возвращает
+частное и остаток в структуре \fIdiv_t\fP, которая содержит два целочисленных
+поля (в неопределённом порядке) \fIquot\fP и \fIrem\fP. Частное округляется до
+ближайшего нуля. Результат равняется \fIquot\fP*\fIdenominator\fP+\fIrem\fP =
+\fInumerator\fP.
+.PP
+Функции \fBldiv\fP(), \fBlldiv\fP() и \fBimaxdiv\fP() выполняют эту же функцию, деля
+числа соответствующего типа и возвращая результат в структуре с
+соответствующим именем, всегда с полями \fIquot\fP и \fIrem\fP того же типа, что и
+аргументы функции.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Структура \fIdiv_t\fP (и т. д.).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw33 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBdiv\fP(),
+\fBldiv\fP(),
+\fBlldiv\fP(),
+\fBimaxdiv\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4, 4.3BSD. Функции \fBlldiv\fP() и
+\fBimaxdiv\fP() добавлены в C99.
+.SH ПРИМЕР
+После
+.PP
+.in +4n
+.EX
+div_t q = div(\-5, 3);
+.EE
+.in
+.PP
+значения \fIq.quot\fP и \fIq.rem\fP равны \-1 и \-2, соответственно.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBabs\fP(3), \fBremainder\fP(3)

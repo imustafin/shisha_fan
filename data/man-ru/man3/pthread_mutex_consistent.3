@@ -1,0 +1,99 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2017, Yubin Ruan <ablacktshirt@gmail.com>
+.\" and Copyright (c) 2017, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_MUTEX_CONSISTENT 3 2017\-08\-20 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_mutex_consistent \- делает устойчивый мьютекс согласованным
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_mutex_consistent(pthread_mutex_t *\fP\fImutex\fP\fB);\fP
+.fi
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBpthread_mutex_consistent\fP():
+.br
+.RS 4
+.ad l
+_POSIX_C_SOURCE >= 200809L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Данная функция делает устойчивый мьютекс согласованным, если он находится в
+рассогласованном состоянии. Мьютекс может остаться в рассогласованном
+состоянии, если владелец завершил работу, удерживая мьютекс; в этом случае
+следующий владелец, захвативший мьютекс вызовом \fBpthread_mutex_lock\fP(),
+получит уведомление возвращаемым значением \fBEOWNERDEAD\fP .
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fIpthread_mutex_consistent\fP() возвращает 0. В
+противном случае возвращается положительный номер, указывающий на причину
+ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Мьютекс находит не в согласованном состоянии и не в рассогласованном
+состоянии.
+.SH ВЕРСИИ
+Функция \fBpthread_mutex_consistent\fP() впервые появилась в glibc 2.12.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Функция \fBpthread_mutex_consistent\fP() просто информирует реализацию, что
+состояние (общие данные) защищаемые мьютексом, были восстановлены в
+согласованное состояние и что теперь с мьютексом можно выполнять обычные
+операции. Перед вызовом \fBpthread_mutex_consistent\fP() приложение само должно
+приводить данные в согласованное состояние.
+.PP
+До появления \fBpthread_mutex_consistent\fP() в POSIX, в glibc определялся
+следующий эквивалент нестандартной функции, если определён \fB_GNU_SOURCE\fP:
+.PP
+.nf
+\fBint pthread_mutex_consistent(const pthread_mutex_t *\fP\fImutex\fP\fB);\fP
+.fi
+.PP
+Данный имеющийся только в GNU программный интерфейс, впервые появившийся в
+glibc 2.4, в настоящее время устарел и не должен использоваться в новых
+программах.
+.SH ПРИМЕР
+Смотрите \fBpthread_mutexattr_setrobust\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBpthread_mutexattr_init\fP(3), \fBpthread_mutex_lock\fP(3),
+\fBpthread_mutexattr_getrobust\fP(3), \fBpthread_mutexattr_setrobust\fP(3),
+\fBpthreads\fP(7)

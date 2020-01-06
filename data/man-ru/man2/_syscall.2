@@ -1,0 +1,158 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt (michael@moria.de),
+.\"   Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Tue Jul  6 12:42:46 MDT 1993 <dminer@nyx.cs.du.edu>
+.\" Added "Calling Directly" and supporting paragraphs
+.\"
+.\" Modified Sat Jul 24 15:19:12 1993 by Rik Faith <faith@cs.unc.edu>
+.\"
+.\" Modified 21 Aug 1994 by Michael Chastain <mec@shell.portal.com>:
+.\"   Added explanation of arg stacking when 6 or more args.
+.\"
+.\" Modified 10 June 1995 by Andries Brouwer <aeb@cwi.nl>
+.\"
+.\" 2007-10-23 mtk: created as a new page, by taking the content
+.\" specific to the _syscall() macros from intro(2).
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH _SYSCALL 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+_syscall \- выполняет системный вызов, который не поддерживается библиотекой
+(УСТАРЕЛ)
+.SH ОБЗОР
+\fB#include <linux/unistd.h>\fP
+.PP
+Макрос _syscall
+.PP
+желаемый системный вызов
+.SH ОПИСАНИЕ
+При использовании системного вызова необходима информация о его
+прототипе. Вам нужно знать количество аргументов, их типы и тип
+возвращаемого значения. Есть несколько макросов, которые облегчают
+выполнение системных вызовов. Они имеют вид:
+.PP
+.in +4n
+.EX
+_syscall\fIX\fP(\fItype\fP,\fIname\fP,\fItype1\fP,\fIarg1\fP,\fItype2\fP,\fIarg2\fP,…)
+.EE
+.in
+.PP
+где
+.IP
+\fIX\fP 0\(en6, количество аргументов, принимаемых системным вызовом
+.IP
+\fItype\fP \(em тип возвращаемого значения системного вызова
+.IP
+\fIname\fP \(em имя системного вызова
+.IP
+\fItypeN\fP \(em тип N\-го аргумента
+.IP
+\fIargN\fP \(em имя N\-го аргумента
+.PP
+Эти макросы создают функцию с именем \fIname\fP и указанными аргументами. После
+добавления _syscall() в код, вы можете вызывать системный вызов по имени
+\fIname\fP.
+.SH ФАЙЛЫ
+\fI/usr/include/linux/unistd.h\fP
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти макросы есть только в Linux и они устарели.
+.SH ЗАМЕЧАНИЯ
+Начиная, приблизительно, с ядра 2.6.18, макросы _syscall удалены из
+заголовочных файлов, используемых в пользовательском пространстве. Вместо
+них используйте \fBsyscall\fP(2). (Для некоторых архитектур, например ia64,
+макросы _syscall никогда не предоставлялись; на таких архитектурах всегда
+требуется макрос \fBsyscall\fP(2).)
+.PP
+Макрос _syscall() \fIне\fP создаёт прототип. Вам, вероятно, придётся создавать
+его самостоятельно, особенно пользователям C++.
+.PP
+Для системных вызовов не требуется возвращать только положительный или
+отрицательный код ошибки. Вам нужно прочитать исходный код, чтобы выяснить
+как возвращаются ошибки. Обычно, это отрицательный стандартный код ошибки,
+например, \-\fIEPERM\fP. Макрос _syscall() возвращает результат \fIr\fP из
+системного вызова, если \fIr\fP неотрицательно, но вернёт \-1 и установит
+значение \fIerrno\fP равное \-\fIr\fP, когда \fIr\fP отрицательно. Коды ошибок
+смотрите в \fBerrno\fP(3).
+.PP
+.\" The preferred way to invoke system calls that glibc does not know
+.\" about yet is via
+.\" .BR syscall (2).
+.\" However, this mechanism can be used only if using a libc
+.\" (such as glibc) that supports
+.\" .BR syscall (2),
+.\" and if the
+.\" .I <sys/syscall.h>
+.\" header file contains the required SYS_foo definition.
+.\" Otherwise, the use of a _syscall macro is required.
+.\"
+При определении системного вызова типы аргументов \fIдолжны\fP передаваться по
+значению или по ссылке (для составных типов, например структур).
+.SH ПРИМЕР
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <linux/unistd.h>       /* поддержка _syscallX */
+#include <linux/kernel.h>       /* struct sysinfo */
+
+_syscall1(int, sysinfo, struct sysinfo *, info);
+
+int
+main(void)
+{
+    struct sysinfo s_info;
+    int error;
+
+    error = sysinfo(&s_info);
+    printf("code error = %d\en", error);
+    printf("Uptime = %lds\enLoad: 1 min %lu / 5 min %lu / 15 min %lu\en"
+           "RAM: total %lu / free %lu / shared %lu\en"
+           "Memory in buffers = %lu\enSwap: total %lu / free %lu\en"
+           "Number of processes = %d\en",
+           s_info.uptime, s_info.loads[0],
+           s_info.loads[1], s_info.loads[2],
+           s_info.totalram, s_info.freeram,
+           s_info.sharedram, s_info.bufferram,
+           s_info.totalswap, s_info.freeswap,
+           s_info.procs);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SS "Результат работы примера"
+.EX
+code error = 0
+uptime = 502034s
+Load: 1 min 13376 / 5 min 5504 / 15 min 1152
+RAM: total 15343616 / free 827392 / shared 8237056
+Memory in buffers = 5066752
+Swap: total 27881472 / free 24698880
+Number of processes = 40
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBintro\fP(2), \fBsyscall\fP(2), \fBerrno\fP(3)

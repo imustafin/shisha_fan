@@ -1,0 +1,116 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) Tom Bjorkholm & Markus Kuhn, 1996
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 1996-04-01 Tom Bjorkholm <tomb@mydata.se>
+.\"            First version written
+.\" 1996-04-10 Markus Kuhn <mskuhn@cip.informatik.uni-erlangen.de>
+.\"            revision
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SCHED_RR_GET_INTERVAL 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sched_rr_get_interval \- определяет временной интервал SCHED_RR для заданного
+процесса
+.SH ОБЗОР
+\fB#include <sched.h>\fP
+.PP
+\fBint sched_rr_get_interval(pid_t \fP\fIpid\fP\fB, struct timespec *\fP\fItp\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBsched_rr_get_interval\fP() записывает циклический квант времени
+процесса \fIpid\fP в структуру \fItimespec\fP, на которую указывает
+\fItp\fP. Указанный процесс должен запускаться с политикой выполнения
+\fBSCHED_RR\fP.
+.PP
+Структура \fItimespec\fP описана следующим образом:
+.PP
+.in +4n
+.EX
+struct timespec {
+    time_t tv_sec;        /* секунды */
+    long   tv_nsec;       /* наносекунды */
+};
+.EE
+.in
+.PP
+.\" FIXME . On Linux, sched_rr_get_interval()
+.\" returns the timeslice for SCHED_OTHER processes -- this timeslice
+.\" is influenced by the nice value.
+.\" For SCHED_FIFO processes, this always returns 0.
+.\"
+.\" The round-robin time quantum value is not alterable under Linux
+.\" 1.3.81.
+.\"
+Если значение \fIpid\fP равно нулю, то в \fI*tp\fP записывается квант времени
+вызывающего процесса.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsched_rr_get_interval\fP() возвращается 0. При
+ошибке возвращается \-1, а значение \fIerrno\fP устанавливается соответствующим
+образом.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Проблема с копированием информации в пространство пользователя.
+.TP 
+\fBEINVAL\fP
+Неверное значение pid.
+.TP 
+\fBENOSYS\fP
+Системный вызов ещё не реализован (только в старых ядрах).
+.TP 
+\fBESRCH\fP
+Не удалось найти процесс с идентификатором, указанном в \fIpid\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В системах POSIX, в которых доступен вызов \fBsched_rr_get_interval\fP(),
+определён \fB_POSIX_PRIORITY_SCHEDULING\fP в \fI<unistd.h>\fP.
+.SS "Замечания, касающиеся Linux"
+.\" commit a4ec24b48ddef1e93f7578be53270f0b95ad666c
+В POSIX не определён какой\-либо механизм для контроля размера циклического
+кванта времени. В старых ядрах Linux для этого создан (непереносимый)
+метод. Квант можно контролировать подгоняя значение любезности процесса
+(см. \fBsetpriority\fP(2)). Назначение отрицательного (т.е., высокого) значения
+любезности приведёт к более длинному кванту; назначение положительного
+(т.е., низкого) значения любезности приведёт к сокращению кванта. Квант по
+умолчанию равен 0.1 секунды; степень, с которой значение любезности влияет
+на квант, различается в разных версиях ядра. Данный метод подгонки кванта
+был удалён начиная с Linux 2.6.24.
+.PP
+.\" commit ce0dbbbb30aee6a835511d5be446462388ba9eee
+.\" .SH BUGS
+.\" As of Linux 1.3.81
+.\" .BR sched_rr_get_interval ()
+.\" returns with error
+.\" ENOSYS, because SCHED_RR has not yet been fully implemented and tested
+.\" properly.
+В Linux 3.9 добавлен новый механизм регулировки (и просмотра) кванта
+\fBSCHED_RR\fP: файл \fI/proc/sys/kernel/sched_rr_timeslice_ms\fP отражает квант
+как значение в миллисекундах, по умолчанию равное 100. Запись 0 в этот файл
+сбрасывает квант в значение по умолчанию.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsched\fP(7)

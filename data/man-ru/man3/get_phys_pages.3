@@ -1,0 +1,90 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2015 William Woodruff (william@tuffbizz.com)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GET_PHYS_PAGES 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+get_phys_pages, get_avphys_pages \- возвращает количество физических страниц,
+а также количество доступных страниц
+.SH ОБЗОР
+.nf
+\fB#include <sys/sysinfo.h>\fP
+.PP
+\fBlong int get_phys_pages(void);\fP
+\fBlong int get_avphys_pages(void);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBget_phys_pages\fP() возвращает общее количество физических страниц
+памяти, доступных в системе.
+.PP
+Функция \fBget_avphys_pages\fP() возвращает количество доступных в данный
+момент физических страниц памяти в системе.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают значение согласно
+ОПИСАНИЮ. При ошибке возвращается \-1 и в \fIerrno\fP записывается номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBENOSYS\fP
+Система не может предоставить требуемую информацию (возможно, из\-за того,
+что не смонтирована файловая система \fI/proc\fP).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+Эти функции получают требуемую информацию из полей \fIMemTotal\fP и \fIMemFree\fP
+файла \fI/proc/meminfo\fP.
+.PP
+Следующие вызовы \fBsysconf\fP(3) предоставляют переносимый способ получения
+информации, возвращаемой этими функциями.
+.PP
+.in +4n
+.EX
+total_pages = sysconf(_SC_PHYS_PAGES); /* общее количество страниц */
+    avl_pages = sysconf(_SC_AVPHYS_PAGES); /* количество доступных страниц */
+.EE
+.in
+.SH ПРИМЕР
+В следующем примере показано использование \fBget_phys_pages\fP() и
+\fBget_avphys_pages\fP().
+.PP
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/sysinfo.h>
+
+int
+main(int argc, char *argv[])
+{
+    printf("В этой системе %ld страниц физической памяти и "
+            "доступно %ld страниц физической памяти.\en",
+            get_phys_pages(), get_avphys_pages());
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsysconf\fP(3)

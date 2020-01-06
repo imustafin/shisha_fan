@@ -1,0 +1,95 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1995 Paul Gortmaker
+.\" (gpg109@rsphy1.anu.edu.au)
+.\" Wed Nov 29 10:58:54 EST 1995
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH OUTB 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+outb, outw, outl, outsb, outsw, outsl, inb, inw, inl, insb, insw, insl,
+outb_p, outw_p, outl_p, inb_p, inw_p, inl_p \- ввод/вывод в порт
+.SH ОБЗОР
+.nf
+\fB#include <sys/io.h>\fP
+.PP
+\fBunsigned char inb(unsigned short int \fP\fIport\fP\fB);\fP
+\fBunsigned char inb_p(unsigned short int \fP\fIport\fP\fB);\fP
+\fBunsigned short int inw(unsigned short int \fP\fIport\fP\fB);\fP
+\fBunsigned short int inw_p(unsigned short int \fP\fIport\fP\fB);\fP
+\fBunsigned int inl(unsigned short int \fP\fIport\fP\fB);\fP
+\fBunsigned int inl_p(unsigned short int \fP\fIport\fP\fB);\fP
+.PP
+\fBvoid outb(unsigned char \fP\fIvalue\fP\fB, unsigned short int \fP\fIport\fP\fB);\fP
+\fBvoid outb_p(unsigned char \fP\fIvalue\fP\fB, unsigned short int \fP\fIport\fP\fB);\fP
+\fBvoid outw(unsigned short int \fP\fIvalue\fP\fB, unsigned short int \fP\fIport\fP\fB);\fP
+\fBvoid outw_p(unsigned short int \fP\fIvalue\fP\fB, unsigned short int \fP\fIport\fP\fB);\fP
+\fBvoid outl(unsigned int \fP\fIvalue\fP\fB, unsigned short int \fP\fIport\fP\fB);\fP
+\fBvoid outl_p(unsigned int \fP\fIvalue\fP\fB, unsigned short int \fP\fIport\fP\fB);\fP
+.PP
+\fBvoid insb(unsigned short int \fP\fIport\fP\fB, void *\fP\fIaddr\fP\fB,\fP
+\fB           unsigned long int \fP\fIcount\fP\fB);\fP
+\fBvoid insw(unsigned short int \fP\fIport\fP\fB, void *\fP\fIaddr\fP\fB,\fP
+\fB           unsigned long int \fP\fIcount\fP\fB);\fP
+\fBvoid insl(unsigned short int \fP\fIport\fP\fB, void *\fP\fIaddr\fP\fB,\fP
+\fB           unsigned long int \fP\fIcount\fP\fB);\fP
+\fBvoid outsb(unsigned short int \fP\fIport\fP\fB, const void *\fP\fIaddr\fP\fB,\fP
+\fB           unsigned long int \fP\fIcount\fP\fB);\fP
+\fBvoid outsw(unsigned short int \fP\fIport\fP\fB, const void *\fP\fIaddr\fP\fB,\fP
+\fB           unsigned long int \fP\fIcount\fP\fB);\fP
+\fBvoid outsl(unsigned short int \fP\fIport\fP\fB, const void *\fP\fIaddr\fP\fB,\fP
+\fB           unsigned long int \fP\fIcount\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Это семейство вызовов используется для низкоуровневой работы с портами
+ввода/вывода. Вызовы out* выполняют запись в порт, а вызовы in* выполняют
+чтение из порта; вызовы с суффиксом b работают с данными шириной один байт,
+а вызовы с суффиксом w работают с данными шириной в одно слово; вызовы с
+суффиксом _p ждут завершения операции ввода\-вывода.
+.PP
+.\" , given the following information
+.\" in addition to that given in
+.\" .BR outb (9).
+В основном, они предназначены для использования внутри ядра, но могут быть
+вызваны и из пользовательского пространства.
+.PP
+Вы должны скомпилировать свою программу с флагами \fB\-O\fP, \fB\-O2\fP и им
+подобными. Данные вызовы определены в виде встроенных макросов и не будут
+подставляться без включённой оптимизации, что приводит к появлению
+неразрешаемых ссылок в процессе компоновки программы.
+.PP
+Для того, чтобы запросить у ядра разрешение доступа к портам ввода\-вывода из
+приложения, работающего в пользовательском пространстве, используйте
+\fBioperm\fP(2) или \fBiopl\fP(2). Если этого не сделать, приложение получит
+сообщение об ошибке сегментации.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызовы \fBoutb\fP() и ему подобные зависят от конкретного
+оборудования. Аргумент \fIvalue\fP передаётся первым, а \fIport\fP \(em вторым,
+что является обратным порядком по сравнению с большинством реализаций этих
+вызовов в DOS.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBioperm\fP(2), \fBiopl\fP(2)

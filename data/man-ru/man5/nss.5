@@ -1,0 +1,89 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Red Hat, Inc. All rights reserved.
+.\" Author: Ulrich Drepper <drepper@redhat.com>
+.\"
+.\" %%%LICENSE_START(GPLv2_MISC)
+.\" This copyrighted material is made available to anyone wishing to use,
+.\" modify, copy, or redistribute it subject to the terms and conditions of the
+.\" GNU General Public License v.2.
+.\"
+.\" This program is distributed in the hope that it will be useful, but WITHOUT
+.\" ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+.\" FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+.\" more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NSS 5 2013\-02\-13 Linux "Руководство программиста Linux"
+.SH ИМЯ
+nss \- файл настройки диспетчера службы имён
+.SH ОПИСАНИЕ
+Функции, возвращающие данные из системной базы данных паролей или групп,
+включены в реализацию диспетчера службы имён (Name Service Switch)
+библиотеки GNU C. Все службы реализованы в виде независимых модулей,
+значительно отличающихся друг от друга.
+.PP
+Реализация библиотеки GNU C стабильна и не использует небезопасных данных. В
+некоторых ситуациях это может оказаться затратным, особенно если базы данных
+очень велики. Некоторые модули позволяют системному администратору включить
+упрощённый поиск, если известно, что это безопасно.
+.PP
+Есть несколько модулей, реализация которых изменилась после долгого
+времени. Если в реализации раньше жертвовали скоростью в угоду снижению
+потребления памяти, это может создать проблемы, если было важно обратное
+предпочтение.
+.PP
+В файле \fI/etc/default/nss\fP нескольким переменным задаются значения. Каждая
+переменная управляет поведением одного или нескольких модулей
+NSS. Пробельные символы игнорируются. Строки, начинающиеся с \(aq#\(aq,
+считаются комментариями.
+.PP
+Действующие переменные:
+.TP 
+\fBNETID_AUTHORITATIVE =\fP \fITRUE\fP|\fIFALSE\fP
+Если значение равно TRUE, то реализация NIS для функции \fBinitgroups\fP(3)
+будет принимать информацию из карты NIS \fInetid.byname\fP как достоверную
+(authoritative). Это может значительно увеличить скорость функции, если
+карта \fIgroup.byname\fP очень велика. Содержимое карты \fInetid.byname\fP
+используется \fBкак есть\fP. За корректность её данных ответственен системный
+администратор.
+.TP 
+\fBSERVICES_AUTHORITATIVE =\fP \fITRUE\fP|\fIFALSE\fP
+Если значение равно TRUE, то реализация NIS для функций \fBgetservbyname\fP(3)
+и \fBgetservbyname_r\fP(3) будет предполагать, что карта NIS
+\fIservices.byservicename\fP существует и достоверна; что она содержит ключи с
+/proto и без /proto для главной (primary) службы имён и псевдонимов
+служб. За корректность её данных ответственен системный администратор.
+.TP 
+\fBSETENT_BATCH_READ =\fP \fITRUE\fP|\fIFALSE\fP
+Если значение равно TRUE, то реализация NIS для функций \fBsetpwent\fP(3) и
+\fBsetgrent\fP(3) будет читать всю базу сразу, а затем, используя память,
+обрабатывать поступающие запросы друг за другом для каждого соответствующего
+вызова \fBgetpwent\fP(3) или \fBgetgrent\fP(3). В противном случае для получения
+следующей записи каждый вызов \fBgetpwent\fP(3) или \fBgetgrent\fP(3) может
+создавать сетевое обращение к серверу.
+.SH ФАЙЛЫ
+\fI/etc/default/nss\fP
+.SH ПРИМЕР
+Файл с настройками по умолчанию выглядит так:
+.PP
+.in +4n
+.EX
+NETID_AUTHORITATIVE=FALSE
+SERVICES_AUTHORITATIVE=FALSE
+SETENT_BATCH_READ=FALSE
+.EE
+.in
+.\" .SH AUTHOR
+.\" Ulrich Drepper <drepper@redhat.com>
+.\"
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fInsswitch.conf\fP

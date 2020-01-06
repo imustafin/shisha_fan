@@ -1,0 +1,180 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2016, IBM Corporation.
+.\" Written by Wainer dos Santos Moschetta <wainersm@linux.vnet.ibm.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume.
+.\" no responsibility for errors or omissions, or for damages resulting.
+.\" from the use of the information contained herein.  The author(s) may.
+.\" not have taken the same level of care in the production of this.
+.\" manual, which is licensed free of charge, as they might when working.
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   Glibc 2.25 source code and manual.
+.\"   C99 standard document.
+.\"   ISO/IEC TS 18661-1 technical specification.
+.\"   snprintf and other man.3 pages.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STRFROMD 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+strfromd, strfromf, strfroml \- преобразуют значение с плавающей запятой в
+строку
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint strfromd(char *restrict \fP\fIstr\fP\fB, size_t \fP\fIn\fP\fB,\fP
+\fB             const char *restrict \fP\fIformat\fP\fB, double \fP\fIfp\fP\fB);\fP
+\fBint strfromf(char *restrict \fP\fIstr\fP\fB, size_t \fP\fIn\fP\fB,\fP
+\fB             const char *restrict \fP\fIformat\fP\fB, float \fP\fIfp\fP\fB);\fP
+\fBint strfroml(char *restrict \fP\fIstr\fP\fB, size_t \fP\fIn\fP\fB,\fP
+\fB             const char *restrict \fP\fIformat\fP\fB, long double \fP\fIfp\fP\fB);\fP
+.fi
+.PP
+.in -4
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBstrfromd\fP(), \fBstrfromf\fP(), \fBstrfroml\fP():
+.RS 4
+__STDC_WANT_IEC_60559_BFP_EXT__
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Данные функции преобразуют значение с плавающей запятой \fIfp\fP в строку
+символов \fIstr\fP в соответствии со строкой формата \fIformat\fP. В \fIstr\fP
+записывается не более \fIn\fP символов.
+.PP
+Конечный символ null ('\e0') записывается только, если \fIn\fP достаточно
+велико; в противном случае записываемая строка обрезается до \fIn\fP символов.
+.PP
+Функции \fBstrfromd\fP(), \fBstrfromf\fP() и \fBstrfroml\fP() эквивалентны
+.PP
+.in +4n
+.EX
+snprintf(str, n, format, fp);
+.EE
+.in
+.PP
+не считая строки \fIformat\fP.
+.SS "Структура строки формата"
+Строка \fIformat\fP должна начинаться с символа \(aq%\(aq. За ним следует
+необязательное значение точности, состоящее из символа точки (.) и
+необязательного десятичного числа. Если число не указано, то используется
+точность ноль. В конце строка формата должна содержать один из
+преобразователей: \fBa\fP, \fBA\fP, \fBe\fP, \fBE\fP, \fBf\fP, \fBF\fP, \fBg\fP или \fBG\fP.
+.PP
+Преобразователи применяются в соответствии с типом плавающей запятой,
+представленным суффиксом функции. В связи с этим, в отличии от \fBsnprintf\fP()
+строка формата не содержит символа модификатора длины. Подробное описание
+преобразователей смотрите в \fBsnprintf\fP(3).
+.PP
+Для значений бесконечности и NaN реализация соответствует стандарту C99:
+.PP
+.RS
+Если \fIfp\fP равно NaN, +NaN или \-NaN и указан преобразователь \fBf\fP (или \fBa\fP,
+\fBe\fP, \fBg\fP), то выполняется преобразование в «nan», «nan» или «\-nan»,
+соответственно. Если указан преобразователь \fBF\fP (или \fBA\fP, \fBE\fP, \fBG\fP), то
+выполняется преобразование в «NAN» или «\-NAN».
+.PP
+Если \fIfp\fP равно бесконечности, то она схожим образом преобразуется в [\-]inf
+или [\-]INF.
+.RE
+.PP
+Некорректная строка \fIformat\fP вызывает непредсказуемое поведение.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBstrfromd\fP(), \fBstrfromf\fP() и \fBstrfroml\fP() возвращают количество
+символов, которое было бы записано в \fIstr\fP, если был \fIn\fP было бы
+достаточно большим, без учёта конечного символа null.  То есть если было
+возвращено значение \fIn\fP или больше, то это указывает на то, что результат
+был обрезан.
+.SH ВЕРСИИ
+Функции \fBstrfromd\fP(), \fBstrfromf\fP() и \fBstrfroml\fP() доступны в glibc
+начиная с версии 2.25.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7) и разделе
+\fBPOSIX Safety Concepts\fP руководства библиотеки GNU C.
+.PP
+.TS
+allbox;
+lbw11 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstrfromd\fP(),
+\fBstrfromf\fP(),
+\fBstrfroml\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+\^	Безопасность в асинхронных сигналах	AS\-Unsafe heap
+\^	Безопасность в асинхронной отмене	AC\-Unsafe mem
+.TE
+.sp 1
+Замечание: эти атрибуты только предварительны.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, ISO/IEC TS 18661\-1.
+.SH ЗАМЕЧАНИЯ
+Функции \fBstrfromd\fP(), \fBstrfromf\fP() и \fBstrfroml\fP() учитывают категорию
+\fBLC_NUMERIC\fP текущей локали.
+.SH ПРИМЕРЫ
+Преобразует значение 12.1 с типом float в строку используя десятичное
+написание, равную «12.100000»:
+.PP
+.in +4
+.EX
+#define __STDC_WANT_IEC_60559_BFP_EXT__
+#include <stdlib.h>
+int ssize = 10;
+char s[ssize];
+strfromf(s, ssize, "%f", 12.1);
+.EE
+.in
+.PP
+Преобразует значение 12.3456 с типом float в строку используя десятичное
+написание с двумя цифрами точности, равную «12.35»:
+.PP
+.in +4
+.EX
+#define __STDC_WANT_IEC_60559_BFP_EXT__
+#include <stdlib.h>
+int ssize = 10;
+char s[ssize];
+strfromf(s, ssize, "%.2f", 12.3456);
+.EE
+.in
+.PP
+Преобразует значение 12.345e19 с типом double в строку используя научное
+написание с нулевой точностью, равную «1E+20»:
+.PP
+.in +4
+.EX
+#define __STDC_WANT_IEC_60559_BFP_EXT__
+#include <stdlib.h>
+int ssize = 10;
+char s[ssize];
+strfromd(s, ssize, "%.E", 12.345e19);
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBatof\fP(3), \fBsnprintf\fP(3), \fBstrtod\fP(3)

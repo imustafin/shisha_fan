@@ -1,0 +1,106 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This page was taken from the 4.4BSD-Lite CDROM (BSD license)
+.\"
+.\" %%%LICENSE_START(BSD_ONELINE_CDROM)
+.\" This page was taken from the 4.4BSD-Lite CDROM (BSD license)
+.\" %%%LICENSE_END
+.\"
+.\" @(#)getrpcent.3n	2.2 88/08/02 4.0 RPCSRC; from 1.11 88/03/14 SMI
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETRPCENT 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+getrpcent, getrpcbyname, getrpcbynumber, setrpcent, endrpcent \- возвращают
+запись RPC
+.SH ОБЗОР
+.nf
+\fB#include <netdb.h>\fP
+.PP
+\fBstruct rpcent *getrpcent(void);\fP
+.PP
+\fBstruct rpcent *getrpcbyname(const char *\fP\fIname\fP\fB);\fP
+.PP
+\fBstruct rpcent *getrpcbynumber(int \fP\fInumber\fP\fB);\fP
+.PP
+\fBvoid setrpcent(int \fP\fIstayopen\fP\fB);\fP
+.PP
+\fBvoid endrpcent(void);\fP
+.fi
+.SH ОПИСАНИЕ
+.PP
+Функции \fBgetrpcent\fP(), \fBgetrpcbyname\fP() и \fBgetrpcbynumber\fP() возвращают
+указатель на объект с описанной ниже структурой, содержащую разделённую на
+поля запись из базы данных номеров программы RPC.
+.PP
+.in +4n
+.EX
+struct rpcent {
+    char  *r_name;     /* имя сервера для этой программы RPC */
+    char **r_aliases;  /* список псевдонимов */
+    long   r_number;   /* номер программы RPC */
+};
+.EE
+.in
+.PP
+Члены структуры:
+.RS 4
+.TP  12
+\fIr_name\fP
+Имя сервера для этой программы RPC.
+.TP 
+\fIr_aliases\fP
+Список альтернативных имён программы RPC, завершающийся NULL.
+.TP 
+\fIr_number\fP
+Номер программы RPC для этой службы.
+.RE
+.PP
+Функция \fBgetrpcent\fP() считывает следующую запись из базы данных. При
+необходимости будет открыто подключение к базе.
+.PP
+Функция \fBsetrpcent\fP() открывает соединение к базе и устанавливает следующую
+запись к первой записи. Если \fIstayopen\fP не равен нулю, то подключение к
+базе между вызовами нескольких функций \fBgetrpc*\fP() не будет закрыто.
+.PP
+Функция \fBendrpcent\fP() закрывает подключение к базе.
+.PP
+Функции \fBgetrpcbyname\fP() и \fBgetrpcbynumber\fP() выполняют последовательный
+поиск от начала файла до нахождения имени программы RPC, её номера или конца
+файла.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBgetrpcent\fP(), \fBgetrpcbyname\fP() и
+\fBgetrpcbynumber\fP() возвращают указатель на статически выделенную структуру
+\fIrpcent\fP. При ошибке или EOF возвращается NULL.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/rpc\fP
+база данных программных номеров RPC
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw28 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetrpcent\fP(),
+\fBgetrpcbyname\fP(),
+.br
+\fBgetrpcbynumber\fP()
+T}	Безвредность в нитях	MT\-Unsafe
+T{
+\fBsetrpcent\fP(),
+\fBendrpcent\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Нет в POSIX.1. Присутствует в BSD, Solaris и многих других системах.
+.SH ДЕФЕКТЫ
+Вся информация располагается в статической области, поэтому для сохранения
+должна быть скопирована.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetrpcent_r\fP(3), \fBrpc\fP(5), \fBrpcinfo\fP(8), \fBypserv\fP(8)

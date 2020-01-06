@@ -1,0 +1,113 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Mon Apr 12 12:49:57 1993, David Metcalfe
+.\" Modified Sat Jul 24 18:56:22 1993, Rik Faith (faith@cs.unc.edu)
+.\" Modified Wed Feb 20 21:09:36 2002, Ian Redfern (redferni@logica.com)
+.\" 2008-07-09, mtk, add rawmemchr()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MEMCHR 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+memchr, memrchr, rawmemchr \- выполняют поиск символа в памяти
+.SH ОБЗОР
+.nf
+\fB#include <string.h>\fP
+.PP
+\fBvoid *memchr(const void *\fP\fIs\fP\fB, int \fP\fIc\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.PP
+\fBvoid *memrchr(const void *\fP\fIs\fP\fB, int \fP\fIc\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.PP
+\fBvoid *rawmemchr(const void *\fP\fIs\fP\fB, int \fP\fIc\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc (смотрите
+\fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBmemrchr\fP(), \fBrawmemchr\fP(): _GNU_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBmemchr\fP() сканирует первые \fIn\fP байт участка памяти, указанного в
+\fIs\fP, в поисках экземпляра \fIc\fP. Считается, что байты в памяти, указанной
+\fIs\fP, и значение \fIc\fP имеют тип \fIunsigned char\fP.
+.PP
+Функция \fBmemrchr\fP() похожа на \fBmemchr\fP(), за исключением того, что она
+ищет в участке \fIn\fP байт, указанных в \fIs\fP, не сначала, а с конца.
+.PP
+Функция \fBrawmemchr\fP() похожа на \fBmemchr\fP(): она подразумевает (то есть
+программист в этом уверен), что экземпляр \fIc\fP точно находится где\-то в
+памяти начало которой указано \fIs\fP, и при это производит оптимизированный
+поиск символа \fIc\fP (то есть, не используется счётчик для ограничения
+диапазона поиска). Если экземпляр \fIc\fP не найден, то результат
+непредсказуем. Следующий вызов является примером быстрого поиска
+завершающего строку байта null:
+.PP
+.in +4n
+.EX
+char *p = rawmemchr(s,\ \(aq\e0\(aq);
+.EE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBmemchr\fP() и \fBmemrchr\fP() возвращают указатель на совпавший байт,
+либо NULL, если в указанном участке памяти искомого байта нет.
+.PP
+Функция \fBrawmemchr\fP() возвращает указатель на совпавший байт (если он был
+обнаружен). Если совпадений не найдено, результат не определён.
+.SH ВЕРСИИ
+Функция \fBrawmemchr\fP() впервые появилась в glibc 2.1.
+.PP
+Функция \fBmemrchr\fP() впервые появилась в glibc 2.2.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw32 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmemchr\fP(),
+\fBmemrchr\fP(),
+\fBrawmemchr\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBmemchr\fP(): POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4, 4.3BSD.
+.PP
+Функция \fBmemrchr\fP() является расширением GNU, доступным в glibc начиная с
+версии 2.1.91.
+.PP
+Функция \fBrawmemchr\fP() является расширением GNU, доступным в glibc начиная с
+версии 2.1.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbstring\fP(3), \fBffs\fP(3), \fBindex\fP(3), \fBmemmem\fP(3), \fBrindex\fP(3),
+\fBstrchr\fP(3), \fBstrpbrk\fP(3), \fBstrrchr\fP(3), \fBstrsep\fP(3), \fBstrspn\fP(3),
+\fBstrstr\fP(3), \fBwmemchr\fP(3)

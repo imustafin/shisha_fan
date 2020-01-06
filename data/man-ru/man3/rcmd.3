@@ -1,0 +1,220 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"	$NetBSD: rcmd.3,v 1.9 1996/05/28 02:07:39 mrg Exp $
+.\"
+.\" Copyright (c) 1983, 1991, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)rcmd.3	8.1 (Berkeley) 6/4/93
+.\"
+.\" Contributed as Linux man page by David A. Holland, 970908
+.\" I have not checked whether the Linux situation is exactly the same.
+.\"
+.\" 2007-12-08, mtk, Converted from mdoc to man macros
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RCMD 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+rcmd, rresvport, iruserok, ruserok, rcmd_af, rresvport_af, iruserok_af,
+ruserok_af \- процедуры возврата потока в удалённую команду
+.SH ОБЗОР
+.nf
+\fB#include <netdb.h> \ \ \fP/* или <unistd.h> в некоторых системах */
+.PP
+\fBint rcmd(char **\fP\fIahost\fP\fB, unsigned short \fP\fIinport\fP\fB, const char *\fP\fIlocuser\fP\fB, \fP
+\fB         const char *\fP\fIremuser\fP\fB, const char *\fP\fIcmd\fP\fB, int *\fP\fIfd2p\fP\fB);\fP
+.PP
+\fBint rresvport(int *\fP\fIport\fP\fB);\fP
+.PP
+\fBint iruserok(uint32_t \fP\fIraddr\fP\fB, int \fP\fIsuperuser\fP\fB, \fP
+\fB             const char *\fP\fIruser\fP\fB, const char *\fP\fIluser\fP\fB);\fP
+.PP
+\fBint ruserok(const char *\fP\fIrhost\fP\fB, int \fP\fIsuperuser\fP\fB, \fP
+\fB            const char *\fP\fIruser\fP\fB, const char *\fP\fIluser\fP\fB);\fP
+.PP
+\fBint rcmd_af(char **\fP\fIahost\fP\fB, unsigned short \fP\fIinport\fP\fB, const char *\fP\fIlocuser\fP\fB, \fP
+\fB            const char *\fP\fIremuser\fP\fB, const char *\fP\fIcmd\fP\fB, int *\fP\fIfd2p\fP\fB,\fP
+\fB            sa_family_t \fP\fIaf\fP\fB);\fP
+.PP
+\fBint rresvport_af(int *\fP\fIport\fP\fB, sa_family_t \fP\fIaf\fP\fB);\fP
+.PP
+\fBint iruserok_af(const void *\fP\fIraddr\fP\fB, int \fP\fIsuperuser\fP\fB, \fP
+\fB                const char *\fP\fIruser\fP\fB, const char *\fP\fIluser\fP\fB, sa_family_t \fP\fIaf\fP\fB);\fP
+.PP
+\fBint ruserok_af(const char *\fP\fIrhost\fP\fB, int \fP\fIsuperuser\fP\fB, \fP
+\fB               const char *\fP\fIruser\fP\fB, const char *\fP\fIluser\fP\fB, sa_family_t \fP\fIaf\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBrcmd\fP(),
+\fBrcmd_af\fP(),
+\fBrresvport\fP(),
+\fBrresvport_af\fP(),
+\fBiruserok\fP(),
+\fBiruserok_af\fP(),
+\fBruserok\fP(),
+\fBruserok_af\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBrcmd\fP() применяется суперпользователем для исполнения команды на
+удалённой машине при помощи схемы аутентификации, основанной на
+зарезервированных номерах портов. Функция \fBrresvport\fP() возвращает файловый
+дескриптор сокета с адресом в привилегированном пространстве портов. Функции
+\fBiruserok\fP() и \fBruserok\fP() используются серверами для аутентификации
+клиентов, запрашивающих сервис \fBrcmd\fP(). Все четыре функции используются
+сервером \fBrshd\fP(8) (среди прочих).
+.SS rcmd()
+.PP
+Функция \fBrcmd\fP() ищет узел \fI*ahost\fP, используя \fBgethostbyname\fP(3) и
+возвращает \-1, если узел не существует. Иначе \fI*ahost\fP устанавливается
+равным стандартному имени узла, при этом создаётся соединение с сервером на
+хорошо известном порту Интернет \fIinport\fP.
+.PP
+Если соединение успешно установлено, то вызывающему возвращается сокет в
+домене Интернет типа \fBSOCK_STREAM\fP, который для удалённой команды считается
+\fIstdin\fP и \fIstdout\fP. Если \fIfd2p\fP не равно нулю, то устанавливается
+вспомогательный канал до управляющего процесса, а его файловый дескриптор
+будет помещён в \fI*fd2p\fP. Управляющий процесс возвращает диагностический
+вывод из команды (устройства 2) в этот канал, а также принимает байты из
+этого канала, считая их номерами сигналов UNIX, для их пересылки группе
+процессов команды. Если \fIfd2p\fP равно 0, то \fIstderr\fP (устройство 2
+удалённой команды) будет работать аналогично \fIstdout\fP и для отправки
+произвольных сигналов в удалённый процесс не будет создано никаких ходов,
+хотя вы сможете привлечь к себе внимание, используя внеполосную передачу
+данных.
+.PP
+Протокол подробно описан в \fBrshd\fP(8).
+.SS rresvport()
+.PP
+.\"
+Функция \fBrresvport\fP() используется для получения сокета с привязанным
+привилегированным портом. Этот сокет подходит для использования функцией
+\fBrcmd\fP() и некоторыми другими. Привилегированные порты Интернет — это порты
+с номерами от 0 до 1023. Только привилегированный процесс (в Linux это
+процесс с мандатом \fBCAP_NET_BIND_SERVICE\fP в пользовательском пространстве
+имён, управляющим своим сетевым пространством имён) может привязаться к
+привилегированному порту. В реализации glibc эта функция ограничена в
+использовании портов номерами с 512 по 1023. Аргумент \fIport\fP является
+значением\-результатом: передаваемое в вызов значение используется в качестве
+начальной точки кругового поиска в диапазоне портов; при (успешном)
+возврате, он содержит номер порта, к которому была осуществлена привязка.
+.SS "iruserok() и ruserok()"
+.PP
+Параметрами функций \fBiruserok\fP() и \fBruserok\fP() являются, соответственно,
+IP\-адрес или имя удалённого узла, два имени пользователя и флаг,
+указывающий, является ли имя локального пользователя именем
+суперпользователя. Далее, если пользователь \fIне\fP является
+суперпользователем, они проверяют файл \fI/etc/hosts.equiv\fP. Если ничего не
+находится или завершается с ошибкой, то проверяется \fI.rhosts\fP в домашнем
+каталоге пользователя (для получения информации о том, разрешены ли запросы
+к службе).
+.PP
+Если этот файл не существует, не является обычным файлом, если его
+владельцем является не текущий пользователь или не суперпользователь, если
+он доступен для записи кому\-то помимо владельца или на него есть жёсткая
+ссылка, то проверка завершается с ошибкой. Если имя машины указано в файле
+\fIhosts.equiv\fP, или если узел и имя пользователя для удалённого доступа
+найдены в файле \fI.rhosts\fP, то возвращается 0; иначе \fBiruserok\fP() и
+\fBruserok\fP() возвращают \-1. Если имя локального домена (полученное вызовом
+\fBgethostname\fP(2)) совпадает с именем удалённого домена, то может
+указываться только имя машины.
+.PP
+Если IP\-адрес удалённого узла известен, то должна использоваться
+\fBiruserok\fP() вместо \fBruserok\fP(), так как при этом не требуется доверия к
+DNS\-серверу для домена удалённого узла.
+.SS "Варианты *_af()"
+Все описанные ранее функции работают с сокетами IPv4 (\fBAF_INET\fP). Варианты
+«_af»  имеют дополнительный аргумент, который позволяет указать адресное
+семейство сокета. Для этих функций значением аргумента \fIaf\fP может быть
+\fBAF_INET\fP или \fBAF_INET6\fP. Также \fBrcmd_af\fP() поддерживает использование
+\fBAF_UNSPEC\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBrcmd\fP() при успешном выполнении возвращает корректный номер
+дескриптора сокета. При ошибках возвращается \-1 и в стандартный поток ошибок
+выводится диагностическое сообщение.
+.PP
+Функция \fBrresvport\fP() при успешном выполнении возвращает корректный
+привязанный дескриптор сокета. При ошибках возвращается \-1 и в глобальную
+переменную \fIerrno\fP записывается код ошибки. Код ошибки \fBEAGAIN\fP означает
+«Все сетевые порты заняты».
+.PP
+Информацию о результатах \fBruserok\fP() и \fBiruserok\fP() смотрите выше.
+.SH ВЕРСИИ
+Функции \fBiruserok_af\fP(), \fBrcmd_af\fP(), \fBrresvport_af\fP() и \fBruserok_af\fP()
+появились в glibc начиная с версии 2.2.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBrcmd\fP(),
+\fBrcmd_af\fP()
+T}	Безвредность в нитях	MT\-Unsafe
+T{
+\fBrresvport\fP(),
+\fBrresvport_af\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBiruserok\fP(),
+\fBruserok\fP(),
+.br
+\fBiruserok_af\fP(),
+\fBruserok_af\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Отсутствуют в POSIX.1. Есть в BSD, Solaris и многих других системах. Данные
+функции впервые появились в 4.2BSD. Варианты «_af» были добавлены позднее и
+распространены не так широко.
+.SH ДЕФЕКТЫ
+.\" Bug filed 25 Nov 2007:
+.\" http://sources.redhat.com/bugzilla/show_bug.cgi?id=5399
+Функции \fBiruserok\fP() и \fBiruserok_af\fP() объявляются в заголовках glibc
+только начиная с версии 2.12.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBrlogin\fP(1), \fBrsh\fP(1), \fBintro\fP(2), \fBrexec\fP(3), \fBrexecd\fP(8),
+\fBrlogind\fP(8), \fBrshd\fP(8)

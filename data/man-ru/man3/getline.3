@@ -1,0 +1,153 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2001 John Levon <moz@compsoc.man.ac.uk>
+.\" Based in part on GNU libc documentation
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETLINE 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getline, getdelim \- разделяет входные данные на строки
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+.PP
+\fBssize_t getline(char **\fP\fIlineptr\fP\fB, size_t *\fP\fIn\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.PP
+\fBssize_t getdelim(char **\fP\fIlineptr\fP\fB, size_t *\fP\fIn\fP\fB, int \fP\fIdelim\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBgetline\fP(), \fBgetdelim\fP():
+.PD 0
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.PD
+.ad
+.SH ОПИСАНИЕ
+Функция \fBgetline\fP() считывает целую строку из \fIstream\fP, сохраняет адрес
+буфера с текстом в \fI*lineptr\fP. Буфер завершается null и включает символ
+новой строки, если был найден разделитель для новой строки.
+.PP
+Если \fI*lineptr\fP равно NULL и \fI*n\fP равно 0 перед вызовом, то \fBgetline\fP()
+выделит буфер для хранения строки. Этот буфер должен быть высвобожден
+программой пользователя, даже если \fBgetline\fP() завершилась с ошибкой.
+.PP
+Как альтернатива, перед вызовом \fBgetline\fP(), \fI*lineptr\fP может содержать
+указатель на буфер, выделенный с помощью \fBmalloc\fP(3) размером \fI*n\fP
+байтов. Если буфер недостаточно велик для размещения строки, то \fBgetline\fP()
+изменяет размер буфера с помощью \fBrealloc\fP(3), обновляя \fI*lineptr\fP и \fI*n\fP
+при необходимости.
+.PP
+В любом случае при успешном выполнении вызова \fI*lineptr\fP и \fI*n\fP будут
+содержать правильный адрес буфера и его размер, соответственно.
+.PP
+Функция \fBgetdelim\fP() работает аналогично \fBgetline\fP(), за исключением того,
+что в аргументе \fIdelimiter\fP можно задать разделитель строки, отличный от
+символа новой строки. Как и с \fBgetline\fP(), символ\-разделитель не
+добавляется, если его было в входных данных до конца файла.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBgetline\fP() и \fBgetdelim\fP() возвращают количество
+считанных символов, включая символ разделителя, но не включая завершающий
+байт null (\(aq\e0\(aq). Это значение может использоваться для обработки
+встроенных байтов null при чтении строки.
+.PP
+Обе функции возвращают \-1 при ошибках чтения строки (включая условие
+достижения конца файла). При возникновении ошибки в \fIerrno\fP сохраняется её
+значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Некорректные параметры (\fIn\fP или \fIlineptr\fP равно NULL или неправильное
+значение \fIstream\fP).
+.TP 
+\fBENOMEM\fP
+Не удалось выделить или переместить строчный буфер.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetline\fP(),
+\fBgetdelim\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Изначально, функции \fBgetline\fP() и \fBgetdelim\fP() были расширениями
+GNU. Позднее они были стандартизированы в POSIX.1\-2008.
+.SH ПРИМЕР
+.EX
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+
+int
+main(int argc, char *argv[])
+{
+    FILE *stream;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t nread;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s <файл>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    stream = fopen(argv[1], "r");
+    if (stream == NULL) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
+    }
+
+    while ((nread = getline(&line, &len, stream)) != \-1) {
+        printf("Retrieved line of length %zu:\en", nread);
+        fwrite(line, nread, 1, stdout);
+    }
+
+    free(line);
+    fclose(stream);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBread\fP(2), \fBfgets\fP(3), \fBfopen\fP(3), \fBfread\fP(3), \fBscanf\fP(3)

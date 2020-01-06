@@ -1,0 +1,124 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1994 Michael Haardt (michael@moria.de), 1994-06-04
+.\" Copyright (c) 1995 Michael Haardt
+.\"      (michael@cantor.informatik.rwth-aachen.de), 1995-03-16
+.\" Copyright (c) 1996 Andries Brouwer (aeb@cwi.nl), 1996-01-13
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 1996-01-13 aeb: merged in some text contributed by Melvin Smith
+.\"   (msmith@falcon.mercer.peachnet.edu) and various other changes.
+.\" Modified 1996-05-16 by Martin Schulze (joey@infodrom.north.de)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PERROR 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+perror \- печатает системное сообщение об ошибке
+.SH ОБЗОР
+\fB#include <stdio.h>\fP
+.PP
+\fBvoid perror(const char *\fP\fIs\fP\fB);\fP
+
+\fB#include <errno.h>\fP
+.PP
+\fBconst char * const \fP\fIsys_errlist\fP\fB[];\fP
+.br
+\fBint \fP\fIsys_nerr\fP\fB;\fP
+.br
+\fBint \fP\fIerrno\fP\fB; \fP/* в реальности объявлено не так; смотрите errno(3) */
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fIsys_errlist\fP,
+\fIsys_nerr\fP:
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBperror\fP() выводит сообщение в стандартный поток ошибок,
+описывающее последнюю ошибку, возникшую при вызове системной или
+библиотечной функции.
+.PP
+Сначала печатается строка из аргумента \fIs\fP (если \fIs\fP не равно NULL и \fI*s\fP
+не указывает на байт null (\(aq\e0\(aq)), после неё двоеточие и
+пробел. Затем выводится сообщение о ошибке, соответствующее текущему
+значению \fIerrno\fP, а после этого символ новой строки.
+.PP
+Для большей информативности в строке параметра должно быть имя функции, в
+которой произошла ошибка.
+.PP
+Глобальный список ошибок \fIsys_errlist\fP[], к которым можно обращаться по
+номеру \fIerrno\fP, можно использовать для получения сообщения об ошибке без
+символа новой строки. Самый большой номер сообщения в таблице равен
+\fIsys_nerr\fP\-1. Будьте внимательны при прямом доступе к этому списку, так как
+новые значения ошибок могут быть ещё не добавлены в \fIsys_errlist\fP[]. В
+настоящее время использование \fIsys_errlist\fP[] не рекомендуется; вместо
+этого используйте \fBstrerror\fP(3).
+.PP
+Когда завершается ошибкой системный вызов, обычно возвращается \-1 и
+изменяется переменная \fIerrno\fP для указания что пошло не так (её значения
+можно найти в \fI<errno.h>\fP). Многие библиотечные функции работают
+также. Функция \fBperror\fP() служит для перевода этого кода ошибки в форму,
+понятную человеку. Заметим, что значение \fIerrno\fP не определено после
+успешного выполнения системного вызова или библиотечной функции: этот вызов
+может также изменить эту переменную даже при успешном выполнении, например
+из\-за ошибки другой библиотечной функции, которая вызывалась при работе. То
+есть, если после вызова функции сразу не вызывается \fBperror\fP(), значение
+\fIerrno\fP нужно куда\-нибудь сохранить.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBperror\fP()
+T}	Безвредность в нитях	MT\-Safe race:stderr
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBperror\fP(), \fIerrno\fP: POSIX.1\-2001, POSIX.1\-2008, C89, C99, 4.3BSD.
+.PP
+Внешние \fIsys_nerr\fP и \fIsys_errlist\fP появились из BSD, и не описаны в
+POSIX.1.
+.SH ЗАМЕЧАНИЯ
+.\" and only when _BSD_SOURCE is defined.
+.\" When
+.\" .B _GNU_SOURCE
+.\" is defined, the symbols
+.\" .I _sys_nerr
+.\" and
+.\" .I _sys_errlist
+.\" are provided.
+Внешние \fIsys_nerr\fP и \fIsys_errlist\fP определены в glibc, но в файле
+\fI<stdio.h>\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBerr\fP(3), \fBerrno\fP(3), \fBerror\fP(3), \fBstrerror\fP(3)

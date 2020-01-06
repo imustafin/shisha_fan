@@ -1,0 +1,105 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" based on glibc infopages
+.\" polished, aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH REMQUO 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+remquo, remquof, remquol \- остаток и неполное частное
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble remquo(double \fP\fIx\fP\fB, double \fP\fIy\fP\fB, int *\fP\fIquo\fP\fB);\fP
+\fBfloat remquof(float \fP\fIx\fP\fB, float \fP\fIy\fP\fB, int *\fP\fIquo\fP\fB);\fP
+\fBlong double remquol(long double \fP\fIx\fP\fB, long double \fP\fIy\fP\fB, int *\fP\fIquo\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBremquo\fP(), \fBremquof\fP(), \fBremquol\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Эти функции вычисляют остаток и неполное частное при делении \fIx\fP на
+\fIy\fP. Неполное частное сохраняется через указатель \fIquo\fP. Остаток
+возвращается как результат функции.
+.PP
+Значение остатка тоже, что и при вычислении функцией \fBremainder\fP(3).
+.PP
+Значение, сохраняемое по указателю \fIquo\fP, имеет знак \fIx\ /\ y\fP и сохраняет
+от частного не менее 3 младших бит.
+.PP
+.\" A possible application of this function might be the computation
+.\" of sin(x). Compute remquo(x, pi/2, &quo) or so.
+.\"
+.\" glibc, UnixWare: return 3 bits
+.\" MacOS 10: return 7 bits
+Например, \fIremquo(29.0,\ 3.0)\fP возвращает \-1.0 и может сохранить
+2. Заметим, что реальный остаток может не поместиться в integer.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные функции возвращают тоже значение, что и
+аналогичные функции, описанные в \fBremainder\fP(3).
+.PP
+Если значение \fIx\fP или \fIy\fP равно NaN, будет возвращено NaN.
+.PP
+Если \fIx\fP стремится к бесконечности и \fIy\fP не равно NaN, то будет
+сгенерирована ошибка выхода за пределы области, а в качестве результата
+будет возвращено NaN.
+.PP
+Если \fIy\fP равно 0 и \fIx\fP не равно NaN, то будет сгенерирована ошибка выхода
+за пределы области, а в качестве результата будет возвращено NaN.
+.SH ОШИБКИ
+Смотрите \fBmath_error\fP(7), чтобы определить возникшую ошибку при вызове этих
+функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка области: \fIx\fP стремится к бесконечности или \fIy\fP равно 0, и другой аргумент не равен NaN.
+.\" .I errno
+.\" is set to
+.\" .BR EDOM .
+Возникает исключение неправильной плавающей запятой (\fBFE_INVALID\fP).
+.PP
+.\" FIXME . Is it intentional that these functions do not set errno?
+.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6802
+Эти функции не изменяют \fIerrno\fP.
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw30 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBremquo\fP(),
+\fBremquof\fP(),
+\fBremquol\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfmod\fP(3), \fBlogb\fP(3), \fBremainder\fP(3)

@@ -1,0 +1,252 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 1995 Andries Brouwer (aeb@cwi.nl)
+.\" and Copyright (C) 2012, 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Written 11 June 1995 by Andries Brouwer <aeb@cwi.nl>
+.\" 2008-02-15, Jeremy Kerr <jk@ozlabs.org>
+.\"     Add info on command type 10; add details on types 6, 7, 8, & 9.
+.\" 2008-02-15, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Update LOG_BUF_LEN details; update RETURN VALUE section.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSLOG 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+syslog, klogctl \- читает и/или очищает кольцевой буфер сообщений ядра;
+устанавливает console_loglevel
+.SH ОБЗОР
+.nf
+\fBint syslog(int \fP\fItype\fP\fB, char *\fP\fIbufp\fP\fB, int \fP\fIlen\fP\fB);\fP
+\fB/* не имеет обёртки в glibc */\fP
+.PP
+/* интерфейс glibc */
+\fB#include <sys/klog.h>\fP
+.PP
+\fBint klogctl(int \fP\fItype\fP\fB, char *\fP\fIbufp\fP\fB, int \fP\fIlen\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fIЗамечание\fP: Вероятно, вы ищете библиотечную функцию Си \fBsyslog\fP(),
+которая описана в \fBsyslogd\fP(8); подробности смотрите в \fBsyslog\fP(3).
+.PP
+В этой странице описана системный вызов ядра \fBsyslog\fP(), который
+используется для управления буфером \fIprintk\fP() в ядре; обёрточная функция
+glibc для данного системного вызова называется \fBklogctl\fP().
+.SS "Буфер журнала ядра"
+.\" Under "General setup" ==> "Kernel log buffer size"
+.\" For 2.6, precisely the option seems to have appeared in 2.5.55.
+В ядре существует кольцевой буфер длиной \fBLOG_BUF_LEN\fP, в котором хранятся
+сообщения, переданные через аргументы функции ядра \fBprintk\fP() (независимо
+от их уровня). В ранних версиях ядра значение \fBLOG_BUF_LEN\fP было равно
+4096, начиная с ядра 1.3.54 оно стало 8192, а начиная с 2.1.113 —
+16384. Начиная с версии 2.4.23/2.6 его значение задаётся в параметрах
+настройки ядра (\fBCONFIG_LOG_BUF_SHIFT\fP, значение по умолчанию зависит от
+архитектуры). Начиная с Linux 2.6.6, размер можно узнать по команде 10
+(смотрите далее).
+.SS Команды
+В аргументе \fItype\fP задаётся действие функции. Далее приводится список со
+всеми значениями \fItype\fP. Символические имена определены в исходном коде
+ядра, но не экспортируются в пользовательское пространство; вы должны
+использовать или номера, или определить имена самостоятельно.
+.TP 
+\fBSYSLOG_ACTION_CLOSE\fP (0)
+Закрыть журнал. Ничего не делает.
+.TP 
+\fBSYSLOG_ACTION_OPEN\fP (1)
+Открыть журнал. Ничего не делает.
+.TP 
+\fBSYSLOG_ACTION_READ\fP (2)
+Читать из журнала. Вызов ждёт пока в буфере журнала ядра что\-нибудь не
+появится и затем записывает максимум \fIlen\fP байт в буфер, указанный
+\fIbufp\fP. Вызов возвращает количество прочитанных байт. Байты, прочитанные из
+журнала, исчезают из буфера журнала: информацию можно прочесть только один
+раз. Эта функция используется ядром когда пользовательская программа читает
+файл \fI/proc/kmsg\fP.
+.TP 
+\fBSYSLOG_ACTION_READ_ALL\fP (3)
+Читать все сообщения, оставшиеся в кольцевом буфере, помещая их в буфер,
+указанный в \fIbufp\fP. Вызов читает последние \fIlen\fP байт из буфера журнала
+(не разрушая его), но не больше, чем было записано в буфер с момента вызова
+команды «очистка кольцевого буфера» (смотрите команду 5 далее). Вызов
+возвращает количество прочитанных байт.
+.TP 
+\fBSYSLOG_ACTION_READ_CLEAR\fP (4)
+Прочитать и стереть все сообщения, оставшиеся в кольцевом буфере. Вызов
+выполняет то же самое, что и  при \fItype\fP равном 3, но ещё вызывает команду
+«очистка кольцевого буфера».
+.TP 
+\fBSYSLOG_ACTION_CLEAR\fP (5)
+Вызов просто исполняет команду «очистка кольцевого буфера». Аргументы
+\fIbufp\fP и \fIlen\fP игнорируются.
+.IP
+Эта команда на самом деле не очищает кольцевой буфер. Вместо этого она
+изменяет переменную учёта в ядре, которая определяет результат, возвращаемый
+командами 3 (\fBSYSLOG_ACTION_READ_ALL\fP)  и 4
+(\fBSYSLOG_ACTION_READ_CLEAR\fP). Эта команда не влияет на команды 2
+(\fBSYSLOG_ACTION_READ\fP) и 9 (\fBSYSLOG_ACTION_SIZE_UNREAD\fP).
+.TP 
+\fBSYSLOG_ACTION_CONSOLE_OFF\fP (6)
+.\" commit 1aaad49e856ce41adc07d8ae0c8ef35fc4483245
+Данная команда сохраняет текущее значение \fIconsole_loglevel\fP и затем
+устанавливает \fIconsole_loglevel\fP равным \fIminimum_console_loglevel\fP, что
+приводит к отключению вывода сообщений на консоль. До Linux 2.6.32, эта
+команда просто изменяла \fIconsole_loglevel\fP на \fIminimum_console_loglevel\fP.
+Смотрите описание \fI/proc/sys/kernel/printk\fP далее.
+.IP
+Аргументы \fIbufp\fP и \fIlen\fP игнорируются.
+.TP 
+\fBSYSLOG_ACTION_CONSOLE_ON\fP (7)
+.\" commit 1aaad49e856ce41adc07d8ae0c8ef35fc4483245
+Если ранее выполнялась команда \fBSYSLOG_ACTION_CONSOLE_OFF\fP, то эта команда
+восстанавливает значение \fIconsole_loglevel\fP, которое было сохранено. До
+Linux 2.6.32 эта команда просто изменяла \fIconsole_loglevel\fP на
+\fIdefault_console_loglevel\fP. Смотрите описание \fI/proc/sys/kernel/printk\fP
+ниже.
+.IP
+Аргументы \fIbufp\fP и \fIlen\fP игнорируются.
+.TP 
+\fBSYSLOG_ACTION_CONSOLE_LEVEL\fP (8)
+Вызов присваивает \fIconsole_loglevel\fP значение, указанное в \fIlen\fP, которое
+должно быть целым числом от 1 до 8 (включительно). Ядро неявно изменяет
+минимальное значение \fIminimum_console_loglevel\fP на \fIlen\fP. Подробности
+смотрите в разделе \fBУровень протоколирования\fP. Аргумент \fIbufp\fP
+игнорируется.
+.TP 
+\fBSYSLOG_ACTION_SIZE_UNREAD\fP (9) (начиная с Linux 2.4.10)
+Вызов возвращает количество байт, доступных для чтения из буфера журнала
+ядра командой 2 (\fBSYSLOG_ACTION_READ\fP). Аргументы \fIbufp\fP и \fIlen\fP
+игнорируются.
+.TP 
+\fBSYSLOG_ACTION_SIZE_BUFFER\fP (10) (начиная с Linux 2.6.6)
+Эта команда возвращает полный размер буфера журнала ядра. Аргументы \fIbufp\fP
+и \fIlen\fP игнорируются.
+.PP
+.\"
+.\"
+Все команды кроме 3 и 10 требуют привилегий. В ядрах Linux до версии 2.6.37,
+команды 3 и 10 были доступны непривилегированным процессам; начиная с Linux
+2.6.37, эти команды разрешены из непривилегированных процессов только, если
+значение \fI/proc/sys/kernel/dmesg_restrict\fP равно 0. До Linux 2.6.37 под
+«привилегиями» понималось, что вызывающий имеет мандат
+\fBCAP_SYS_ADMIN\fP. Начиная с Linux 2.6.37 «привилегией» считается, что
+вызывающий имеет либо мандат \fBCAP_SYS_ADMIN\fP (теперь устарел для такого
+использования), либо (новый) мандат \fBCAP_SYSLOG\fP.
+.SS \fI/proc/sys/kernel/printk\fP
+Файл \fI/proc/sys/kernel/printk\fP доступен на запись и содержит 4
+целочисленных значения, которыми управляется поведение ядерного \fIprintk()\fP
+при печати или протоколировании сообщений об ошибках. Четыре значения:
+.TP 
+\fIconsole_loglevel\fP
+.\" since Linux 2.4
+На консоль выводятся только сообщения, у которых уровень протоколирования
+меньше этого значения. По умолчанию значение этой переменной равно
+\fBDEFAULT_CONSOLE_LOGLEVEL\fP (7), но это значение будет равно 4, если
+командная строка ядра содержит слово «quiet»; 10 — если командная строка
+ядра содержит слово «debug», и 15 — в случае ошибки ядра (10 и 15 не имеют
+большого смысла и аналогичны ). Значение (из диапазона от 1 до 8)
+\fIconsole_loglevel\fP устанавливается вызовом \fBsyslog\fP() с \fItype\fP равным 8.
+.TP 
+\fIdefault_message_loglevel\fP
+.\" commit 5af5bcb8d37f99ba415a1adc6da71051b84f93a5
+Это значение будет использовано как уровень протоколирования сообщений
+\fIprintk()\fP, у которых уровень не указан. До версии Linux 2.6.38
+включительно это поле содержало неизменяемое значение 4 (\fBKERN_WARNING\fP);
+начиная с Linux 2.6.39, значение по умолчанию задаётся в параметре настройки
+ядра \fBCONFIG_DEFAULT_MESSAGE_LOGLEVEL\fP и по умолчанию равно 4.
+.TP 
+\fIminimum_console_loglevel\fP
+Значение этого поля — минимальное значение, которое может быть указано в
+\fIconsole_loglevel\fP.
+.TP 
+\fIdefault_console_loglevel\fP
+.\"
+.\"
+Это значение по умолчанию для \fIconsole_loglevel\fP.
+.SS "Уровень протоколирования"
+Каждое сообщение \fIprintk\fP() имеет свой уровень протоколирования. Если
+уровень протоколирования явно не задан в сообщении, то по умолчанию оно
+равно \fIdefault_message_loglevel\fP. Для удобства имеются следующие уровни
+протоколирования:
+.TS
+lB lB lB
+lB c l.
+Ядерные постоянные	Уровень	Смысл
+\fBKERN_EMERG\fP	0	Система не пригодна к использованию 
+\fBKERN_ALERT\fP	1	Необходимо немедленно принять меры
+\fBKERN_CRIT\fP	2	Условная паника
+\fBKERN_ERR\fP	3	Условные ошибки 
+\fBKERN_WARNING\fP	4	Условные предупреждения 
+\fBKERN_NOTICE\fP	5	Обычное, но важное условие
+\fBKERN_INFO\fP	6	Информационное сообщение
+\fBKERN_DEBUG\fP	7	Cообщения уровня отладки
+.TE
+.sp 1
+Ядерная процедура \fIprintk()\fP печатает сообщение на консоль только, если его
+уровень протоколирования меньше значения \fIconsole_loglevel\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении и если \fItype\fP равно 2, 3 или 4, \fBsyslog\fP()
+возвращает количество прочитанных байт. При \fItype\fP равном 9, \fBsyslog\fP()
+возвращает количество байт, доступных для чтения из кольцевого буфера
+ядра. При \fItype\fP равном 10, \fBsyslog\fP() возвращает полный размер кольцевого
+буфера ядра. При других значениях \fItype\fP и успешном выполнении возвращается
+0.
+.PP
+При ошибке возвращается \-1, а переменной \fIerrno\fP присваивается номер
+ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Неправильные значения параметров (например, некорректное значение \fItype\fP;
+при \fItype\fP равном 2, 3,  4, значение \fIbuf\fP равно NULL или значение \fIlen\fP
+меньше нуля; при \fItype\fP равном 8, значение \fIlevel\fP лежит вне диапазона от
+1 до 8).
+.TP 
+\fBENOSYS\fP
+Системный вызов \fBsyslog\fP() недоступен, так как ядро было собрано с
+отключённым параметром \fBCONFIG_PRINTK\fP.
+.TP 
+\fBEPERM\fP
+Процесс, не имеющий необходимых прав (мандата \fBCAP_SYS_ADMIN\fP или
+\fBCAP_SYSLOG\fP), пытался изменить \fIconsole_loglevel\fP или очистить кольцевой
+буфер сообщений ядра.
+.TP 
+\fBERESTARTSYS\fP
+Системный вызов был прерван сигналом; ничего не было прочитано (может быть
+замечено только при трассировке).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный системный вызов существует только в Linux и не должен использоваться
+переносимых программах.
+.SH ЗАМЕЧАНИЯ
+.\" In libc4 and libc5 the number of this call was defined by
+.\" .BR SYS_klog .
+.\" In glibc 2.0 the syscall is baptized
+.\" .BR klogctl ().
+С самого начала многим не нравится, что вызов ядра и библиотечная функция с
+одинаковыми именами делают совершенно разные вещи.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdmesg\fP(1), \fBsyslog\fP(3), \fBcapabilities\fP(7)

@@ -1,0 +1,126 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1997 Andries Brouwer (aeb@cwi.nl)
+.\" and Copyright (C) 2005, 2010, 2014, 2015, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified, 2003-05-26, Michael Kerrisk, <mtk.manpages@gmail.com>
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETRESUID 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+setresuid, setresgid \- устанавливает  реальный, эффективный и сохранённый
+пользовательский идентификатор или идентификатор группы
+.SH ОБЗОР
+\fB#define _GNU_SOURCE\fP /* смотрите feature_test_macros(7) */
+.br
+\fB#include <unistd.h>\fP
+.PP
+\fBint setresuid(uid_t \fP\fIruid\fP\fB, uid_t \fP\fIeuid\fP\fB, uid_t \fP\fIsuid\fP\fB);\fP
+.br
+\fBint setresgid(gid_t \fP\fIrgid\fP\fB, gid_t \fP\fIegid\fP\fB, gid_t \fP\fIsgid\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBsetresuid\fP() устанавливает реальный идентификатор пользователя,
+эффективный идентификатор пользователя и сохранённый идентификатор
+пользователя вызывающего процесса.
+.PP
+Непривилегированный процесс может изменять реальный UID, эффективный UID и
+сохранённый set\-user\-ID на соответственно текущий реальный UID, текущий  UID
+и текущий сохранённый set\-user\-ID.
+.PP
+Привилегированный процесс (в Linux: имеющие мандат \fBCAP_SETUID\fP) могут
+устанавливать произвольные значения для реального, эффективного UID и
+сохранённого set\-user\-UID .
+.PP
+Если один из параметров равен \-1, то соответствующее ему значение не
+изменяется.
+.PP
+Независимо от того, как изменились реальный UID, эффективный UID и
+сохранённый UID идентификатор в файловой системе всегда устанавливается
+равным значению (возможно новому) эффективного UID.
+.PP
+Аналогично, \fBsetresgid\fP() устанавливает реальный GID, эффективный GID, и
+сохранённый GID вызывающего процесса (и всегда изменяет GID в файловой
+системе на значение эффективного GID) с теми же ограничениями для
+непривилегированных процессов.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.PP
+\fIЗамечание\fP: есть случаи, когда \fBsetresuid\fP() может завершиться с ошибкой
+даже когда UID вызывающего равен 0; это серьёзная ошибка безопасности — не
+проверять возвращаемое значение \fBsetresuid\fP().
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Вызов изменил бы настоящего реальный UID вызывающего (т. е. \fIruid\fP не
+совпадает с реальным UID вызывающего), но возникла временная ошибка при
+выделении памяти под необходимые структуры ядра.
+.TP 
+\fBEAGAIN\fP
+Значение \fIruid\fP не совпадает с реальным UID вызывающего и этот вызов создал
+был превышение количества процессов, принадлежащих пользователю с реальным
+ID \fIruid\fP сверх ограничителя ресурсы \fBRLIMIT_NPROC\fP вызывающего. Начиная с
+Linux 3.1 эта ошибка больше не возникает (но корректное приложение должно
+проверять эту ошибку); смотрите описание \fBEAGAIN\fP в \fBexecve\fP(2).
+.TP 
+\fBEINVAL\fP
+Один или более целевых идентификаторов пользователя или группы некорректны в
+этом пользовательском пространстве имён.
+.TP 
+\fBEPERM\fP
+Вызывающий процесс не является привилегированным (не имеет необходимого
+мандата в своём пространстве имён пользователя) и пытается изменить значения
+идентификаторов, что запрещено. Для \fBsetresuid\fP() необходим мандат
+\fBCAP_SETUID\fP; для \fBsetresgid\fP() — \fBCAP_SETGID\fP.
+.SH ВЕРСИИ
+Данные вызовы доступны в Linux начиная с версии 2.1.44.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Это нестандартные вызовы; также они есть в HP\-UX и некоторых BSD.
+.SH ЗАМЕЧАНИЯ
+В HP\-UX и FreeBSD прототип находится в \fI<unistd.h>\fP. В Linux
+прототип задан в glibc, начиная с версии 2.3.2.
+.PP
+.\"
+Первоначальные версии системных вызовов \fBsetresuid\fP() и \fBsetresgid\fP() в
+Linux поддерживали только 16\-битные идентификаторы пользователей и
+групп. Позднее в Linux 2.4 были добавлены вызовы \fBsetresuid32\fP() и
+\fBsetresgid32\fP(), поддерживающие 32\-битные идентификаторы. В glibc
+обёрточные функции \fBsetresuid\fP() и \fBsetresgid\fP() работают одинаково вне
+зависимости от версий ядра.
+.SS "Отличия между библиотекой C и ядром"
+На уровне ядра ID пользователя и группы являются атрибутами нити. Однако в
+POSIX требуется, чтобы все нити в процессе имели одинаковые права. В
+реализации нитей NPTL требования POSIX реализованы через обёрточные функции
+для различных системных вызовов, которые изменяют UID и GID процесса. В этих
+функциях (включая и  \fBsetresuid\fP() and \fBsetresgid\fP()) используется
+алгоритмы на основе сигналов, которые следят за тем, что когда у одной нити
+изменяются права, эти изменения выполняются и для остальных нитей
+процесса. Подробное описание смотрите в \fBnptl\fP(7).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetresuid\fP(2), \fBgetuid\fP(2), \fBsetfsgid\fP(2), \fBsetfsuid\fP(2),
+\fBsetreuid\fP(2), \fBsetuid\fP(2), \fBcapabilities\fP(7), \fBcredentials\fP(7),
+\fBuser_namespaces\fP(7)

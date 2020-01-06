@@ -1,0 +1,168 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1995 James R. Van Zandt <jrv@vanzandt.mv.com>
+.\" and Copyright (C) 2006, 2014 Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" changed section from 2 to 3, aeb, 950919
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MKFIFO 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+mkfifo, mkfifoat \- создают специальный файл очереди FIFO (именованный канал)
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/stat.h>\fP
+.PP
+\fBint mkfifo(const char *\fP\fIpathname\fP\fB, mode_t \fP\fImode\fP\fB);\fP
+
+\fB#include <fcntl.h>           \fP/* определения констант AT_* */
+\fB#include <sys/stat.h>\fP
+.PP
+\fBint mkfifoat(int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB, mode_t \fP\fImode\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc (смотрите
+\fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBmkfifoat\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_ATFILE_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+Функция \fBmkfifo\fP() создаёт специальный файл FIFO с именем \fIpathname\fP и
+правами доступа \fImode\fP. Как обычно, в правах учитывается значение \fIumask\fP
+процесса: права на создаваемый файл вычисляются как \fB(\fImode\fP &
+~\fIumask\fP)\fP.
+.PP
+Специальный файл FIFO подобен каналу, за исключением того, что он создаётся
+другим способом. Вызов \fBmkfifo\fP() вместо безымянного канала взаимодействия
+создаёт специальный файл FIFO, расположенный в файловой системе.
+.PP
+После создания специального файла  FIFO, любой процесс может открывать его
+для чтения или записи, как если бы он открывал обычный файл. Однако прежде
+чем вы сможете что\-либо сделать, его необходимо открыть с обоих концов,
+притом одновременно. Открытие FIFO для чтения обычно блокируется, пока
+какой\-нибудь другой процесс не откроет его для записи, и наоборот. Описание
+работы со специальными файлами FIFO в неблокирующем режиме смотрите в
+\fBfifo\fP(7).
+.SS mkfifoat()
+Функция \fBmkfifoat\fP() работает также как как \fBmkfifo\fP(), за исключением
+случаев, описанных здесь.
+.PP
+Если в \fIpathname\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBmkfifo\fP(3)).
+.PP
+Если в \fIpathname\fP задан относительный путь и \fIdirfd\fP равно специальному
+значению \fBAT_FDCWD\fP, то \fIpathname\fP рассматривается относительно текущего
+рабочего каталога вызывающего процесса (как \fBmkfifo\fP(3)).
+.PP
+Если в \fIpathname\fP задан абсолютный путь, то \fIdirfd\fP игнорируется.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении вызовы \fBmkfifo\fP() и \fBmkfifoat\fP() возвращают 0. В
+случае ошибки возвращают \-1, а \fIerrno\fP устанавливается в соответствующее
+значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Один из каталогов содержащихся в \fIpathname\fP не позволяет выполнить поиск,
+так как правами запрещено исполнение.
+.TP 
+\fBEDQUOT\fP
+Исчерпана пользовательская квота на дисковые блоки или иноды файловой
+системы.
+.TP 
+\fBEEXIST\fP
+\fIpathname\fP уже существует. В этом случае \fIpathname\fP может быть символьной
+ссылкой, повисшей или нет.
+.TP 
+\fBENAMETOOLONG\fP
+Если длина полного имени файла (включая путь)  \fIpathname\fP больше чем
+\fBPATH_MAX\fP или длина имени файла больше чем \fBNAME_MAX\fP. В общем случае в
+системах, соответствующих стандарту GNU, отсутствует ограничение на длину
+полного имени файла, однако некоторые файловые системы могут устанавливать
+ограничение на длину отдельного компонента.
+.TP 
+\fBENOENT\fP
+Один из каталогов в \fIpathname\fP не существует или является повисшей
+символьной ссылкой.
+.TP 
+\fBENOSPC\fP
+В каталоге или файловой системе закончились места для новых файлов.
+.TP 
+\fBENOTDIR\fP
+Компонент пути, использованный как каталог в \fIpathname\fP, в действительности
+таковым не является.
+.TP 
+\fBEROFS\fP
+\fIpathname\fP указывает на файловую систему, доступную только для чтения.
+.PP
+Следующие дополнительные ошибки могут быть характерны для  \fBmkfifoat\fP():
+.TP 
+\fBEBADF\fP
+\fIdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBENOTDIR\fP
+\fIpathname\fP является относительным путем, а \fIdirfd\fP является файловым
+дескриптором, указывающим на файл, отличный от каталога.
+.SH ВЕРСИИ
+Функция \fBmkfifoat\fP() была добавлена в glibc 2.4. Она реализована с помощью
+системного вызова \fBmknodat\fP(2), доступного в ядре Linux начиная с версии
+2.6.16.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw20 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmkfifo\fP(),
+\fBmkfifoat\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBmkfifo\fP(): POSIX.1\-2001, POSIX.1\-2008.
+.PP
+\fBmkfifoat\fP(): POSIX.1\-2008.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmkfifo\fP(1), \fBclose\fP(2), \fBopen\fP(2), \fBread\fP(2), \fBstat\fP(2), \fBumask\fP(2),
+\fBwrite\fP(2), \fBfifo\fP(7)

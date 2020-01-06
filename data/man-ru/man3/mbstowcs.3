@@ -1,0 +1,194 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t -*- coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\" and Copyright 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MBSTOWCS 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+mbstowcs \- преобразует многобайтовую строку в строку широких символов
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBsize_t mbstowcs(wchar_t *\fP\fIdest\fP\fB, const char *\fP\fIsrc\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Если значение \fIdest\fP не равно NULL, то функция \fBmbstowcs\fP() преобразует
+многобайтовую строку \fIsrc\fP в широкосимвольную строку начиная с \fIdest\fP. В
+\fIdest\fP будет записано не более \fIn\fP широких символов. Последовательность
+символов в строке \fIsrc\fP должна начинаться с начального
+состояния. Преобразование может прекратиться по трём причинам:
+.IP 1. 3
+Во входных данных находится неправильная многобайтовая последовательность. В
+этом случае возвращается \fI(size_t)\ \-1\fP.
+.IP 2.
+В \fIdest\fP было сохранено \fIn\fP не равных L\(aq\e0\(aq широких символов. В
+этом случае будет возвращено количество широких символов, записанных в
+\fIdest\fP, но состояние сдвига в этой точке теряется.
+.IP 3.
+Многобайтовая строка была полностью преобразована, включая завершающий
+символ null (\(aq\e0\(aq). В этом случае возвращается количество записанных
+в \fIdest\fP широких символов, не считая завершающий широкий символ null.
+.PP
+Программист должен проверить, что в \fIdest\fP есть место по крайней мере для
+\fIn\fP широких символов.
+.PP
+Если значение \fIdest\fP равно NULL, то \fIn\fP игнорируется и преобразование
+выполняется как описано выше, исключая то, что преобразованные широкие
+символы не записываются в память и нет ограничения по длине.
+.PP
+Для того, чтобы избежать ограничения пункта 2, программист должен
+удостовериться, что значение \fIn\fP больше или равно
+\fImbstowcs(NULL,src,0)+1\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBmbstowcs\fP() возвращает количество широких символов, которые
+составили преобразованную часть широкосимвольной строки, не включая конечный
+широкий символ null Если обнаружена некорректная многобайтовая
+последовательность, то возвращается \fI(size_t)\ \-1\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmbstowcs\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBmbstowcs\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.PP
+Функция \fBmbsrtowcs\fP(3) предоставляет лучший интерфейс с теми же
+возможностями.
+.SH ПРИМЕР
+В программе, представленной ниже, показано использование \fBmbstowcs\fP(), а
+также некоторые функции классификации широких символов. Пример запуска:
+.PP
+.in +4n
+.EX
+$ ./t_mbstowcs de_DE.UTF\-8 Grüße!
+Длина исходной строки (без конечного символа):
+    8 байт
+    6 многобайтовых символов
+
+Строка широких символов: Grüße! (6 символов)
+    G буква заглавная
+    r буква строчная
+    ü буква строчная
+    ß буква строчная
+    e буква строчная
+    ! !буква
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <wctype.h>
+#include <locale.h>
+#include <wchar.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+int
+main(int argc, char *argv[])
+{
+    size_t mbslen;      /* количество многобайтовых символов в источнике */
+    wchar_t *wcs;       /* указатель на преобразованную строку
+                           широких символов */
+    wchar_t *wp;
+
+    if (argc < 3) {
+        fprintf(stderr, "Использование: %s <локаль> <строка>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /* применяем указанную локаль */
+
+    if (setlocale(LC_ALL, argv[1]) == NULL) {
+        perror("setlocale");
+        exit(EXIT_FAILURE);
+    }
+
+    /* вычисляем длину, которая требуется для хранения argv[2],
+       преобразованной в строку широких символов */
+
+    mbslen = mbstowcs(NULL, argv[2], 0);
+    if (mbslen == (size_t) \-1) {
+        perror("mbstowcs");
+        exit(EXIT_FAILURE);
+    }
+
+    /* опишем исходную строку пользователю */
+
+    printf("Длина исходной строки (без конечного символа):\en");
+    printf("    %zu байт\en", strlen(argv[2]));
+    printf("    %zu многобайтовых символов\en\en", mbslen);
+
+    /* выделим место под строку широких символов желаемого размера.
+       Добавим 1 для конечного широкого символа null (L\(aq\e0\(aq). */
+
+    wcs = calloc(mbslen + 1, sizeof(wchar_t));
+    if (wcs == NULL) {
+        perror("calloc");
+        exit(EXIT_FAILURE);
+    }
+
+    /* преобразуем многобайтовую строку из argv[2] в
+       строку широких символов */
+
+    if (mbstowcs(wcs, argv[2], mbslen + 1) == (size_t) \-1) {
+        perror("mbstowcs");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Строка широких символов: %ls (%zu символов)\en",
+            wcs, mbslen);
+
+    /* теперь посмотрим на классы символов в
+       строке широких символов */
+
+    for (wp = wcs; *wp != 0; wp++) {
+        printf("    %lc ", (wint_t) *wp);
+
+        if (!iswalpha(*wp))
+            printf("!");
+        printf("буква ");
+
+        if (iswalpha(*wp)) {
+            if (iswupper(*wp))
+                printf("заглавная ");
+
+            if (iswlower(*wp))
+                printf("строчная ");
+        }
+
+        putchar(\(aq\en\(aq);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmblen\fP(3), \fBmbsrtowcs\fP(3), \fBmbtowc\fP(3), \fBwcstombs\fP(3), \fBwctomb\fP(3)

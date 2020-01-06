@@ -1,0 +1,299 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_ATTR_INIT 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_attr_init, pthread_attr_destroy \- инициализирует и уничтожает объект
+атрибутов нити
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_attr_init(pthread_attr_t *\fP\fIattr\fP\fB);\fP
+\fBint pthread_attr_destroy(pthread_attr_t *\fP\fIattr\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_attr_init\fP() инициализирует объект атрибутов нити, на
+который указывает \fIattr\fP, значениями атрибутов по умолчанию. После этого
+вызова отдельные атрибуты объекта можно изменять с помощью различных
+соответствующих функций (перечислены в разделе СМОТРИТЕ ТАКЖЕ, а после этого
+объект можно использовать в одном или нескольких вызовах
+\fBpthread_create\fP(3) для создания нитей.
+.PP
+Вызов \fBpthread_attr_init\fP() с уже инициализированным объектом атрибутов
+нити приводит к непредсказуемому поведению.
+.PP
+Когда объект атрибутов нити больше не нужен, он должен быть уничтожен с
+помощью функции \fBpthread_attr_destroy\fP(). Уничтожение объекта атрибутов
+нити не влияет на нить, которая была создана с использованием этого объекта.
+.PP
+После уничтожения объекта атрибутов нити его можно инициализировать с
+помощью \fBpthread_attr_init\fP() повторно. При использовании уничтоженного
+объекта атрибутов нити другим способом приводит непредсказуемым результатам.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+В POSIX.1 описана ошибка \fBENOMEM\fP для \fBpthread_attr_init\fP(); в Linux эти
+функции всегда выполняются успешно (тем не менее, в переносимых приложениях
+нужно учитывать возможность возврата ошибки).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw22 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_attr_init\fP(),
+\fBpthread_attr_destroy\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Тип \fIpthread_attr_t\fP должен считаться со скрытым форматом: любой доступ к
+объекту помимо функций pthreads является непереносимым и приводит к
+непредсказуемым результатам.
+.SH ПРИМЕР
+В программе, представленной ниже, для создания одной нити используется
+\fBpthread_attr_init\fP() и другие функции, относящиеся к инициализации объекта
+атрибутов нити. После создания в нити используется функция
+\fBpthread_getattr_np\fP(3) (нестандартное расширение GNU) для получения
+атрибутов нити, а затем показываются эти атрибуты.
+.PP
+Если программа запускается без аргументов командной строки, то аргумент
+\fIattr\fP функции \fBpthread_create\fP(3) равен NULL, и поэтому нить создаётся с
+атрибутами по умолчанию. При запуске программы на Linux/x86\-32 с реализацией
+нитей NPTL мы увидим следующее:
+.PP
+.in +4n
+.EX
+.\" Results from glibc 2.8, SUSE 11.0; Oct 2008
+$\fB ulimit \-s\fP       # стек не ограничен ==> размер стека по умолчанию 2 МБ
+unlimited
+$\fB ./a.out\fP
+Атрибуты нити:
+        Состояние отсоединения     = PTHREAD_CREATE_JOINABLE
+        Область                    = PTHREAD_SCOPE_SYSTEM
+        Унаследованный планировщик = PTHREAD_INHERIT_SCHED
+        Алгоритм планирования      = SCHED_OTHER
+        Приоритет планирования     = 0
+        Размер защиты              = 4096 байт
+        Адрес стека                = 0x40196000
+        Размер стека               = 0x201000 байт
+.EE
+.in
+.PP
+Если в командной строке мы укажем размер стека, то программа инициализирует
+объект атрибутов нити, задаёт различные атрибуты в этом объекте и передаёт
+указатель на объект в вызов \fBpthread_create\fP(3). При запуске программы на
+Linux/x86\-32 с реализацией нитей NPTL мы увидим следующее:
+.PP
+.in +4n
+.EX
+.\" Results from glibc 2.8, SUSE 11.0; Oct 2008
+$\fB ./a.out 0x3000000\fP
+posix_memalign() выделен по адресу 0x40197000
+Атрибуты нити:
+        Состояние отсоединения     = PTHREAD_CREATE_DETACHED
+        Область                    = PTHREAD_SCOPE_SYSTEM
+        Унаследованный планировщик = PTHREAD_EXPLICIT_SCHED
+        Алгоритм планирования      = SCHED_OTHER
+        Приоритет планирования     = 0
+        Размер защиты              = 0 байт
+        Адрес стека                = 0x40197000
+        Размер стека               = 0x3000000 байт
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE     /* для объявления pthread_getattr_np() */
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+
+#define handle_error_en(en, msg) \e
+        do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
+
+static void
+display_pthread_attr(pthread_attr_t *attr, char *prefix)
+{
+    int s, i;
+    size_t v;
+    void *stkaddr;
+    struct sched_param sp;
+
+    s = pthread_attr_getdetachstate(attr, &i);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_getdetachstate");
+    printf("%sСостояние отсоединения     = %s\en", prefix,
+            (i == PTHREAD_CREATE_DETACHED) ? "PTHREAD_CREATE_DETACHED" :
+            (i == PTHREAD_CREATE_JOINABLE) ? "PTHREAD_CREATE_JOINABLE" :
+            "???");
+
+    s = pthread_attr_getscope(attr, &i);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_getscope");
+    printf("%sОбласть                    = %s\en", prefix,
+            (i == PTHREAD_SCOPE_SYSTEM)  ? "PTHREAD_SCOPE_SYSTEM" :
+            (i == PTHREAD_SCOPE_PROCESS) ? "PTHREAD_SCOPE_PROCESS" :
+            "???");
+
+    s = pthread_attr_getinheritsched(attr, &i);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_getinheritsched");
+    printf("%sУнаследованный планировщик = %s\en", prefix,
+            (i == PTHREAD_INHERIT_SCHED)  ? "PTHREAD_INHERIT_SCHED" :
+            (i == PTHREAD_EXPLICIT_SCHED) ? "PTHREAD_EXPLICIT_SCHED" :
+            "???");
+
+    s = pthread_attr_getschedpolicy(attr, &i);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_getschedpolicy");
+    printf("%sАлгоритм планирования      = %s\en", prefix,
+            (i == SCHED_OTHER) ? "SCHED_OTHER" :
+            (i == SCHED_FIFO)  ? "SCHED_FIFO" :
+            (i == SCHED_RR)    ? "SCHED_RR" :
+            "???");
+
+    s = pthread_attr_getschedparam(attr, &sp);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_getschedparam");
+    printf("%sПриоритет планирования     = %d\en", prefix, sp.sched_priority);
+
+    s = pthread_attr_getguardsize(attr, &v);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_getguardsize");
+    printf("%sРазмер защиты          = %zu bytes\en", prefix, v);
+
+    s = pthread_attr_getstack(attr, &stkaddr, &v);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_getstack");
+    printf("%sАдрес стека                = %p\en", prefix, stkaddr);
+    printf("%sРазмер стека               = 0x%zx байт\en", prefix, v);
+}
+
+static void *
+thread_start(void *arg)
+{
+    int s;
+    pthread_attr_t gattr;
+
+    /* pthread_getattr_np() — нестандартное расширение GNU,
+       возвращает атрибуты нити, указанной в её
+       первом аргументе */
+
+    s = pthread_getattr_np(pthread_self(), &gattr);
+    if (s != 0)
+        handle_error_en(s, "pthread_getattr_np");
+
+    printf("Атрибуты нити:\en");
+    display_pthread_attr(&gattr, "\et");
+
+    exit(EXIT_SUCCESS);         /* Завершить все нити */
+}
+
+int
+main(int argc, char *argv[])
+{
+    pthread_t thr;
+    pthread_attr_t attr;
+    pthread_attr_t *attrp;      /* NULL или &attr */
+    int s;
+
+    attrp = NULL;
+
+    /* Если в командной строке есть аргумент, то использовать его
+       для задания атрибута размера стека и ещё некоторых других атрибутов
+       нити, и attrp будет указывать на объект атрибутов нити */
+
+    if (argc > 1) {
+        int stack_size;
+        void *sp;
+
+        attrp = &attr;
+
+        s = pthread_attr_init(&attr);
+        if (s != 0)
+            handle_error_en(s, "pthread_attr_init");
+
+        s = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+        if (s != 0)
+            handle_error_en(s, "pthread_attr_setdetachstate");
+
+        s = pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
+        if (s != 0)
+            handle_error_en(s, "pthread_attr_setinheritsched");
+
+        stack_size = strtoul(argv[1], NULL, 0);
+
+        s = posix_memalign(&sp, sysconf(_SC_PAGESIZE), stack_size);
+        if (s != 0)
+            handle_error_en(s, "posix_memalign");
+
+        printf("posix_memalign() выделен по адресу %p\en", sp);
+
+        s = pthread_attr_setstack(&attr, sp, stack_size);
+        if (s != 0)
+            handle_error_en(s, "pthread_attr_setstack");
+    }
+
+    s = pthread_create(&thr, attrp, &thread_start, NULL);
+    if (s != 0)
+        handle_error_en(s, "pthread_create");
+
+    if (attrp != NULL) {
+        s = pthread_attr_destroy(attrp);
+        if (s != 0)
+            handle_error_en(s, "pthread_attr_destroy");
+    }
+
+    pause();    /* Завершается, когда другая нить вызывает exit() */
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBpthread_attr_setaffinity_np\fP(3), \fBpthread_attr_setdetachstate\fP(3),
+\fBpthread_attr_setguardsize\fP(3), \fBpthread_attr_setinheritsched\fP(3),
+\fBpthread_attr_setschedparam\fP(3), \fBpthread_attr_setschedpolicy\fP(3),
+\fBpthread_attr_setscope\fP(3), \fBpthread_attr_setstack\fP(3),
+\fBpthread_attr_setstackaddr\fP(3), \fBpthread_attr_setstacksize\fP(3),
+\fBpthread_create\fP(3), \fBpthread_getattr_np\fP(3),
+\fBpthread_setattr_default_np\fP(3), \fBpthreads\fP(7)

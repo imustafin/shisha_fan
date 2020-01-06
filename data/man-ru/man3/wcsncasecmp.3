@@ -1,0 +1,81 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCSNCASECMP 3 2016\-03\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wcsncasecmp \- сравнивает две широкосимвольные строки заданного размера,
+игнорируя их регистр
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBint wcsncasecmp(const wchar_t *\fP\fIs1\fP\fB, const wchar_t *\fP\fIs2\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBwcsncasecmp\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+Функция \fBwcsncasecmp\fP() является широкосимвольным аналогом функции
+\fBstrncasecmp\fP(3). Она сравнивает широкосимвольную строку по указателю \fIs1\fP
+с широкосимвольной строкой по указателю \fIs2\fP, не более \fIn\fP широких
+символов в каждой строке, и не учитывая разницы в регистре символов
+(\fBtowupper\fP(3), \fBtowlower\fP(3)).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBwcsncasecmp\fP() возвращает ноль, если широкосимвольные строки \fIs1\fP
+и \fIs2\fP, обрезанные до \fIn\fP знаков, одинаковы, за исключением различий в
+регистре. Функция возвращает положительное число, если \fIs1\fP больше
+урезанной \fIs2\fP, без учета регистра. Функция возвращает отрицательное число,
+если \fIs1\fP меньше урезанной \fIs2\fP, без учета регистра.
+.SH ВЕРСИИ
+Функция \fBwcsncasecmp\fP() определена в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwcsncasecmp\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2008. Эта функция не определена в POSIX.1\-2001 и широко не
+распространена среди других систем.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBwcsncasecmp\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBstrncasecmp\fP(3), \fBwcsncmp\fP(3)

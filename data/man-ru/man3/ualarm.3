@@ -1,0 +1,120 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2003 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UALARM 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+ualarm \- планирует отправку сигнала через заданное число микросекунд
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBuseconds_t ualarm(useconds_t \fP\fIusecs\fP\fB, useconds_t \fP\fIinterval\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBualarm\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Начиная с glibc 2.12:
+.nf
+(_XOPEN_SOURCE\ >=\ 500) && ! (_POSIX_C_SOURCE\ >=\ 200809L)
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версиях glibc <= 2.19: */ _BSD_SOURCE
+.TP  4
+.fi
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+До glibc 2.12: _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.PD
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBualarm\fP() планирует отправку сигнала \fBSIGALRM\fP вызывающему
+процессу (не менее чем) через \fIusecs\fP микросекунд. Задержка может быть
+слегка больше при большой загруженности системы, из\-за, собственно, времени
+обработки этого вызова или из\-за неточности хода системных часов.
+.PP
+Если сигнал не будет пойман или проигнорирован, то \fBSIGALRM\fP уничтожит
+процесс.
+.PP
+Если аргумент \fIinterval\fP не равен нулю, то сигналы \fBSIGALRM\fP будут
+отправляться повторно каждые \fIinterval\fP микросекунд после первого.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Эта функция возвращает число микросекунд, оставшихся от любого ранее
+установленного сигнала, или 0, если сигналов не запланировано.
+.SH ОШИБКИ
+.TP 
+\fBEINTR\fP
+Прервано сигналом; см. \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Значение \fIusec\fP или \fIinterval\fP больше 1000000 (в тех системах, где это
+считается ошибкой).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBualarm\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.3BSD, POSIX.1\-2001. В POSIX.1\-2001 функция \fBualarm\fP() помечена как
+устаревшая. В POSIX.1\-2008 описание \fBualarm\fP() было удалено. В 4.3BSD,
+SUSv2 и POSIX нет описания ошибок.
+.SH ЗАМЕЧАНИЯ
+.\" This case is not documented in HP-US, Solar, FreeBSD, NetBSD, or OpenBSD!
+В POSIX.1\-2001 не указано, что случится, если значение \fIusecs\fP равно 0. В
+Linux (и, вероятно, в большинстве систем) произойдёт отмена любого
+взведённого будильника.
+.PP
+Тип \fIuseconds_t\fP является беззнаковым целым типом, способным хранить целые
+числа в диапазоне [0,1000000]. В первоначальной реализации BSD и glibc до
+версии 2.1, аргументы \fBualarm\fP() имели тип \fIunsigned int\fP. Программы будут
+более переносимы, если они никогда не будут явно упоминать тип
+\fIuseconds_t\fP.
+.PP
+Взаимодействие этой функции с другими функциями таймера, такими как
+\fBalarm\fP(2), \fBsleep\fP(3), \fBnanosleep\fP(2), \fBsetitimer\fP(2),
+\fBtimer_create\fP(2), \fBtimer_delete\fP(2), \fBtimer_getoverrun\fP(2),
+\fBtimer_gettime\fP(2), \fBtimer_settime\fP(2), \fBusleep\fP(3) не определено.
+.PP
+Эта функция устарела. Используйте вместо неё \fBsetitimer\fP(2) или
+интервальные таймеры POSIX (\fBtimer_create\fP(2) и т.д.).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBalarm\fP(2), \fBgetitimer\fP(2), \fBnanosleep\fP(2), \fBselect\fP(2),
+\fBsetitimer\fP(2), \fBusleep\fP(3), \fBtime\fP(7)

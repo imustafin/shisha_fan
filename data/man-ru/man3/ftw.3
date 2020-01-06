@@ -1,0 +1,347 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt (michael@moria.de)
+.\" and copyright (c) 1999 Andries Brouwer (aeb@cwi.nl)
+.\" and copyright (c) 2006 Justin Pryzby <justinpryzby@users.sf.net>
+.\" and copyright (c) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sun Jul 25 11:02:22 1993 by Rik Faith (faith@cs.unc.edu)
+.\" 2006-05-24, Justin Pryzby <justinpryzby@users.sf.net>
+.\"  	document FTW_ACTIONRETVAL; include .SH RETURN VALUE;
+.\" 2006-05-24, Justin Pryzby <justinpryzby@users.sf.net> and
+.\"	Michael Kerrisk <mtk.manpages@gmail.com>
+.\" 	reorganized and rewrote much of the page
+.\" 2006-05-24, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Added an example program.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FTW 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ftw, nftw \- обход файлового дерева
+.SH ОБЗОР
+.nf
+\fB#include <ftw.h>\fP
+.PP
+\fBint nftw(const char *\fP\fIdirpath\fP\fB,\fP
+\fB        int (*\fP\fIfn\fP\fB) (const char *\fP\fIfpath\fP\fB, const struct stat *\fP\fIsb\fP\fB,\fP
+\fB                   int \fP\fItypeflag\fP\fB, struct FTW *\fP\fIftwbuf\fP\fB),\fP
+\fB        int \fP\fInopenfd\fP\fB, int \fP\fIflags\fP\fB);\fP
+.PP
+\fB#include <ftw.h>\fP
+.PP
+\fBint ftw(const char *\fP\fIdirpath\fP\fB,\fP
+\fB        int (*\fP\fIfn\fP\fB) (const char *\fP\fIfpath\fP\fB, const struct stat *\fP\fIsb\fP\fB,\fP
+\fB                   int \fP\fItypeflag\fP\fB),\fP
+\fB        int \fP\fInopenfd\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBnftw\fP(): _XOPEN_SOURCE >= 500
+.SH ОПИСАНИЕ
+Функция \fBnftw\fP() обходит дерево каталогов, начиная с указанного в
+\fIdirpath\fP, и для каждого элемента дерева однократно вызывает \fIfn\fP(). По
+умолчанию каталоги обрабатываются раньше файлов и подкаталогов, которые в
+них содержатся (предварительный обход).
+.PP
+Чтобы избежать использования всех файловых дескрипторов вызывающего
+процесса, в \fInopenfd\fP задаётся максимальное количество одновременно
+открываемых \fBnftw\fP() каталогов. Когда это количество превышается, работа
+\fBnftw\fP() немного замедляется, так как каталоги будут закрываться и снова
+открываться. Функция \fBnftw\fP() использует не более одного файлового
+дескриптора для работы с каждым уровнем дерева каталогов.
+.PP
+Для каждого найденного элемента дерева \fBnftw\fP() вызывает функцию \fBfn\fP() с
+четырьмя аргументами: \fIfpath\fP, \fIsb\fP, \fIfpath\fP и \fIftwbuf\fP. В \fIfpath\fP
+указывается полное имя элемента в виде, или пути относительно рабочего
+каталога вызывающего процесса на момент вызова \fBnftw\fP() (если \fIdirpath\fP
+указан в виде относительного пути), или абсолютного пути (если \fIdirpath\fP
+указан в виде абсолютного пути). В \fIsb\fP задаётся указатель на структуру
+\fIstat\fP, возвращаемую вызовом \fBstat\fP(2) для \fIfpath\fP.
+.PP
+Аргумент \fItypeflag\fP, передаваемый в \fIfn\fP(), представляет собой целое
+число, которое может быть одним из следующих значений:
+.TP 
+\fBFTW_F\fP
+\fIfpath\fP обычный файл
+.TP 
+\fBFTW_D\fP
+\fIfpath\fP каталог
+.TP 
+\fBFTW_DNR\fP
+\fIfpath\fP каталог, который не может быть прочитан
+.TP 
+\fBFTW_DP\fP
+\fIfpath\fP является каталогом, и в \fIflags\fP установлен \fBFTW_DEPTH\fP (если
+\fBFTW_DEPTH\fP отсутствует в \fIflags\fP, то каталоги всегда будут
+просматриваться с \fItypeflag\fP равным \fBFTW_D\fP). Обработаны все файлы и
+подкаталоги в \fIfpath\fP.
+.TP 
+\fBFTW_NS\fP
+Вызов \fBstat\fP(2) завершился с ошибкой для \fIfpath\fP, который не является
+символьной ссылкой. Вероятно, проблема в том, что вызывающий имеет право на
+чтение родительского каталога, и поэтому файл с именем \fIfpath\fP доступен, но
+не имеет права выполнения, и поэтому файл недоступен для
+\fBstat\fP(2). Содержимое буфера, указываемого \fIsb\fP, не определено.
+.TP 
+\fBFTW_SL\fP
+.\" To obtain the definition of this constant from
+.\" .IR <ftw.h> ,
+.\" either
+.\" .B _BSD_SOURCE
+.\" must be defined, or
+.\" .BR _XOPEN_SOURCE
+.\" must be defined with a value of 500 or more.
+\fIfpath\fP является символьной ссылкой и в \fIflags\fP установлен \fBFTW_PHYS\fP.
+.TP 
+\fBFTW_SLN\fP
+Значение \fIfpath\fP является символьной ссылкой, указывающей на несуществующий
+файл (это может произойти, только если не установлен флаг \fBFTW_PHYS\fP). В
+большинстве реализаций в этом случае аргумент \fIsb\fP, переданный \fIfn\fP(),
+содержит информацию, возвращаемую вызовом \fBlstat\fP(2) для символьной
+ссылки. Подробней для Linux смотрите в разделе ДЕФЕКТЫ.
+.PP
+Четвёртый аргумент (\fIftwbuf\fP), передаваемый \fBnftw\fP() при вызове \fIfn\fP(),
+является структурой типа \fIFTW\fP:
+.PP
+.in +4n
+.EX
+struct FTW {
+    int base;
+    int level;
+};
+.EE
+.in
+.PP
+\fIbase\fP — смещение на имя файла (т.е. базовая часть) в пути, заданном в
+\fIfpath\fP.  \fIlevel\fP — глубина \fIfpath\fP в дереве каталогов относительно корня
+дерева (\fIdirpath\fP имеет глубину 0).
+.PP
+Для остановки обхода дерева \fIfn\fP() возвращает ненулевое значение; оно
+станет возвращаемым значением для \fBnftw\fP(). Пока \fIfn\fP() возвращает 0,
+\fBnftw\fP() будет продолжать свой поиск до полного обхода дерева (в этом
+случае она возвратит ноль), или пока не возникнет ошибка (например, из\-за
+\fBmalloc\fP(3)). В этом случае функция возвратит значение \-1.
+.PP
+Так как \fBnftw\fP() использует динамические структуры данных, то единственным
+безопасным способом для выхода из процесса обхода дерева будет возврат
+ненулевого значения из \fIfn\fP(). Для завершения обхода по сигналу без утечек
+памяти в обработчике нужно устанавливать глобальный флаг, проверяемый
+\fIfn\fP(). \fIНе\fP используйте \fBlongjmp\fP(3) кроме как для завершения программы.
+.PP
+Значение аргумента \fIflags\fP в \fBnftw\fP() составляется логическим сложением 0
+или нескольких следующих флагов:
+.TP 
+\fBFTW_ACTIONRETVAL\fP (начиная с glibc 2.3.3)
+Если этот флаг, имеющийся только в glibc, не задан, то \fBnftw\fP() по другому
+обрабатывает полученное от \fIfn\fP() значение. Вызов \fIfn\fP() должен возвращать
+одно из следующих значений:
+.RS
+.TP 
+\fBFTW_CONTINUE\fP
+Указывает \fBnftw\fP() продолжать обычную работу.
+.TP 
+\fBFTW_SKIP_SIBLINGS\fP
+.\" If \fBFTW_DEPTH\fP
+.\" is set, the entry's parent directory is processed next (with
+.\" \fIflag\fP set to \fBFTW_DP\fP).
+При возврате этого значения родственные элементы пропускаются и продолжается
+обход родителя.
+.TP 
+\fBFTW_SKIP_SUBTREE\fP
+Если \fIfn\fP() вызывается для элемента, являющегося каталогом (\fItypeflag\fP
+равно \fBFTW_D\fP), то объекты внутри каталога не будут переданы \fIfn\fP() в
+качестве аргументов. \fBnftw\fP() продолжит обход со следующего родственного
+элемента каталога.
+.TP 
+\fBFTW_STOP\fP
+Заставляет \fBnftw\fP() немедленно завершить работу со значением \fBFTW_STOP\fP.
+.PP
+В будущем могут появиться другие возвращаемые значения для новых действий;
+\fIfn\fP() не должна возвращать значений, отличных от перечисленных выше.
+.PP
+Чтобы получить определение \fBFTW_ACTIONRETVAL\fP из \fI<ftw.h>\fP, должен
+быть определён макрос тестирования свойств \fB_GNU_SOURCE\fP.
+.RE
+.TP 
+\fBFTW_CHDIR\fP
+Если установлен этот флаг, то будет выполняться \fBchdir\fP(2) для каждого
+каталога перед обработкой его содержимого. Это полезно, если программе
+требуется выполнить какое\-то действие в каталоге, в котором расположен
+\fIfpath\fP (наличие данного флага не влияет на путь, который передаётся в
+\fIfpath\fP аргумента \fIfn\fP).
+.TP 
+\fBFTW_DEPTH\fP
+Если установлен этот флаг, то производить обход в обратном порядке,
+т.е. вызывать \fIfn\fP() для обработки самого каталога \fIпосле\fP обработки
+содержимого его подкаталогов (по умолчанию каждый каталог обрабатывается
+\fIраньше\fP своего содержимого).
+.TP 
+\fBFTW_MOUNT\fP
+Если установлен этот флаг, то оставаться в пределах одной файловой системы
+(т.е. не переходить в другую точку монтирования).
+.TP 
+\fBFTW_PHYS\fP
+Если установлен этот флаг, то не следовать по символьным ссылкам (то, что
+обычно нужно). Если флаг не задан, то выполняется переход по символьным
+ссылкам, но ни один файл не будет обработан дважды.
+.IP
+Если \fBFTW_PHYS\fP не задан, но задан \fBFTW_DEPTH\fP, то функция \fIfn\fP() никогда
+не будет вызвана для каталога, который является потомком самого себя.
+.SS ftw()
+Функция \fBftw\fP() является устаревшей и предоставляет только часть
+возможностей \fBnftw\fP(). Основные отличия:
+.IP * 3
+В \fBftw\fP() нет аргумента \fIflags\fP. Она действует также, как если бы
+\fBnftw\fP() вызвали со значением \fIflags\fP равным нулю.
+.IP *
+Функции обратного вызова \fIfn\fP() не передаётся четвёртый аргумент.
+.IP *
+Диапазон значений, передаваемый в аргументе \fItypeflag\fP для \fIfn\fP() меньше:
+\fBFTW_F\fP, \fBFTW_D\fP, \fBFTW_DNR\fP, \fBFTW_NS\fP и (возможно) \fBFTW_SL\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0 и \-1 при ошибке.
+.PP
+Если \fIfn\fP() возвращает ненулевое значение, то обход дерева прекращается и
+значение, полученное от \fIfn\fP(), возвращается в качестве результата \fBftw\fP()
+или \fBnftw\fP().
+.PP
+Если \fBnftw\fP() вызывается с флагом \fBFTW_ACTIONRETVAL\fP, то для прекращения
+обхода дерева \fIfn\fP() должна вернуть ненулевое значение \fBFTW_STOP\fP, и это
+значение возвращается в качестве результата \fBnftw\fP().
+.SH ВЕРСИИ
+Функция \fBnftw\fP() доступна в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBnftw\fP()
+T}	Безвредность в нитях	MT\-Safe cwd
+T{
+\fBftw\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, SUSv1. В POSIX.1\-2008 функция \fBftw\fP()
+помечена как устаревшая.
+.SH ЗАМЕЧАНИЯ
+В POSIX.1\-2008 отмечено, что результат непредсказуем, если \fIfn\fP не
+сохраняет текущий рабочий каталог.
+.PP
+Функция \fBnftw\fP() и использование \fBFTW_SL\fP с \fBftw\fP() впервые появились в
+SUSv1.
+.PP
+В некоторых реализациях (например, glibc), \fBftw\fP() никогда не использует
+\fBFTW_SL\fP, в других системах \fBFTW_SL\fP возникает только для символьных
+ссылок, которые не указывают на существующий файл, или даже \fBftw\fP() будет
+использовать \fBFTW_SL\fP для каждой символьной ссылки. Если \fIfpath\fP —
+символьная ссылка и \fBstat\fP(2) завершается с ошибкой, то следуя POSIX.1\-2008
+нельзя понять что передаётся в \fItypeflag\fP: \fBFTW_NS\fP или \fBFTW_SL\fP. Для
+предсказуемости результатов используйте \fBnftw\fP().
+.SH ДЕФЕКТЫ
+.\" FIXME .
+.\" https://bugzilla.redhat.com/show_bug.cgi?id=1422736
+.\" http://austingroupbugs.net/view.php?id=1121
+В спецификации POSIX.1 на \fBnftw\fP() отмечено, что при передаче \fBFTW_NS\fP в
+аргументе \fItypeflag\fP для \fIfn\fP(), содержимое буфера, на который указывает
+аргумент \fIsb\fP, не определено. Стандарт не утверждает это для случая, когда
+в \fItypeflag\fP передаётся \fBFTW_SLN\fP и подразумевается, что содержимое
+буфера, на который указывает \fIsb\fP, является определённым. И действительно,
+этот так для большинства реализаций: буфер, на который указывает \fIsb\fP,
+содержит результаты работы \fBlstat\fP(2) для символьной ссылки. В ранних glibc
+поведение было тем же самым. Однако начиная с glibc 2.4 содержимое буфера,
+на который указывает \fIsb\fP, не определено при передаче \fBFTW_SLN\fP в
+\fItypeflag\fP. Это изменение, \fIвероятно\fP, вызовет непреднамеренную регрессию,
+но (пока) не ясно,  будет ли восстановлено поведение, предоставляемое
+первоначальной реализацией glibc (и другими реализациями).
+.SH ПРИМЕР
+Следующая программа обходит дерево каталогов начиная с пути, указанном в
+первом аргументе командой строки или начиная с текущего каталога, если
+аргумент не указан. Она отображает различную информацию о каждом файле. Во
+втором параметре можно указать символы, которые управляют содержимым
+аргумента \fIflags\fP у \fBnftw\fP().
+.SS "Исходный код программы"
+\&
+.EX
+#define _XOPEN_SOURCE 500
+#include <ftw.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+
+static int
+display_info(const char *fpath, const struct stat *sb,
+             int tflag, struct FTW *ftwbuf)
+{
+    printf("%\-3s %2d ",
+            (tflag == FTW_D) ?   "d"   : (tflag == FTW_DNR) ? "dnr" :
+            (tflag == FTW_DP) ?  "dp"  : (tflag == FTW_F) ?   "f" :
+            (tflag == FTW_NS) ?  "ns"  : (tflag == FTW_SL) ?  "sl" :
+            (tflag == FTW_SLN) ? "sln" : "???",
+            ftwbuf\->level);
+
+    if (tflag == FTW_NS)
+        printf("\-\-\-\-\-\-\-");
+    else
+        printf("%7jd", (intmax_t) sb\->st_size);
+
+    printf("   %\-40s %d %s\en",
+            fpath, ftwbuf\->base, fpath + ftwbuf\->base);
+
+    return 0;           /* говорит nftw() продолжать */
+}
+
+int
+main(int argc, char *argv[])
+{
+    int flags = 0;
+
+    if (argc > 2 && strchr(argv[2], \(aqd\(aq) != NULL)
+        flags |= FTW_DEPTH;
+    if (argc > 2 && strchr(argv[2], \(aqp\(aq) != NULL)
+        flags |= FTW_PHYS;
+
+    if (nftw((argc < 2) ? "." : argv[1], display_info, 20, flags)
+            == \-1) {
+        perror("nftw");
+        exit(EXIT_FAILURE);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBstat\fP(2), \fBfts\fP(3), \fBreaddir\fP(3)

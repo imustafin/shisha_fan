@@ -1,0 +1,97 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2001 John Levon <moz@compsoc.man.ac.uk>
+.\" Based on mkstemp(3), Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and GNU libc documentation
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MKDTEMP 3 2016\-07\-17 GNU "Руководство программиста Linux"
+.SH ИМЯ
+mkdtemp \- создание временного каталога с уникальным именем
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBchar *mkdtemp(char *\fP\fItemplate\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc (смотрите
+\fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBmkdtemp\fP():
+.br
+.ad l
+.RS 4
+.PD 0
+/* Начиная с glibc 2.19: */ _DEFAULT_SOURCE
+.br
+|| /* glibc 2.19 и старше: */ _BSD_SOURCE
+.br
+|| /* начиная с glibc 2.10: */ _POSIX_C_SOURCE\ >=\ 200809L
+.ad
+.PD
+.RE
+.SH ОПИСАНИЕ
+Функция \fBmkdtemp\fP() создаёт временный каталог с уникальным именем на основе
+\fItemplate\fP. Последние шесть символов \fItemplate\fP должны быть равны XXXXXX;
+они будут заменены на строку, которая и сделает имя каталога
+уникальным. После этого будет создан каталог с правами 0700. Так как
+\fItemplate\fP меняется, он не должен быть строковой константой, а должен быть
+объявлен как массив символов.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае успеха \fBmkdtemp\fP() возвращает указатель на изменённую строку
+шаблона (template), в случае неудачи \(em NULL, при этом \fIerrno\fP
+устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Последние шесть символов \fItemplate\fP не равны XXXXXX. \fItemplate\fP не
+изменён.
+.PP
+См. также в \fBmkdir\fP(2) другие возможные значения \fIerrno\fP.
+.SH ВЕРСИИ
+Доступна в glibc с версии 2.1.91.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmkdtemp\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" As at 2006, this function is being considered for a revision of POSIX.1
+.\" Also in NetBSD 1.4.
+POSIX.1\-2008. Данная функция есть в реализациях BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmktemp\fP(1), \fBmkdir\fP(2), \fBmkstemp\fP(3), \fBmktemp\fP(3), \fBtempnam\fP(3),
+\fBtmpfile\fP(3), \fBtmpnam\fP(3)

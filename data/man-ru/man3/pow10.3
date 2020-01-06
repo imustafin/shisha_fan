@@ -1,0 +1,71 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2004 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH POW10 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+pow10, pow10f, pow10l \- функция возведения числа 10 в степень
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+\fB#include <math.h>\fP
+.PP
+\fBdouble pow10(double \fP\fIx\fP\fB);\fP
+\fBfloat pow10f(float \fP\fIx\fP\fB);\fP
+\fBlong double pow10l(long double \fP\fIx\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.SH ОПИСАНИЕ
+Данные функции возвращают значение 10, возведённое в степень \fIx\fP.
+.PP
+\fBПримечание\fP: Эти функции выполняют те же задачи, что и функции, описанные
+в \fBexp10\fP(3), с той разницей, что последние описаны в TS\ 18661\-4:2015. Рекомендуется использовать последние функции, а не описанные в
+этой странице.
+.SH ВЕРСИИ
+.\" glibc commit 5a80d39d0d2587e9bd8e72f19e92eeb2a66fbe9e
+Эти функции впервые появились в glibc 2.1. Начиная с glibc 2.27,
+использование данных функций в новых программах больше не поддерживается.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw28 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpow10\fP(),
+\fBpow10f\fP(),
+\fBpow10l\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBexp10\fP(3), \fBpow\fP(3)

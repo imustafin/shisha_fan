@@ -1,0 +1,122 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2016, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Based on an earlier version of the page where a few pieces were
+.\" copyright (C) 1993 by Dan Miner (dminer@nyx.cs.du.edu) and subsequently
+.\" others (see old changelog below).
+.\" The structure definitions are taken more or less straight from the kernel
+.\" source files.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\" Modified Sat Jul 24 12:35:12 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Oct 22 22:29:51 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Mon Aug 25 16:06:11 1997 by Nicolás Lichtmaier <nick@debian.org>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSINFO 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sysinfo \- возвращает информацию о системе
+.SH ОБЗОР
+\fB#include <sys/sysinfo.h>\fP
+.PP
+\fBint sysinfo(struct sysinfo *\fP\fIinfo\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBsysinfo\fP() возвращает некоторую статистику использования памяти и
+области подкачки, а также среднюю загруженность.
+.PP
+До Linux 2.3.16 вызов \fBsysinfo\fP() возвращал следующую структуру:
+.PP
+.in +4n
+.EX
+struct sysinfo {
+    long uptime;             /* Количество секунд, прошедшее
+                                с загрузки системы */
+    unsigned long loads[3];  /* средняя 1, 5 и 15\-минутная загруженность
+                                системы */
+    unsigned long totalram;  /* Общий объём доступной оперативной памяти */
+    unsigned long freeram;   /* Объём свободной памяти */
+    unsigned long sharedram; /* Объём общей памяти */
+    unsigned long bufferram; /* Объём памяти, использованной под буферы */
+    unsigned long totalswap; /* Общий объём области подкачки */
+    unsigned long freeswap;  /* Объём свободного пространства в области
+                                подкачки */
+    unsigned short procs;    /* Текущее количество процессов */
+    char _f[22];             /* Дополнение структуры до 64 байтов */
+};
+.EE
+.in
+.PP
+В приведённой выше структуре размеры полей памяти и подкачки приводятся в
+байтах.
+.PP
+Начиная с Linux 2.3.23 (i386) и Linux 2.3.48 (остальные архитектуры),
+структура следующая:
+.PP
+.in +4n
+.EX
+struct sysinfo {
+    long uptime;             /* Количество секунд, прошедшее с загрузки
+                                системы */
+    unsigned long loads[3];  /* средняя 1,  и 15\-минутная загруженность
+                                системы */
+    unsigned long totalram;  /* Общий объём доступной оперативной памяти */
+    unsigned long freeram;   /* Объём свободной памяти */
+    unsigned long sharedram; /* Объём общей памяти */
+    unsigned long bufferram; /* Объём памяти, использованной под буферы */
+    unsigned long totalswap; /* Общий объём области подкачки */
+    unsigned long freeswap;  /* Объём свободного пространства в области
+                                подкачки */
+    unsigned short procs;    /* Текущее количество процессов */
+    unsigned long totalhigh; /* Общий объём дальней (high) памяти */
+    unsigned long freehigh;  /* Объём свободной дальней памяти */
+    unsigned int mem_unit;   /* Размер элемента памяти в байтах */
+    char _f[20\-2*sizeof(long)\-sizeof(int)];
+                             /* Дополнение до 64 байт */
+};
+.EE
+.in
+.PP
+В приведённой выше структуре размеры полей памяти и подкачки приводятся
+умноженными на \fImem_unit\fP байт.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsysinfo\fP() возвращается ноль. При ошибке
+возвращается \-1, а в \fIerrno\fP содержится код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Аргумент \fIinfo\fP не содержит допустимого адреса.
+.SH ВЕРСИИ
+Вызов \fBsysinfo\fP() впервые появился в Linux 0.98.pl6.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данная функция есть только в Linux и не должна использоваться в программах,
+которые задуманы как переносимые.
+.SH ЗАМЕЧАНИЯ
+Вся информация, предоставляемая этим системным вызовом также доступна через
+\fI/proc/meminfo\fP и \fI/proc/loadavg\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBproc\fP(5)

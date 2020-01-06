@@ -1,0 +1,244 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2017 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSFS 5 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sysfs \- файловая система для экспортируемых объектов ядра
+.SH ОПИСАНИЕ
+Файловая система \fBsysfs\fP — это псевдофайловая система, предоставляющая
+интерфейс к структурам данных ядра (точнее, файлы и каталоги в \fBsysfs\fP
+позволяют видеть структуры \fIkobject\fP, определённые внутри ядра). Файлы в
+\fBsysfs\fP показывают информацию об устройствах, модулях ядра, файловых
+системах и других компонентах ядра.
+.PP
+Обычно, файловая система \fBsysfs\fP монтируется в \fI/sys\fP. Это выполняется
+системой автоматически, но также можно монтировать её вручную с помощью
+команды:
+.PP
+.in +4n
+.EX
+mount \-t sysfs sysfs /sys
+.EE
+.in
+.PP
+.\"
+Многие из файлов файловой системы \fBsysfs\fP доступны только для чтения, но
+есть и доступные на запись, через которые можно изменять переменные ядра. В
+целях сокращения избыточности для связи элементов в дереве файловой системы
+широко применяются символьные ссылки.
+.SS "Файлы и каталоги"
+В следующем списке описаны некоторые файлы и каталоги в иерархии \fI/sys\fP.
+.TP 
+\fI/sys/block\fP
+В этом подкаталоге содержится по одной символьной ссылке на каждое блочное
+устройство, обнаруженное в системе. Символьные ссылки указывают на
+соответствующие каталоги в \fI/sys/devices\fP.
+.TP 
+\fI/sys/bus\fP
+В этом каталоге содержится по одному подкаталогу на каждый тип шины
+ядра. Внутри каждого каталога есть два подкаталога:
+.RS
+.TP 
+\fIdevices\fP
+Этот подкаталог содержит символьные ссылки на элементы в \fI/sys/devices\fP,
+которые соответствуют устройствам, обнаруженным на этой шине.
+.TP 
+\fIdrivers\fP
+Этот подкаталог содержит по одному подкаталогу на каждый драйвер устройства,
+загруженный для этой шины.
+.RE
+.TP 
+\fI/sys/class\fP
+Этот подкаталог содержит по одному слою дополнительных подкаталогов на
+каждый класс устройств, зарегистрированных в системе (например, терминалы,
+сетевые устройства, блочные устройства, графические устройства, звуковые
+устройства и т. д.). Внутри каждого из этих подкаталогов находятся
+символьные ссылки на каждое из устройств этого класса. Данные символьные
+ссылки указывают на элементы в каталоге \fI/sys/devices\fP.
+.TP 
+\fI/sys/class/net\fP
+Каждый элемент этого каталога представляет собой символьную ссылку на одно
+из  реальных или виртуальных сетевых устройств, видимых в сетевом
+пространстве имён процесса, обратившегося к каталогу. Эти символьные ссылки
+указывают на элементы в каталоге \fI/sys/devices\fP.
+.TP 
+\fI/sys/dev\fP
+Этот каталог содержит два подкаталога — \fIblock\fP/ и \fIchar/\fP,
+соответствующие блочным и символьным устройствам в системе. Внутри каждого
+подкаталога находятся символьные ссылки с именами в виде
+\fIосновной\-ID\fP:\fIдополнительный\-ID\fP, где значения ID соответствуют основному
+и дополнительному идентификаторами определённого устройства. Каждая
+символьная ссылка указывает на каталог \fBsysfs\fP для устройства. Таким
+образом, символьные ссылки в \fI/sys/dev\fP предоставляют простой способ
+просмотра интерфейса \fBsysfs\fP по идентификаторам устройств, возвращаемых
+вызовом \fBstat\fP(2) (или подобным).
+.IP
+Пример сеанса оболочки с выводом \fI/sys/dev\fP:
+.IP
+.in +4n
+.EX
+$ \fBstat \-c "%t %T" /dev/null\fP
+1 3
+$ \fBreadlink /sys/dev/char/1\e:3\fP
+\&../../devices/virtual/mem/null
+$ \fBls \-Fd /sys/devices/virtual/mem/null\fP
+/sys/devices/virtual/mem/null/
+$ \fBls \-d1 /sys/devices/virtual/mem/null/*\fP
+/sys/devices/virtual/mem/null/dev
+/sys/devices/virtual/mem/null/power/
+/sys/devices/virtual/mem/null/subsystem@
+/sys/devices/virtual/mem/null/uevent
+.EE
+.in
+.TP 
+\fI/sys/devices\fP
+В данном каталоге содержится представление в виде файловой системы для
+дерева устройств ядра, которое является иерархией структур \fIdevice\fP внутри
+ядра.
+.TP 
+\fI/sys/firmware\fP
+В этом подкаталоге содержатся интерфейсы для просмотра и изменения объектов
+и атрибутов микропрограмм.
+.TP 
+\fI/sys/fs\fP
+В этом каталоге содержатся подкаталоги для некоторых файловых систем. Здесь
+файловая система будет иметь подкаталог только, если она явно создаст
+подкаталог.
+.TP 
+\fI/sys/fs/cgroup\fP
+Обычно, этот каталог используется как точка монтирования файловой системы
+\fBtmpfs\fP(5), содержащей точки монтирования для файловых систем
+\fBcgroups\fP(7).
+.TP 
+\fI/sys/fs/smackfs\fP
+В каталоге содержатся файлы настройки SMACK LSM. Смотрите файл исходного
+кода ядра \fIDocumentation/admin\-guide/LSM/Smack.rst\fP.
+.TP 
+\fI/sys/hypervisor\fP
+[Будет описано]
+.TP 
+\fI/sys/kernel\fP
+В этом подкаталоге содержатся различные файлы и подкаталоги, предоставляющие
+информацию о работающем ядре.
+.TP 
+\fI/sys/kernel/cgroup/\fP
+Файлы этого каталога описаны в \fBcgroups\fP(7).
+.TP 
+\fI/sys/kernel/debug/tracing\fP
+Точка монтирования файловой системы \fItracefs\fP, используемая свойством ядра
+\fIftrace\fP (информацию по \fIftrace\fP смотрите в файле исходного кода ядра
+\fIDocumentation/trace/ftrace.txt\fP).
+.TP 
+\fI/sys/kernel/mm\fP
+В этом подкаталоге содержатся различные файлы и подкаталоги, предоставляющие
+информацию о подсистеме ядра управления памятью.
+.TP 
+\fI/sys/kernel/mm/hugepages\fP
+Этот подкаталог содержит по одному подкаталогу на каждый размер огромных
+страниц ядра, поддерживаемых системой. В имени подкаталога показан размер
+огромной страницы (например, \fIhugepages\-2048kB\fP). Внутри каждого
+подкаталога содержится набор файлов, которые могут быть использованы для
+просмотра и (в некоторых случаях) изменения настроек, относящихся к размеру
+огромных страниц. Дополнительную информацию смотрите в файле исходного кода
+ядра \fIDocumentation/admin\-guide/mm/hugetlbpage.rst\fP.
+.TP 
+\fI/sys/module\fP
+Этот подкаталог содержит по одному подкаталогу на каждый модуль, загруженный
+в ядро. Подкаталоги называются по имени модулей. В каждом подкаталоге могут
+быть следующие файлы:
+.RS
+.TP 
+\fIcoresize\fP
+[Будет описано]
+.TP 
+\fIinitsize\fP
+[Будет описано]
+.TP 
+\fIinitstate\fP
+[Будет описано]
+.TP 
+\fIrefcnt\fP
+[Будет описано]
+.TP 
+\fIsrcversion\fP
+[Будет описано]
+.TP 
+\fItaint\fP
+[Будет описано]
+.TP 
+\fIuevent\fP
+[Будет описано]
+.TP 
+\fIversion\fP
+[Будет описано]
+.RE
+.IP
+В каждом подкаталоге могут быть следующие подкаталоги:
+.RS
+.TP 
+\fIdrivers\fP
+[Будет описано]
+.TP 
+\fIholders\fP
+[Будет описано]
+.TP 
+\fInotes\fP
+[Будет описано]
+.TP 
+\fIparameters\fP
+Этот каталог содержит по одному файлу на каждый параметр модуля; в каждом
+файле хранится значение соответствующего параметра. Некоторые файлы доступны
+на запись.
+.TP 
+\fIsections\fP
+В этих подкаталогах содержатся файла с информацией о разделах модуля. Эта
+информацию, в основном, используется для отладки.
+.TP 
+\fI[Будет описано]\fP
+.RE
+.TP 
+\fI/sys/power\fP
+[Будет описано]
+.SH ВЕРСИИ
+Файловая система \fBsysfs\fP впервые появилась в Linux 2.6.0.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Файловая система \fBsysfs\fP есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Данная справочная страница неполна, в ней могут быть неточности и является
+одной из страниц, которую требуется обновлять очень часто.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBproc\fP(5), \fBudev\fP(7)
+.PP
+.\" https://www.kernel.org/pub/linux/kernel/people/mochel/doc/papers/ols-2005/mochel.pdf
+P.\& Mochel. (2005).  \fIФайловая система sysfs\fP. Представлен на симпозиуме
+Linux в Оттаве в 2005 году.
+.PP
+Файл исходного кода ядра \fIDocumentation/filesystems/sysfs.txt\fP и другие
+различные файлы в \fIDocumentation/ABI\fP и \fIDocumentation/*/sysfs.txt\fP

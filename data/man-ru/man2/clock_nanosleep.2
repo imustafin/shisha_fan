@@ -1,0 +1,180 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008, Linux Foundation, written by Michael Kerrisk
+.\" <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CLOCK_NANOSLEEP 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+clock_nanosleep \- остановка работы процесса на точно выдержанное время с
+помощью определённых часов
+.SH ОБЗОР
+\fB#include <time.h>\fP
+.nf
+.PP
+\fBint clock_nanosleep(clockid_t \fP\fIclock_id\fP\fB, int \fP\fIflags\fP\fB,\fP
+\fB                    const struct timespec *\fP\fIrequest\fP\fB,\fP
+\fB                    struct timespec *\fP\fIremain\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lrt\fP (только для glibc до версии
+2.17).
+.PP
+.ad l
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBclock_nanosleep\fP():
+.RS 4
+_POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Подобно \fBnanosleep\fP(2), \fBclock_nanosleep\fP() позволяет вызывающей нити
+приостановить работу на некоторое время с наносекундной точностью. Отличие в
+том, что вызывающий может выбрать часы, по которым будет отсчитываться
+интервал, что позволяет задавать интервал абсолютным или относительным
+значением времени.
+.PP
+Время, передаваемое и возвращаемое этим вызовом, задаётся в структурах
+\fItimespec\fP, определённых следующим образом:
+.PP
+.in +4n
+.EX
+struct timespec {
+    time_t tv_sec;        /* секунды */
+    long   tv_nsec;       /* наносекунды [0 .. 999999999] */
+};
+.EE
+.in
+.PP
+Аргумент \fIclock_id\fP определяет часы, по которым отсчитывается
+интервал. Этот аргумент может иметь следующие значения:
+.TP  17
+\fBCLOCK_REALTIME\fP
+Настраиваемые системные часы реального времени.
+.TP 
+\fBCLOCK_MONOTONIC\fP
+.\" On Linux this clock measures time since boot.
+Ненастраиваемые, постоянно идущие вперёд часы, которые отчитывают время с
+некоторой неопределённой точки в прошлом, которая не изменяется с момент
+запуска системы.
+.TP 
+\fBCLOCK_PROCESS_CPUTIME_ID\fP
+.\" There is some trickery between glibc and the kernel
+.\" to deal with the CLOCK_PROCESS_CPUTIME_ID case.
+Настраиваемые для каждого процесса часы, измеряющие время ЦП, затраченное
+всеми нитями процесса.
+.PP
+Подробней об этих часах смотрите в \fBclock_getres\fP(2). Также ID часов ЦП,
+возвращаемый \fBclock_getcpuclockid\fP(3) и \fBpthread_getcpuclockid\fP(3), также
+может передаваться в \fIclock_id\fP.
+.PP
+Если \fIflags\fP равно 0, то значение, указанное в \fIrequest\fP, считается
+относительным интервалом от текущего значения часов, заданных в \fIclock_id\fP.
+.PP
+Если \fIflags\fP равно \fBTIMER_ABSTIME\fP, то значением \fIrequest\fP считается
+абсолютное время, отсчитываемое часами, заданными в \fIclock_id\fP. Если
+\fIrequest\fP меньше или равно текущему значению часов, то \fBclock_nanosleep\fP()
+немедленно завершает работу без приостановки работы вызывающий нити.
+.PP
+\fBclock_nanosleep\fP() приостанавливает выполнение вызывающей нити до тех пор,
+пока не наступит время, указанное в \fIrequest\fP, или не будет получен сигнал,
+вызывающий обработчик сигнала, или процесс не завершится.
+.PP
+Если вызов прерывается обработчиком сигнала, то \fBclock_nanosleep\fP()
+завершается с ошибкой \fBEINTR\fP. Также, если \fIremain\fP не равно NULL и
+\fIflags\fP не равно \fBTIMER_ABSTIME\fP, то он возвращает в \fIremain\fP остаток
+непроведённого в остановке времени. Это значение можно использовать в вызове
+\fBclock_nanosleep\fP() снова и завершить (относительно) приостановку.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+После успешной приостановки на запрошенное время, \fBclock_nanosleep\fP()
+возвращает 0. Если вызове был прерван обработчиком сигнала или произошла
+ошибка, то возвращается один из положительных номеров ошибок, перечисленных
+в разделе ОШИБКИ.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+В \fIrequest\fP или \fIremain\fP указан неправильный адрес.
+.TP 
+\fBEINTR\fP
+Сон прерван обработчиком сигнала; смотрите \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Значение поля \fItv_nsec\fP не находится в интервале от 0 до 999999999 или
+\fItv_sec\fP содержит отрицательное число.
+.TP 
+\fBEINVAL\fP
+Неверное значение \fIclock_id\fP. (Значение \fBCLOCK_THREAD_CPUTIME_ID\fP нельзя
+указать в \fIclock_id\fP.)
+.SH ВЕРСИИ
+Системный вызов \fBclock_nanosleep\fP() появился в Linux 2.6. Поддержка в glibc
+появилась в версии 2.1.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Если интервал, указанный в \fIrequest\fP, не кратен степени разрешения
+используемых часов (см. \fBtime\fP(7)), то интервал будет округлён до
+следующего кратного значения. Также, после окончания интервала приостановки
+может возникнуть задержка перед тем, как ЦП освободится снова для следующего
+выполнения вызывающей нити.
+.PP
+Использование абсолютного таймера позволяет избежать проблем с уходом часов,
+которые описаны в \fBnanosleep\fP(2). (Такие проблемы ухудшаются, если
+программа пытается перезапустить приостановку на относительный интервал
+после постоянно прерывания сигналами.) Чтобы избежать этих проблем при
+использовании относительного интервала, вызовите \fBclock_gettime\fP(2) с
+нужными часами, добавьте нужный интервал к возвращённому значению времени и
+вызовите \fBclock_nanosleep\fP() с флагом \fBTIMER_ABSTIME\fP.
+.PP
+\fBclock_nanosleep\fP() никогда не перезапускается после того, как прерван
+обработчиком сигнала, независимо от значения флага \fBSA_RESTART\fP в
+\fBsigaction\fP(2).
+.PP
+Аргумент \fIremain\fP не нужен и не используется, если \fIflags\fP равно
+\fBTIMER_ABSTIME\fP. (Приостановка с абсолютным значением может быть
+перезапущена с тем же значением аргумента \fIrequest\fP.)
+.PP
+В POSIX.1 указано, что \fBclock_nanosleep\fP() не влияет на заданные
+обработчики сигналов или сигнальные маски.
+.PP
+В POSIX.1 указано, что после изменения значения часов \fBCLOCK_REALTIME\fP с
+помощью \fBclock_settime\fP(2), новое значение часов должно быть использовано
+для определения времени, на которое была блокирована нить с помощью
+\fBclock_nanosleep\fP() с абсолютным значением; если по новому значению часов
+интервал приостановки истёк, то вызов \fBclock_nanosleep\fP() немедленно
+завершается.
+.PP
+В POSIX.1 указано, что изменение значения часов \fBCLOCK_REALTIME\fP с помощью
+\fBclock_settime\fP(2) не оказывает влияние на нити, которые заблокированы с
+помощью \fBclock_nanosleep\fP() с относительным значением интервала.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclock_getres\fP(2), \fBnanosleep\fP(2), \fBrestart_syscall\fP(2),
+\fBtimer_create\fP(2), \fBsleep\fP(3), \fBusleep\fP(3), \fBtime\fP(7)

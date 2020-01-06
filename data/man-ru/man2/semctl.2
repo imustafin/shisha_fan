@@ -1,0 +1,365 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Giorgio Ciucci (giorgio@crcc.it)
+.\" and Copyright 2004, 2005 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Tue Oct 22 17:53:56 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Fri Jun 19 10:59:15 1998 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified Sun Feb 18 01:59:29 2001 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 20 Dec 2001, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 21 Dec 2001, aeb
+.\" Modified 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on CAP_IPC_OWNER requirement
+.\" Modified 17 Jun 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on CAP_SYS_ADMIN requirement for IPC_SET and IPC_RMID
+.\" Modified, 11 Nov 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Language and formatting clean-ups
+.\"	Rewrote semun text
+.\"	Added semid_ds and ipc_perm structure definitions
+.\" 2005-08-02, mtk: Added IPC_INFO, SEM_INFO, SEM_STAT descriptions.
+.\" 2018-03-20, dbueso: Added SEM_STAT_ANY description.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SEMCTL 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+semctl \- операции управления семафорами System V
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/ipc.h>\fP
+\fB#include <sys/sem.h>\fP
+.PP
+\fBint semctl(int \fP\fIsemid\fP\fB, int \fP\fIsemnum\fP\fB, int \fP\fIcmd\fP\fB, ...);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов semctl выполняет операцию, определённую в \fIcmd\fP, над набором
+семафоров System\ V, указанном в \fIsemid\fP, или над семафором с номером
+\fIsemnum\fP из этого набора (семафоры нумеруются, начиная с 0).
+.PP
+Данный вызов имеет три или четыре аргумента, в зависимости от значения
+\fIcmd\fP. Если аргументов четыре, то четвертый аргумент arg имеет тип \fIunion
+semun\fP. В \fIвызывающей программе\fP это объединение должно быть определено
+следующим образом:
+.PP
+.in +4n
+.EX
+union semun {
+    int              val;    /* значение для SETVAL */
+    struct semid_ds *buf;    /* буфер для IPC_STAT, IPC_SET */
+    unsigned short  *array;  /* массив для GETALL, SETALL */
+    struct seminfo  *__buf;  /* буфер для IPC_INFO
+                                (есть только в Linux) */
+};
+.EE
+.in
+.PP
+Структура данных \fIsemid_ds\fP определена в \fI<sys/sem.h>\fP следующим
+образом:
+.PP
+.in +4n
+.EX
+struct semid_ds {
+    struct ipc_perm sem_perm;  /* владелец и права */
+    time_t          sem_otime; /* время последней операции semop */
+    time_t          sem_ctime; /* время последнего изменения */
+    unsigned long  sem_nsems; /* кол\-во семафоров в наборе */
+};
+.EE
+.in
+.PP
+Структура \fIipc_perm\fP определена следующим образом (значения полей
+устанавливаются с помощью \fBIPC_SET\fP):
+.PP
+.in +4n
+.EX
+struct ipc_perm {
+    key_t          __key; /* ключ, передаваемый в semget(2) */
+    uid_t          \fBuid\fP;   /* эффективный UID владельца */
+    gid_t          \fBgid\fP;   /* эффективный GID владельца */
+    uid_t          cuid;  /* эффективный UID создателя */
+    gid_t          cgid;  /* эффективный GID создателя */
+    unsigned short \fBmode\fP;  /* права */
+    unsigned short __seq; /* порядковый номер */
+};
+.EE
+.in
+.PP
+Возможные значения \fIcmd\fP:
+.TP  10
+\fBIPC_STAT\fP
+Копирует информацию из структуры данных ядра, связанной с \fIsemid\fP, в
+структуру \fIsemid_ds\fP, расположенную по адресу \fIarg.buf\fP. Аргумент
+\fIsemnum\fP игнорируется. Вызывающий процесс должен иметь права на чтение
+набора семафоров.
+.TP 
+\fBIPC_SET\fP
+Записывает значения некоторых полей структуры \fIsemid_ds\fP, на которую
+указывает \fIarg.buf\fP, в структуру данных ядра, связанную с этим набором
+семафоров, также обновляя при этом поле \fIsem_ctime\fP. Обновляются следующие
+поля структуры: \fIsem_perm.uid\fP, \fIsem_perm.gid\fP и (младшие 9 значащих
+битов) \fIsem_perm.mode\fP. Эффективный UID вызывающего процесса должен
+совпадать с идентификатором владельца (\fIsem_perm.uid\fP) или создателя
+(\fIsem_perm.cuid\fP) набора семафоров, или вызывающий должен иметь расширенные
+права. Аргумент \fIsemnum\fP игнорируется.
+.TP 
+\fBIPC_RMID\fP
+Немедленно удаляет набор семафоров, пробуждая все процессы, заблокированные
+в вызове \fBsemop\fP(2) (при этом возвращается сообщение об ошибке, а \fIerrno\fP
+присваивается значение \fBEIDRM\fP). Эффективный идентификатор пользователя
+вызывающего процесса должен совпадать с идентификатором создателя или
+владельца набора семафоров, или вызывающий должен иметь расширенные
+права. Аргумент \fIsemnum\fP игнорируется.
+.TP 
+\fBIPC_INFO\fP (есть только в Linux)
+Возвращает параметры и информацию о системных ограничениях семафоров в
+структуре, указанной в \fIarg.__buf\fP. Данная структура имеет тип \fIseminfo\fP,
+который определён в \fI<sys/sem.h>\fP, если определён макрос
+тестирования свойств \fB_GNU_SOURCE\fP:
+.IP
+.in +4n
+.EX
+struct  seminfo {
+    int semmap;  /* количество записей в карте
+                    семафоров; не используется в ядре */
+    int semmni;  /* максимальное количество наборов
+                    семафоров */
+    int semmns;  /* максимальное количество семафоров во
+                     всех наборах семафоров */
+    int semmnu;  /* максимальное количество структур undo
+                    в системе; не используется в ядре */
+    int semmsl;  /* максимальное количество семафоров в
+                    наборе */
+    int semopm;  /* максимальное количество операция для
+                    semop(2) */
+    int semume;  /* максимальное количество записей undo на
+                    процесс; не используется в ядре */
+    int semusz;  /* размер struct sem_undo */
+    int semvmx;  /* максимальное значение семафора */
+    int semaem;  /* максимальное значение, которое может
+                    быть записано для регулирования
+                    семафора (SEM_UNDO) */
+};
+.EE
+.in
+.IP
+Значения \fIsemmsl\fP, \fIsemmns\fP, \fIsemopm\fP и \fIsemmni\fP можно изменить через
+\fI/proc/sys/kernel/sem\fP; подробности в \fBproc\fP(5).
+.TP 
+\fBSEM_INFO\fP (есть только в Linux)
+Возвращает структуру \fIseminfo\fP, содержащую такую же информацию что и для
+\fBIPC_INFO\fP, за исключением того, что следующие поля содержат информацию о
+системных ресурсах, потребляемых семафорами: в поле \fIsemusz\fP возвращается
+количество наборов семафоров, существующих в системе; в поле \fIsemaem\fP
+возвращается общее количество семафоров во всех наборах семафоров в системе.
+.TP 
+\fBSEM_STAT\fP (есть только в Linux)
+Возвращает структуру \fIsemid_ds\fP как для \fBIPC_STAT\fP. Однако аргумент
+\fIsemid\fP содержит не идентификатор семафора, а индекс во внутреннем массиве
+ядра, который хранит информацию о всех наборах семафоров в системе.
+.TP 
+\fBSEM_STAT_ANY\fP (есть только в Linux\-specific, начиная с Linux 4.17)
+Возвращает структуру \fIseminfo\fP, содержащую информацию как у
+\fBSEM_STAT\fP. Однако \fIsem_perm.mode\fP не проверяется на доступность чтения
+для \fIsemid\fP, что означает, что эту операцию может выполнять пользователь
+(как и любой пользователь, который может прочитать эту же информацию из
+\fI/proc/sysvipc/sem\fP).
+.TP 
+\fBGETALL\fP
+Возвращает значение \fBsemval\fP (т.е. текущее значение) всех семафоров в
+наборе в \fIarg.array\fP. Аргумент \fIsemnum\fP игнорируется. Вызывающему процессу
+нужны права на чтение набора семафоров.
+.TP 
+\fBGETNCNT\fP
+Возвращает значение \fBsemncnt\fP для \fIsemnum\fP\-того семафора (т.е., число
+процессов, ожидающих увеличения значения \fBsemval\fP в \fIsemnum\fP\-ом семафоре
+набора). Вызывающему процессу нужны права на чтение набора семафоров.
+.TP 
+\fBGETPID\fP
+Возвращает значение \fBsempid\fP для \fIsemnum\fP\-того семафора набора. Это PID
+процесса, который последним выполнял операцию с этим семафором (но смотрите
+ЗАМЕЧАНИЯ). Вызывающему процессу нужны права на чтение набора семафоров.
+.TP 
+\fBGETVAL\fP
+Возвращает значение \fBsemval\fP для \fIsemnum\fP\-того семафора
+набора. Вызывающему процессу нужны права на чтение набора семафоров.
+.TP 
+\fBGETZCNT\fP
+Возвращает значение \fBsemzcnt\fP для \fIsemnum\fP\-того семафора (т.е., количество
+процессов, ожидающих, когда значение \fBsemval\fP \fIsemnum\fP\-того семафора
+набора станет равным 0). Вызывающему процессу нужны права на чтение набора
+семафоров.
+.TP 
+\fBSETALL\fP
+Устанавливает значение \fBsemval\fP всех семафоров набора, используя
+\fIarg.array\fP и изменяя также поле \fIsem_ctime\fP структуры \fIsemid_ds\fP,
+связанной с набором. Записи undo (см. \fBsemop\fP(2)) очищаются для изменённых
+семафоров во всех процессах. Если изменения значений семафоров приводят к
+отмене блокировки в вызове \fBsemop\fP(2) других процессов, то эти процессы
+пробуждаются. Аргумент \fIsemnum\fP игнорируется. Вызывающему процессу нужны
+права на запись в набор семафоров.
+.TP 
+\fBSETVAL\fP
+Устанавливает значение \fBsemval\fP равным \fIarg.val\fP для \fIsemnum\fP\-го семафора
+набора, изменяя также поле \fIsem_ctime\fP в структуре \fIsemid_ds\fP, связанной с
+этим набором. Записи undo очищаются для изменённых семафоров во всех
+процессах. Если изменения значений семафоров приводят к отмене блокировки в
+вызове \fBsemop\fP(2) других процессов, то эти процессы пробуждаются. Аргумент
+\fIsemnum\fP игнорируется. Вызывающему процессу нужны права на запись в набор
+семафоров.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При ошибке \fBsemctl\fP() возвращает \-1, а переменной \fIerrno\fP присваивается
+номер ошибки.
+.PP
+При успешном выполнении системный вызов возвращает положительное значение,
+зависящее от \fIcmd\fP:
+.TP  10
+\fBGETNCNT\fP
+значение \fBsemncnt\fP.
+.TP 
+\fBGETPID\fP
+значение \fBsempid\fP.
+.TP 
+\fBGETVAL\fP
+значение \fBsemval\fP.
+.TP 
+\fBGETZCNT\fP
+значение \fBsemzcnt\fP.
+.TP 
+\fBIPC_INFO\fP
+самое большое значение индекса, использованного в записи внутреннего массива
+ядра, содержащего информацию о всех наборах семафоров (эта информация может
+использоваться в повторяющихся операциях \fBSEM_STAT\fP или \fBSEM_STAT_ANY\fP для
+получения информации о всех наборах семафоров в системе).
+.TP 
+\fBSEM_INFO\fP
+как для \fBIPC_INFO\fP.
+.TP 
+\fBSEM_STAT\fP
+идентификатор набора семафоров, индекс которого указан в \fIsemid\fP.
+.TP 
+\fBSEM_STAT_ANY\fP
+как у \fBSEM_STAT\fP.
+.PP
+Для всех остальных значений \fIcmd\fP возвращается 0.
+.SH ОШИБКИ
+При ошибке \fIerrno\fP присваиваются следующие значения:
+.TP 
+\fBEACCES\fP
+Аргумент \fIcmd\fP равен \fBGETALL\fP, \fBGETPID\fP, \fBGETVAL\fP, \fBGETNCNT\fP,
+\fBGETZCNT\fP, \fBIPC_STAT\fP, \fBSEM_STAT\fP, \fBSEM_STAT_ANY\fP, \fBSETALL\fP или
+\fBSETVAL\fP и вызывающий процесс не имеет требуемых прав на набор семафоров и
+не имеет мандата \fBCAP_IPC_OWNER\fP в пользовательском пространстве имён,
+которое управляет своим пространством имён IPC.
+.TP 
+\fBEFAULT\fP
+Адрес, указанный в \fIarg.buf\fP или \fIarg.array\fP, недоступен.
+.TP 
+\fBEIDRM\fP
+Набор семафоров был удалён.
+.TP 
+\fBEINVAL\fP
+Неверное значение \fIcmd\fP или \fIsemid\fP. Или: при операции \fBSEM_STAT\fP
+значение индекса, указанное в \fIsemid\fP, ссылается на место в массиве,
+которое в данные момент не используется.
+.TP 
+\fBEPERM\fP
+Аргумент \fIcmd\fP имеет значение \fBIPC_SET\fP или \fBIPC_RMID\fP, но эффективный
+идентификатор пользователя вызывающего процесса не совпадает с ID создателя
+(указанного в \fIsem_perm.cuid\fP) или с ID владельца (указанного в
+\fIsem_perm.uid\fP) набора семафоров, и процесс не имеет мандата
+\fBCAP_SYS_ADMIN\fP.
+.TP 
+\fBERANGE\fP
+Аргумент \fIcmd\fP имеет значение \fBSETALL\fP или \fBSETVAL\fP и значение,
+присваиваемое \fBsemval\fP (для какого\-то семафора в наборе), меньше нуля или
+больше, чем ограничение реализации \fBSEMVMX\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents more error conditions EINVAL and EOVERFLOW.
+POSIX.1\-2001, POSIX.1\-2008, SVr4.
+.PP
+.\" POSIX.1-2001, POSIX.1-2008
+В POSIX.1 указано, что поле \fIsem_nsems\fP структуры \fIsemid_ds\fP имеет тип
+\fIunsigned\ short\fP, и это так на в большинстве других систем. Это было и в
+Linux 2.2 и более ранних версиях, но начиная с Linux 2.4 это поле имеет тип
+\fIunsigned\ long\fP.
+.SH ЗАМЕЧАНИЯ
+.\" Like Linux, the FreeBSD man pages still document
+.\" the inclusion of these header files.
+Включение файлов \fI<sys/types.h>\fP и \fI<sys/ipc.h>\fP не
+требуется в Linux или любых версий POSIX. Однако, некоторые старые
+реализации требуют включения данных заголовочных файлов, и это также
+требуется по SVID. В приложениях, которые нужно перенести на такие старые
+системы, может потребоваться включить данных заголовочные файлы.
+.PP
+Операции \fBIPC_INFO\fP, \fBSEM_STAT\fP и \fBSEM_INFO\fP используются программой
+\fBipcs\fP(1) для получения информации о выделенных ресурсах. В будущем для
+этого может быть задействован интерфейс файловой системы \fI/proc\fP.
+.PP
+В Linux 2.2 различные поля \fIstruct semid_ds\fP имели тип \fIshort\fP. В Linux
+2.4 тип был изменён на \fIlong\fP. Для задействования преимуществ этого
+изменения необходима перекомпиляция программы с glibc\-2.1.91 или более
+поздней версией (ядро различает старые и новые вызовы по флагу \fBIPC_64\fP в
+аргументе \fIcmd\fP).
+.PP
+.\" POSIX.1-2001, POSIX.1-2008
+В некоторых ранних версиях glibc объединение \fIsemun\fP определялось в
+\fI<sys/sem.h>\fP, но в POSIX.1 требовалось, чтобы это объединение
+определял вызывающий. В версиях glibc, в которых это объединение \fIне\fP
+определено, в \fI<sys/sem.h>\fP определён макрос
+\fB_SEM_SEMUN_UNDEFINED\fP.
+.PP
+На работу наборов семафоров и вызова \fBsemctl\fP() влияет системное
+ограничение:
+.TP 
+\fBSEMVMX\fP
+Максимальное значение \fBsemval\fP: зависит от реализации (32767).
+.PP
+.\"
+Для лучшей переносимости программ желательно всегда вызывать \fBsemctl\fP() c
+четырьмя аргументам.
+.SS "Значение sempid"
+В POSIX.1 значение \fIsempid\fP определено как «ID процесса последней операции»
+над семафором, и явно отмечено, что это значение устанавливается успешным
+вызовом \fBsemop\fP(2), подразумевая, что больше никто не изменяет \fIsempid\fP.
+.PP
+.\" At least OpenSolaris (and, one supposes, older Solaris) and Darwin
+Одни реализации следуют требованиям, указанным в POSIX.1, а другие нет (вина
+здесь, вероятно, лежит на POSIX.1, так как ему не удастся охватить поведение
+всех существующих реализаций). Также, разные реализации обновляют \fIsempid\fP
+другими операциями, обновляющими значение семафора: \fBSETVAL\fP и \fBSETALL\fP, а
+также изменение семафора, выполняемое при завершении процесса как следствие
+использования флага \fBSEM_UNDO\fP (смотрите \fBsemop\fP(2)).
+.PP
+.\" commit a5f4db877177d2a3d7ae62a7bac3a5a27e083d7f
+Linux также обновляет \fIsempid\fP при операциях \fBSETVAL\fP и регулировки
+семафора. Однако, непоследовательно, ранние версии Linux по 4.5 включительно
+не обновляли \fIsempid\fP при операциях \fBSETALL\fP. Это было исправлено в Linux
+4.6.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBipc\fP(2), \fBsemget\fP(2), \fBsemop\fP(2), \fBcapabilities\fP(7),
+\fBsem_overview\fP(7), \fBsysvipc\fP(7)

@@ -1,0 +1,226 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2011 by Andi Kleen <andi@firstfloor.org>
+.\" and Copyright (c) 2011 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Syscall added in following commit
+.\"	commit a2e2725541fad72416326798c2d7fa4dafb7d337
+.\"	Author: Arnaldo Carvalho de Melo <acme@redhat.com>
+.\"	Date:   Mon Oct 12 23:40:10 2009 -0700
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RECVMMSG 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+recvmmsg \- получает несколько сообщений из сокета
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* Смотрите feature_test_macros(7) */
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint recvmmsg(int \fP\fIsockfd\fP\fB, struct mmsghdr *\fP\fImsgvec\fP\fB, unsigned int \fP\fIvlen\fP\fB,\fP
+\fB             int \fP\fIflags\fP\fB, struct timespec *\fP\fItimeout\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBrecvmmsg\fP() является расширенной версией \fBrecvmsg\fP(2),
+позволяя вызывающему получать несколько сообщений из сокета, используя
+только один системный вызов (в некоторых приложениях это позволяет получить
+выигрыш в производительности). Ещё одно улучшение \fBrecvmsg\fP(2) — настройка
+времени ожидания для операции получения.
+.PP
+Аргумент \fIsockfd\fP представляет собой файловый дескриптор сокета приёма
+данных.
+.PP
+Аргумент \fImsgvec\fP является указателем на массив структур \fImmsghdr\fP. Размер
+этого массива указывается в \fIvlen\fP.
+.PP
+Структура \fImmsghdr\fP определена в \fI<sys/socket.h>\fP следующим
+образом:
+.PP
+.in +4n
+.EX
+struct mmsghdr {
+    struct msghdr msg_hdr;  /* Заголовок сообщения */
+    unsigned int  msg_len;  /* Количество полученных байт
+                               для заголовка */
+};
+.EE
+.in
+.PP
+Поле \fImsg_hdr\fP представляет собой структуру \fImsghdr\fP, которая описана в
+\fBrecvmsg\fP(2). В поле \fImsg_len\fP содержится количество байт возвращаемого
+сообщения в записи. Это поле имеет такое же значение, что и возвращаемое
+значение одиночного вызова \fBrecvmsg\fP(2) в заголовке.
+.PP
+Аргумент \fIflags\fP содержит объединённые с помощью OR флаги. Флаги те же, что
+и у \fBrecvmsg\fP(2), но со следующим дополнением:
+.TP 
+\fBMSG_WAITFORONE\fP (начиная с Linux 2.6.34)
+Включить \fBMSG_DONTWAIT\fP после получения первого сообщения.
+.PP
+Аргумент \fItimeout\fP указывает на \fIstruct timespec\fP (смотрите
+\fBclock_gettime\fP(2)), задающую время ожидания (в секундах и наносекундах)
+операции приёма (\fIно смотрите ДЕФЕКТЫ!\fP; (этот интервал будет округлён до
+точности системных часов, и из\-за задержек планировщика ядра интервал
+блокировки может быть немного больше). Если \fItimeout\fP равно NULL, то
+операция блокируется на неопределённое время.
+.PP
+Блокирование вызова \fBrecvmmsg\fP() происходит до тех пор, пока не будет
+получено \fIvlen\fP сообщений или не истечёт интервал блокировки. Неблокирующий
+вызов читает все доступные сообщения (максимальное количество указано в
+\fIvlen\fP) и сразу завершает работу.
+.PP
+При выходе из \fBrecvmmsg\fP() последующие элементы \fImsgvec\fP обновляются
+информацией о каждом полученном сообщении: в \fImsg_len\fP содержится размер
+принятого сообщения; подполя \fImsg_hdr\fP обновляются согласно описанию в
+\fBrecvmsg\fP(2). Возвращаемое значение вызова означает количество обновлённых
+элементов \fImsgvec\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBrecvmmsg\fP() возвращает количество принятых в
+\fImsgvec\fP сообщений; при ошибке возвращается \-1 и в \fIerrno\fP устанавливается
+код ошибки.
+.SH ОШИБКИ
+Возникают те же ошибки что и для \fBrecvmsg\fP(2). Кроме этого, случается
+следующая ошибка:
+.TP 
+\fBEINVAL\fP
+Значение \fItimeout\fP неверно.
+.PP
+Также смотрите ДЕФЕКТЫ.
+.SH ВЕРСИИ
+Системный вызов \fBrecvmmsg\fP() был добавлен в Linux 2.6.33. Поддержка в glibc
+появилась в версии 2.12.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBrecvmmsg\fP() есть только в Linux.
+.SH ДЕФЕКТЫ
+.\" FIXME . https://bugzilla.kernel.org/show_bug.cgi?id=75371
+.\" http://thread.gmane.org/gmane.linux.man/5677
+Аргумент \fItimeout\fP работает не так, как планировалось. Время ожидания
+проверяется только после приёма каждой дейтаграммы, поэтому, если до
+истечения срока будет получено до \fIvlen\-1\fP дейтаграмм, но затем дейтаграммы
+не поступят, то вызов заблокируется навсегда.
+.PP
+Если ошибка возникает после получения хотя бы одного сообщения, то вызов
+выполняется успешно и возвращается количество полученных сообщений. Код
+ошибки будет возвращён следующим вызовом \fBrecvmmsg\fP(). Однако в текущей
+реализации код ошибки может перезаписаться при возникновении в тоже время
+события, не связанного с сетью, например, из\-за поступившего пакета ICMP.
+.SH ПРИМЕР
+.PP
+Следующая программа использует \fBrecvmmsg\fP() для получения нескольких
+сообщений через сокет и сохранения их в несколько буферов. Вызов завершается
+при заполнении всех буферов, либо по окончании заданного временного
+интервала.
+.PP
+Следующий отрывок периодически генерирует датаграммы UDP с произвольным
+номером внутри:
+.PP
+.in +4n
+.EX
+$\fB while true; do echo $RANDOM > /dev/udp/127.0.0.1/1234; \fP
+\fBsleep 0.25; done\fP
+.EE
+.in
+.PP
+Эти датаграммы читаются примером приложения, который выдаёт:
+.PP
+.in +4n
+.EX
+$\fB ./a.out\fP
+5 сообщений получено
+1 11782
+2 11345
+3 304
+4 13514
+5 28421
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <netinet/ip.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+
+int
+main(void)
+{
+#define VLEN 10
+#define BUFSIZE 200
+#define TIMEOUT 1
+    int sockfd, retval, i;
+    struct sockaddr_in addr;
+    struct mmsghdr msgs[VLEN];
+    struct iovec iovecs[VLEN];
+    char bufs[VLEN][BUFSIZE+1];
+    struct timespec timeout;
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd == \-1) {
+        perror("socket()");
+        exit(EXIT_FAILURE);
+    }
+
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    addr.sin_port = htons(1234);
+    if (bind(sockfd, (struct sockaddr *) &addr, sizeof(addr)) == \-1) {
+        perror("bind()");
+        exit(EXIT_FAILURE);
+    }
+
+    memset(msgs, 0, sizeof(msgs));
+    for (i = 0; i < VLEN; i++) {
+        iovecs[i].iov_base         = bufs[i];
+        iovecs[i].iov_len          = BUFSIZE;
+        msgs[i].msg_hdr.msg_iov    = &iovecs[i];
+        msgs[i].msg_hdr.msg_iovlen = 1;
+    }
+
+    timeout.tv_sec = TIMEOUT;
+    timeout.tv_nsec = 0;
+
+    retval = recvmmsg(sockfd, msgs, VLEN, 0, &timeout);
+    if (retval == \-1) {
+        perror("recvmmsg()");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("%d сообщений получено\en", retval);
+    for (i = 0; i < retval; i++) {
+        bufs[i][msgs[i].msg_len] = 0;
+        printf("%d %s", i+1, bufs[i]);
+    }
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclock_gettime\fP(2), \fBrecvmsg\fP(2), \fBsendmmsg\fP(2), \fBsendmsg\fP(2),
+\fBsocket\fP(2), \fBsocket\fP(7)

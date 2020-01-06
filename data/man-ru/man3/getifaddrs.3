@@ -1,0 +1,258 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Petr Baudis <pasky@suse.cz>
+.\" and copyright (c) 2009, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\"
+.\" 2008-12-08 Petr Baudis <pasky@suse.cz>
+.\"    Rewrite the BSD manpage in the Linux man pages style and account
+.\"    for glibc specificities, provide an example.
+.\" 2009-01-14 mtk, many edits and changes, rewrote example program.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETIFADDRS 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getifaddrs, freeifaddrs \- возвращают адреса интерфейса
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <ifaddrs.h>\fP
+.PP
+\fBint getifaddrs(struct ifaddrs **\fP\fIifap\fP\fB);\fP
+.PP
+\fBvoid freeifaddrs(struct ifaddrs *\fP\fIifa\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBgetifaddrs\fP() создаёт связный список структур, описывающих сетевые
+интерфейсы локальной системы, и сохраняет адрес первого элемента списка в
+\fI*ifap\fP. Список состоит из структур \fIifaddrs\fP:
+.PP
+.in +4n
+.EX
+struct ifaddrs {
+    struct ifaddrs  *ifa_next;    /* след. элемент в списке */
+    char            *ifa_name;    /* имя интерфейса */
+    unsigned int     ifa_flags;   /* флаги из SIOCGIFFLAGS */
+    struct sockaddr *ifa_addr;    /* адрес интерфейса */
+    struct sockaddr *ifa_netmask; /* сетевая маска интерфейса */
+    union {
+        struct sockaddr *ifu_broadaddr;
+                         /* широковещательный адрес интерфейса */
+        struct sockaddr *ifu_dstaddr;
+                         /* адрес назначения точка\-точка */
+    } ifa_ifu;
+#define              ifa_broadaddr ifa_ifu.ifu_broadaddr
+#define              ifa_dstaddr   ifa_ifu.ifu_dstaddr
+    void            *ifa_data;    /* спец. данные для адреса */
+};
+.EE
+.in
+.PP
+В поле \fIifa_next\fP содержится указатель на следующую структуру в списке или
+NULL, если это последний элемент в списке.
+.PP
+.\" The constant
+.\" .B IF NAMESIZE
+.\" indicates the maximum length of this field.
+Поле \fIifa_name\fP указывает на имя интерфейса (заканчивающееся null).
+.PP
+В поле \fIifa_flags\fP содержатся флаги интерфейса, полученные операцией
+\fBSIOCGIFFLAGS\fP \fBioctl\fP(2) (список флагов приведён в \fBnetdevice\fP(7)).
+.PP
+Поле \fIifa_addr\fP указывает на структуру, содержащую адрес интерфейса (для
+определения формата структуры адреса обратитесь к подполю \fIsa_family\fP). Это
+поле может содержать указатель null.
+.PP
+Поле \fIifa_netmask\fP указывает на структуру, содержащую маску сети для
+\fIifa_addr\fP (если она используется в адресном семействе). Это поле может
+содержать указатель null.
+.PP
+В зависимости от наличия флага \fBIFF_BROADCAST\fP или \fBIFF_POINTOPOINT\fP в
+\fIifa_flags\fP (может быть установлен какой\-то один), в \fIifa_broadaddr\fP будет
+содержаться широковещательный адрес \fIifa_addr\fP (если он используется в
+адресном семействе) или \fIifa_dstaddr\fP будет содержать адрес назначения
+интерфейса типа точка\-точка.
+.PP
+Поле \fIifa_data\fP указывает на буфер, содержащий данные, присущие адресному
+семейству; это поле может быть равно NULL, если данных для этого интерфейса
+нет.
+.PP
+Память под структуру данных, возвращаемая \fBgetifaddrs\fP(), выделяется
+динамически и должна освобождаться с помощью \fBfreeifaddrs\fP(), когда больше
+не нужна.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBgetifaddrs\fP() возвращается 0. В случае ошибки
+возвращается \-1, а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+Функция \fBgetifaddrs\fP() может завершиться с ошибками и назначить переменной
+\fIerrno\fP значения, перечисленные в \fBsocket\fP(2), \fBbind\fP(2),
+\fBgetsockname\fP(2), \fBrecvmsg\fP(2), \fBsendto\fP(2), \fBmalloc\fP(3) или
+\fBrealloc\fP(3).
+.SH ВЕРСИИ
+Впервые функция \fBgetifaddrs\fP() появилась в glibc 2.3, но до glibc 2.3.3
+реализация поддерживала только интерфейсы с адресами IPv4; поддержка IPv6
+добавлена в glibc 2.3.3. Поддержка семейств адресов не IPv4 доступна только
+в ядрах, поддерживающих netlink.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetifaddrs\fP(),
+\fBfreeifaddrs\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" , but the BSD-derived documentation generally
+.\" appears to be confused and obsolete on this point.
+.\" i.e., commonly it still says one of them will be NULL, even if
+.\" the ifa_ifu union is already present
+Нет в POSIX.1. Данная функция впервые появилась в BSDi и существует в
+системах BSD, но со слегка другой семантикой — возвращается одна запись на
+интерфейс, а не на адрес. Это означает, что \fIifa_addr\fP и другие поля могут
+быть равны NULL, если интерфейс не имеет адресов, и адрес канального уровня
+не возвращается, если интерфейсу назначен IP\-адрес. Также в разных системах
+различается способ выбора между \fIifa_broadaddr\fP и \fIifa_dstaddr\fP.
+.SH ЗАМЕЧАНИЯ
+Адреса, возвращаемые в Linux, обычно, являются адресами IPv4 и IPv6,
+назначенными интерфейсу, но также есть один адрес \fBAF_PACKET\fP на интерфейс,
+содержащий канальные настройки интерфейса и его физический уровень. В этом
+случае поле \fIifa_data\fP может содержать указатель на \fIstruct
+rtnl_link_stats\fP, определённую в \fI<linux/if_link.h>\fP (в Linux 2.4 и
+ранее — \fIstruct net_device_stats\fP, определена в
+\fI<linux/netdevice.h>\fP), которая содержит различные атрибуты
+интерфейса и статистику.
+.SH ПРИМЕР
+В программе, показанной далее, демонстрируется использование
+\fBgetifaddrs\fP(), \fBfreeifaddrs\fP(), и \fBgetnameinfo\fP(3). Вот результат
+запуска этой программы:
+.PP
+.in +4n
+.EX
+$ \fB./a.out\fP
+lo       AF_PACKET (17)
+                tx_packets =        524; rx_packets =        524
+                tx_bytes   =      38788; rx_bytes   =      38788
+wlp3s0   AF_PACKET (17)
+                tx_packets =     108391; rx_packets =     130245
+                tx_bytes   =   30420659; rx_bytes   =   94230014
+em1      AF_PACKET (17)
+                tx_packets =          0; rx_packets =          0
+                tx_bytes   =          0; rx_bytes   =          0
+lo       AF_INET (2)
+                адрес: <127.0.0.1>
+wlp3s0   AF_INET (2)
+                адрес: <192.168.235.137>
+lo       AF_INET6 (10)
+                адрес: <::1>
+wlp3s0   AF_INET6 (10)
+                адрес: <fe80::7ee9:d3ff:fef5:1a91%wlp3s0>
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE     /* чтобы получить NI_MAXSERV и NI_MAXHOST */
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <ifaddrs.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <linux/if_link.h>
+
+int main(int argc, char *argv[])
+{
+    struct ifaddrs *ifaddr, *ifa;
+    int family, s, n;
+    char host[NI_MAXHOST];
+
+    if (getifaddrs(&ifaddr) == \-1) {
+        perror("getifaddrs");
+        exit(EXIT_FAILURE);
+    }
+
+    /* обходим связный список, сохраняя начальный указатель, чтобы
+       освободить список позже */
+
+    for (ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa\->ifa_next, n++) {
+        if (ifa\->ifa_addr == NULL)
+            continue;
+
+        family = ifa\->ifa_addr\->sa_family;
+
+        /* вывод имени интерфейса и семейства (включая символический
+           вид для общих семейств) */
+
+        printf("%\-8s %s (%d)\en",
+               ifa\->ifa_name,
+               (family == AF_PACKET) ? "AF_PACKET" :
+               (family == AF_INET) ? "AF_INET" :
+               (family == AF_INET6) ? "AF_INET6" : "???",
+               family);
+
+        /* для адресов интерфейса AF_INET* показываем адрес */
+
+        if (family == AF_INET || family == AF_INET6) {
+            s = getnameinfo(ifa\->ifa_addr,
+                    (family == AF_INET) ? sizeof(struct sockaddr_in) :
+                                          sizeof(struct sockaddr_in6),
+                    host, NI_MAXHOST,
+                    NULL, 0, NI_NUMERICHOST);
+            if (s != 0) {
+                printf("ошибка getnameinfo(): %s\en", gai_strerror(s));
+                exit(EXIT_FAILURE);
+            }
+
+            printf("\et\etадрес: <%s>\en", host);
+
+        } else if (family == AF_PACKET && ifa\->ifa_data != NULL) {
+            struct rtnl_link_stats *stats = ifa\->ifa_data;
+
+            printf("\et\ettx_packets = %10u; rx_packets = %10u\en"
+                   "\et\ettx_bytes   = %10u; rx_bytes   = %10u\en",
+                   stats\->tx_packets, stats\->rx_packets,
+                   stats\->tx_bytes, stats\->rx_bytes);
+        }
+    }
+
+    freeifaddrs(ifaddr);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbind\fP(2), \fBgetsockname\fP(2), \fBsocket\fP(2), \fBpacket\fP(7), \fBifconfig\fP(8)

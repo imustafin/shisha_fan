@@ -1,0 +1,411 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1995 Michael Chastain (mec@shell.portal.com), 15 April 1995.
+.\" and Copyright (C) 2014, 2016 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1997-01-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1997-07-30 by Paul Slootman <paul@wurtel.demon.nl>
+.\" Modified 2004-05-27 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ADJTIMEX 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+adjtimex, ntp_adjtime \- тонкая настройка часов в ядре
+.SH ОБЗОР
+.nf
+\fB#include <sys/timex.h>\fP
+.PP
+\fBint adjtimex(struct timex *\fP\fIbuf\fP\fB);\fP
+.PP
+\fBint ntp_adjtime(struct timex *\fP\fIbuf\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+В Linux для подстройки часов используется алгоритм Дэвида Л.\& Миллса (David
+L. Mills) (смотрите RFC\ 5905). Системный вызов \fBadjtimex\fP() читает и
+(необязательно) устанавливает параметры подстройки для этого алгоритма. Он
+берёт указатель на структуру \fItimex\fP, изменяет параметры ядра согласно
+значениям (некоторых) её полей и возвращает эту уже обновлённую структуру с
+текущими значениями параметров ядра. Данная структура объявлена так:
+.PP
+.in +4n
+.EX
+struct timex {
+    int  modes;      /* выбор режима */
+    long offset;     /* смещение по времени; в наносекундах, если
+                        установлен флаг состояния STA_NANO, иначе
+                        в микросекундах */
+    long freq;       /* смещение частоты; единицы измерения */
+                        описаны в ЗАМЕЧАНИЯХ */    long maxerror;   /* максимальная ошибка (микросекунды) */
+    long esterror;   /* ожидаемая ошибка (микросекунды) */
+    int  status;     /* команда/состояние для часов */
+    long constant;   /* константа времени PLL (phase\-locked loop) */
+    long precision;  /* точность часов
+                        (микросекунды, только чтение) */
+    long tolerance;  /* допуск тактовой частоты (только чтение);
+                        единицы измерения описаны в ЗАМЕЧАНИЯХ */
+    struct timeval time;
+                     /* текущее время (только чтение, кроме
+                        ADJ_SETOFFSET); при возврате в time.tv_usec
+                        содержатся наносекунды, если установлен флаг
+                        STA_NANO, иначе микросекунды */
+    long tick;       /* микросекунд между тиками часов */
+    long ppsfreq;    /* частота PPS (импульсов в секунду)
+                        (только чтение); единицы измерения описаны в
+                        ЗАМЕЧАНИЯХ */
+    long jitter;     /* искажение PPS (только чтение); в наносекундах,
+                        если установлен флаг состояния STA_NANO,
+                        иначе в микросекундах
+    int  shift;      /* длительность интервала PPS
+                        (секунды, только чтение) */
+    long stabil;     /* устойчивость PPS (только чтение);
+                        единицы измерения описаны в ЗАМЕЧАНИЯХ */
+    long jitcnt;     /* счётчик превышений ограничения искажения
+                        PPS (только чтение) */
+    long calcnt;     /* счётчик интервалов калибровки PPS
+                        (только чтение) */
+    long errcnt;     /* счётчик ошибок калибровки PPS
+                        (только чтение) */
+    long stbcnt;     /* счётчик событий превышения ограничения
+                        устойчивости PPS (только чтение) */
+    int tai;         /* смещение TAI offset, установленное предыдущей
+                        операцией ADJ_TAI (секунды, только чтение,
+                        начиная с Linux 2.6.26) */
+    /* далее идут байты заполнения, для расширения структуры в будущем */
+};
+.EE
+.in
+.PP
+Полем \fImodes\fP определяется какие параметры, если это необходимо,
+устанавливаются (как описывалось выше, константы, используемые в
+\fBntp_adjtime\fP(), те же самые, но названные по\-другому). Является битовой
+маской, содержащей побитовую (\fIили\fP) комбинацию нуля или более следующих
+бит:
+.TP 
+\fBADJ_OFFSET\fP
+.\" commit 074b3b87941c99bc0ce35385b5817924b1ed0c23
+Установить смещение по времени из \fIbuf.offset\fP. Начиная с Linux 2.6.26,
+переданное значение ограничивается диапазоном (\-0.5s, +0.5s). В старых
+ядрах, если значение выходит из диапазона, то возвращается ошибка \fBEINVAL\fP.
+.TP 
+\fBADJ_FREQUENCY\fP
+.\" commit 074b3b87941c99bc0ce35385b5817924b1ed0c23
+Установить смещение по частоте из \fIbuf.offset\fP. Начиная с Linux 2.6.26,
+переданное значение ограничивается диапазоном (\-32768000, +32768000) В
+старых ядрах, если значение выходит из диапазона, то возвращается ошибка
+\fBEINVAL\fP.
+.TP 
+\fBADJ_MAXERROR\fP
+Установить максимальную ошибку времени из \fIbuf.maxerror\fP.
+.TP 
+\fBADJ_ESTERROR\fP
+Установить ожидаемую ошибку времени из \fIbuf.esterror\fP.
+.TP 
+\fBADJ_STATUS\fP
+Установить биты состояния часов из \fIbuf.status\fP. Описание бит представлено
+ниже.
+.TP 
+\fBADJ_TIMECONST\fP
+Установить константу времени PLL из \fIbuf.constant\fP. Если не задан флаг
+состояния \fBSTA_NANO\fP (смотрите ниже), то ядро добавляет к этому значению 4.
+.TP 
+\fBADJ_SETOFFSET\fP (начиная с Linux 2.6.39)
+.\" commit 094aa1881fdc1b8889b442eb3511b31f3ec2b762
+.\" Author: Richard Cochran <richardcochran@gmail.com>
+Добавить \fIbuf.time\fP к текущему времени. Если в \fIbuf.status\fP указан флаг
+\fBADJ_NANO\fP, то значение \fIbuf.time.tv_usec\fP считается заданным в
+наносекундах; в противном случае это микросекунды.
+.TP 
+\fBADJ_MICRO\fP (начиная с Linux 2.6.26)
+.\" commit eea83d896e318bda54be2d2770d2c5d6668d11db
+.\" Author: Roman Zippel <zippel@linux-m68k.org>
+Выбрать микросекундной разрешение.
+.TP 
+\fBADJ_NANO\fP (начиная с Linux 2.6.26)
+.\" commit eea83d896e318bda54be2d2770d2c5d6668d11db
+.\" Author: Roman Zippel <zippel@linux-m68k.org>
+Выбрать наносекундной разрешение. Должно быть указано что\-то одно:
+\fBADJ_MICRO\fP или \fBADJ_NANO\fP.
+.TP 
+\fBADJ_TAI\fP (начиная с Linux 2.6.26)
+.\" commit 153b5d054ac2d98ea0d86504884326b6777f683d
+Установить смещение TAI (атомное международное время) из \fIbuf.constant\fP.
+.IP
+\fBADJ_TAI\fP не должно использоваться вместе с \fBADJ_TIMECONST\fP, так как
+последний режим также использует поле \fIbuf.constant\fP.
+.IP
+Подробное описание TAI и различия между TAI и UTC смотрите в
+.UR http://www.bipm.org/en/bipm/tai/tai.html
+\fIBIPM\fP
+.UE
+.TP 
+\fBADJ_TICK\fP
+Установить значение тика из \fIbuf.tick\fP.
+.PP
+.\" In general, the other bits are ignored, but ADJ_OFFSET_SINGLESHOT 0x8001
+.\" ORed with ADJ_NANO (0x2000) gives 0xa0001 == ADJ_OFFSET_SS_READ!!
+Также в \fImodes\fP можно указывать любое из следующих значений (многобитовая
+маска), биты которых нельзя указать в \fImodes\fP:
+.TP 
+\fBADJ_OFFSET_SINGLESHOT\fP
+.\" In user space, ADJ_OFFSET_SINGLESHOT is 0x8001
+.\" In kernel space it is 0x0001, and must be ANDed with ADJ_ADJTIME (0x8000)
+Старый вариант \fBadjtime\fP(): (постепенно) корректировать время значением,
+указанным в \fIbuf.offset\fP, которое задаётся в микросекундах.
+.TP 
+\fBADJ_OFFSET_SS_READ\fP (работает, начиная с Linux 2.6.28)
+.\" In user space, ADJ_OFFSET_SS_READ is 0xa001
+.\" In kernel space there is ADJ_OFFSET_READONLY (0x2000) anded with
+.\" ADJ_ADJTIME (0x8000) and ADJ_OFFSET_SINGLESHOT (0x0001) to give 0xa001)
+.\" commit 52bfb36050c8529d9031d2c2513b281a360922ec
+.\" commit 916c7a855174e3b53d182b97a26b2e27a29726a1
+Получить (в \fIbuf.offset\fP) остаток необходимого откорректированного времени
+после выполнения операции \fBADJ_OFFSET_SINGLESHOT\fP. Это возможность была
+добавлена в Linux 2.6.24, но работала неправильно до Linux 2.6.28.
+.PP
+Обычные пользователи могут задавать в \fImodes\fP значение ноль или
+\fBADJ_OFFSET_SS_READ\fP. Только суперпользователь может задавать любые
+параметры.
+.PP
+Поле \fIbuf.status\fP представляет собой битовую маску, используется для
+установки/получения битов состояния, связанных с реализацией NTP. Одни биты
+в маске можно и читать, и изменять, другие — только читать.
+.TP 
+\fBSTA_PLL\fP (чтение\-запись)
+Включить обновление фазовой подстройки частоты (PLL) через \fBADJ_OFFSET\fP.
+.TP 
+\fBSTA_PPSFREQ\fP (чтение\-запись)
+Включить частотную дисциплину обслуживания PPS (импульсов в секунду).
+.TP 
+\fBSTA_PPSTIME\fP (чтение\-запись)
+Включить временную дисциплину обслуживания PPS.
+.TP 
+\fBSTA_FLL\fP (чтение\-запись)
+Выбрать режим частотной подстройки частоты (FLL).
+.TP 
+\fBSTA_INS\fP (чтение\-запись)
+.\" John Stultz;
+.\"     Usually this is written as extending the day by one second,
+.\"     which is represented as:
+.\"        23:59:59
+.\"        23:59:60
+.\"        00:00:00
+.\"
+.\"     But since posix cannot represent 23:59:60, we repeat the last second:
+.\"        23:59:59 + TIME_INS
+.\"        23:59:59 + TIME_OOP
+.\"        00:00:00 + TIME_WAIT
+.\"
+Вставить високосную секунду за последней секундой дня UTC, то есть удлинить
+последнюю минуту дня на одну секунду. Вставка високосной секунды будет
+происходить каждый день пока установлен этот флаг.
+.TP 
+\fBSTA_DEL\fP (чтение\-запись)
+.\" John Stultz:
+.\"     Similarly the progression here is:
+.\"        23:59:57 + TIME_DEL
+.\"        23:59:58 + TIME_DEL
+.\"        00:00:00 + TIME_WAIT
+.\" FIXME Does there need to be a statement that it is nonsensical to set
+.\" to set both STA_INS and STA_DEL?
+Удалить високосную секунду из последней секунды дня UTC. Удаление високосной
+секунды будет происходить каждый день пока установлен этот флаг.
+.TP 
+\fBSTA_UNSYNC\fP (чтение\-запись)
+Часы не синхронизированы.
+.TP 
+\fBSTA_FREQHOLD\fP (чтение\-запись)
+.\" Following text from John Stultz:
+Зафиксировать частоту. Обычно корректировки, внесённые через результат
+\fBADJ_OFFSET\fP, приводят к ослаблению также проводимых настроек по
+частоте. Таким образом, единичный вызов исправляет текущее смещение, но
+поскольку смещения в том же направлении делаются неоднократно, маленькие
+изменения по частоте будут накапливаться, чтобы исправить длинный сдвиг.
+.IP
+.\" According to the Kernel Application Program Interface document,
+.\" STA_FREQHOLD is not used by the NTP version 4 daemon
+Данный флаг отключает маленькие исправления по частоте при корректировке
+значения \fBADJ_OFFSET\fP.
+.TP 
+\fBSTA_PPSSIGNAL\fP (только чтение)
+Присутствует сигнал PPS (импульсов в секунду).
+.TP 
+\fBSTA_PPSJITTER\fP (только чтение)
+Превышено искажение сигнала PPS.
+.TP 
+\fBSTA_PPSWANDER\fP (только чтение)
+Превышено отклонение сигнала PPS.
+.TP 
+\fBSTA_PPSERROR\fP (только чтение)
+Ошибка калибровки сигнала PPS.
+.TP 
+\fBSTA_CLOCKERR\fP (только чтение)
+.\" Not set in current kernel (4.5), but checked in a few places
+Проблема с аппаратурой часов.
+.TP 
+\fBSTA_NANO\fP (только чтение; начиная с Linux 2.6.26)
+.\" commit eea83d896e318bda54be2d2770d2c5d6668d11db
+.\" Author: Roman Zippel <zippel@linux-m68k.org>
+Единица данных (0 = микросекунды, 1 = наносекунды). Устанавливается с
+помощью \fBADJ_NANO\fP, очищается с помощью \fBADJ_MICRO\fP.
+.TP 
+\fBSTA_MODE\fP (начиная с Linux 2.6.26)
+.\" commit eea83d896e318bda54be2d2770d2c5d6668d11db
+.\" Author: Roman Zippel <zippel@linux-m68k.org>
+Режим (0 = фазовая подстройка частоты, 1 = частотная подстройка частоты).
+.TP 
+\fBSTA_CLK\fP (только чтение; начиная c Linux 2.6.26)
+.\" commit eea83d896e318bda54be2d2770d2c5d6668d11db
+.\" Author: Roman Zippel <zippel@linux-m68k.org>
+Источник часов (0 = A, 1 = B); не используется.
+.PP
+.\"
+Попытки установить биты \fIstatus\fP, помеченные только для чтения, просто
+игнорируются.
+.SS "ntp_adjtime ()"
+Библиотечная функция \fBntp_adjtime\fP() (описана в NTP "Kernel Application
+Program API", KAPI) является более переносимым интерфейсом для выполнения
+той же задачи, что и \fBadjtimex\fP(). Она идентична \fBadjtime\fP() кроме
+следующего:
+.IP * 3
+Константы, используемые в \fImodes\fP, начинаются с «MOD_», а не с «ADJ_», и
+содержат одинаковые суффиксы (\fBMOD_OFFSET\fP, \fBMOD_FREQUENCY\fP, and so on),
+кроме:
+.IP *
+\fBMOD_CLKA\fP — синоним \fBADJ_OFFSET_SINGLESHOT\fP.
+.IP *
+\fBMOD_CLKB\fP — синоним \fBADJ_TICK\fP.
+.IP *
+Синонима для \fBADJ_OFFSET_SS_READ\fP в KAPI нет.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBadjtimex\fP() и \fBntp_adjtime\fP() возвращают
+состояние часов, а именно одно из следующих значений:
+.TP  12
+\fBTIME_OK\fP
+Часы синхронизированы, подстройки високосной секундой не ожидается.
+.TP 
+\fBTIME_INS\fP
+Показывает, что в конце дня по UTC будет добавлена високосная секунда.
+.TP 
+\fBTIME_DEL\fP
+Показывает, что в конце дня по UTC будет удалена високосная секунда.
+.TP 
+\fBTIME_OOP\fP
+Выполняется вставка високосной секунды.
+.TP 
+\fBTIME_WAIT\fP
+Выполнена вставка или удаление високосной секунды. Это значение возвращается
+при следующей операции \fBADJ_STATUS\fP по очистке флагов \fBSTA_INS\fP и
+\fBSTA_DEL\fP.
+.TP 
+\fBTIME_ERROR\fP
+Системное время не синхронизировано с авторитетным сервером. Это значение
+возвращается при любом утвердительном значении следующего:
+.RS
+.IP * 3
+Установлен \fBSTA_UNSYNC\fP или \fBSTA_CLOCKERR\fP.
+.IP *
+Флаг \fBSTA_PPSSIGNAL\fP сброшен и установлен \fBSTA_PPSFREQ\fP или
+\fBSTA_PPSTIME\fP.
+.IP *
+Установлены флаги \fBSTA_PPSTIME\fP и \fBSTA_PPSJITTER\fP.
+.IP *
+Установлен флаг \fBSTA_PPSFREQ\fP и \fBSTA_PPSWANDER\fP или \fBSTA_PPSJITTER\fP.
+.RE
+.IP
+Символическое имя \fBTIME_BAD\fP — синоним \fBTIME_ERROR\fP, предоставляется для
+обратной совместимости.
+.PP
+.\" commit 6b43ae8a619d17c4935c3320d2ef9e92bdeed05d changed to asynchronous
+.\"  operation, so we can no longer rely on the return code.
+Заметим, что начиная с Linux 3.4 вызов выполняется асинхронно и возвращаемое
+значение, обычно, не отражает состояние, изменённое самим вызовом.
+.PP
+При ошибке эти вызовы возвращают \-1 и изменяют \fIerrno\fP.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+\fIbuf\fP не является указателем на доступную для записи область памяти.
+.TP 
+\fBEINVAL\fP (до Linux 2.6.26)
+.\" From a quick glance, it appears there was no clamping or range check
+.\" for buf.freq in kernels before 2.0
+Попытка установить \fIbuf.freq\fP в значение вне диапазона (\-33554432,
++33554432).
+.TP 
+\fBEINVAL\fP (до Linux 2.6.26)
+Попытка установить \fIbuf.offset\fP в значение вне разрешённого диапазона. В
+ядрах до Linux 2.0 допустимым диапазоном был (\-131072, +131072). Начиная с
+Linux 2.0 и новее допустимым диапазоном является (\-512000, +512000).
+.TP 
+\fBEINVAL\fP
+Попытка установить \fIbuf.status\fP в значение, отличное от перечисленных выше.
+.TP 
+\fBEINVAL\fP
+Предпринята попытка установить \fIbuf.tick\fP в значение вне диапазона от
+900000/\fBHZ\fP до 1100000/\fBHZ\fP, где \fBHZ\fP — частота прерываний системного
+таймера.
+.TP 
+\fBEPERM\fP
+Значение \fIbuf.modes\fP не равно 0 или \fBADJ_OFFSET_SS_READ\fP и вызывающий не
+имеет необходимых прав. В Linux для этого требуется мандат \fBCAP_SYS_TIME\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBntp_adjtime\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти интерфейсы не описаны в POSIX.1
+.PP
+Вызов \fBadjtimex\fP() есть только в Linux и не должен использоваться в
+переносимых программах.
+.PP
+Предпочтительным программным интерфейсом для службы NTP является
+\fBntp_adjtime\fP().
+.SH ЗАМЕЧАНИЯ
+В структуре \fItimex\fP, \fIfreq\fP, \fIppsfreq\fP и \fIstabil\fP ppm (частей на
+миллион) имеет 16\-битную дробную часть, что означает, что значение 1 в одном
+из этих полей в действительности равно 2^\-16 ppm, и 2^16=65536 равно 1
+ppm. Это действительно как для входных (в случае \fIfreq\fP) так и для выходных
+значений.
+.PP
+Обработка високосной секунды, возникающая при установке \fBSTA_INS\fP и
+\fBSTA_DEL\fP, выполняется ядром в контексте таймера. Следовательно, для
+установки или удаления високосной секунды потребуется один тик для перехода.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsettimeofday\fP(2), \fBadjtime\fP(3), \fBntp_gettime\fP(3), \fBcapabilities\fP(7),
+\fBtime\fP(7), \fBadjtimex\fP(8), \fBhwclock\fP(8)
+.PP
+.ad l
+.UR http://www.slac.stanford.edu/comp/unix/\:package/\:rtems/\:src/\:ssrlApps/\:ntpNanoclock/\:api.htm
+NTP "Kernel Application Program Interface"
+.UE

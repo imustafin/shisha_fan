@@ -1,0 +1,211 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1995, Thomas K. Dyas <tdyas@eden.rutgers.edu>
+.\" and Copyright (C) 2016, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Created   Sat Aug 21 1995     Thomas K. Dyas <tdyas@eden.rutgers.edu>
+.\"
+.\" typo corrected, aeb, 950825
+.\" added layout change from joey, 960722
+.\" changed prototype, documented 0xffffffff, aeb, 030101
+.\" Modified 2004-11-03 patch from Martin Schulze <joey@infodrom.org>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PERSONALITY 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+personality \- задаёт домен исполнения процесса
+.SH ОБЗОР
+\fB#include <sys/personality.h>\fP
+.PP
+\fBint personality(unsigned long \fP\fIpersona\fP\fB);\fP
+.SH ОПИСАНИЕ
+Linux поддерживает несколько видов доменов исполнения процессов или
+специализаций (personalities) для каждого процесса. Среди прочего, домены
+исполнения указывают Linux как связывать номера сигналов с обработчиками
+сигналов. Система доменов исполнения позволяет Linux частично поддерживать
+программы, собранные в других ОС, подобных UNIX.
+.PP
+Если значение \fIpersona\fP не равно 0xffffffff, то \fBpersonality\fP() установит
+домен исполнения вызывающего равным значению \fIpersona\fP. Если значение
+\fIpersona\fP равно 0xffffffff, то возвращается текущую специализацию (persona)
+не изменяя её.
+.PP
+Список доступных доменов исполнения можно найти в
+\fI<sys/personality.h>\fP. Домен исполнения — это 32\-битное значение, в
+котором верхние три байта отведены под флаги, заставляющие ядро изменить
+поведение определённых системных вызов, чтобы они эмулировали устаревшие или
+архитектурные особенности. Младший байт содержит значение, определяющее
+специализацию, которую должно предполагать ядро. Значения флагов:
+.TP 
+\fBADDR_COMPAT_LAYOUT\fP (начиная с Linux 2.6.9)
+При указании этого флага предоставляется устаревшая раскладка виртуального
+адресного пространства.
+.TP 
+\fBADDR_NO_RANDOMIZE\fP (начиная с Linux 2.6.12)
+При указании этого флага отключается случайное расположение виртуального
+адресного пространства.
+.TP 
+\fBADDR_LIMIT_32BIT\fP (начиная с Linux 2.2)
+Ограничивает адресное пространство 32 битами.
+.TP 
+\fBADDR_LIMIT_3GB\fP (начиная с Linux 2.4.0)
+При указании этого флага значение 0xc0000000 используется как смещение, по
+которому ищется блок (chunk) виртуальной памяти в \fBmmap\fP(2); в противном
+случае используется 0xffffe000.
+.TP 
+\fBFDPIC_FUNCPTRS\fP (начиная с Linux 2.6.11)
+Указатели на функции пользовательского пространства для сигнальных
+обработчиков указывают (на определённых архитектурах) на дескрипторы.
+.TP 
+\fBMMAP_PAGE_ZERO\fP (начиная с Linux 2.4.0)
+Отображать страницу 0 только для чтения (для поддержки двоичных файлов,
+зависящих от такого поведения согласно SVr4).
+.TP 
+\fBREAD_IMPLIES_EXEC\fP (начиная с Linux 2.6.8)
+При указании этого флага операция \fBPROT_READ\fP в \fBmmap\fP(2) подразумевает и
+\fBPROT_EXEC\fP.
+.TP 
+\fBSHORT_INODE\fP (начиная с Linux 2.4.0)
+Никак не влияет(?).
+.TP 
+\fBSTICKY_TIMEOUTS\fP (начиная с Linux 1.2.0)
+При указании этого флага вызовы \fBselect\fP(2), \fBpselect\fP(2) и \fBppoll\fP(2) не
+изменяют возвращаемый аргумент ожидания, если их работа прерывается
+обработчиком сигнала.
+.TP 
+\fBUNAME26\fP (начиная с Linux 3.1)
+Заставляет \fBuname\fP(2) выдавать номер версии 2.6.40+, а не 3.x. Добавлен как
+временная мера поддержки некорректных приложений, которые не могут учесть
+переход в нумерации версий ядра с 2.6.x на 3.x.
+.TP 
+\fBWHOLE_SECONDS\fP (начиная с Linux 1.2.0)
+Никак не влияет(?).
+.PP
+Список доступных доменов исполнения:
+.TP 
+\fBPER_BSD\fP (начиная с Linux 1.2.0)
+BSD. (Никак не влияет)
+.TP 
+\fBPER_HPUX\fP (начиная с Linux 2.4)
+Поддержка 32\-битного HP/UX. Никогда не была полной и удалена начиная с Linux
+4.0, данное значение никак не влияет на работу.
+.TP 
+\fBPER_IRIX32\fP (начиная с Linux 2.2)
+Поддержка 32\-битного IRIX 5. Никогда полностью не работала; удалена в Linux
+2.6.27. Подразумевает \fBSTICKY_TIMEOUTS\fP.
+.TP 
+\fBPER_IRIX64\fP (начиная с Linux 2.2)
+IRIX 6, 64\-битная версия. Подразумевает \fBSTICKY_TIMEOUTS\fP; в противном
+случае никак не влияет.
+.TP 
+\fBPER_IRIXN32\fP (начиная с Linux 2.2)
+IRIX 6, новая 32\-битная версия. Подразумевает \fBSTICKY_TIMEOUTS\fP; в
+противном случае никак не влияет.
+.TP 
+\fBPER_ISCR4\fP (начиная с Linux 1.2.0)
+Подразумевает \fBSTICKY_TIMEOUTS\fP; в противном случае никак не влияет.
+.TP 
+\fBPER_LINUX\fP (начиная с Linux 1.2.0)
+Linux.
+.TP 
+\fBPER_LINUX32\fP (начиная с Linux 2.2)
+[Будет описано.]
+.TP 
+\fBPER_LINUX32_3GB\fP (начиная с Linux 2.4)
+Подразумевает \fBADDR_LIMIT_3GB\fP.
+.TP 
+\fBPER_LINUX_32BIT\fP (начиная с Linux 2.0)
+Подразумевает \fBADDR_LIMIT_32BIT\fP.
+.TP 
+\fBPER_LINUX_FDPIC\fP (начиная с Linux 2.6.11)
+Подразумевает \fBFDPIC_FUNCPTRS\fP.
+.TP 
+\fBPER_OSF4\fP (начиная с Linux 2.4)
+.\" Following is from a comment in arch/alpha/kernel/osf_sys.c
+OSF/1 v4. На alpha, очищает верхние 32 бита iov_len в пользовательском
+буфере для совместимости со старыми версиями OSF/1, где iov_len определено
+как \fIint\fP.
+.TP 
+\fBPER_OSR5\fP (начиная с Linux 2.4)
+Подразумевает \fBSTICKY_TIMEOUTS\fP и \fBWHOLE_SECONDS\fP; в противном случае
+никак не влияет.
+.TP 
+\fBPER_RISCOS\fP (начиная с Linux 2.2)
+[Будет описано.]
+.TP 
+\fBPER_SCOSVR3\fP (начиная с Linux 1.2.0)
+Подразумевает \fBSTICKY_TIMEOUTS\fP, \fBWHOLE_SECONDS\fP и \fBSHORT_INODE\fP; в
+противном случае никак не влияет.
+.TP 
+\fBPER_SOLARIS\fP (начиная с Linux 2.4)
+Подразумевает \fBSTICKY_TIMEOUTS\fP; в противном случае никак не влияет.
+.TP 
+\fBPER_SUNOS\fP (начиная с Linux 2.4.0)
+Подразумевает \fBSTICKY_TIMEOUTS\fP. Библиотека отклонений и динамический
+компоновщик ищутся в \fI/usr/gnemul\fP. Содержит ошибки, практически не
+сопровождается и почти никем не используется; поддержка была удалена в Linux
+2.6.26.
+.TP 
+\fBPER_SVR3\fP (начиная с Linux 1.2.0)
+Подразумевает \fBSTICKY_TIMEOUTS\fP и \fBSHORT_INODE\fP; в противном случае никак
+не влияет.
+.TP 
+\fBPER_SVR4\fP (начиная с Linux 1.2.0)
+Подразумевает \fBSTICKY_TIMEOUTS\fP и \fBMMAP_PAGE_ZERO\fP; в противном случае
+никак не влияет.
+.TP 
+\fBPER_UW7\fP (начиная с Linux 2.4)
+Подразумевает \fBSTICKY_TIMEOUTS\fP и \fBMMAP_PAGE_ZERO\fP; в противном случае
+никак не влияет.
+.TP 
+\fBPER_WYSEV386\fP (начиная с Linux 1.2.0)
+Подразумевает \fBSTICKY_TIMEOUTS\fP и \fBSHORT_INODE\fP; в противном случае никак
+не влияет.
+.TP 
+\fBPER_XENIX\fP (начиная с Linux 1.2.0)
+Подразумевает \fBSTICKY_TIMEOUTS\fP и \fBSHORT_INODE\fP; в противном случае никак
+не влияет.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При нормальном завершении работы возвращается предыдущее значение
+\fIpersona\fP. При ошибке возвращается \-1, а переменная \fIerrno\fP,
+устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Ядру не удалось изменить специализацию.
+.SH ВЕРСИИ
+.\" personality wrapper first appeared in glibc 1.90,
+.\" <sys/personality.h> was added later in 2.2.91.
+Данный системный вызов впервые появился в Linux 1.1.20 (и, таким образом, в
+первом стабильном выпуске ядра Linux 1.2.0); поддержка в glibc добавлена в
+версии 2.3.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBpersonality\fP() есть только в Linux, и он не должен использоваться в
+переносимых программах.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsetarch\fP(8)

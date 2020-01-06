@@ -1,0 +1,91 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) Tom Bjorkholm & Markus Kuhn, 1996
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 1996-04-01 Tom Bjorkholm <tomb@mydata.se>
+.\"            First version written
+.\" 1996-04-10 Markus Kuhn <mskuhn@cip.informatik.uni-erlangen.de>
+.\"            revision
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SCHED_GET_PRIORITY_MAX 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sched_get_priority_max, sched_get_priority_min \- возвращают статический
+диапазон приоритетов
+.SH ОБЗОР
+\fB#include <sched.h>\fP
+.PP
+\fBint sched_get_priority_max(int \fP\fIpolicy\fP\fB);\fP
+.PP
+\fBint sched_get_priority_min(int \fP\fIpolicy\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBsched_get_priority_max\fP() возвращает максимальное значение
+приоритета, которое может использоваться с алгоритмом планирования,
+указанного в \fIpolicy\fP. Вызов \fBsched_get_priority_min\fP() возвращает
+минимальное значение приоритета, которое может использоваться с алгоритмом
+планирования, указанного в \fIpolicy\fP. Поддерживаемые значения для \fIpolicy\fP:
+\fBSCHED_FIFO\fP, \fBSCHED_RR\fP, \fBSCHED_OTHER\fP, \fBSCHED_BATCH\fP, \fBSCHED_IDLE\fP и
+\fBSCHED_DEADLINE\fP. Подробней об этих политиках смотрите в \fBsched\fP(7).
+.PP
+Процессы с большим числовым значением приоритета планируются к выполнению
+раньше процессов с меньшим числовым значением приоритета. То есть значение,
+возвращаемое \fBsched_get_priority_max\fP(), будет больше значения,
+возвращаемого \fBsched_get_priority_min\fP().
+.PP
+В Linux допускаются статические приоритеты в диапазоне от 1 до 99 для
+политик \fBSCHED_FIFO\fP и \fBSCHED_RR\fP и приоритет 0 для для остальных
+политик. Диапазоны планируемых приоритетов для различных политик назначить
+нельзя.
+.PP
+.\" POSIX.1-2001, POSIX.1-2008 (XBD 2.8.4)
+В разных системах POSIX диапазон планируемых приоритетов может различаться,
+то есть переносимое приложение должно использовать диапазон виртуальных
+приоритетов и отображать его в интервал, получаемый с помощью
+\fBsched_get_priority_max\fP() и \fBsched_get_priority_min\fP(). Согласно POSIX.1
+между максимальным и минимальным значениями для \fBSCHED_FIFO\fP и \fBSCHED_RR\fP
+требуется диапазон из не менее 32 значений.
+.PP
+В системах POSIX, имеющих \fBsched_get_priority_max\fP() и
+\fBsched_get_priority_min\fP(), определено значение для
+\fB_POSIX_PRIORITY_SCHEDULING\fP в \fI<unistd.h>\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsched_get_priority_max\fP() и
+\fBsched_get_priority_min\fP() возвращают максимальное/минимальное значение
+приоритета для указанной политики планирования. В случае ошибки возвращается
+\-1, а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Аргумент \fIpolicy\fP не содержит допустимого значения политики планирования.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBsched_getaffinity\fP(2), \fBsched_getparam\fP(2), \fBsched_getscheduler\fP(2),
+\fBsched_setaffinity\fP(2), \fBsched_setparam\fP(2), \fBsched_setscheduler\fP(2),
+\fBsched\fP(7)

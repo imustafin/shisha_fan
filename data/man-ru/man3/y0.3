@@ -1,0 +1,194 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 19:08:17 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 2002-08-25, aeb
+.\" Modified 2004-11-12 as per suggestion by Fabian Kreutz/AEB
+.\" 2008-07-24, mtk, created this page, based on material from j0.3.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH Y0 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+y0, y0f, y0l, y1, y1f, y1l, yn, ynf, ynl \- функции Бесселя второго рода
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble y0(double \fP\fIx\fP\fB);\fP
+\fBdouble y1(double \fP\fIx\fP\fB);\fP
+\fBdouble yn(int \fP\fIn\fP\fB, double \fP\fIx\fP\fB);\fP
+.PP
+\fBfloat y0f(float \fP\fIx\fP\fB);\fP
+\fBfloat y1f(float \fP\fIx\fP\fB);\fP
+\fBfloat ynf(int \fP\fIn\fP\fB, float \fP\fIx\fP\fB);\fP
+.PP
+\fBlong double y0l(long double \fP\fIx\fP\fB);\fP
+\fBlong double y1l(long double \fP\fIx\fP\fB);\fP
+\fBlong double ynl(int \fP\fIn\fP\fB, long double \fP\fIx\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBy0\fP(), \fBy1\fP(), \fByn\fP():
+.RS 4
+_XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.RE
+.br
+\fBy0f\fP(), \fBy0l\fP(), \fBy1f\fP(), \fBy1l\fP(), \fBynf\fP(), \fBynl\fP():
+.RS 4
+_XOPEN_SOURCE \ >=\ 600
+    || (_ISOC99_SOURCE && _XOPEN_SOURCE)
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+.PP
+Функции \fBy0\fP() и \fBy1\fP() возвращают функцию Бесселя второго рода от \fIx\fP
+для порядков 0 и 1 соответственно. Функция \fByn\fP() возвращает функцию
+Бесселя второго рода от \fIx\fP для порядка \fIn\fP.
+.PP
+Значение \fIx\fP должно быть положительным.
+.PP
+Функции \fBy0f\fP(), \fBy1f\fP() и \fBynf\fP() представляют собой версии, которые
+принимают и возвращают значения типа \fIfloat\fP. Функции \fBy0l\fP(), \fBy1l\fP() и
+\fBynl\fP() представляют собой версии, которые принимают и возвращают значения
+типа \fIlong double\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае успеха эти функции возвращают соответствующее значение функции
+Бесселя второго рода от \fIx\fP.
+.PP
+Если \fIx\fP имеет значение NaN, будет возвращено NaN.
+.PP
+Если \fIx\fP отрицательное, то генерируется ошибка выхода за пределы области, а
+функции возвращают \-\fBHUGE_VAL\fP, \-\fBHUGE_VALF\fP или \-\fBHUGE_VALL\fP
+соответственно. (В POSIX.1\-2001 также допускается в этом случае возврат
+NaN).
+.PP
+Если \fIx\fP равно 0.0, генерируется ошибка особой точки, а функции возвращают
+\-\fBHUGE_VAL\fP, \-\fBHUGE_VALF\fP или \-\fBHUGE_VALL\fP соответственно.
+.PP
+Если результат исчерпал степень, генерируется ошибка диапазона, а функции
+возвращают 0.0.
+.PP
+Если результат превышает разрядность, генерируется ошибка диапазона, а
+функции возвращают \-\fBHUGE_VAL\fP, \-\fBHUGE_VALF\fP или \-\fBHUGE_VALL\fP
+соответственно (В POSIX.1\-2001 также допускается в этом случае возврат 0.0).
+.SH ОШИБКИ
+Смотрите \fBmath_error\fP(7), чтобы определить, какие ошибки могут возникать
+при вызове этих функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка области: \fIx\fP является отрицательным
+\fIerrno\fP устанавливается в \fBEDOM\fP. Вызывается исключение неправильной
+плавающей точки (\fBFE_INVALID\fP).
+.TP 
+Ошибка особой точки: \fIx\fP равно 0.0
+.\" Before POSIX.1-2001 TC2, this was (inconsistently) specified
+.\" as a range error.
+.\" FIXME . y0(0.0) gives EDOM
+.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6808
+\fIerrno\fP устанавливается в \fBERANGE\fP (однако смотрите раздел ДЕФЕКТЫ). В
+данном случае от \fBfetestexcept\fP(3) исключение \fBFE_DIVBYZERO\fP не
+возвращается.
+.TP 
+Ошибка диапазона: результат исчерпал степень
+.\" e.g., y0(1e33) on glibc 2.8/x86-32
+.\" An underflow floating-point exception
+.\" .RB ( FE_UNDERFLOW )
+.\" is raised.
+.\" FIXME . Is it intentional that these functions do not use FE_*?
+.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6806
+\fIerrno\fP устанавливается в \fBERANGE\fP. В данном случае от \fBfetestexcept\fP(3)
+исключение \fBFE_DIVBYZERO\fP не возвращается.
+.TP 
+Ошибка диапазона: результат превысил разрядность
+.\" e.g., yn(10, 1e-40) on glibc 2.8/x86-32
+.\" .I errno
+.\" is set to
+.\" .BR ERANGE .
+.\" FIXME . Is it intentional that errno is not set?
+.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6808
+В данном случае \fIerrno\fP не изменяется. Вызывается исключение переполнения
+плавающей точки (\fBFE_OVERFLOW\fP).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBy0\fP(),
+\fBy0f\fP(),
+\fBy0l\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBy1\fP(),
+\fBy1f\fP(),
+\fBy1l\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fByn\fP(),
+\fBynf\fP(),
+\fBynl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функции, возвращающие \fIdouble\fP, соответствуют SVr4, 4.3BSD, POSIX.1\-2001 и
+POSIX.1\-2008. Остальные являются не стандартизованными функциями, которые
+также существуют в BSD.
+.SH ДЕФЕКТЫ
+.\" FIXME .
+.\" Bug raised: http://sourceware.org/bugzilla/show_bug.cgi?id=6807
+В случае ошибки особой точки данные функции устанавливают \fIerrno\fP в \fBEDOM\fP
+вместо \fBERANGE\fP, как это требует POSIX.1\-2004.
+.PP
+.\" FIXME . Actually, 2.3.2 is the earliest test result I have; so yet
+.\" to confirm if this error occurs only in 2.3.2.
+В glibc\-2.3.2 и младше данные функции не вызывают исключение неправильной
+плавающей точки (\fBFE_INVALID\fP) при возникновении ошибки выхода за пределы
+области.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBj0\fP(3)

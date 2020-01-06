@@ -1,0 +1,76 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MBRLEN 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+mbrlen \- вычисляет количество байт в следующем многобайтовом символе
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBsize_t mbrlen(const char *\fP\fIs\fP\fB, size_t \fP\fIn\fP\fB, mbstate_t *\fP\fIps\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBmbrlen\fP() просматривает не более \fIn\fP байт в многобайтовой строке,
+начинающейся с \fIs\fP и извлекает следующий полный многобайтовый символ. Она
+изменяет состояние сдвига \fI*ps\fP. Если многобайтовый символ не является
+широким символом null, то возвращается количество байт, которые
+использовались из \fIs\fP. Если многобайтовый символ является широким символом
+null, состояние сдвига \fI*ps\fP сбрасывается в начальное и возвращается 0.
+.PP
+Если в \fIn\fP байтах, начиная с \fIs\fP, не содержится полного многобайтового
+символа, то \fBmbrlen\fP() возвращает \fI(size_t)\ \-2\fP. Это может произойти
+даже, если \fIn\fP >= \fIMB_CUR_MAX\fP, если в многобайтовой строке содержится
+лишние сдвиговые последовательности.
+.PP
+Если многобайтовая строка, начинающаяся с \fIs\fP, содержит некорректную
+многобайтовую последовательность до следующего полного символа, то
+\fBmbrlen\fP() возвращает \fI(size_t)\ \-1\fP и присваивает \fIerrno\fP значение
+\fBEILSEQ\fP. В этом случае влияние на \fI*ps\fP не определено.
+.PP
+Если \fIps\fP равно NULL, то используется статическое анонимное состояние,
+известное только функции \fBmbrlen\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBmbrlen\fP() возвращает количество байт, просмотренных в
+многобайтовой последовательности, начинающейся с \fIs\fP, если при этом был
+получен широкий символ не равный null. Она возвращает 0, если был получен
+широкий символ null. Она возвращает \fI(size_t)\ \-1\fP и присваивает \fIerrno\fP
+значение \fBEILSEQ\fP, если встречена некорректная многобайтовая
+последовательность. Она возвращает \fI(size_t)\ \-2\fP, если не удалось найти
+полную многобайтовую последовательность, что означает, что \fIn\fP должно быть
+увеличено.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmbrlen\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:mbrlen/!ps
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBmbrlen\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmbrtowc\fP(3)

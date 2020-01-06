@@ -1,0 +1,359 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2015-2017 Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MEMBARRIER 2 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+membarrier \- задаёт барьеры памяти в наборе нитей
+.SH ОБЗОР
+\fB#include <linux/membarrier.h>\fP
+.PP
+\fBint membarrier(int \fP\fIcmd\fP\fB, int \fP\fIflags\fP\fB);\fP
+.SH ОПИСАНИЕ
+Системный вызов \fBmembarrier\fP() помогает сократить накладные расходы
+инструкций барьера памяти, которые требуются при доступе к памяти в
+многоядерных системах. Однако данный системный вызов затратнее чем барьер
+памяти, поэтому чтобы использовать его эффективно \fIнедостаточно\fP просто
+заменить им барьеры памяти, требуется понимание описанного далее.
+.PP
+При использовании барьеров памяти нужно принимать во внимание, что барьер
+памяти всегда должен или иметь противоположную сторону барьера, или что
+модель памяти архитектуры этого не требует.
+.PP
+При работе бывает, что одна сторона барьера (которую будем называть «быстрой
+стороной») применяется чаще чем другая (которую будем называть «медленной
+стороной»). Это основная цель использования \fBmembarrier\fP(). Основная идея в
+замене этих барьеров: быстрые стороны барьеров — простыми барьерами
+компилятора:
+.PP
+.in +4n
+.EX
+asm volatile ("" : : : "memory")
+.EE
+.in
+.PP
+а медленные стороны барьеров — вызовами \fBmembarrier\fP().
+.PP
+Это добавит накладных расходов к медленной стороне и удалит расходы у
+быстрой стороны, что в результате повысит общую производительность в
+зависимости от того, как часто используются вызовы \fBmembarrier\fP() у
+медленной стороны, из\-за которой возникают издержки, и не перевесит ли это
+увеличение производительности быстрой стороны.
+.PP
+Аргумент \fIcmd\fP может принимать одно из следующих значений:
+.TP 
+\fBMEMBARRIER_CMD_QUERY\fP (начиная с Linux 4.3)
+Запросить набор поддерживаемых команд. Возвращаемое вызовом значение
+представляет собой битовую маску поддерживаемых команд. Сама команда
+\fBMEMBARRIER_CMD_QUERY\fP имеет значение 0 и не включается в эту маску. Данная
+команда поддерживается всегда (в ядрах с поддержкой \fBmembarrier\fP()).
+.TP 
+\fBMEMBARRIER_CMD_GLOBAL\fP (начиная с Linux 4.16)
+Проверить, что все потоки всех процессов в системе прошли через состояние,
+где все доступы к памяти по адресам пространства пользователя соответствуют
+программному порядку между входом и возвратом из системного вызова
+\fBmembarrier\fP(). Все потоки в системе являются целью этой команды.
+.TP 
+\fBMEMBARRIER_CMD_GLOBAL_EXPEDITED\fP (начиная с Linux 4.16)
+Установить барьер памяти во всех выполняющихся нитях всех процессов, которые
+были ранее зарегистрированы с помощью
+\fBMEMBARRIER_CMD_REGISTER_GLOBAL_EXPEDITED\fP.
+.IP
+После возврата из системного вызова вызвавшей нити гарантируется, что все
+выполняющиеся нити прошли через состояние, где все доступы к памяти по
+адресам пространства пользователя соответствуют программному порядку между
+входом и возвратом из системного вызова (не выполняющиеся нити уже в таком
+состоянии). Это гарантируется только для нитей процессов, которые были ранее
+зарегистрированы с помощью \fBMEMBARRIER_CMD_REGISTER_GLOBAL_EXPEDITED\fP.
+.IP
+Учтите, что регистрация о намерении получать барьеры допускается вызовом
+\fBMEMBARRIER_CMD_GLOBAL_EXPEDITED\fP только из процесса, который не
+использовал \fBMEMBARRIER_CMD_REGISTER_GLOBAL_EXPEDITED\fP.
+.IP
+«Курируемые» (expedited) команды выполняются быстрее чем не курируемые; они
+никогда не блокируются, но на них приходятся дополнительные издержки.
+.TP 
+\fBMEMBARRIER_CMD_REGISTER_GLOBAL_EXPEDITED\fP (начиная с Linux 4.16)
+Зарегистрировать намерение процесса получать барьеры памяти
+\fBMEMBARRIER_CMD_GLOBAL_EXPEDITED\fP.
+.TP 
+\fBMEMBARRIER_CMD_PRIVATE_EXPEDITED\fP (начиная с Linux 4.14)
+Применить барьер памяти на все выполняющиеся нити, принадлежащие тому же
+процессу, что и вызвавшая нить.
+.IP
+После возврата из системного вызова вызвавшей нити гарантируется, что все
+выполняющиеся, одноуровневые с ней нити прошли через состояние, где все
+доступы к памяти по адресам пространства пользователя соответствуют
+программному порядку между входом и возвратом из системного вызова
+(невыполняющиеся нити уже в таком состоянии). Это гарантируется только для
+нитей того же процесса, что и вызвавшая нить.
+.IP
+«Курируемые» (expedited) команды выполняются быстрее чем не курируемые; они
+никогда не блокируются, но на них приходятся дополнительные издержки.
+.IP
+Процессу нужно регистрировать своё намерение использовать частную курируемую
+команду до её использования.
+.TP 
+\fBMEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED\fP (начиная с Linux 4.14)
+Зарегистрировать намерение процесса использовать
+\fBMEMBARRIER_CMD_PRIVATE_EXPEDITED\fP.
+.TP 
+\fBMEMBARRIER_CMD_PRIVATE_EXPEDITED_SYNC_CORE\fP (начиная с Linux 4.16)
+В дополнении к гарантии упорядочивания памяти, описанной в
+\fBMEMBARRIER_CMD_PRIVATE_EXPEDITED\fP, после возврата из системного вызова
+вызвавшей нити гарантируется, что все выполняющиеся, одноуровневые с ней
+нити выполнили ядерную инструкцию сериализации (core serializing
+instruction). Это гарантируется только для нитей того же процесса, что и
+вызвавшая нить.
+.IP
+«Курируемые» (expedited) команды выполняются быстрее чем не курируемые; они
+никогда не блокируются, но на них приходятся дополнительные издержки.
+.IP
+Процессу нужно регистрировать своё намерение использовать частную курируемую
+ядерную команду синхронизации до её использования.
+.TP 
+\fBMEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_SYNC_CORE\fP (начиная с Linux 4.16)
+Зарегистрировать намерение процесса использовать
+\fBMEMBARRIER_CMD_PRIVATE_EXPEDITED_SYNC_CORE\fP.
+.TP 
+\fBMEMBARRIER_CMD_SHARED\fP (начиная с Linux 4.3)
+Псевдоним \fBMEMBARRIER_CMD_GLOBAL\fP, существует для обратной совместимости в
+заголовке.
+.PP
+В настоящее время аргумент \fIflags\fP не используется и должен равняться 0.
+.PP
+Все доступы к памяти, выполняемые в программном порядке из каждого целевого
+потока, гарантированно упорядочены в отношении \fBmembarrier\fP().
+.PP
+Если использовать семантику \fIbarrier()\fP для представления барьера
+компилятора, обеспечивающего доступа к памяти, выполняемого в программном
+порядке для пересечения барьера, и \fIsmp_mb()\fP — для представления явных
+барьеров памяти, обеспечивающих полный упорядоченный доступ к памяти через
+барьер, то получится следующая упорядочивающая таблица для каждой пары
+\fIbarrier()\fP, \fBmembarrier\fP() и \fIsmp_mb()\fP. Наличие порядка в паре показано
+знаком (O: упорядочено, X: не упорядочено):
+.PP
+                       barrier()  smp_mb()  membarrier()
+       barrier()          X          X          O
+       smp_mb()           X          O          O
+       membarrier()       O          O          O
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении операции \fBMEMBARRIER_CMD_QUERY\fP возвращается
+битовая маска поддерживаемых команд, а операции \fBMEMBARRIER_CMD_GLOBAL\fP,
+\fBMEMBARRIER_CMD_GLOBAL_EXPEDITED\fP,
+\fBMEMBARRIER_CMD_REGISTER_GLOBAL_EXPEDITED\fP,
+\fBMEMBARRIER_CMD_PRIVATE_EXPEDITED\fP,
+\fBMEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED\fP,
+\fBMEMBARRIER_CMD_PRIVATE_EXPEDITED_SYNC_CORE\fP и
+\fBMEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_SYNC_CORE\fP возвращают ноль. При
+ошибке возвращается \-1 и в \fIerrno\fP устанавливается соответствующее
+значение.
+.PP
+Для данной команды, если флаг \fIflags\fP равен 0, то системный вызов всегда
+гарантирует возврат одного и того же значения до перезагрузки. Последующие
+вызовы с теми же аргументами всегда возвращают тот же результат. Поэтому,
+если \fIflags\fP равен 0, то обработка ошибок требуется только при первом
+вызове \fBmembarrier\fP().
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Неверное значение \fIcmd\fP, значение \fIflags\fP не равно нулю, отключена команда
+\fBMEMBARRIER_CMD_GLOBAL\fP, так как указан параметр ЦП \fInohz_full\fP или
+команды \fBMEMBARRIER_CMD_PRIVATE_EXPEDITED_SYNC_CORE\fP
+и\fBMEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_SYNC_CORE\fP не реализованы для
+архитектуры.
+.TP 
+\fBENOSYS\fP
+Системный вызов \fBmembarrier\fP() не реализован в данном ядре.
+.TP 
+\fBEPERM\fP
+Текущий процесс не зарегистрирован до использования частных курируемых
+команд.
+.SH ВЕРСИИ
+.\"
+Системный вызов \fBmembarrier\fP()  впервые появился в Linux версии 4.3.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" .SH SEE ALSO
+.\" FIXME See if the following syscalls make it into Linux 4.15 or later
+.\" .BR cpu_opv (2),
+.\" .BR rseq (2)
+Вызов \fBmembarrier\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Инструкция барьера памяти является частью системы команд архитектуры со
+слабо упорядоченными моделями памяти. Она упорядочивает доступ к памяти до
+барьера и после барьера в соответствии совпадающими барьерами на других
+ядрах. Например, загрузка барьера (fence) может упорядочить загрузку до и
+после этого барьера в соответствии порядком хранилища, установленного
+барьерами хранилища.
+.PP
+Программный порядок — это порядок, в котором инструкции упорядочены в
+ассемблерном коде программы.
+.PP
+Вызов \fBmembarrier\fP() может быть полезным для реализации библиотек
+чтения\-копирования\-обновления или сборщиков мусора.
+.SH ПРИМЕР
+Предполагая, что в многонитевой программе «fast_path()» выполняется очень
+часто, а «slow_path()» — редко, следующий код (x86) можно преобразовать
+используя \fBmembarrier\fP():
+.PP
+.in +4n
+.EX
+#include <stdlib.h>
+
+static volatile int a, b;
+
+static void
+fast_path(int *read_b)
+{
+    a = 1;
+    asm volatile ("mfence" : : : "memory");
+    *read_b = b;
+}
+
+static void
+slow_path(int *read_a)
+{
+    b = 1;
+    asm volatile ("mfence" : : : "memory");
+    *read_a = a;
+}
+
+int
+main(int argc, char **argv)
+{
+    int read_a, read_b;
+
+    /*
+     * В реальных приложениях вызовы fast_path() и slow_path()
+     * были бы в разных нитях. Их вызов из main() сделан только
+     * для укорачивания данного примера.
+     */
+
+    slow_path(&read_a);
+    fast_path(&read_b);
+
+    /*
+     * read_b == 0 подразумевает read_a == 1 и
+     * read_a == 0 подразумевает read_b == 1.
+     */
+
+    if (read_b == 0 && read_a == 0)
+        abort();
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.in
+.PP
+Этот же код, переписанный с использованием \fBmembarrier\fP():
+.PP
+.in +4n
+.EX
+#define _GNU_SOURCE
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <linux/membarrier.h>
+
+static volatile int a, b;
+
+static int
+membarrier(int cmd, int flags)
+{
+    return syscall(__NR_membarrier, cmd, flags);
+}
+
+static int
+init_membarrier(void)
+{
+    int ret;
+
+    /* Проверка поддержки в функции membarrier() */
+
+    ret = membarrier(MEMBARRIER_CMD_QUERY, 0);
+    if (ret < 0) {
+        perror("membarrier");
+        return \-1;
+    }
+
+    if (!(ret & MEMBARRIER_CMD_GLOBAL)) {
+        fprintf(stderr,
+            "membarrier не поддерживает MEMBARRIER_CMD_GLOBAL\en");
+        return \-1;
+    }
+
+    return 0;
+}
+
+static void
+fast_path(int *read_b)
+{
+    a = 1;
+    asm volatile ("" : : : "memory");
+    *read_b = b;
+}
+
+static void
+slow_path(int *read_a)
+{
+    b = 1;
+    membarrier(MEMBARRIER_CMD_GLOBAL, 0);
+    *read_a = a;
+}
+
+int
+main(int argc, char **argv)
+{
+    int read_a, read_b;
+
+    if (init_membarrier())
+        exit(EXIT_FAILURE);
+
+    /*
+     * В реальных приложениях вызовы fast_path() и slow_path()
+     * были бы в разных нитях. Их вызов из main() сделан только
+     * для укорачивания данного примера.
+     */
+
+    slow_path(&read_a);
+    fast_path(&read_b);
+
+    /*
+     * read_b == 0 подразумевает read_a == 1 и
+     * read_a == 0 подразумевает read_b == 1.
+     */
+
+    if (read_b == 0 && read_a == 0)
+        abort();
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.in

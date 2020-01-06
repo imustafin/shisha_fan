@@ -1,0 +1,107 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) 2000 lars brinkhoff <lars@nocrew.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified, Thu Jan 27 19:16:19 CET 2000, lars@nocrew.org
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DSP56K 4 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+dsp56k \- устройство интерфейса DSP56001
+.SH ОБЗОР
+.nf
+#include <asm/dsp56k.h>
+.PP
+\fBssize_t read(int \fP\fIfd\fP\fB, void *\fP\fIdata\fP\fB, size_t \fP\fIlength\fP\fB);\fP
+\fBssize_t write(int \fP\fIfd\fP\fB, void *\fP\fIdata\fP\fB, size_t \fP\fIlength\fP\fB);\fP
+.PP
+\fBint ioctl(int \fP\fIfd\fP\fB, DSP56K_UPLOAD, struct dsp56k_upload *\fP\fIprogram\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, DSP56K_SET_TX_WSIZE, int \fP\fIwsize\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, DSP56K_SET_RX_WSIZE, int \fP\fIwsize\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, DSP56K_HOST_FLAGS, struct dsp56k_host_flags *\fP\fIflags\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, DSP56K_HOST_CMD, int \fP\fIcmd\fP\fB);\fP
+.fi
+.SH НАСТРОЙКА
+Устройство dsp56k является символьным устройством с старшим номером 55 и
+младшим номером 0.
+.SH ОПИСАНИЕ
+Motorola DSP56001 \(em это полностью программируемый 24\-битный цифровой
+сигнальный процессор, используемый в компьютерах Atari Falcon030 и
+совместимых с ними. Специальный файл \fIdsp56k\fP используется для управления
+DSP56001 и для посылки и получения данных через выбранный на узле (host)
+двунаправленный порт.
+.PP
+Для отправки потока данных сигнальному процессору, используйте \fBwrite\fP(2),
+а для получения обработанных данных \(em \fBread\fP(2). Данные могут быть
+посылаться и получаться узлом по 8, 16, 24 или 32 бита, а сигнальный
+процессор способен обрабатывать только по 24 бита.
+.PP
+Для управления устройством \fIdsp56k\fP используются следующие вызовы
+\fBioctl\fP(2):
+.IP \fBDSP56K_UPLOAD\fP
+Обнуляет DSP56001 и загружает в него программу. Третьим аргументом
+\fBioctl\fP(2) должен быть указатель на \fIstruct dsp56k_binary\fP, в которое поле
+\fIbin\fP указывает на двоичную программу DSP56001, а в \fIlen\fP задаётся длина
+программы (значение должно быть кратно 24\-битным словам).
+.IP \fBDSP56K_SET_TX_WSIZE\fP
+Устанавливает размер передаваемых слов. Допустимое значение находится в
+пределах от 1 до 4, и является числом байт, посылаемых за один раз в
+DSP56001. Эти частички информации будут заполнены нулевыми байтами или
+преобразованы в формат 24\-битных данных DSP56001.
+.IP \fBDSP56K_SET_RX_WSIZE\fP
+Устанавливает размер принимаемых слов. Допустимое значение находится в
+диапазоне от 1 до 4, и является числом байт, принимаемых за один раз от
+процессора DSP56001. Эти частички информации будут урезаны или дополнены
+байтом null (\(aq\e0\(aq), чтобы соответствовать 24\-битному формату
+DSP56001.
+.IP \fBDSP56K_HOST_FLAGS\fP
+Считывает и записывает флаги узла. Флаги узла \(em это четыре бита общего
+назначения, они могут быть считаны как узлом, так и процессором
+DSP56001. Нулевой и первый биты могут записываться узлом, а второй и третий
+пишутся устройством DSP56001.
+.IP
+Для получения доступа к флагам узла третий аргумент \fBioctl\fP(2) должен быть
+указателем на \fIstruct dsp56k_host_flags\fP. Если нулевой и первый поля \fIdir\fP
+установлены в единичное значение, то соответствующий бит в поле \fIout\fP будет
+записан в флаг узла. Состояние всех флагов узла будет возвращено в младших
+четырёх битах поля \fIstatus\fP.
+.IP \fBDSP56K_HOST_CMD\fP
+Посылает команды узла. Допустимые величины находятся в диапазоне от 0 до 31,
+это определяемые пользователем команды, обрабатываемые программой,
+выполняющейся на DSP56001.
+.SH ФАЙЛЫ
+.\" .SH AUTHORS
+.\" Fredrik Noring <noring@nocrew.org>, lars brinkhoff <lars@nocrew.org>,
+.\" Tomas Berndtsson <tomas@nocrew.org>.
+/dev/dsp56k
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fIlinux/include/asm\-m68k/dsp56k.h\fP, \fIlinux/drivers/char/dsp56k.c\fP,
+.UR http://dsp56k.nocrew.org/
+.UE ,
+DSP56000/DSP56001 Digital Signal
+Processor User's Manual

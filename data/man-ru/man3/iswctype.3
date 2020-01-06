@@ -1,0 +1,61 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ISWCTYPE 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+iswctype \- классифицирует широкие символы
+.SH ОБЗОР
+.nf
+\fB#include <wctype.h>\fP
+.PP
+\fBint iswctype(wint_t \fP\fIwc\fP\fB, wctype_t \fP\fIdesc\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Если \fIwc\fP — широкий символ, имеющий свойство символа, обозначенное \fIdesc\fP
+(другими словами, принадлежащим классу символов, обозначенному \fIdesc\fP), то
+функция \fBiswctype\fP() возвращает ненулевое значение. В противном случае
+возвращается ноль. Если \fIwc\fP равно \fBWEOF\fP, то возвращается ноль.
+.PP
+Значение \fIdesc\fP должно быть описателем свойств символа, возвращаемым
+функцией \fBwctype\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBiswctype\fP() возвращает ненулевое значение, если имя \fIwc\fP имеет
+обозначенное свойство. Иначе возвращается 0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBiswctype\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBiswctype\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBiswalnum\fP(3), \fBiswalpha\fP(3), \fBiswblank\fP(3), \fBiswcntrl\fP(3),
+\fBiswdigit\fP(3), \fBiswgraph\fP(3), \fBiswlower\fP(3), \fBiswprint\fP(3),
+\fBiswpunct\fP(3), \fBiswspace\fP(3), \fBiswupper\fP(3), \fBiswxdigit\fP(3),
+\fBwctype\fP(3)

@@ -1,0 +1,69 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"  Copyright 2002 walter harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"  adapted glibc info page
+.\"
+.\"  polished a little, aeb
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ADDSEVERITY 3 2016\-03\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+addseverity \- объявление новых классов критичности
+.SH ОБЗОР
+.nf
+.PP
+\fB#include <fmtmsg.h>\fP
+.PP
+\fBint addseverity(int \fP\fIseverity\fP\fB, const char *\fP\fIs\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBaddseverity\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _SVID_SOURCE
+.SH ОПИСАНИЕ
+Эта функция позволяет добавить новые классы критичности (severity), которые
+могут передаваться в аргументе \fIseverity\fP функции \fBfmtmsg\fP(3). По
+умолчанию, эта функция позволяет выводить сообщения с уровнями критичности
+0\-4 (со строками (и без), HALT, ERROR, WARNING, INFO). Описываемая здесь
+функция связывает указанную строку \fIs\fP с заданным значением критичности
+\fIseverity\fP. Если значение \fIs\fP равно NULL, то класс критичности с числовым
+значением \fIseverity\fP будет удалён. Невозможно изменить или удалить классы
+критичности по умолчанию. Значение критичности должно быть положительным.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается значение \fBMM_OK\fP. При ошибке
+возвращаемое значение равно \fBMM_NOTOK\fP. Возможные ошибки: нехватка памяти,
+попытка удалить несуществующий класс или класс критичности по умолчанию.
+.SH ВЕРСИИ
+Функция \fBaddseverity\fP() появилась в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBaddseverity\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция не определена в X/Open Portability Guide, хотя в нём есть
+функция \fBfmtmsg\fP(3). Она доступна в системах System V.
+.SH ЗАМЕЧАНИЯ
+Также, новые классы критичности можно добавить создав переменную окружения
+\fBSEV_LEVEL\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfmtmsg\fP(3)

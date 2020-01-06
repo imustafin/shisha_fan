@@ -1,0 +1,97 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright Michael Haardt (michael@cantor.informatik.rwth-aachen.de)
+.\"     Sat Aug 27 20:43:50 MET DST 1994
+.\" and Copyright (C) 2014, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sun Sep 11 19:19:05 1994 <faith@cs.unc.edu>
+.\" Modified Mon Mar 25 10:19:00 1996 <aeb@cwi.nl> (merged a few
+.\"	tiny changes from a man page by Charles Livingston).
+.\" Modified Sun Jul 21 14:45:46 1996 <aeb@cwi.nl>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETSID 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+setsid \- создает сеанс и устанавливает идентификатор группы процесса
+.SH ОБЗОР
+.ad l
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <unistd.h>\fP
+.PP
+\fBpid_t setsid(void);\fP
+.br
+.ad b
+.SH ОПИСАНИЕ
+Вызов \fBsetsid\fP() создаёт новый сеанс, если вызывающий процесс не является
+лидером группы процессов. Вызывающий процесс становится лидером нового
+сеанса (то есть, его ID сеанса становится равным ID самого
+процесса). Вызывающий процесс также становится лидером группы процессов
+новой группы процессов в сеансе (то есть, его ID группы процессов становится
+равным ID самого процесса).
+.PP
+Вызывающий процесс будет единственным в новой группе процессов и новом
+сеансе.
+.PP
+Изначально, новый сеанс не имеет управляющего терминала. О том, как сеанс
+получает управляющий терминал, смотрите в \fBcredentials\fP(7).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается идентификатор (нового) сеанса
+вызывающего процесса. В случае ошибки возвращается \fI(pid_t)\ \-1\fP, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEPERM\fP
+Идентификатор группы процессов любого процесса равен PID вызывающего
+процесса. В этом случае, в частности, \fBsetsid\fP() завершается неудачно, если
+вызывающий процесс уже является лидером группы процессов.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4.
+.SH ЗАМЕЧАНИЯ
+Потомок, создаваемый с помощью \fBfork\fP(2), наследует ID сеанса своего
+родителя. Идентификатор сеанса сохраняется при вызове \fBexecve\fP(2).
+.PP
+Лидер группы процессов — это процесс, идентификатор группы процессов
+которого равен идентификатору самого процесса (PID). Отказ лидера группы
+процессов выполнять \fBsetsid\fP() предотвращает возможность того, что сам
+лидер группы процессов переместится в новый сеанс, в то время как другие
+процессы в группе останутся в первоначальном сеансе; это поломало бы жёсткую
+двухуровневую иерархию сценариев и групп процессов. Для того, чтобы
+\fBsetsid\fP() выполнился успешно, вызовите \fBfork\fP(2) и в родителе
+\fB_exit\fP(2), а затем в дочернем процессе (который по определению не может
+быть лидером группы процессов) вызовите \fBsetsid\fP().
+.PP
+Если сеанс имеет управляющий терминал, у которого не установлен флаг
+\fBCLOCAL\fP и возникает зависание (hangup) терминала, то лидеру сеанса
+посылается \fBSIGHUP\fP.
+.PP
+Если завершается процесс, который является лидером сеанса, то сигнал
+\fBSIGHUP\fP посылается каждому процессу в приоритетной (foreground) группе
+процессов управляющего терминала.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsetsid\fP(1), \fBgetsid\fP(2), \fBsetpgid\fP(2), \fBsetpgrp\fP(2), \fBtcgetsid\fP(3),
+\fBcredentials\fP(7), \fBsched\fP(7)

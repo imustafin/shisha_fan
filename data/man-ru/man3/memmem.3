@@ -1,0 +1,88 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 18:50:48 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Interchanged 'needle' and 'haystack'; added history, aeb, 980113.
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MEMMEM 3 2017\-03\-13 GNU "Руководство программиста Linux"
+.SH ИМЯ
+memmem \- ищет подстроку
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* смотрите feature_test_macros(7) */
+\fB#include <string.h>\fP
+.PP
+\fBvoid *memmem(const void *\fP\fIhaystack\fP\fB, size_t \fP\fIhaystacklen\fP\fB,\fP
+\fB             const void *\fP\fIneedle\fP\fB, size_t \fP\fIneedlelen\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBmemmem\fP() ищет начало первого появления подстроки \fIneedle\fP
+длинной \fIneedlelen\fP в области памяти \fIhaystack\fP размером \fIhaystacklen\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBmemmem\fP() возвращает указатель на начало подстроки или NULL, если
+подстрока не найдена.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmemmem\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция не определена в POSIX.1, однако доступна в некоторых других
+системах.
+.SH ДЕФЕКТЫ
+.\" This function was broken in Linux libraries up to and including libc 5.0.9;
+.\" there the
+.\" .IR needle
+.\" and
+.\" .I haystack
+.\" arguments were interchanged,
+.\" and a pointer to the end of the first occurrence of
+.\" .I needle
+.\" was returned.
+.\"
+.\" Both old and new libc's have the bug that if
+.\" .I needle
+.\" is empty,
+.\" .I haystack\-1
+.\" (instead of
+.\" .IR haystack )
+.\" is returned.
+В glibc 2.0, если \fIneedle\fP пусто, то \fBmemmem\fP() возвращает указатель на
+последний байт \fIhaystack\fP. Это исправлено в glibc 2.1.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbstring\fP(3), \fBstrstr\fP(3)

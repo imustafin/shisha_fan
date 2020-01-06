@@ -1,0 +1,81 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCSDUP 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wcsdup \- дублирует широкосимвольную строку
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBwchar_t *wcsdup(const wchar_t *\fP\fIs\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBwcsdup\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+Функция \fBwcsdup\fP() является широкосимвольным аналогом функции
+\fBsstrdup\fP(3). Она размещает в памяти и возвращает широкосимвольную строку —
+копию широкосимвольной строки, на которую указывает значение \fIs\fP.
+.PP
+Память для размещения новой широкосимвольной строки выделяется посредством
+\fBmalloc\fP(3) и должна освобождаться посредством \fBfree\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBwcsdup\fP() возвращает указатель на новую строку
+широких символов. В случае ошибки возвращается NULL, а в \fIerrno\fP
+записывается код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для размещения копии строки.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwcsdup\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" present in libc5 and glibc 2.0 and later
+POSIX.1\-2008. Эта функция не определена в POSIX.1\-2001 и широко не
+распространена среди других систем.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBstrdup\fP(3), \fBwcscpy\fP(3)

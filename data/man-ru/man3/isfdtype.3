@@ -1,0 +1,81 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ISFDTYPE 3 2014\-03\-13 Linux "Руководство программиста Linux"
+.SH ИМЯ
+isfdtype \- проверяет тип файла файлового дескриптора
+.SH ОБЗОР
+.nf
+\fB#include <sys/stat.h>\fP
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint isfdtype(int \fP\fIfd\fP\fB, int \fP\fIfdtype\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBisfdtype\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Начиная с glibc 2.20:
+_DEFAULT_SOURCE
+.TP  4
+До glibc 2.20:
+_BSD_SOURCE || _SVID_SOURCE
+.PD
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBisfdtype\fP() проверяет ссылается ли файловый дескриптор \fIfd\fP на
+файл с типом \fIfdtype\fP. В аргументе \fIfdtype\fP указывается одна из констант
+\fBS_IF*\fP, определённых в \fI<sys/stat.h>\fP и описанных в \fBstat\fP(2)
+(например, \fBS_IFREG\fP).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBisfdtype\fP() возвращает 1, если файловый дескриптор \fIfd\fP ссылается
+на файл с типом \fIfdtype\fP и 0, если нет. При ошибке возвращается \-1 и в
+\fIerrno\fP содержится код ошибки.
+.SH ОШИБКИ
+Функция \fBisfdtype\fP() может завершаться с теми же ошибками что и
+\fBfstat\fP(3).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функция \fBisfdtype\fP() отсутствует в каком\-либо стандарте, но появлялась в
+черновике POSIX.1g. Она есть в OpenBSD и Tru64 UNIX (требуется заголовочный
+файл \fI<sys/stat.h>\fP, согласно черновику POSIX.1g), и, возможно, в
+других системах.
+.SH ЗАМЕЧАНИЯ
+В переносимых программах следует использовать \fBfstat\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfstat\fP(3)

@@ -1,0 +1,118 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2010 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" based on a proposal from Stephan Mueller <smueller@atsec.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume
+.\" no responsibility for errors or omissions, or for damages resulting
+.\" from the use of the information contained herein.  The author(s) may
+.\" not have taken the same level of care in the production of this
+.\" manual, which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Various pieces of text taken from the kernel source and the commentary
+.\" in kernel commit fa28237cfcc5827553044cbd6ee52e33692b0faa
+.\" both written by Paul Mackerras <paulus@samba.org>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SUBPAGE_PROT 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+subpage_prot \- определяет подстраничную защиту адресного диапазона
+.SH ОБЗОР
+.nf
+\fBlong subpage_prot(unsigned long \fP\fIaddr\fP\fB, unsigned long \fP\fIlen\fP\fB,\fP
+\fB                  uint32_t *\fP\fImap\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Системный вызов (есть только для PowerPC) \fBsubpage_prot\fP() предоставляет
+возможность контроля доступа к отдельным 4\ КБ подстраницам в системах, где
+размер страницы равен 64\ КБ.
+.PP
+Карта защиты налагается на страницы памяти для области, начинающейся с
+\fIaddr\fP и имеющей размер \fIlen\fP байт. Значения обоих аргументов должны быть
+выровнены на 64\-КБ границу.
+.PP
+Карта защиты задаётся в буфере, на который указывает \fImap\fP. В карте на
+каждую 4\-килобайтную подстраницу выделяется 2 бита; таким образом, в каждом
+32\-битном слове задаётся защита для 16 4\-килобайтных подстраниц внутри
+64\-килобайтной страницы (поэтому количество 32\-битных слов, на которые
+указывает \fImap\fP, должно быть равно количеству 64\-килобайтных страниц,
+указанному в \fIlen\fP). Каждое 2\-битное поле в карте защиты может быть: 0 —
+полный доступ, 1 — защита от записи, 2 или 3 — запрет на любой доступ.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsubpage_prot\fP() возвращается 0. В противном случае
+возвращается один из кодов ошибок, описанных далее.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Буфер, на который ссылается \fImap\fP, недоступен.
+.TP 
+\fBEINVAL\fP
+Некорректное значение аргумента \fIaddr\fP или \fIlen\fP. Оба значения должны быть
+кратны размеру системной страницы, и они не должны указывать на область вне
+адресного пространства процесса, или на область, которая состоит из огромных
+страниц.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти.
+.SH ВЕРСИИ
+Данный системный вызов предоставляется для архитектуры PowerPC начиная с
+Linux 2.6.25. Для его сборки в ядре должен быть указан параметр
+\fBCONFIG_PPC_64K_PAGES\fP. В библиотеке поддержка данного вызова отсутствует.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данного системного вызова; запускайте его с помощью
+\fBsyscall\fP(2).
+.PP
+Обычная страничная защита также работает (на уровне 64\-килобайтных страниц);
+механизм подстраничной защиты является дополнительным ограничением, поэтому
+указание 0 в 2\-битном поле не разрешит запись в страницу, которая защищена
+от записи другим способом.
+.SS Обоснование
+.\" In the initial implementation, it was the case that:
+.\"     In fact the whole process is switched to use 4 kB hardware pages when the
+.\"     subpage_prot system call is used, but this could be improved in future
+.\"     to switch only the affected segments.
+.\" But Paul Mackerass says (Oct 2010): I'm pretty sure we now only switch
+.\" the affected segment, not the whole process.
+Данный системный вызов предоставляется для облегчения написания эмуляторов,
+которые работают с 64\-КБ страницами в системах PowerPC. При эмуляции систем,
+в которых используется меньший размер страницы (таких как x86), эмулятор не
+может использовать блок управления памятью (MMU) и обычные системные вызовы
+управления защитой страниц (эмулятор может эмулировать MMU с помощью ПО
+проверяя и, возможно, перераспределяя адрес при каждом обращении к памяти,
+но это медленно). Идея в том, что эмулятор задаёт массив защитных масок для
+указанного диапазона виртуальных адресов. Эти маски накладываются в месте,
+где аппаратные табличные записи страниц (PTE) вставляются в аппаратную
+таблицу страниц на основе Linux PTE, при этом Linux PTE не затрагиваются. В
+этом случае для защищённых областей адресного пространства начинают неявно
+использоваться 4\-килобайтные аппаратные страницы, а не 64\-килобайтные
+аппаратные страницы (на машинах с аппаратной поддержкой 64\-килобайтных
+страниц).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmprotect\fP(2), \fBsyscall\fP(2)
+.PP
+\fIDocumentation/admin\-guide/mm/hugetlbpage.rst\fP в дереве исходного кода ядра
+Linux

@@ -1,0 +1,70 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\" Copyright 1997 Andries E. Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH VM86 2 2009\-02\-20 Linux "Руководство программиста Linux"
+.SH ИМЯ
+vm86old, vm86 \- войти в виртуальный режим 8086 
+.SH ОБЗОР
+\fB#include <sys/vm86.h>\fP
+.PP
+\fBint vm86old(struct vm86_struct *\fP\fIinfo\fP\fB);\fP
+.PP
+\fBint vm86(unsigned long \fP\fIfn\fP\fB, struct vm86plus_struct *\fP\fIv86\fP\fB);\fP
+.SH ОПИСАНИЕ
+Системный вызов \fBvm86\fP() был введён в Linux 0.97p2. В Linux 2.1.15 и 2.0.28
+он был переименован в \fBvm86old\fP() и был введён новый \fBvm86\fP(). Описание
+структуры \fIstruct vm86_struct\fP было изменено в 1.1.8 и 1.1.9.
+.PP
+Данные вызовы заставляют вызывающий процесс войти в режим VM86 (виртуальный
+режим 8086 в литературе по Intel) и используются \fBdosemu\fP.
+.PP
+Режим VM86 \(em это эмуляция реального режима внутри задачи, которая
+работает в защищённом режиме.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Возвращённое значение является есть только для i386 и указывает на проблему
+получения данных из пространства пользователя.
+.TP 
+\fBENOSYS\fP
+Возвращённое значение указывает, что вызов не реализован на данной
+архитектуре.
+.TP 
+\fBEPERM\fP
+Существует сохранённый стек ядра (это проверка ядра; сохранённый стек должен
+существовать только внутри самого режима vm86).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов является специфичным для Linux на 32\-битных процессорах Intel и
+не должен использоваться в программах, которые задумываются как переносимые
+на другие платформы. 

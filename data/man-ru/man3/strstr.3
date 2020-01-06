@@ -1,0 +1,96 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 17:56:43 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Added history, aeb, 980113.
+.\" 2005-05-05 mtk: added strcasestr()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STRSTR 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+strstr, strcasestr \- поиск подстроки
+.SH ОБЗОР
+.nf
+\fB#include <string.h>\fP
+.PP
+\fBchar *strstr(const char *\fP\fIhaystack\fP\fB, const char *\fP\fIneedle\fP\fB);\fP
+.PP
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+.PP
+\fB#include <string.h>\fP
+.PP
+\fBchar *strcasestr(const char *\fP\fIhaystack\fP\fB, const char *\fP\fIneedle\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBstrstr\fP() ищет первое соответствие подстроки \fIneedle\fP в строке
+\fIhaystack\fP. Конечные байты null (\(aq\e0\(aq) не сравниваются.
+.PP
+\fBstrcasestr\fP() аналогична \fBstrstr\fP(), но при этом игнорируется регистр
+обеих строк.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Данные функции возвращают указатель на начало найденной подстроки или NULL,
+если подстрока не найдена.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstrstr\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBstrcasestr\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBstrstr\fP(): POSIX.1\-2001, POSIX.1\-2008, C89, C99.
+.PP
+.\" .SH BUGS
+.\" Early versions of Linux libc (like 4.5.26) would not allow
+.\" an empty
+.\" .I needle
+.\" argument for
+.\" .BR strstr ().
+.\" Later versions (like 4.6.27) work correctly,
+.\" and return
+.\" .IR haystack
+.\" when
+.\" .I needle
+.\" is empty.
+\fBstrcasestr\fP() является нестандартизованным расширением.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBindex\fP(3), \fBmemchr\fP(3), \fBmemmem\fP(3), \fBrindex\fP(3), \fBstrcasecmp\fP(3),
+\fBstrchr\fP(3), \fBstring\fP(3), \fBstrpbrk\fP(3), \fBstrsep\fP(3), \fBstrspn\fP(3),
+\fBstrtok\fP(3), \fBwcsstr\fP(3)

@@ -1,0 +1,186 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\"
+.\" Modified 1993-03-29, David Metcalfe
+.\" Modified 1993-04-28, Lars Wirzenius
+.\" Modified 1993-07-24, Rik Faith (faith@cs.unc.edu)
+.\" Modified 1995-05-18, Rik Faith (faith@cs.unc.edu) to add
+.\"          better discussion of problems with rand on other systems.
+.\"          (Thanks to Esa Hyyti{ (ehyytia@snakemail.hut.fi).)
+.\" Modified 1998-04-10, Nicolás Lichtmaier <nick@debian.org>
+.\"          with contribution from Francesco Potorti <F.Potorti@cnuce.cnr.it>
+.\" Modified 2003-11-15, aeb, added rand_r
+.\" 2010-09-13, mtk, added example program
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RAND 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+rand, rand_r, srand \- генератор псевдослучайных чисел
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint rand(void);\fP
+.PP
+\fBint rand_r(unsigned int *\fP\fIseedp\fP\fB);\fP
+.PP
+\fBvoid srand(unsigned int \fP\fIseed\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBrand_r\fP():
+.RS 4
+начиная с glibc 2.24:
+    _POSIX_C_SOURCE >= 199506L
+.br
+в glibc 2.23 и старее
+    _POSIX_C_SOURCE
+.RE
+.SH ОПИСАНИЕ
+Функция \fBrand\fP() возвращает псевдослучайное целое число в диапазоне от нуля
+до \fBRAND_MAX\fP включительно (т. е., из математического диапазона [0,\ \fBRAND_MAX\fP]).
+.PP
+Функция \fBsrand\fP() устанавливает свой аргумент как основу (seed) для новой
+последовательности псевдослучайных целых чисел, возвращаемых функцией
+\fBrand\fP(). Эту последовательность можно воспроизвести. Для этого необходимо
+вызвать \fBsrand\fP() с той же величиной основы.
+.PP
+Если основа не задана, то функция \fBrand\fP() автоматически устанавливает её
+равной 1.
+.PP
+Функция \fBrand\fP() не реентерабельная, так как она использует скрытое
+состояние, которое изменяется с каждым вызовом. Это может быть как просто
+значение основы, так и что\-то более сложное. Чтобы получить воспроизводимое
+поведение в многонитевом приложении такое состояние нужно создать явным
+образом; это можно сделать с помощью реентерабельной функции \fBrand_r\fP().
+.PP
+Как и \fBrand\fP(), \fBrand_r\fP() возвращает псевдослучайное целое число из
+диапазона [0,\ \fBRAND_MAX\fP]. Аргумент \fIseedp\fP является указателем на число
+\fIunsigned int\fP, которое используется для хранения состояния между
+вызовами. Если \fBrand_r\fP() вызывается с одинаковым начальным значением
+целого, на которое указывает \fIseedp\fP, и это значение не изменяется между
+вызовами, то результатом будет одинаковая псевдослучайная
+последовательность.
+.PP
+Значение, на которое указывает аргумент \fIseedp\fP для \fBrand_r\fP(),
+предоставляет только очень малую часть состояния, поэтому данная функция
+будет очень не случайным псевдослучайным генератором. Используйте вместо неё
+\fBdrand48_r\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBrand\fP() и \fBrand_r\fP() возвращают значение в промежутке от 0 до
+\fBRAND_MAX\fP (включительно). Функция \fBsrand\fP() не возвращает результат.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw25 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBrand\fP(),
+\fBrand_r\fP(),
+\fBsrand\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функции \fBrand\fP() и \fBsrand\fP() описаны в SVr4, 4.3BSD, C89, C99,
+POSIX.1\-2001. Функция \fBrand_r\fP() описана в POSIX.1\-2001. В POSIX.1\-2008
+функция \fBrand_r\fP() помечена как устаревшая.
+.SH ЗАМЕЧАНИЯ
+Версия функций \fBrand\fP() и \fBsrand\fP() в библиотеке Си для Linux использует
+тот же генератор чисел, что и в функциях \fBrandom\fP(3) и \fBsrandom\fP(3), так
+что младшие биты в числе случайны настолько, насколько и старшие. В то же
+время, в старых реализациях \fBrand\fP() и в текущих реализациях на других
+системах младшие биты являются гораздо менее случайными, чем старшие. Не
+используйте эту функцию в переносимых приложениях, для которых требуется
+большая случайность (вместо неё используйте \fBrandom\fP(3)).
+.SH ПРИМЕР
+В POSIX.1\-2001 приведён следующий пример реализации \fBrand\fP() и \fBsrand\fP(),
+возможно полезный, если требуется одинаковая последовательность на двух
+разных машинах.
+.PP
+.in +4n
+.EX
+static unsigned long next = 1;
+
+/* предполагается, что RAND_MAX равно 32767 */
+int myrand(void) {
+    next = next * 1103515245 + 12345;
+    return((unsigned)(next/65536) % 32768);
+}
+
+void mysrand(unsigned int seed) {
+    next = seed;
+}
+.EE
+.in
+.PP
+Следующая программа может использоваться для отображения псевдослучайной
+последовательности, созданной \fBrand\fP() при указании определённой основы.
+.PP
+.in +4n
+.EX
+#include <stdlib.h>
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+    int j, r, nloops;
+    unsigned int seed;
+
+    if (argc != 3) {
+        fprintf(stderr, "Использование: %s <seed> <nloops>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    seed = atoi(argv[1]);
+    nloops = atoi(argv[2]);
+
+    srand(seed);
+    for (j = 0; j < nloops; j++) {
+        r =  rand();
+        printf("%d\en", r);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdrand48\fP(3), \fBrandom\fP(3)

@@ -1,0 +1,60 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CLOG10 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+clog10, clog10f, clog10l \- вычисление десятичного логарифма комплексного
+числа
+.SH ОБЗОР
+\fB#define _GNU_SOURCE\fP /* смотрите feature_test_macros(7) */
+.br
+\fB#include <complex.h>\fP
+.PP
+\fBdouble complex clog10(double complex \fP\fIz\fP\fB);\fP
+.br
+\fBfloat complex clog10f(float complex \fP\fIz\fP\fB);\fP
+.br
+\fBlong double complex clog10l(long double complex \fP\fIz\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.SH ОПИСАНИЕ
+Вызов \fIclog10(z)\fP равнозначен следующему:
+.PP
+    clog(z)/log(10)
+.PP
+или:
+.PP
+    log10(cabs(c)) + I * carg(c) / log(10)
+.PP
+Другие функции выполняют ту же задачу для типов \fIfloat\fP и \fIlong double\fP.
+.PP
+Заметим, что \fIz\fP, близкое к нулю, вызовет переполнение.
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw30 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBclog10\fP(),
+\fBclog10f\fP(),
+\fBclog10l\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU. Идентификаторы зарезервированы для
+будущего использования в C99 и C11.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcabs\fP(3), \fBcexp\fP(3), \fBclog\fP(3), \fBclog2\fP(3), \fBcomplex\fP(7)

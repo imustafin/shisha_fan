@@ -1,0 +1,103 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2005 Michael Kerrisk
+.\" based on earlier work by faith@cs.unc.edu and
+.\" Mike Battersby <mib@deakin.edu.au>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2005-09-15, mtk, Created new page by splitting off from sigaction.2
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGPENDING 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sigpending, rt_sigpending \- проверка ожидающих сигналов
+.SH ОБЗОР
+\fB#include <signal.h>\fP
+.PP
+\fBint sigpending(sigset_t *\fP\fIset\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBsigpending\fP(): _POSIX_C_SOURCE
+.ad b
+.SH ОПИСАНИЕ
+.PP
+Вызов \fBsigpending\fP() возвращает набор сигналов, которые ожидают доставки в
+вызвавшую нить (т.е., сигналы, возникшие пока были заблокированы). Маска
+ожидающих сигналов возвращается в \fIset\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBsigpending\fP() возвращает 0 и \-1 при
+ошибке. В случае ошибки в \fIerrno\fP указывается номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Аргумент \fIset\fP указывает на память в недопустимой части адресуемого
+пространства.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Подробная информация о работе с наборами сигналов есть на странице
+\fBsigsetops\fP(3).
+.PP
+Если сигнал заблокирован и имеет обработчик «игнорировать», то он \fIне\fP
+добавляется в маску ожидающих сигналов при генерации.
+.PP
+Набор сигналов, ожидающих обработки в нити, представляет собой объединение
+набора сигналов, ожидающих обработки в этой нити и набора сигналов,
+ожидающих обработки всем процессом (см. \fBsignal\fP(7)).
+.PP
+.\"
+Потомок, созданный с помощью \fBfork\fP(2), первоначально имеет пустой набор
+ожидающих сигналов; набор ожидающих сигналов сохраняется при вызове
+\fBexecve\fP(2).
+.SS "Отличия между библиотекой C и ядром"
+.\" This argument is currently required to be less than or equal to
+.\" .IR sizeof(sigset_t)
+.\" (or the error
+.\" .B EINVAL
+.\" results).
+.\"
+Первоначально, системный вызов Linux назывался \fBsigpending\fP(). Однако, с
+добавлением сигналов реального времени в Linux 2.2, 32\-битный аргумент
+\fIsigset_t\fP неизменяемого размера, поддерживаемый этим системным вызовом, не
+мог больше использоваться. В результате был добавлен новый системный вызов
+\fBrt_sigpending\fP() с увеличенным типом \fIsigset_t\fP. У нового системного
+вызова появился второй аргумент, \fIsize_t sigsetsize\fP, в котором указывается
+размер (в байтах) набора сигналов \fIset\fP. Обёрточная функция glibc
+\fBsigpending\fP() скрывает это и вызывает \fBrt_sigpending\fP(), если он есть в
+ядре.
+.SH ДЕФЕКТЫ
+В версиях glibc до 2.2.1 включительно, был дефект в обёрточной функции к
+\fBsigpending\fP(), из\-за которого возвращалась некорректная информация об
+ожидающих сигналах реального времени.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBsigaction\fP(2), \fBsignal\fP(2), \fBsigprocmask\fP(2),
+\fBsigsuspend\fP(2), \fBsigsetops\fP(3), \fBsignal\fP(7)

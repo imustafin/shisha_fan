@@ -1,0 +1,93 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2007 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2007-10-23 mtk, Nearly a complete rewrite of the earlier page.
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INTRO 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+intro \- введение в библиотечные функции
+.SH ОПИСАНИЕ
+В разделе 3 описываются все библиотечные функции за исключением библиотечных
+функций (обёрток системных вызовов), описанных в разделе 2, которые
+предоставляют системные вызовы.
+.PP
+Много функций этого раздела являются частью стандартной библиотеки C
+(\fIlibc\fP). Некоторые функции находятся в других библиотеках (например, в
+математической библиотеке \fIlibm\fP или библиотеке реального времени
+\fIlibrt\fP); в таких справочных страницах указывается параметр компоновщика
+для связывания с требуемой библиотекой (например, \fI\-lm\fP и \fI\-lrt\fP,
+соответственно, для вышеупомянутых библиотек).
+.PP
+.\"
+.\" There
+.\" are various function groups which can be identified by a letter which
+.\" is appended to the chapter number:
+.\" .IP (3C)
+.\" These functions, the functions from chapter 2 and from chapter 3S are
+.\" contained in the C standard library libc, which will be used by
+.\" .BR cc (1)
+.\" by default.
+.\" .IP (3S)
+.\" These functions are parts of the
+.\" .BR stdio (3)
+.\" library.  They are contained in the standard C library libc.
+.\" .IP (3M)
+.\" These functions are contained in the arithmetic library libm.  They are
+.\" used by the
+.\" .BR f77 (1)
+.\" FORTRAN compiler by default, but not by the
+.\" .BR cc (1)
+.\" C compiler, which needs the option \fI\-lm\fP.
+.\" .IP (3F)
+.\" These functions are part of the FORTRAN library libF77.  There are no
+.\" special compiler flags needed to use these functions.
+.\" .IP (3X)
+.\" Various special libraries.  The manual pages documenting their functions
+.\" specify the library names.
+В некоторых случаях программист должен определить макрос тестирования
+свойств, чтобы получить объявление функции из заголовочного файла,
+указанного в справочной странице в разделе СИНТАКСИС. (Где необходимо, эти
+макросы тестирования свойств должны быть определены перед включением
+\fIкакого\-либо\fP заголовочного файла.) В таких случаях требуемый макрос описан
+в справочной странице. Подробней о макросах тестирования свойств написано в
+\fBfeature_test_macros\fP(7).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Для обозначение вариантов UNIX и разнообразных стандартов, которым
+соответствуют системные вызовы, описанные в этом разделе, используются
+различные сокращения. См. \fBstandards\fP(7).
+.SH ЗАМЕЧАНИЯ
+.SS "Авторы и условия распространения"
+Авторы и условия распространения указаны в заголовке исходной справочной
+страницы. Заметим, что у разных страниц они могут быть разными! Список
+русских переводчиков для каждой страницы можно найти в .po файле в исходном
+коде пакета.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBintro\fP(2), \fBerrno\fP(3), \fBcapabilities\fP(7), \fBcredentials\fP(7),
+\fBenviron\fP(7), \fBfeature_test_macros\fP(7), \fBlibc\fP(7), \fBmath_error\fP(7),
+\fBpath_resolution\fP(7), \fBpthreads\fP(7), \fBsignal\fP(7), \fBstandards\fP(7)

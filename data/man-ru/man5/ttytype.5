@@ -1,0 +1,65 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt (michael@moria.de),
+.\"     Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 17:17:50 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Thu Oct 19 21:25:21 MET 1995 by Martin Schulze <joey@infodrom.north.de>
+.\" Modified Mon Oct 21 17:47:19 EDT 1996 by Eric S. Raymond
+.\" <esr@thyrsus.com>xk
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TTYTYPE 5 2012\-12\-31 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ttytype \- отображение терминального устройства на тип терминала по умолчанию
+.SH ОПИСАНИЕ
+Файл \fI/etc/ttytype\fP связывает имена типов из \fBtermcap\fP(5)/\fBterminfo\fP(5) с
+линиями tty. Каждая строка состоит из типа терминала, пробел, имя терминала
+(имя устройства без префикса \fI/dev/\fP).
+.PP
+Эта связь используется программой \fBtset\fP(1) для настройки переменной
+окружения \fBTERM\fP на имя терминала по умолчанию для пользователей текущего
+tty.
+.PP
+Это средство было разработано для традиционной среды с разделением времени,
+благодаря символьным терминалам, которые были неотъемлемой частью
+мини\-компьютера UNIX. Оно мало используется на современных рабочих станциях
+и персональных системах UNIX.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/ttytype\fP
+Файл определений tty.
+.SH ПРИМЕР
+Обычно \fI/etc/ttytype\fP следующий:
+.PP
+.in +4n
+.EX
+con80x25 tty1
+vt320 ttys0
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBtermcap\fP(5), \fBterminfo\fP(5), \fBagetty\fP(8), \fBmingetty\fP(8)

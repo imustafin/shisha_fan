@@ -1,0 +1,56 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2013, Peter Schiffer (pschiffe@redhat.com)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MTRACE 1 2017\-09\-15 GNU "Руководство пользователя Linux"
+.SH ИМЯ
+mtrace \- трактует журнал трассировки malloc
+.SH ОБЗОР
+\fBmtrace\fP [\fIпараметр\fP]… [\fIbinary\fP] \fImtracedata\fP
+.SH ОПИСАНИЕ
+Программа \fBmtrace\fP представляет собой сценарий Perl и используется для
+трактовки и вывода в понятном человеку виде журнала трассировки из файла
+\fImtracedata\fP, который создаётся \fBmtrace\fP(3). Если указан файл \fIbinary\fP,
+то вывод \fBmtrace\fP также содержит имя файла исходного кода и номера строк
+соответствующих мест (предполагается, что \fIbinary\fP скомпилирован с
+отладочной информацией).
+.PP
+Подробней о функции \fBmtrace\fP(3) и использовании сценария \fBmtrace\fP смотрите
+в \fBmtrace\fP(3).
+.SH ПАРАМЕТРЫ
+.TP 
+\fB\-\-help\fP
+Показать справку по использованию и завершить работу.
+.TP 
+\fB\-\-version\fP
+Показать информацию о версии и завершить работу.
+.SH ДЕФЕКТЫ
+Инструкции по созданию отчетов об ошибках можно найти по адресу
+.UR http://www.gnu.org/software/libc/bugs.html
+.UE .
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmemusage\fP(1), \fBmtrace\fP(3)

@@ -1,0 +1,300 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INET_NET_PTON 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+inet_net_pton, inet_net_ntop \- преобразует\ номер сети Интернета
+.SH ОБЗОР
+.nf
+\fB#include <arpa/inet.h>\fP
+.PP
+\fBint inet_net_pton(int \fP\fIaf\fP\fB, const char *\fP\fIpres\fP\fB,\fP
+\fB                  void *\fP\fInetp\fP\fB, size_t \fP\fInsize\fP\fB);\fP
+
+\fBchar *inet_net_ntop(int \fP\fIaf\fP\fB, const void *\fP\fInetp\fP\fB, int \fP\fIbits\fP\fB,\fP
+\fB                    char *\fP\fIpres\fP\fB, size_t \fP\fIpsize\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lresolv\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBinet_net_pton\fP(), \fBinet_net_ntop\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Начиная с glibc 2.20:
+_DEFAULT_SOURCE
+.TP  4
+До glibc 2.20:
+_BSD_SOURCE || _SVID_SOURCE
+.PD
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Эти функции преобразуют номера сетей, представленных в сетевом формате
+(т. е. двоичном), в представленческий формат (т. е., печатаемый) и обратно.
+.PP
+В обоих функциях в \fIaf\fP задаётся адресное семейство для преобразования;
+поддерживается только значение \fBAF_INET\fP.
+.SS inet_net_pton()
+Функция \fBinet_net_pton\fP() преобразует \fIpres\fP, строку с null в конце,
+содержащую номер сети Интернета в представленческом формате, в сетевой
+формат. Результат преобразования с сетевым порядком байт помещается в буфер,
+указанный в \fInet\fP (аргумент \fInetp\fP, обычно, указывает на структуру
+\fIin_addr\fP). В аргументе \fInsize\fP задаётся количество доступных байт в
+\fInetp\fP.
+.PP
+При успешном выполнении \fBinet_net_pton\fP() возвращает количество бит в поле
+номера сети результата, помещённого в \fInetp\fP. Обсуждение входного
+представленческого формата и возвращаемое значение смотрите в ЗАМЕЧАНИЯХ.
+.PP
+\fIЗамечание\fP: буфер, указанный в \fInetp\fP, должен быть заполнен нулями до
+вызова \fBinet_net_pton\fP(), так как вызов изменяет только байты, необходимые
+для номера сети (или сколько явно указано в \fIpres\fP), что может быть меньше,
+чем байт в полном адресе сети.
+.SS inet_net_ntop()
+Функция \fBinet_net_ntop\fP() преобразует номер сети в буфере, указанном в
+\fInetp\fP, в представленческий формат; значение \fI*netp\fP рассматривается в
+сетевом порядке байт. В аргументе \fIbits\fP задаётся количество бит в номере
+сети из \fI*netp\fP.
+.PP
+Строка в представленческом формате с null в конце помещается в буфер, на
+который указывает \fIpres\fP. В аргументе \fIpsize\fP задаётся количество байт,
+доступных в \fIpres\fP. Представленческая строка имеет формат CIDR: адрес сети
+в виде чисел, разделённых точками, затем косая черта и размер сети в битах.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBinet_net_pton\fP() возвращает количество бит в
+номере сети. При ошибке возвращается \-1, а в \fIerrno\fP содержится код ошибки.
+.PP
+При успешном выполнении \fBinet_net_ntop\fP() возвращается \fIpres\fP. При ошибке
+возвращается NULL, а в \fIerrno\fP содержится код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEAFNOSUPPORT\fP
+В \fIaf\fP указано значение, отличное от \fBAF_INET\fP.
+.TP 
+\fBEMSGSIZE\fP
+Размер буфера результата недостаточен.
+.TP 
+\fBENOENT\fP
+(\fBinet_net_pton\fP()) Значение \fIpres\fP имеет некорректный представленческий
+формат.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функции \fBinet_net_pton\fP() и \fBinet_net_ntop\fP() являются нестандартными, но
+широко распространены.
+.SH ЗАМЕЧАНИЯ
+.SS "Представленческий формат входных данных inet_net_pton()"
+Номер сети может задаваться в виде шестнадцатеричного значения или в
+точечно\-десятичной форме.
+.PP
+.\" If the hexadecimal string is short, the remaining nibbles are zeroed.
+Шестнадцатеричное значение определяется по начальному «0x» или
+«0X». Шестнадцатеричные цифры заполняют полубайты (половина октета) номера
+сети слева направо в сетевом порядке байт.
+.PP
+В точечно\-десятичной форме указываются, максимум, первые четыре октета, с
+помощью десятичных чисел и точек. То есть можно использовать следующие
+форматы:
+.PP
+    a.b.c.d
+    a.b.c
+    a.b
+    a
+.PP
+.\" Reading other man pages, some other implementations treat
+.\" 	'c' in a.b.c as a 16-bit number that populates right-most two bytes
+.\"     'b' in a.b as a 24-bit number that populates right-most three bytes
+Каждая часть — это число от 0 до 255, которое заполняет один байт
+получаемого номера сети; заполнение производится слева направо, в сетевом
+порядке байт (от старшего к младшему). Если часть пропущена, то байт
+результата в  номере сети равно нулю.
+.PP
+В шестнадцатеричном или точечно\-десятичном формате номер сети может
+содержать косую черту и число от 0 до 32, которое задаёт размер сети в
+битах.
+.SS "Возвращаемое значение inet_net_pton()"
+Возвращаемым значением \fBinet_net_pton\fP() является количество бит поля
+номера сети. Если входная строка представленческих данных заканчивается
+косой чертой и явным значением размера, то это значение является результатом
+\fBinet_net_pton\fP(). В противном случае возвращаемое значение, \fIbits\fP,
+определяется следующим образом:
+.IP * 3
+Если наиболее значимый байт номер сети больше или равен 240, то \fIbits\fP
+равно 32.
+.IP * 3
+Или же, если наиболее значимый байт номер сети больше или равен 224, то
+\fIbits\fP равно 4.
+.IP * 3
+Или же, если наиболее значимый байт номер сети больше или равен 192, то
+\fIbits\fP равно 24.
+.IP * 3
+Или же, если наиболее значимый байт номер сети больше или равен 128, то
+\fIbits\fP равно 16.
+.IP *
+В противном случае \fIbits\fP равно 8.
+.PP
+Если значение результата \fIbits\fP после определения больше или равно 8, но
+количество октетов, указанных в номере сети, превышает \fIbits/8\fP, то \fIbits\fP
+присваивается 8 кратное количество октетов, указанных на самом деле.
+.SH ПРИМЕР
+Программа, представленная далее, показывает использование \fBinet_net_pton\fP()
+и \fBinet_net_ntop\fP(). В ней используется \fBinet_net_pton\fP() для
+преобразования адреса сети из значения в представленческом формате,
+переданном в первом аргументе командной строки, в двоичную форму; выводится
+полученное из \fBinet_net_pton\fP() значение. Затем используется
+\fBinet_net_ntop\fP() для преобразования двоичной формы обратно в
+представленческий формат, и выводится полученная строка.
+.PP
+Чтобы продемонстрировать, что \fBinet_net_pton\fP() может не записывать все
+байты аргумента \fInetp\fP, программе можно передать в командной строке
+необязательный второй аргумент — число, используемое для заполнения буфера
+перед вызовом \fBinet_net_pton\fP(). В строке результата программа показывает
+все байты буфера, возвращаемого \fBinet_net_pton\fP(), позволяя пользователю
+увидеть какие байты не изменялись \fBinet_net_pton\fP().
+.PP
+Пример работы, показывающий, как \fBinet_net_pton\fP() прогнозирует количество
+бит в номере сети:
+.PP
+.in +4n
+.EX
+$ \fB./a.out 193.168\fP
+inet_net_pton() вернула: 24
+inet_net_ntop() выдала:  193.168.0/24
+Необработанный адрес:              c1a80000
+.EE
+.in
+.PP
+Демонстрируется, как \fBinet_net_pton\fP() не обнуляет неиспользованные байты в
+буфере результата:
+.PP
+.in +4n
+.EX
+$ \fB./a.out 193.168 0xffffffff\fP
+inet_net_pton() вернула: 24
+inet_net_ntop() выдала:  193.168.0/24
+Необработанный адрес:              c1a800ff
+.EE
+.in
+.PP
+Демонстрируется, как \fBinet_net_pton\fP() расширяет прогнозируемый размер
+номера сети, если полученное количество байт в представленческой строке
+превышает прогнозируемое значение:
+.PP
+.in +4n
+.EX
+$ \fB./a.out 193.168.1.128\fP
+inet_net_pton() вернула: 32
+inet_net_ntop() выдала:  193.168.1.128/32
+Необработанный адрес:              c1a80180
+.EE
+.in
+.PP
+Явно указанный размер номера сети заменяет любой прогнозируемый (но все
+дополнительные байты, указанные явно, всё равно будут использованы
+\fBinet_net_pton\fP() для заполнения буфера результата):
+.PP
+.in +4n
+.EX
+$ \fB./a.out 193.168.1.128/24\fP
+inet_net_pton() вернула: 24
+inet_net_ntop() выдала:  193.168.1/24
+Необработанный адрес:              c1a80180
+.EE
+.in
+.SS "Исходный код программы"
+.EX
+/* Компоновать с «\-lresolv» */
+
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    char buf[100];
+    struct in_addr addr;
+    int bits;
+
+    if (argc < 2) {
+        fprintf(stderr,
+                "Использование: %s представленческая\-форма \e
+                                   [начальное\-значение\-адреса]\en",
+                argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /* Если указан argv[2] (число), то использовать его для инициализации
+       буфера результата, передаваемого inet_net_pton() для того, чтобы
+       мы могли увидеть, что inet_net_pton() инициализирует только те
+       байты, которые нужны для номера сети. Если argv[2] не указан, то
+       буфер инициализируется нулями (как рекомендуется). */
+
+    addr.s_addr = (argc > 2) ? strtod(argv[2], NULL) : 0;
+
+    /* Преобразование представленческого формата номера сети
+       из argv[1] в двоичный */
+
+    bits = inet_net_pton(AF_INET, argv[1], &addr, sizeof(addr));
+    if (bits == \-1)
+        errExit("inet_net_ntop");
+
+    printf("inet_net_pton() вернула: %d\en", bits);
+
+    /* Преобразование двоичного формата обратно в представленческий,
+       используя значение «bits», возвращённое inet_net_pton() */
+
+    if (inet_net_ntop(AF_INET, &addr, bits, buf, sizeof(buf)) == NULL)
+        errExit("inet_net_ntop");
+
+    printf("inet_net_ntop() выдала:  %s\en", buf);
+
+    /* Показать «addr» в необработанном виде (в сетевом порядке байт)
+       для того, чтобы мы могли увидеть байты, не отображаемые
+       inet_net_ntop(); некоторые из этих байт могут быть не изменены
+       inet_net_ntop(), и поэтому будут содержать любое начальное
+       значение, которое было задано в argv[2]. */
+
+    printf("Необработанный адрес:            %x\en", htonl(addr.s_addr));
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBinet\fP(3), \fBnetworks\fP(5)

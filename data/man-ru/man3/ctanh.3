@@ -1,0 +1,55 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CTANH 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+ctanh, ctanhf, ctanhl \- вычисление гиперболического тангенса комплексного
+числа
+.SH ОБЗОР
+\fB#include <complex.h>\fP
+.PP
+\fBdouble complex ctanh(double complex \fP\fIz\fP\fB);\fP
+.br
+\fBfloat complex ctanhf(float complex \fP\fIz\fP\fB);\fP
+.br
+\fBlong double complex ctanhl(long double complex \fP\fIz\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.SH ОПИСАНИЕ
+Эти функции вычисляют комплексный гиперболический тангенс \fIz\fP.
+.PP
+Функция гиперболического тангенса комплексного числа математически
+определена как:
+.PP
+.nf
+    ctanh(z) = csinh(z) / ccosh(z)
+.fi
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBctanh\fP(),
+\fBctanhf\fP(),
+\fBctanhl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcabs\fP(3), \fBcatanh\fP(3), \fBccosh\fP(3), \fBcsinh\fP(3), \fBcomplex\fP(7)

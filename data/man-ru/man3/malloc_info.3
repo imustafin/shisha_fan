@@ -1,0 +1,245 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2012 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MALLOC_INFO 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+malloc_info \- экспортирует состояние malloc в поток
+.SH ОБЗОР
+.nf
+\fB#include <malloc.h>\fP
+.PP
+\fBint malloc_info(int \fP\fIoptions\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBmalloc_info\fP() экспортирует строку XML, описывающую текущее
+состояние реализации выделения памяти вызывающего. Строка печатается в
+файловый поток \fIstream\fP. В экспортируемой строке содержится информация о
+всех областях (arenas) (смотрите \fBmalloc\fP(3)).
+.PP
+В текущей реализации значение \fIoptions\fP должно быть равно нулю.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBmalloc_info\fP() возвращается 0; при ошибке
+возвращается \-1, а в \fIerrno\fP помещается код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Значение \fIoptions\fP не равно.
+.SH ВЕРСИИ
+Функция \fBmalloc_info\fP() впервые появилась в glibc 2.10.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmalloc_info\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является расширением GNU.
+.SH ЗАМЕЧАНИЯ
+Информация о выделении памяти предоставляется в виде строки XML (а не в
+структуре C), так как структура со временем может меняться (при изменении в
+реализации). Возвращаемая строка XML содержит поле версии.
+.PP
+Для отправки вывода \fBmalloc_info\fP() в буфер памяти, а не в файл можно
+использовать функцию \fBopen_memstream\fP(3).
+.PP
+Функция \fBmalloc_info\fP() разработана для компенсации нехватки данных из
+\fBmalloc_stats\fP(3) и \fBmallinfo\fP(3).
+.SH ПРИМЕР
+Программа, представленная ниже, принимает до четырёх параметров командной
+строки, три из которых обязательны. В первом параметре задаётся количество
+нитей, которые должна создать программа. Все нити, включая главную нить,
+выделяют количество блоков памяти, заданное в втором параметре. В третьем
+параметре задаётся размер выделяемых блоков. Главная нить создает блоки
+этого размера, вторая нить создаваемая программой, выделяет блоки
+двукратного размера, третья нить выделяет блоки трёхкратного размера и так
+далее.
+.PP
+Чтобы показать состояние выделения памяти программа дважды вызывает
+\fBmalloc_info\fP(). Первый раз вызов делается до создания нитей и выделения
+памяти. Второй вызов выполняется после того, как все нити выделят память.
+.PP
+В следующем примере аргументами командной строки задаётся создание одной
+дополнительной нити и что главная и дополнительная нить выделяют 10000
+блоков памяти. После того, как блоки памяти выделены, \fBmalloc_info\fP()
+показывает состояние двух областей выделения.
+.PP
+.in +4
+.EX
+$ \fBgetconf GNU_LIBC_VERSION\fP
+glibc 2.13
+$ \fB./a.out 1 10000 100\fP
+============ до выделения блоков ============
+<malloc version="1">
+<heap nr="0">
+<sizes>
+</sizes>
+<total type="fast" count="0" size="0"/>
+<total type="rest" count="0" size="0"/>
+<system type="current" size="135168"/>
+<system type="max" size="135168"/>
+<aspace type="total" size="135168"/>
+<aspace type="mprotect" size="135168"/>
+</heap>
+<total type="fast" count="0" size="0"/>
+<total type="rest" count="0" size="0"/>
+<system type="current" size="135168"/>
+<system type="max" size="135168"/>
+<aspace type="total" size="135168"/>
+<aspace type="mprotect" size="135168"/>
+</malloc>
+
+============ после выделения блоков ============
+<malloc version="1">
+<heap nr="0">
+<sizes>
+</sizes>
+<total type="fast" count="0" size="0"/>
+<total type="rest" count="0" size="0"/>
+<system type="current" size="1081344"/>
+<system type="max" size="1081344"/>
+<aspace type="total" size="1081344"/>
+<aspace type="mprotect" size="1081344"/>
+</heap>
+<heap nr="1">
+<sizes>
+</sizes>
+<total type="fast" count="0" size="0"/>
+<total type="rest" count="0" size="0"/>
+<system type="current" size="1032192"/>
+<system type="max" size="1032192"/>
+<aspace type="total" size="1032192"/>
+<aspace type="mprotect" size="1032192"/>
+</heap>
+<total type="fast" count="0" size="0"/>
+<total type="rest" count="0" size="0"/>
+<system type="current" size="2113536"/>
+<system type="max" size="2113536"/>
+<aspace type="total" size="2113536"/>
+<aspace type="mprotect" size="2113536"/>
+</malloc>
+.EE
+.in
+.SS "Исходный код программы"
+.EX
+#include <unistd.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <malloc.h>
+#include <errno.h>
+
+static size_t blockSize;
+static int numThreads, numBlocks;
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+static void *
+thread_func(void *arg)
+{
+    int j;
+    int tn = (int) arg;
+
+    /* Множитель \(aq(2 + tn)\(aq для обеспечения того, что каждая
+       нить (включая главную) выделяет разное количество памяти */
+
+    for (j = 0; j < numBlocks; j++)
+        if (malloc(blockSize * (2 + tn)) == NULL)
+            errExit("malloc\-thread");
+
+    sleep(100);         /* Спим, пока главная нить не завершит работу */
+    return NULL;
+}
+
+int
+main(int argc, char *argv[])
+{
+    int j, tn, sleepTime;
+    pthread_t *thr;
+
+    if (argc < 4) {
+        fprintf(stderr,
+                "%s num\-threads num\-blocks block\-size [sleep\-time]\en",
+                argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    numThreads = atoi(argv[1]);
+    numBlocks = atoi(argv[2]);
+    blockSize = atoi(argv[3]);
+    sleepTime = (argc > 4) ? atoi(argv[4]) : 0;
+
+    thr = calloc(numThreads, sizeof(pthread_t));
+    if (thr == NULL)
+        errExit("calloc");
+
+    printf("============ до выделения блоков ============\en");
+    malloc_info(0, stdout);
+
+    /* Создаём нити, которые выделяют разное количество памяти  */
+
+    for (tn = 0; tn < numThreads; tn++) {
+        errno = pthread_create(&thr[tn], NULL, thread_func,
+                               (void *) tn);
+        if (errno != 0)
+            errExit("pthread_create");
+
+        /* если мы добавим задержку после запуска каждой нити,
+           то нити, вероятно,  не будут бороться за мьютекс malloc,
+           и поэтому дополнительные области выделены
+           не будут (смотрите malloc(3)) */
+
+        if (sleepTime > 0)
+            sleep(sleepTime);
+    }
+
+    /* главная нить также выделяет память */
+
+    for (j = 0; j < numBlocks; j++)
+        if (malloc(blockSize) == NULL)
+            errExit("malloc");
+
+    sleep(2);           /* ждём, чтобы потоки успели
+                           выделить память */
+
+    printf("\en============ после выделения блоков ============\en");
+    malloc_info(0, stdout);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmallinfo\fP(3), \fBmalloc\fP(3), \fBmalloc_stats\fP(3), \fBmallopt\fP(3),
+\fBopen_memstream\fP(3)

@@ -1,0 +1,135 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2006, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH POSIX_FALLOCATE 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+posix_fallocate \- выделяет пространство для файла
+.SH ОБЗОР
+.nf
+\fB#include <fcntl.h>\fP
+.PP
+\fBint posix_fallocate(int \fP\fIfd\fP\fB, off_t \fP\fIoffset\fP\fB, off_t \fP\fIlen\fP\fB);\fP
+.fi
+.PP
+.ad l
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBposix_fallocate\fP():
+.RS 4
+_POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBposix_fallocate\fP() гарантирует, что дисковое пространство,
+выделено для файла, на который указывает файловый дескриптор \fIfd\fP, для байт
+в диапазоне начиная с \fIoffset\fP и длиной \fIlen\fP байт. После успешного
+выполнения \fBposix_fallocate\fP() последующие операции записи в байты
+указанного диапазона гарантировано не закончатся ошибкой из\-за нехватки
+места на диске.
+.PP
+Если размер файла меньше чем \fIoffset\fP+\fIlen\fP, то файл увеличится до своего
+размера; в противном случае размер файла останется не изменённым.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функции \fBposix_fallocate\fP()  возвращается 0, а при
+ошибке возвращается её номер. Заметим, что \fIerrno\fP не изменяется.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+\fIfd\fP не является допустимым файловым дескриптором или не открыт на запись.
+.TP 
+\fBEFBIG\fP
+Сумма \fIoffset+len\fP превышает максимальный размер файла.
+.TP 
+\fBEINTR\fP
+При выполнении поступил сигнал.
+.TP 
+\fBEINVAL\fP
+Значение \fIoffset\fP меньше, или \fIlen\fP меньше или равно 0, или используемая
+файловая система, хранящая файл, не поддерживает операцию.
+.TP 
+\fBENODEV\fP
+Дескриптор \fIfd\fP не указывает на обычный файл.
+.TP 
+\fBENOSPC\fP
+Недостаточно дискового пространства на устройстве, на котором расположен
+файл, указанный в \fIfd\fP.
+.TP 
+\fBESPIPE\fP
+Значение \fIfd\fP указывает на канал.
+.SH ВЕРСИИ
+Функция \fBposix_fallocate\fP() доступна в glibc начиная с версии 2.1.94.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBposix_fallocate\fP()
+T}	Безвредность в нитях	MT\-Safe (но смотрите ДЕФЕКТЫ)
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001.
+.PP
+В POSIX.1\-2008 указано, что реализация \fIдолжна\fP возвращать ошибку
+\fBEINVAL\fP, если \fIlen\fP равно 0 или \fIoffset\fP меньше 0. В POSIX.1\-2001
+сказано, что реализация \fIдолжна\fP возвращать ошибку \fBEINVAL\fP, если \fIlen\fP
+меньше 0 или \fIoffset\fP меньше 0, и \fIможет\fP возвращать ошибку, если \fIlen\fP
+равно 0.
+.SH ЗАМЕЧАНИЯ
+В glibc функция \fBposix_fallocate\fP() реализована с помощью системного вызова
+\fBfallocate\fP(2), который является нитебезопасным. Если подлежащая файловая
+система не поддерживает \fBfallocate\fP(2), то операция эмулируется со
+следующими оговорками:
+.IP * 2
+Эмуляция не считается эффективной.
+.IP *
+Существует состязательность, где одновременные записи из другой нити или
+процесса могут быть перезаписаны null байтами.
+.IP *
+Существует состязательность, где одновременное увеличение размера файла из
+другой нити или процесса могут привести к тому, что размер файл будет меньше
+ожидаемого.
+.IP *
+Если \fIfd\fP был открыт с флагом \fBO_APPEND\fP или \fBO_WRONLY\fP, то функция
+завершается ошибкой \fBEBADF\fP.
+.PP
+Таким образом, эмуляция не является нитебезопасной. В Linux приложения могут
+использовать \fBfallocate\fP(2), если для них неприемлемы оговорки эмуляции. В
+общем, функцию рекомендуется использовать только, если приложение планирует
+завершить операцию, если возвращается \fBEOPNOTSUPP\fP, в противном случае в
+приложении нужно реализовать обходное решение проблем эмуляции,
+предоставляемой glibc.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfallocate\fP(1), \fBfallocate\fP(2), \fBlseek\fP(2), \fBposix_fadvise\fP(2)

@@ -1,0 +1,118 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 19:40:39 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Fri Jun 25 12:10:47 1999 by Andries Brouwer (aeb@cwi.nl)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ECVT 3 2016\-03\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+ecvt, fcvt \- преобразование числа с плавающей точкой в строку
+.SH ОБЗОР
+\fB#include <stdlib.h>\fP
+.PP
+\fBchar *ecvt(double \fP\fInumber\fP\fB, int \fP\fIndigits\fP\fB, int *\fP\fIdecpt\fP\fB,\fP
+\fBint *\fP\fIsign\fP\fB);\fP
+.PP
+\fBchar *fcvt(double \fP\fInumber\fP\fB, int \fP\fIndigits\fP\fB, int *\fP\fIdecpt\fP\fB,\fP
+\fBint *\fP\fIsign\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBecvt\fP(), \fBfcvt\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Начиная с glibc 2.12:
+.nf
+(_XOPEN_SOURCE\ >=\ 500) ! (_POSIX_C_SOURCE\ >=\ 200112L)
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версии glibc <= 2.19: */ _SVID_SOURCE
+.fi
+.TP  4
+До glibc 2.12:
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_SVID_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.PD
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBecvt\fP() преобразует \fInumber\fP в строку с завершающим null\-символом
+\fIndigits\fP цифр (количество \fIndigits\fP усекается до пределов точности,
+определённых форматом \fIdouble\fP) и возвращает указатель на строку. Самый
+старший разряд полученного числа не будет равен нулю, если только само число
+\fInumber\fP не равно нулю. Самый младший разряд округляется. Строка сама по
+себе не содержит разделителя целой и дробной части, однако позиция
+разделителя относительно начала строки сохраняется в
+\fI*decpt\fP. Отрицательное значение \fI*decpt\fP означает, что разделитель
+находится слева от начала строки. Если число \fInumber\fP отрицательное, то
+\fI*sign\fP устанавливается в ненулевое значение, иначе равно нулю. Если
+\fInumber\fP равно нулю, то не определено, равен ли \fI*decpt\fP 0 или 1.
+.PP
+Функция \fBfcvt\fP() аналогична \fBecvt\fP(), за исключением того, что \fIndigits\fP
+указывает число цифр после разделителя.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Обе функции, \fBecvt\fP() и \fBfcvt\fP(), возвращают указатель на статическую
+строку, содержащую ASCII\-представление \fInumber\fP. Статическая строка
+перезаписывается каждый раз при вызове \fBecvt\fP() или \fBfcvt\fP().
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBecvt\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:ecvt
+T{
+\fBfcvt\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:fcvt
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr2; отмечены в POSIX.1\-2001 как УСТАРЕВШИЕ. В POSIX.1\-2008 спецификации
+\fBecvt\fP() и \fBfcvt\fP() удалены, вместо них рекомендуется использовать
+\fBsprintf\fP(3) (однако \fBsnprintf\fP(3) может быть предпочтительнее).
+.SH ЗАМЕЧАНИЯ
+.\" Linux libc4 and libc5 specified the type of
+.\" .I ndigits
+.\" as
+.\" .IR size_t .
+Не все локали используют точку в качестве разделителя целой и дробной части
+(«десятичная точка»).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBecvt_r\fP(3), \fBgcvt\fP(3), \fBqecvt\fP(3), \fBsetlocale\fP(3), \fBsprintf\fP(3)

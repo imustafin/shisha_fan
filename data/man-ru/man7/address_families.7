@@ -1,0 +1,348 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2018 by Eugene Syromyatnikov <evgsyr@gmail.com>,
+.\" and Copyright (c) 2018 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ADDRESS_FAMILIES 7 2018\-10\-16 Linux "Руководство программиста Linux"
+.SH ИМЯ
+address_families \- семейства адресов сокетов (домены)
+.SH ОБЗОР
+\fB#include <sys/types.h>\fP /* смотрите ЗАМЕЧАНИЯ */
+.br
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint socket(int \fP\fIdomain\fP\fB, int \fP\fItype\fP\fB, int \fP\fIprotocol\fP\fB);\fP
+.SH ОПИСАНИЕ
+Параметр \fIdomain\fP в \fBsocket\fP(2) задает домен соединения: выбирает
+семейство протоколов, которое будет использоваться для соединения. Семейства
+описаны в \fI<sys/socket.h>\fP. В настоящее время ядром Linux
+распознаются следующие форматы:
+.TP 
+\fBAF_UNIX\fP, \fBAF_LOCAL\fP
+Локальное соединение, дополнительная информация доступна в \fBunix\fP(7).
+.TP 
+\fBAF_INET\fP
+Протоколы Интернет IPv4, дополнительная информация доступна в \fBip\fP(7).
+.TP 
+\fBAF_AX25\fP
+.\" Part of ax25-tools
+Протокол любительского радио AX.25, дополнительная информация доступна в
+\fBax25\fP(4).
+.TP 
+\fBAF_IPX\fP
+Протоколы Novell IPX.
+.TP 
+\fBAF_APPLETALK\fP
+AppleTalk, дополнительная информация доступна в \fBddp\fP(7).
+.TP 
+\fBAF_NETROM\fP
+.\" Part of ax25-tools package
+Протокол пакетного уровня AX.25, дополнительная информация доступна в
+\fBnetrom\fP(4),
+.UR https://www.tldp.org/HOWTO/AX25\-HOWTO/x61.html
+\fIThe
+Packet Radio Protocols and Linux\fP
+.UE
+и \fIAX.25\fP, \fINET/ROM\fP и главах
+\fIROSE network programming\fP из
+.UR https://www.tldp.org/HOWTO/AX25\-HOWTO/x2107.html
+\fILinux Amateur Radio
+AX.25 HOWTO\fP
+.UE .
+.TP 
+\fBAF_BRIDGE\fP
+Нельзя использовать для создания сокетов; в основном используется для связей
+типа «мост» в протокольных командах \fBrtnetlink\fP(7).
+.TP 
+\fBAF_ATMPVC\fP
+Доступ к неструктурированным постоянным виртуальным каналам ATM (PVC),
+дополнительная информация доступна в
+.UR https://www.tldp.org/HOWTO/text/ATM\-Linux\-HOWTO
+\fIATM on Linux HOWTO\fP
+.UE .
+.TP 
+\fBAF_X25\fP
+Протокол ITU\-T X.25 / ISO\-8208, дополнительная информация доступна в
+\fBx25\fP(7).
+.TP 
+\fBAF_INET6\fP
+Протоколы Интернет IPv6, дополнительная информация доступна в \fBipv6\fP(7).
+.TP 
+\fBAF_ROSE\fP
+Протокол пакетного уровня RATS (Radio Amateur Telecommunications Society)
+окружения открытых систем (ROSE) AX.25, дополнительная информация доступна в
+ресурсах, перечисленных для \fBAF_NETROM\fP.
+.TP 
+\fBAF_DECnet\fP
+Протокольные сокеты DECet, дополнительная информация доступна в
+\fIDocumentation/networking/decnet.txt\fP из дерева исходного кода Linux.
+.TP 
+\fBAF_NETBEUI\fP
+Зарезервировано для «проекта 802.2LLC», никогда не использовалось.
+.TP 
+\fBAF_SECURITY\fP
+Недолго существовавшее (с Linux 2.1.30 по 2.1.99pre2) семейство протоколов
+для вызовов из межсетевого экрана.
+.TP 
+\fBAF_KEY\fP
+Прокотол управления ключами, изначально разрабатывался для использования с
+IPsec (начиная с Linux 2.1.38). Никак не связан с \fBkeyctl\fP(2) и
+возможностью хранения ключей в ядре. Дополнительная информация доступна в
+.UR https://tools.ietf.org/html/rfc2367
+RFC 2367 \fIPF_KEY Key Management
+API, Version 2\fP
+.UE
+.
+.TP 
+\fBAF_NETLINK\fP
+Устройство для пользовательского взаимодействия с ядром, дополнительная
+информация доступна в \fBnetlink\fP(7).
+.TP 
+\fBAF_PACKET\fP
+.\" .TP
+.\" .B AF_ASH
+.\" Asynchronous Serial Host protocol (?)
+.\" Notes from Eugene Syromyatnikov:
+.\" I haven't found any concrete information about this one;
+.\" it never was implemented in Linux, at least, judging by historical
+.\" repos.  There is also this file (and its variations):
+.\" https://github.com/ecki/net-tools/blob/master/lib/ash.c
+.\" ( https://github.com/ecki/net-tools/commits/master/lib/ash.c )
+.\" it mentions "NET-2 distribution" (BSD Net/2?), but, again, I failed
+.\" to find any mentions of "ash" protocol there.
+.\" (for the reference:
+.\" ftp://pdp11.org.ru/pub/unix-archive/Distributions/UCB/Net2/net2.tar.gz )
+.\" Another source that mentions it is
+.\" https://www.silabs.com/documents/public/user-guides/ug101-uart-gateway-protocol-reference.pdf
+.\" https://www.silabs.com/documents/public/user-guides/ug115-ashv3-protocol-reference.pdf
+.\" but I doubt that it's related, as former files use 64-byte addresses and
+.\" "Hamming-encode of hops", and that's barely combines with a protocol
+.\" that is mainly used over serial connection.
+Низкоуровневый пакетный интерфейс, дополнительная информация доступна в
+\fBpacket\fP(7).
+.TP 
+\fBAF_ECONET\fP
+.\" commit: 349f29d841dbae854bd7367be7c250401f974f47
+Протокол Acorn Econet (удалён в Linux 3.5); дополнительная информация
+доступна в
+.UR http://www.8bs.com/othrdnld/manuals/econet.shtml
+Econet
+documentation
+.UE
+.
+.TP 
+\fBAF_ATMSVC\fP
+Доступ к коммутируемым виртуальным каналам ATM (SVC); дополнительная
+информация доступна в
+.UR https://www.tldp.org/HOWTO/text/ATM\-Linux\-HOWTO
+\fIATM on Linux HOWTO\fP
+.UE
+.
+.TP 
+\fBAF_RDS\fP
+.\" commit: 639b321b4d8f4e412bfbb2a4a19bfebc1e68ace4
+.\" rds-tools: https://github.com/oracle/rds-tools/blob/master/rds.7
+.\" rds-tools: https://github.com/oracle/rds-tools/blob/master/rds-rdma.7
+Протокол надёжных датаграммных сокетов (RDS) (начиная с Linux 2.6.30).  RDS
+поверх RDMA никак не связан с \fBAF_SMC\fP или \fBAF_XDP\fP. Дополнительная
+информация доступна в  \fBrds\fP(7), \fBrds\-rdma\fP(7) и файле
+\fIDocumentation/networking/rds.txt\fP из дерева исходного кода Linux.
+.TP 
+\fBAF_IRDA\fP
+.\" commits: 1ca163afb6fd569b, d64c2a76123f0300
+.\" irda-utils: https://sourceforge.net/p/irda/code/HEAD/tree/tags/IRDAUTILS_0_9_18/irda-utils/man/irda.7.gz?format=raw
+Сокетный интерфейс поверх IrDA (помещён для обкатки в Linux 4.14, удалён
+Linux 4.17); дополнительная информация доступна в \fBirda\fP(7).
+.TP 
+\fBAF_PPPOX\fP
+Транспортный слой PPP общего назначения для поднятия туннелей L2 (L2TP и
+PPPoE). Смотрите файл \fIDocumentation/networking/l2tp.txt\fP в дереве
+исходного кода Linux.
+.TP 
+\fBAF_WANPIPE\fP
+.\" commits: ce0ecd594d78710422599918a608e96dd1ee6024
+Устаревший протокол для территориально распределённой сети (WAN),
+использовался в картах Sangoma WAN («WANPIPE»); удалён в Linux 2.6.21.
+.TP 
+\fBAF_LLC\fP
+.\" linux-history commit: 34beb106cde7da233d4df35dd3d6cf4fee937caa
+Протокол управления логической связью (IEEE 802.2 LLC), верхних подуровень
+канального уровня сетевого стека протоколов ISO/OSI (начиная с Linux 2.4);
+никак не связан с \fBAF_PACKET\fP. Смотрите главу \fI13.5.3. Logical Link
+Control\fP в \fIUnderstanding Linux Kernel Internals\fP (O'Reilly Media, 2006)  и
+\fIIEEE Standards for Local Area Networks: Logical Link Control\fP (The
+Institute of Electronics and Electronics Engineers, Inc., New York, New
+York, 1985). В
+.UR https://wiki.linuxfoundation.org/networking/llc
+исторических заметках
+.UE
+описана разработка протокола.
+.TP 
+\fBAF_IB\fP
+.\" commits: 8d36eb01da5d371f..ce117ffac2e93334
+Собственная адресация InfiniBand (начиная с Linux 3.11).
+.TP 
+\fBAF_MPLS\fP
+.\" commits: 0189197f441602acdca3f97750d392a895b778fd
+Многопротокольная коммутация по меткам (начиная с Linux 4.1); по большей
+части используется для настройки маршрутизации MPLS через \fBnetlink\fP(7), так
+как нет возможности создавать сокеты в пользовательском пространстве.
+.TP 
+\fBAF_CAN\fP
+.\" commits: 8dbde28d9711475a..5423dd67bd0108a1
+Автотранспортный протокол шины Controller Area Network (начиная с Linux
+2.6.25). Дополнительную информацию смотрите в файле
+\fIDocumentation/networking/can.rst\fP в дереве исходного кода Linux.
+.TP 
+\fBAF_TIPC\fP
+.\" commits: b97bf3fd8f6a16966d4f18983b2c40993ff937d4
+TIPC, протокол «кластерных доменных сокетов» (начиная с Linux
+2.6.16). Смотрите
+.UR http://tipc.io/programming.html
+\fITIPC Programmer's
+Guide\fP
+.UE
+и
+.UR http://tipc.io/protocol.html
+описание протокола
+.UE
+.
+.TP 
+\fBAF_BLUETOOTH\fP
+.\" commits: 8d36eb01da5d371f..ce117ffac2e93334
+Сокетный протокол Bluetooth низкого уровня (начиная с Linux 3.11). Описан в
+.UR https://git.kernel.org\:/pub/scm\:/bluetooth/bluez.git\:/tree/doc/mgmt\-api.txt
+\fIBluetooth Management API overview\fP
+.UE
+и
+.UR https://people.csail.mit.edu/albert/bluez\-intro/
+\fIAn Introduction to
+Bluetooth Programming\fP Альбертом Хуангом (Albert Huang)
+.UE
+.
+.TP 
+\fBAF_IUCV\fP
+.\" commit: eac3731bd04c7131478722a3c148b78774553116
+Протокол IUCV (средство межпользовательской связи) z/VM для взаимодействия
+гипервизор\-гость (начиная с Linux 2.6.21); никак не связан с \fBAF_VSOCK\fP
+и/или \fBAF_SMC\fP. Дополнительную информацию смотрите в
+.UR https://www.ibm.com\:/support\:/knowledgecenter\:/en/SSB27U_6.4.0\:/com.ibm.zvm.v640.hcpb4\:/iucv.htm
+\fIIUCV protocol overview\fP
+.UE
+.
+.TQ
+.TP 
+\fBAF_RXRPC\fP
+.\" commit: 17926a79320afa9b95df6b977b40cca6d8713cea
+.\" http://people.redhat.com/~dhowells/rxrpc/
+.\" https://www.infradead.org/~dhowells/kafs/af_rxrpc_client.html
+.\" http://workshop.openafs.org/afsbpw09/talks/thu_2/kafs.pdf
+.\" http://pages.cs.wisc.edu/~remzi/OSTEP/dist-afs.pdf
+.\" http://web.mit.edu/kolya/afs/rx/rx-spec
+Rx, протокол процедурных вызовов Andrew File System (начиная с Linux
+2.6.22).Дополнительную информацию смотрите в файле
+\fIDocumentation/networking/rxrpc.txt\fP дерева исходного кода Linux.
+.TP 
+\fBAF_ISDN\fP
+.\" commit: 1b2b03f8e514e4f68e293846ba511a948b80243c
+Новый протокол взаимодействия с драйвером «модульного ISDN» (начиная с Linux
+2.6.27). Смотрите
+.UR http://www.misdn.eu/wiki/Main_Page/
+вики mISDN
+.UE
+.
+.TP 
+\fBAF_PHONET\fP
+.\" commit: 4b07b3f69a8471cdc142c51461a331226fef248a
+Интерфейс IPC/RPC к сотовому модему Nokia (начиная с Linux
+2.6.31). Дополнительную информацию смотрите в файле
+\fIDocumentation/networking/phonet.txt\fP дерева исходного кода Linux.
+.TP 
+\fBAF_IEEE802154\fP
+.\" commit: 9ec7671603573ede31207eb5b0b3e1aa211b2854
+Неструктурированный пакетный протокол IEEE 802.15.4 WPAN (персональная
+беспроводная сеть) (начиная с Linux 2.6.31). Дополнительную информацию
+смотрите в файле \fIDocumentation/networking/ieee802154.txt\fP дерева исходного
+кода Linux.
+.TP 
+\fBAF_CAIF\fP
+.\" commit: 529d6dad5bc69de14cdd24831e2a14264e93daa4
+.\" https://lwn.net/Articles/371017/
+.\" http://read.pudn.com/downloads157/doc/comm/698729/Misc/caif/Com%20CPU%20to%20Appl%20CPU%20Interface%20DESCRIPTION_LZN901%202002_revR1C.pdf
+.\" http://read.pudn.com/downloads157/doc/comm/698729/Misc/caif/Com%20CPU%20to%20Appl%20CPU%20Interface%20PROTOCOL%20SPECIFICATION_LZN901%201708_revR1A.pdf
+Протокол взаимодействия Ericsson Communication CPU с Application CPU
+(CAIF)(начиная с Linux 2.6.36). Дополнительную информацию смотрите в файле
+\fIDocumentation/networking/caif/Linux\-CAIF.txt\fP дерева исходного кода Linux.
+.TP 
+\fBAF_ALG\fP
+Взаимодействие с ядерным интерфейсом шифрования (начиная с Linux
+2.6.38). Дополнительную информацию смотрите в файле
+\fIDocumentation/crypto/userspace\-if.rst\fP дерева исходного кода Linux.
+.TP 
+\fBAF_VSOCK\fP
+.\" commit: d021c344051af91f42c5ba9fdedc176740cbd238
+Протокол VMWare VSockets для взаимодействия гипервизор\-гость (начиная с
+Linux 3.9);никак не связан с \fBAF_IUCV\fP и \fBAF_SMC\fP. Дополнительную
+информацию смотрите в \fBvsock\fP(7).
+.TP 
+\fBAF_KCM\fP
+.\" commit: 03c8efc1ffeb6b82a22c1af8dd908af349563314
+Интерфейс KCM (концентратор соединений ядра) (начиная с Linux
+4.6). Дополнительную информацию смотрите в файле
+\fIDocumentation/networking/kcm.txt\fP дерева исходного кода Linux.
+.TP 
+\fBAF_QIPCRTR\fP
+.\" commit: bdabad3e363d825ddf9679dd431cca0b2c30f881
+Протокол взаимодействия с маршрутизатором Qualcomm IPC (начиная с Linux
+4.7).
+.TP 
+\fBAF_SMC\fP
+.\" commit: f3a3e248f3f7cd9a4bed334022704d7e7fc781bf
+Протокол SMC\-R (подключения к общей памяти через RDMA) (начиная с Linux
+4.11), и протокол SMC\-D (подключения к общей памяти, прямой доступ к памяти)
+для межузлового гостевого взаимодействия z/VM (начиная с Linux 4.19); никак
+не связан с \fBAF_RDS\fP, \fBAF_IUCV\fP или \fBAF_VSOCK\fP. В
+.UR https://tools.ietf.org/html/rfc7609
+RFC 7609 \fIIBM's Shared Memory
+Communications over RDMA (SMC\-R) Protocol\fP
+.UE
+приведена информация по
+SMC\-R. В
+.UR https://www\-01.ibm.com\:/software/network\:/commserver\:/SMC\-D/index.html
+\fISMC\-D Reference Information\fP
+.UE
+приведена информация по SMC\-D.
+.TP 
+\fBAF_XDP\fP
+.\" commit: c0c77d8fb787cfe0c3fca689c2a30d1dad4eaba7
+Интерфейс XDP (короткий путь прохождения данных) (начиная с Linux
+4.18). Дополнительную информацию смотрите в файле
+\fIDocumentation/networking/af_xdp.rst\fP дерева исходного кода Linux.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsocket\fP(2), \fBsocket\fP(7)

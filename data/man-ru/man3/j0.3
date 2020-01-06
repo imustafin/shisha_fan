@@ -1,0 +1,149 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 19:08:17 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 2002-08-25, aeb
+.\" Modified 2004-11-12 as per suggestion by Fabian Kreutz/AEB
+.\" 2008-07-24, mtk, moved yxx() material into separate y0.3 page
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH J0 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+j0, j0f, j0l, j1, j1f, j1l, jn, jnf, jnl \- функции Бесселя первого рода
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble j0(double \fP\fIx\fP\fB);\fP
+\fBdouble j1(double \fP\fIx\fP\fB);\fP
+\fBdouble jn(int \fP\fIn\fP\fB, double \fP\fIx\fP\fB);\fP
+.PP
+\fBfloat j0f(float \fP\fIx\fP\fB);\fP
+\fBfloat j1f(float \fP\fIx\fP\fB);\fP
+\fBfloat jnf(int \fP\fIn\fP\fB, float \fP\fIx\fP\fB);\fP
+.PP
+\fBlong double j0l(long double \fP\fIx\fP\fB);\fP
+\fBlong double j1l(long double \fP\fIx\fP\fB);\fP
+\fBlong double jnl(int \fP\fIn\fP\fB, long double \fP\fIx\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBj0\fP(), \fBj1\fP(), \fBjn\fP():
+.RS 4
+_XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.RE
+.br
+\fBj0f\fP(), \fBj0l\fP(), \fBj1f\fP(), \fBj1l\fP(), \fBjnf\fP(), \fBjnl\fP():
+.RS 4
+_XOPEN_SOURCE \ >=\ 600
+    || (_ISOC99_SOURCE && _XOPEN_SOURCE)
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Функции \fBj0\fP() и \fBj1\fP() возвращают функцию Бесселя первого рода от \fIx\fP
+для порядков 0 и 1 соответственно. Функция \fBjn\fP() возвращает функцию
+Бесселя первого рода от \fIx\fP для порядка \fIn\fP.
+.PP
+Функции \fBj0f\fP(), \fBj1f\fP() и \fBjnf\fP() представляют собой версии, которые
+принимают и возвращают значения типа \fIfloat\fP. Функции \fBj0l\fP(), \fBj1l\fP() и
+\fBjnl\fP() представляют собой версии, которые принимают и возвращают значения
+типа \fIlong double\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае успеха эти функции возвращают соответствующее значение функции
+Бесселя первого рода от \fIx\fP.
+.PP
+Если \fIx\fP имеет значение NaN, будет возвращено NaN.
+.PP
+Если значение \fIx\fP слишком велико по абсолютному значению или результат
+исчерпал степень, то генерируется ошибка диапазона и возвращается 0.
+.SH ОШИБКИ
+Смотрите \fBmath_error\fP(7), чтобы определить, какие ошибки могут возникать
+при вызове этих функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка диапазона: результат исчерпал степень или значение \fIx\fP слишком велико по абсолютному значению
+.\" An underflow floating-point exception
+.\" .RB ( FE_UNDERFLOW )
+.\" is raised.
+Значению \fIerrno\fP присваивается \fBERANGE\fP.
+.PP
+.\" FIXME . Is it intentional that these functions do not raise exceptions?
+.\" e.g., j0(1.5e16)
+.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6805
+Эти функции не вызывают исключений для \fBfetestexcept\fP(3).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBj0\fP(),
+\fBj0f\fP(),
+\fBj0l\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBj1\fP(),
+\fBj1f\fP(),
+\fBj1l\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBjn\fP(),
+\fBjnf\fP(),
+\fBjnl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функции, возвращающие \fIdouble\fP, соответствуют SVr4, 4.3BSD, POSIX.1\-2001 и
+POSIX.1\-2008. Остальные являются не стандартизованными функциями, которые
+также существуют в BSD.
+.SH ДЕФЕКТЫ
+Есть ошибки вплоть до 2e\-16 в значениях, возвращаемых \fBj0\fP(), \fBj1\fP() и
+\fBjn\fP(), для значений \fIx\fP в диапазоне от \-8 до 8.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBy0\fP(3)

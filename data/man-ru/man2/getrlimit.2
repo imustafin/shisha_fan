@@ -1,0 +1,585 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt, March 28, 1992
+.\" and Copyright (c) 2002, 2004, 2005, 2008, 2010 Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-23 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-01-13 by Arnt Gulbrandsen <agulbra@troll.no>
+.\" Modified 1996-01-22 by aeb, following a remark by
+.\"          Tigran Aivazian <tigran@sco.com>
+.\" Modified 1996-04-14 by aeb, following a remark by
+.\"          Robert Bihlmeyer <robbe@orcus.ping.at>
+.\" Modified 1996-10-22 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2001-05-04 by aeb, following a remark by
+.\"          Håvard Lygre <hklygre@online.no>
+.\" Modified 2001-04-17 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2002-06-13 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added note on nonstandard behavior when SIGCHLD is ignored.
+.\" Modified 2002-07-09 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Enhanced descriptions of 'resource' values
+.\" Modified 2003-11-28 by aeb, added RLIMIT_CORE
+.\" Modified 2004-03-26 by aeb, added RLIMIT_AS
+.\" Modified 2004-06-16 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on CAP_SYS_RESOURCE
+.\"
+.\" 2004-11-16 -- mtk: the getrlimit.2 page, which formally included
+.\" coverage of getrusage(2), has been split, so that the latter
+.\" is now covered in its own getrusage.2.
+.\"
+.\" Modified 2004-11-16, mtk: A few other minor changes
+.\" Modified 2004-11-23, mtk
+.\"	Added notes on RLIMIT_MEMLOCK, RLIMIT_NPROC, and RLIMIT_RSS
+.\"		to "CONFORMING TO"
+.\" Modified 2004-11-25, mtk
+.\"	Rewrote discussion on RLIMIT_MEMLOCK to incorporate kernel
+.\"		2.6.9 changes.
+.\"	Added note on RLIMIT_CPU error in older kernels
+.\" 2004-11-03, mtk, Added RLIMIT_SIGPENDING
+.\" 2005-07-13, mtk, documented RLIMIT_MSGQUEUE limit.
+.\" 2005-07-28, mtk, Added descriptions of RLIMIT_NICE and RLIMIT_RTPRIO
+.\" 2008-05-07, mtk / Peter Zijlstra, Added description of RLIMIT_RTTIME
+.\" 2010-11-06, mtk: Added documentation of prlimit()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETRLIMIT 2 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getrlimit, setrlimit, prlimit \- считывает/устанавливает ограничения
+использования ресурсов
+.SH ОБЗОР
+\fB#include <sys/time.h>\fP
+.br
+\fB#include <sys/resource.h>\fP
+.PP
+\fBint getrlimit(int \fP\fIresource\fP\fB, struct rlimit *\fP\fIrlim\fP\fB);\fP
+.br
+\fBint setrlimit(int \fP\fIresource\fP\fB, const struct rlimit *\fP\fIrlim\fP\fB);\fP
+.PP
+\fBint prlimit(pid_t \fP\fIpid\fP\fB, int \fP\fIresource\fP\fB, const struct rlimit
+*\fP\fInew_limit\fP\fB,\fP
+.br
+\fB struct rlimit *\fP\fIold_limit\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBprlimit\fP(): _GNU_SOURCE
+.SH ОПИСАНИЕ
+Системные вызовы \fBgetrlimit\fP() и \fBsetrlimit\fP() получают и устанавливают
+ограничения использования ресурсов. Каждому ресурсу назначается мягкое и
+жёсткое ограничение, определяемое структурой \fIrlimit\fP:
+.PP
+.in +4n
+.EX
+struct rlimit {
+    rlim_t rlim_cur;  /* мягкое ограничение */
+    rlim_t rlim_max;  /* жёсткое ограничение (максимум для rlim_cur) */
+};
+.EE
+.in
+.PP
+Мягким ограничением является значение, принудительно устанавливаемое ядром
+для соответствующего ресурса. Жёсткое ограничение работает как максимальное
+значение для мягкого ограничения: непривилегированные процессы могут
+определять только свои мягкие ограничения в диапазоне от 0 до жёсткого
+ограничения, то есть однозначно меньше жёсткого
+ограничения. Привилегированные процессы (в  Linux: имеющие мандат
+\fBCAP_SYS_RESOURCE\fP в начальном пространстве имён пользователя) могут
+устанавливать произвольные значения в любых пределах.
+.PP
+Значение \fBRLIM_INFINITY\fP означает отсутствие ограничений для ресурса (в
+структуре, возвращаемой \fBgetrlimit\fP() и в структуре, передаваемой в
+\fBsetrlimit\fP()).
+.PP
+Значение \fIresource\fP должно быть одним из:
+.TP 
+\fBRLIMIT_AS\fP
+.\" since 2.0.27 / 2.1.12
+Максимальный размер виртуальной памяти (адресного пространства)
+процесса. Данное ограничение задаётся в байтах и округляется в меньшую
+сторону к размеру системной страницы. Учитывается в вызовах \fBbrk\fP(2),
+\fBmmap\fP(2) и \fBmremap\fP(2), которые завершатся с ошибкой \fBENOMEM\fP, если
+будет превышено это ограничение. К тому же завершается ошибкой
+автоматическое расширение стека (и генерируется сигнал \fBSIGSEGV\fP, по
+которому процесс завершится, если не было создано с помощью
+\fBsigaltstack\fP(2) альтернативного стека). Так как значение имеет тип
+\fIlong\fP, на машинах с 32\-битным \fIlong\fP максимальное значение ограничения
+будет около 2\ ГиБ, или этот ресурс не ограничивается.
+.TP 
+\fBRLIMIT_CORE\fP
+Максимальный размер файла \fIcore\fP (смотрите \fBcore\fP(5)) в байтах, который
+может получиться из процесса. Если значение равно 0, то файлы core не
+создаются. Если значение больше нуля, то создаваемые дампы обрезаются до
+этого размера.
+.TP 
+\fBRLIMIT_CPU\fP
+Ограничение времени выполнения процесса на ЦП в секундах. Когда процесс
+достигает своего мягкого ограничения, то ему отправляется сигнал \fBSIGX
+CPU\fP. Действием по умолчанию для этого сигнала является завершение
+процесса. Однако, этот сигнал может быть перехвачен, и обработчик может
+передать управление в основную программу. Если процесс продолжает потреблять
+процессорное время, то ему будет отправляться \fBSIGXCPU\fP раз в секунду до
+тех пор, пока не будет достигнуто жёсткое ограничение, и тогда процессу
+будет послан сигнал \fBSIGKILL\fP (последний пункт описывает поведение Linux. В
+разных реализациях действия над потребляющими процессорное время после
+прохождения мягкого ограничения процессами различаются. Переносимые
+приложения, где требуется перехват сигнала, должны выполнять корректное
+завершение процесса после первого получения \fBSIGXCPU\fP).
+.TP 
+\fBRLIMIT_DATA\fP
+.\" commits 84638335900f1995495838fe1bd4870c43ec1f67
+.\" ("mm: rework virtual memory accounting"),
+.\" f4fcd55841fc9e46daac553b39361572453c2b88
+.\" (mm: enable RLIMIT_DATA by default with workaround for valgrind).
+Максимальный размер сегмента данных процесса (инициализированные данные,
+неинициализированные данные, куча). Данное ограничение задаётся в байтах и
+округляется в меньшую сторону к размеру системной страницы. Это ограничение
+учитывается в вызовах \fBbrk\fP(2), \fBsbrk\fP(2) и (начиная с Linux 4.7)
+\fBmmap\fP(2), которые завершатся с ошибкой \fBENOMEM\fP при достижении мягкого
+ограничения этого ресурса.
+.TP 
+\fBRLIMIT_FSIZE\fP
+Максимальный размер (в байтах) файлов, создаваемых процессом. Попытки
+расширить файл сверх этого ограничения приведёт к доставке сигнала
+\fBSIGXFSZ\fP. По умолчанию по этому сигналу процесс завершается, но процесс
+может перехватить этот сигнал и в этом случае выполнявшийся системный вызов
+(например, \fBwrite\fP(2), \fBtruncate\fP(2)) завершится с ошибкой \fBEFBIG\fP.
+.TP 
+\fBRLIMIT_LOCKS\fP (только в ранних версиях Linux 2.4)
+.\" to be precise: Linux 2.4.0-test9; no longer in 2.4.25 / 2.5.65
+Ограничение на общее количество блокировок \fBflock\fP(2) и аренд \fBfcntl\fP(2),
+которое может установить процесс.
+.TP 
+\fBRLIMIT_MEMLOCK\fP
+Максимальное количество байт памяти, которое может быть заблокировано в
+ОЗУ. В целях эффективности это ограничение округляется в меньшую сторону до
+ближайшего значения, кратного размеру системной страницы. Это ограничение
+учитывается в \fBmlock\fP(2), \fBmlockall\fP(2) и в \fBmmap\fP(2) при операции
+\fBMAP_LOCKED\fP. Начиная с Linux 2.6.9, оно также учитывается в \fBshmctl\fP(2)
+при операции \fBSHM_LOCK\fP, где определяет максимальное количество байт всех
+общих сегментов памяти (смотрите \fBshmget\fP(2)), которые могут быть
+заблокированы вызывающим процессом с реальным идентификатором
+пользователя. Блокировки по операции \fBSHM_LOCK\fP у \fBshmctl\fP(2) учитываются
+отдельно от попроцессных блокировок памяти, устанавливаемых \fBmlock\fP(2),
+\fBmlockall\fP(2) и \fBmmap\fP(2) с операцией \fBMAP_LOCKED\fP; процесс может
+заблокировать пространство до этого значения заданного ограничения байт в
+каждой из этих двух категорий.
+.IP
+В ядрах Linux до версии 2.6.9 этим ограничением контролировалось количество
+памяти, которое можно было блокировать привилегированному процессу. Начиная
+с Linux 2.6.9 привилегированный процесс не ограничен по количеству памяти, и
+теперь это ограничение управляет количеством памяти, которое может
+блокировать непривилегированный процесс.
+.TP 
+\fBRLIMIT_MSGQUEUE\fP (начиная с Linux 2.6.8)
+Ограничение на количество байт, которое может выделяться для очередей
+сообщений POSIX для вызывающего процесса с реальным идентификатором
+пользователя. Это ограничение учитывается в \fBmq_open\fP(3). Каждая очередь
+сообщений, которую создаёт пользователь, учитывается (пока не будет удалена)
+в формуле:
+.IP
+    Начиная Linux 3.5:
+.IP
+.EX
+        bytes = attr.mq_maxmsg * sizeof(struct msg_msg) +
+                min(attr.mq_maxmsg, MQ_PRIO_MAX) *
+                      sizeof(struct posix_msg_tree_node)+
+                                /* издержки */
+                attr.mq_maxmsg * attr.mq_msgsize;
+                                /* данные из сообщения */
+.EE
+.IP
+    Linux 3.4 и старше:
+.IP
+.EX
+        bytes = attr.mq_maxmsg * sizeof(struct msg_msg *) +
+                                /* издержки */
+                attr.mq_maxmsg * attr.mq_msgsize;
+                                /* данные из сообщения */
+.EE
+.IP
+где \fIattr\fP — структура \fImq_attr\fP, указанная в четвёртом аргументе
+\fBmq_open\fP(3), а \fImsg_msg\fP и \fIposix_msg_tree_node\fP — внутренние структуры
+ядра.
+.IP
+Дополнение «издержки» (overhead) в формуле нужно учитывает байты расходов
+требуемые в реализации на то, чтобы пользователь не смог создать бесконечное
+количество сообщений нулевой длины (для таких сообщений, тем не менее,
+потребляется системная память для учёта использования системных ресурсов).
+.TP 
+\fBRLIMIT_NICE\fP (начиная с Linux 2.6.12, см. ДЕФЕКТЫ далее)
+Определяет максимум, до которого может быть увеличено значение уступчивости
+процесса с помощью \fBsetpriority\fP(2) или \fBnice\fP(2). Действительный максимум
+значения уступчивости высчитывается по формуле: \fI20\ \-\ rlim_cur\fP. Полезным
+диапазоном этого ограничения являются значения от 1 (соответствует значению
+уступчивости 19) до 40 (соответствует значению уступчивости \-20). Так
+пришлось поступить из\-за того, что отрицательные числа нельзя указывать в
+значениях ограничений ресурсов, так как они, обычно, имеют специальное
+предназначение. Например, \fBRLIM_INFINITY\fP, обычно равно \-1. Более подробно
+о значениях уступчивости описано в \fBsched\fP(7).
+.TP 
+\fBRLIMIT_NOFILE\fP
+Определяет значение, на 1 больше максимального количества дескрипторов
+файлов, которое может открыть этот процесс. Попытки (\fBopen\fP(2), \fBpipe\fP(2),
+\fBdup\fP(2) и т.п.) превысить это ограничение приведут к ошибке \fBEMFILE\fP
+(раньше это ограничение в BSD называлось \fBRLIMIT_OFILE\fP).
+.IP
+Начиная с Linux 4.5, это ограничение также определяет максимальное
+количество файловых дескрипторов, которое непривилегированный процесс (не
+имеющий мандата \fBCAP_SYS_RESOURCE\fP) может держать «пересылать» (in flight)
+другим процессам через доменные сокеты UNIX. Данное ограничение применяется
+только к системному вызову \fBsendmsg\fP(2). Дополнительную информацию смотрите
+в \fBunix\fP(7).
+.TP 
+\fBRLIMIT_NPROC\fP
+Ограничивает количество живущих (extant) процессов (или, более точно для
+Linux, нитей), для реального идентификатора пользователя вызывающего
+процесса. Как только текущее количество процессов, принадлежащих реальному
+идентификатору пользователя вызывающего процесса, станет больше или равно
+этому ограничению \fBfork\fP(2) начнёт завершаться с ошибкой \fBEAGAIN\fP.
+.IP
+Данное ограничение не учитываются процессы, имеющие мандат \fBCAP_SYS_ADMIN\fP
+или \fBCAP_SYS_RESOURCE\fP.
+.TP 
+\fBRLIMIT_RSS\fP
+.\" As at kernel 2.6.12, this limit still does nothing in 2.6 though
+.\" talk of making it do something has surfaced from time to time in LKML
+.\"       -- MTK, Jul 05
+Максимальное ограничение (в байтах) размера постоянного присутствия процесса
+(числа виртуальных страниц, постоянно присутствующих в ОЗУ). Это ограничение
+учитывается только начиная с версии Linux 2.4.x, x < 30, и только в
+вызовах \fBmadvise\fP(2) со значением \fBMADV_WILLNEED\fP.
+.TP 
+\fBRLIMIT_RTPRIO\fP (начиная с Linux 2.6.12, смотрите ДЕФЕКТЫ)
+Определяет максимум для приоритета реального времени, который можно
+установить для процесса с помощью \fBsched_setscheduler\fP(2) и
+\fBsched_setparam\fP(2).
+.IP
+Дополнительную информацию об алгоритмах планирования реального времени
+смотрите в \fBsched\fP(7).
+.TP 
+\fBRLIMIT_RTTIME\fP (начиная с Linux 2.6.25)
+Определяет ограничение (в микросекундах) на количество времени ЦП, которое
+процесс может быть запланирован выполняться в условиях реального времени без
+выполнения блокирующего системного вызова. Для работы ограничения, всякий
+раз когда процесс делает блокирующий системный вызов счётчик использованного
+времени ЦП сбрасывается в ноль. Счётчик времени ЦП не сбрасывается, если
+процесс продолжает пытаться использовать ЦП, но был вытеснен, его выделенное
+время на исполнение истекло или он вызвал \fBsched_yield\fP(2).
+.IP
+При достижении мягкого ограничения процессу посылается сигнал
+\fBSIGXCPU\fP. Если процесс перехватил сигнал, проигнорировал его и продолжает
+потреблять время ЦП, то раз в секунду будет генерироваться сигнал \fBSIGXCPU\fP
+до тех пор, пока не будет достигнуто жёсткое ограничение, и процессу не
+будет послан сигнал \fBSIGKILL\fP.
+.IP
+Это ограничение предназначено для предотвращения блокировки системы
+вышедшими из под контроля процессами реального времени.
+.IP
+Дополнительную информацию об алгоритмах планирования реального времени
+смотрите в \fBsched\fP(7).
+.TP 
+\fBRLIMIT_SIGPENDING\fP (начиная с Linux 2.6.8)
+.\" This replaces the /proc/sys/kernel/rtsig-max system-wide limit
+.\" that was present in kernels <= 2.6.7.  MTK Dec 04
+Определяет ограничение на количество сигналов, которые могут быть поставлены
+в очередь вызывающего процесса с реальным пользовательским
+идентификатором. При проверке ограничения учитываются обычные сигналы и
+сигналы реального времени. Однако ограничение учитывается только в
+\fBsigqueue\fP(3); всегда возможно использовать \fBkill\fP(2) для постановки в
+очередь любого сигнала, которого ещё нет в очереди процесса.
+.TP 
+\fBRLIMIT_STACK\fP
+Максимальный размер стека процесса в байтах. При достижении этого
+ограничения генерируется сигнал \fBSIGSEGV\fP. Для обработки этого сигнала
+процесс должен использовать альтернативный стек сигналов
+(\fBsigaltstack\fP(2)).
+.IP
+Начиная с Linux 2.6.23, это ограничение также определяет количество места,
+используемого для аргументов командной строки процесса и его переменных
+окружения; подробней об этом смотрите в \fBexecve\fP(2).
+.SS prlimit()
+.\" commit c022a0acad534fd5f5d5f17280f6d4d135e74e81
+.\" Author: Jiri Slaby <jslaby@suse.cz>
+.\" Date:   Tue May 4 18:03:50 2010 +0200
+.\"
+.\"     rlimits: implement prlimit64 syscall
+.\"
+.\" commit 6a1d5e2c85d06da35cdfd93f1a27675bfdc3ad8c
+.\" Author: Jiri Slaby <jslaby@suse.cz>
+.\" Date:   Wed Mar 24 17:06:58 2010 +0100
+.\"
+.\"     rlimits: add rlimit64 structure
+.\"
+Системный вызов \fBprlimit\fP(), который есть только в Linux объединяет и
+расширяет функции \fBsetrlimit\fP() и \fBgetrlimit\fP(). Он может использоваться
+для задания и получения ограничений ресурсов произвольного процесса.
+.PP
+Аргумент \fIresource\fP имеет тот же смысл что и в \fBsetrlimit\fP() и
+\fBgetrlimit\fP().
+.PP
+Если значение аргумента \fInew_limit\fP не равно NULL, то структура \fIrlimit\fP,
+на которую он указывает, используется для задания новых значений мягкий и
+жёстких ограничений для \fIresource\fP. Если значение аргумента \fIold_limit\fP не
+равно NULL, то успешный вызов \fBprlimit\fP() помещает текущие значения мягких
+и жёстких ограничений для \fIresource\fP в структуру \fIrlimit\fP, на которую
+указывает \fIold_limit\fP.
+.PP
+.\" FIXME . this permission check is strange
+.\" Asked about this on LKML, 7 Nov 2010
+.\"     "Inconsistent credential checking in prlimit() syscall"
+В аргументе \fIpid\fP задаётся идентификатор процесса с которым работает
+вызов. Если \fIpid\fP равно 0, то вызов применяется к вызывающему процессу. Для
+установки и получения ресурсов не своего процесса, вызывающий должен иметь
+мандат \fBCAP_SYS_RESOURCE\fP в пользовательском пространстве имён процесса,
+ограничения ресурсов которого изменяются или реальный, эффективный и
+сохранённый идентификатор пользователя процесса назначения должен совпадать
+с реальным идентификатором пользователя вызывающего \fIи\fP реальный,
+эффективный и сохранённый идентификатор группы процесса назначения должны
+совпадать с реальным идентификатором группы вызывающего.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Аргумент\-указатель указывает за пределы доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+Указано некорректное значение \fIresource\fP; или для \fBsetrlimit\fP() или
+\fBprlimit\fP(): \fIrlim\->rlim_cur\fP больше чем \fIrlim\->rlim_max\fP.
+.TP 
+\fBEPERM\fP
+Непривилегированный процесс пытался увеличить жёсткое ограничение; для этого
+требуется мандат \fBCAP_SYS_RESOURCE\fP.
+.TP 
+\fBEPERM\fP
+Вызывающий пытался увеличить жёсткое ограничение \fBRLIMIT_NOFILE\fP, превышая
+максимум, заданный в \fI/proc/sys/fs/nr_open\fP (смотрите \fBproc\fP(5)).
+.TP 
+\fBEPERM\fP
+Вызывающий процесс не имеет прав для назначения ограничений процессу,
+указанному в \fIpid\fP.
+.TP 
+\fBESRCH\fP
+Не удалось найти процесс с идентификатором, указанном в \fIpid\fP.
+.SH ВЕРСИИ
+Системный вызов \fBprlimit\fP() появился в Linux 2.6.36. Поддержка в glibc
+доступна начиная с версии 2.13.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw35 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetrlimit\fP(),
+\fBsetrlimit\fP(),
+\fBprlimit\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBgetrlimit\fP(), \fBsetrlimit\fP(): POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.PP
+\fBprlimit\fP(): только в Linux.
+.PP
+Ограничение \fBRLIMIT_MEMLOCK\fP и \fBRLIMIT_NPROC\fP появились из BSD и их нет в
+POSIX.1; они есть в BSD и Linux, но реализации несколько
+различны. Ограничение \fBRLIMIT_RSS\fP появилось из BSD и его нет в POSIX.1;
+тем не менее оно есть в большинстве реализаций. Ограничения
+\fBRLIMIT_MSGQUEUE\fP, \fBRLIMIT_NICE\fP, \fBRLIMIT_RTPRIO\fP, \fBRLIMIT_RTTIME\fP и
+\fBRLIMIT_SIGPENDING\fP есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Дочерний процесс, созданный \fBfork\fP(2), наследует ограничения ресурсов
+родителя. Ограничения ресурсов сохраняются при \fBexecve\fP(2).
+.PP
+Атрибуты ограничения ресурсов есть у каждого процесса, они являются общими
+для всех нитей процесса.
+.PP
+Уменьшение мягкого ограничения ресурса ниже текущего потребления процесса
+будет выполнено (но в дальнейшем процесс не сможет увеличить потребление
+ресурса).
+.PP
+Ограничения ресурсов интерпретатора командной строки можно устанавливать с
+помощью встроенной команды \fIulimit\fP (\fIlimit\fP в \fBcsh\fP(1)). Ограничения
+ресурсов интерпретатора наследуются дочерними процессами, которые он создаёт
+при выполнении команд.
+.PP
+Начиная с Linux 2.6.24, ограничения ресурсов любого процесса можно узнать с
+помощью \fI/proc/[pid]/limits\fP; смотрите \fBproc\fP(5).
+.PP
+В старых системах была функция \fBvlimit\fP() с подобным \fBsetrlimit\fP()
+назначением. Для обратной совместимости в glibc также есть функция
+\fBvlimit\fP(). Во всех новых приложениях должен быть использован
+\fBsetrlimit\fP().
+.SS "Отличия между библиотекой C и ABI ядра"
+Начиная с версии 2.13, обёрточные функции glibc \fBgetrlimit\fP() и
+\fBsetrlimit\fP() больше не вызывают соответствующие системные вызовы, вместо
+этого вызывается \fBprlimit\fP() по причинам, описанным в разделе ДЕФЕКТЫ.
+.PP
+Обёрточная функция в glibc называется \fBprlimit\fP(); нижележащий системный
+вызов называется \fBprlimit64\fP().
+.SH ДЕФЕКТЫ
+В старых ядрах Linux сигналы \fBSIGXCPU\fP и \fBSIGKILL\fP, посылаемые когда у
+процесса обнаруживается достижение мягкого и жёсткого ограничения
+\fBRLIMIT_CPU\fP, доставляются на одну секунду (ЦП) позднее чем это должно
+быть. Это исправлено в ядре версии 2.6.8.
+.PP
+.\" see http://marc.theaimsgroup.com/?l=linux-kernel&m=114008066530167&w=2
+В ядрах 2.6.x до версии 2.6.17, ограничение \fBRLIMIT_CPU\fP равное 0,
+неправильно воспринималось как «без ограничения» (подобно
+\fBRLIM_INFINITY\fP). Начиная с Linux 2.6.17, установка ограничения в 0
+действует, но реально обрабатывается как ограничение в 1 секунду.
+.PP
+.\" See https://lwn.net/Articles/145008/
+Из\-за дефекта ядра \fBRLIMIT_RTPRIO\fP не работает в версии 2.6.12; это
+исправлено в ядре 2.6.13.
+.PP
+.\" see http://marc.theaimsgroup.com/?l=linux-kernel&m=112256338703880&w=2
+В ядре 2.6.12 было несоответствие в единицу между диапазонами приоритетов,
+возвращаемых \fBgetpriority\fP(2) и \fBRLIMIT_NICE\fP. Это приводило к тому, что
+реальный максимум значения nice вычислялся как \fI19\ \- \ rlim_cur\fP. Исправлено в ядре 2.6.13.
+.PP
+.\" The relevant patch, sent to LKML, seems to be
+.\" http://thread.gmane.org/gmane.linux.kernel/273462
+.\" From: Roland McGrath <roland <at> redhat.com>
+.\" Subject: [PATCH 7/7] make RLIMIT_CPU/SIGXCPU per-process
+.\" Date: 2005-01-23 23:27:46 GMT
+.\" Tested Solaris 10, FreeBSD 9, OpenBSD 5.0
+.\" FIXME . https://bugzilla.kernel.org/show_bug.cgi?id=50951
+Начиная с Linux 2.6.12, если процесс имеет мягкое ограничение \fBRLIMIT_CPU\fP
+и установлен обработчик для \fBSIGXCPU\fP, то, помимо вызова обработчика
+сигнала, ядро увеличивает мягкое ограничение на одну секунду. Такое
+поведение повторяется, если процесс продолжает потреблять процессорное
+время, и происходит это до тех пор, пока не будет достигнуто жёсткое
+ограничение, после чего процесс будет завершён. В других реализациях мягкое
+ограничение \fBRLIMIT_CPU\fP не меняется подобным образом, и поведение Linux,
+вероятно, нестандартно; переносимые приложения не должны полагаться на
+данную специфику Linux. Ограничение Linux \fBRLIMIT_RTTIME\fP демонстрирует
+такое же поведение, при исчерпании мягкого ограничения.
+.PP
+.\" d3561f78fd379a7110e46c87964ba7aa4120235c
+В ядрах до 2.4.22 не определялась ошибка \fBEINVAL\fP в \fBsetrlimit\fP(), если
+значение \fIrlim\->rlim_cur\fP было больше \fIrlim\->rlim_max\fP.
+.PP
+.\"
+В целях совместимости, Linux не возвращает ошибку при неудачной попытке
+назначения \fBRLIMIT_CPU\fP.
+.SS "Представление «больших» значений ограничений ресурсов на 32\-битных платформах"
+.\" Linux still uses long for limits internally:
+.\" c022a0acad534fd5f5d5f17280f6d4d135e74e81
+.\" kernel/sys.c:do_prlimit() still uses struct rlimit which
+.\" uses kernel_ulong_t for its members, i.e. 32-bit  on 32-bit kernel.
+.\" https://bugzilla.kernel.org/show_bug.cgi?id=5042
+.\" http://sources.redhat.com/bugzilla/show_bug.cgi?id=12201
+В обёрточных функциях glibc \fBgetrlimit\fP() и \fBsetrlimit\fP() используется
+64\-битный тип данных \fIrlim_t\fP, даже на 32\-битных платформах. Однако в
+системных вызовах \fBgetrlimit\fP() и \fBsetrlimit\fP() тип данных \fIrlim_t\fP
+приводится к \fIunsigned long\fP (32\-битному). Кроме этого, в ядре Linux
+ограничители ресурсов на 32\-битных платформах представлены типом \fIunsigned
+long\fP. Однако 32\-битный тип данных недостаточно велик. Для этого больше
+подходит \fBRLIMIT_FSIZE\fP, который определяет максимальный размер на который
+можно увеличить файл; чтобы его можно было использовать, данное ограничение
+должно быть представлено типом, соразмерным с типом, используемым для
+представления файловых смещений — 64\-битным \fBoff_t\fP (предполагается, что
+программа компилируется в параметром \fI_FILE_OFFSET_BITS=64\fP).
+.PP
+Если программа пытается задать ограничение ресурса значением, большим чем
+можно представить 32\-битным \fIunsigned long\fP, то, чтобы обойти это
+ограничение ядра, обёрточная функция glibc \fBsetrlimit\fP() просто преобразует
+значение ограничения в \fBRLIM_INFINITY\fP. Иначе говоря, запрашиваемое
+назначение ограничения ресурса просто игнорируется.
+.PP
+.\" https://www.sourceware.org/bugzilla/show_bug.cgi?id=12201
+Начиная с версии 2.13, в glibc для обхода ограничений системных вызовов
+\fBgetrlimit\fP() и \fBsetrlimit\fP() для реализации обёрточных функций
+\fBsetrlimit\fP() и \fBgetrlimit\fP() используется вызов \fBprlimit\fP().
+.SH ПРИМЕР
+Представленная ниже программа показывает использование \fBprlimit\fP().
+.PP
+.EX
+#define _GNU_SOURCE
+#define _FILE_OFFSET_BITS 64
+#include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/resource.h>
+
+#define errExit(msg) do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    struct rlimit old, new;
+    struct rlimit *newp;
+    pid_t pid;
+
+    if (!(argc == 2 || argc == 4)) {
+        fprintf(stderr, "Использование: %s <pid> [<новое\-мягкое\-ограничение> "
+                "<новое\-жёсткое\-ограничение>]\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    pid = atoi(argv[1]);        /* PID процесса назначения */
+
+    newp = NULL;
+    if (argc == 4) {
+        new.rlim_cur = atoi(argv[2]);
+        new.rlim_max = atoi(argv[3]);
+        newp = &new;
+    }
+
+    /* Установить ограничение на время ЦП процесса назначения;
+       получить и показать предыдущее ограничение */
+
+    if (prlimit(pid, RLIMIT_CPU, newp, &old) == \-1)
+        errExit("prlimit\-1");
+    printf("Previous limits: soft=%lld; hard=%lld\en",
+            (long long) old.rlim_cur, (long long) old.rlim_max);
+
+    /* Получить и показать новое ограничение времени ЦП */
+
+    if (prlimit(pid, RLIMIT_CPU, NULL, &old) == \-1)
+        errExit("prlimit\-2");
+    printf("Новые ограничения: мягкое=%lld; жёсткое=%lld\en",
+            (long long) old.rlim_cur, (long long) old.rlim_max);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBprlimit\fP(1), \fBdup\fP(2), \fBfcntl\fP(2), \fBfork\fP(2), \fBgetrusage\fP(2),
+\fBmlock\fP(2), \fBmmap\fP(2), \fBopen\fP(2), \fBquotactl\fP(2), \fBsbrk\fP(2),
+\fBshmctl\fP(2), \fBmalloc\fP(3), \fBsigqueue\fP(3), \fBulimit\fP(3), \fBcore\fP(5),
+\fBcapabilities\fP(7), \fBcgroups\fP(7), \fBcredentials\fP(7), \fBsignal\fP(7)

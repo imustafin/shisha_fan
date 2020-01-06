@@ -1,0 +1,179 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 21:46:57 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 961109, 031115, aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETMNTENT 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+getmntent, setmntent, addmntent, endmntent, hasmntopt, getmntent_r \-
+возвращают запись из файла описания файловых систем
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+\fB#include <mntent.h>\fP
+.PP
+\fBFILE *setmntent(const char *\fP\fIfilename\fP\fB, const char *\fP\fItype\fP\fB);\fP
+.PP
+\fBstruct mntent *getmntent(FILE *\fP\fIstream\fP\fB);\fP
+.PP
+\fBint addmntent(FILE *\fP\fIstream\fP\fB, const struct mntent *\fP\fImnt\fP\fB);\fP
+.PP
+\fBint endmntent(FILE *\fP\fIstreamp\fP\fB);\fP
+.PP
+\fBchar *hasmntopt(const struct mntent *\fP\fImnt\fP\fB, const char *\fP\fIopt\fP\fB);\fP
+
+/* Расширение GNU */
+\fB#include <mntent.h>\fP
+.PP
+\fBstruct mntent *getmntent_r(FILE *\fP\fIstreamp\fP\fB, struct mntent *\fP\fImntbuf\fP\fB,\fP
+\fB                           char *\fP\fIbuf\fP\fB, int \fP\fIbuflen\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgetmntent_r\fP(),
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE || _SVID_SOURCE
+.SH ОПИСАНИЕ
+Эти функции используются для доступа к файлу описаний файловых систем
+\fI/etc/fstab\fP и к файлу описаний смонтированных файловых систем
+\fI/etc/mtab\fP.
+.PP
+Функция \fBsetmntent\fP() открывает файл описаний файловых систем \fIfilename\fP и
+возвращает указатель на файл, который может быть использован
+\fBgetmntent\fP(). В аргументе \fItype\fP указывается требуемый тип доступа и и
+могут задаваться те же значения, что и в аргументе \fImode\fP функции
+\fBfclose\fP(3). Возвращаемый поток должен закрываться с помощью
+\fBendmntent\fP(), а не \fBfclose\fP(3).
+.PP
+Функция \fBgetmntent\fP() считывает следующую строку из файла описаний файловых
+систем \fIstream\fP и возвращает указатель на структуру, содержащую поля строки
+файла. Указатель ссылается на статическую область памяти, которая
+перезаписывается последующими вызовами \fBgetmntent\fP().
+.PP
+Функция \fBaddmntent\fP() добавляет структуру \fImnt\fP типа \fImntent\fP к концу
+открытого \fIstream\fP.
+.PP
+Функция \fBendmntent\fP() закрывает \fIstream\fP, связанный с файл описаний
+файловых систем.
+.PP
+Функция \fBhashmntopt\fP() ищет в полях \fImnt_opts\fP (смотрите ниже) структуры
+\fImnt\fP типа \fImntent\fP подстроку, совпадающую с \fIopt\fP. Список возможных
+параметров монтирования приведён в \fI<mntent.h>\fP и \fBmount\fP(8).
+.PP
+Реентерабельная функция \fBgetmntent_r\fP() подобна \fBgetmntent\fP(), но
+сохраняет \fIstruct mount\fP в предоставляемом \fI*mntbuf\fP, а строки элементов
+этой структуры — в предоставляемый массив \fIbuf\fP размера \fIbuflen\fP.
+.PP
+Структура \fImntent\fP определена в \fI<mntent.h>\fP следующим образом:
+.PP
+.in +4n
+.EX
+struct mntent {
+    char *mnt_fsname;   /* название смонтированной файловой системы */
+    char *mnt_dir;      /* префикс пути к файловой системе */
+    char *mnt_type;     /* тип монтирования (смотрите mntent.h) */
+    char *mnt_opts;     /* параметры монтирования (смотрите mntent.h) */
+    int   mnt_freq;     /* периодичность запуска dump, в днях */
+    int   mnt_passno;   /* номер прохода при параллельном fsck */
+};
+.EE
+.in
+.PP
+Так как поля в файлах mtab и fstab разделяются пробельными символами, то для
+их записи в одной из четырёх строках структуры \fImntent\fP используются их
+экранированные последовательности в восьмеричном коде: пробел (\e040),
+табуляция (\e011), новая строка (\e012) и обратная косая черта
+(\e\e). Функции \fBaddmntent\fP() и \fBgetmntent\fP() выполнят преобразование
+экранированных строк и обратно. При преобразовании из экранированного
+представления, последовательность \e134 также преобразуется в символ
+обратной косой черты.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBgetmntent\fP() и \fBgetmntent_r\fP() возвращают указатель на структуру
+типа \fImntent\fP или NULL при ошибке.
+.PP
+Функция \fBaddmntent\fP() возвращает 0 при успешном выполнении и 1 при ошибке.
+.PP
+Функция \fBendmntent\fP() всегда возвращает 1.
+.PP
+Функция \fBhasmntopt\fP() возвращает адрес подстроки, если она была найдена, в
+противном случае NULL.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/fstab\fP
+файл описаний файловых систем
+.TP 
+\fI/etc/mtab\fP
+файл описаний смонтированных файловых систем
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw13 lb lbw31
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsetmntent\fP(),
+\fBendmntent\fP(),
+\fBhasmntopt\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBgetmntent\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:mntentbuf locale
+T{
+\fBaddmntent\fP()
+T}	Безвредность в нитях	MT\-Safe race:stream locale
+T{
+\fBgetmntent_r\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Нереентерабельные функции появились из SunOS 4.1.3. Функция \fBgetmntent_r\fP()
+появилась из HP\-UX 10, но она возвращает int. Показанный здесь прототип есть
+только в glibc.
+.SH ЗАМЕЧАНИЯ
+В System V также имеется функция \fBgetmntent\fP(), однако последовательность
+вызова и возвращаемая структура отличаются от остальных. В System V
+используется \fI/etc/mnttab\fP. В BSD 4.4 и Digital UNIX есть функция
+\fBgetmntinfo\fP(), обёртка над системным вызовом \fBgetfsstat\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfopen\fP(3), \fBfstab\fP(5), \fBmount\fP(8)

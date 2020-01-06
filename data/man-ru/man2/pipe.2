@@ -1,0 +1,221 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2005, 2008, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" (A few fragments remain from an earlier (1992) version by
+.\" Drew Eckhardt <drew@cs.colorado.edu>.)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-23 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-10-22 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2004-06-17 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2005, mtk: added an example program
+.\" Modified 2008-01-09, mtk: rewrote DESCRIPTION; minor additions
+.\"     to EXAMPLE text.
+.\" 2008-10-10, mtk: add description of pipe2()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PIPE 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pipe, pipe2 \- создаёт канал
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+/* На Alpha, IA\-64, MIPS, SuperH и SPARC/SPARC64; смотрите ЗАМЕЧАНИЯ */
+\fBstruct fd_pair {\fP
+\fBlong fd[2];\fP
+\fB};\fP
+\fBstruct fd_pair pipe();\fP
+.PP
+/* На остальных архитектурах */
+\fBint pipe(int \fP\fIpipefd\fP\fB[2]);\fP
+
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <fcntl.h>\fP              /* Определение констант O_* */
+\fB#include <unistd.h>\fP
+.PP
+\fBint pipe2(int \fP\fIpipefd\fP\fB[2], int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fBpipe\fP() создаёт однонаправленный канал данных, который можно использовать
+для взаимодействия между процессами. Массив \fIpipefd\fP используется для
+возврата двух файловых описателей, указывающих на концы канала. \fIpipefd[0]\fP
+указывает на конец канала для чтения. \fIpipefd[1]\fP указывает на конец канала
+для записи. Данные, записанные в конец канала, буферизируются ядром до тех
+пор, пока не будут прочитаны из конца канала для чтения. Подробней
+см. \fBpipe\fP(7).
+.PP
+Если \fIflags\fP равно 0, то \fBpipe2\fP() выполняет то же что и
+\fBpipe\fP(). Следующие значения могут быть побитово сложены в \fIflags\fP для
+получения различного поведения:
+.TP 
+\fBO_CLOEXEC\fP
+Устанавливает флаг close\-on\-exec (\fBFD_CLOEXEC\fP) для двух новых открытых
+файловых дескрипторов. Смотрите описание того же флага в \fBopen\fP(2) для
+того, чтобы узнать как это может пригодиться.
+.TP 
+\fBO_DIRECT\fP (начиная с Linux 3.4)
+.\" commit 9883035ae7edef3ec62ad215611cb8e17d6a1a5d
+Создаёт канал, в котором ввод\-вывод выполняется в «пакетном» режиме. Каждый
+\fBwrite\fP(2) в канал рассматривается как отдельный пакет, а \fBread\fP(2) из
+канала читает один пакет за раз. Заметим следующее:
+.RS
+.IP * 3
+Запись более \fBPIPE_BUF\fP байт (смотрите \fBpipe\fP(7)) будет разделена на
+несколько пакетов. Константа \fBPIPE_BUF\fP определена в \fI<limits.h>\fP.
+.IP *
+Если в \fBread\fP(2) указан размер буфера меньше чем следующий пакет, то
+читается запрашиваемое количество байт, а лишние байты пакета
+отбрасываются. Указание \fBPIPE_BUF\fP в качестве размера буфера будет
+достаточно для чтения самых больших пакетов (смотрите предыдущее
+примечание).
+.IP *
+Пакеты нулевой длины не поддерживаются (вызов \fBread\fP(2) с нулевым размером
+буфера ничего не делает и возвращает 0).
+.RE
+.IP
+Старые ядра, которые не поддерживают этот флаг, возвращают ошибку \fBEINVAL\fP.
+.IP
+.\" commit 0dbf5f20652108106cb822ad7662c786baaa03ff
+.\" FIXME . But, it is not possible to specify O_DIRECT when opening a FIFO
+Начиная с Linux 4.5, у файлового дескриптора канала возможно менять
+установку \fBO_DIRECT\fP с помощью \fBfcntl\fP(2).
+.TP 
+\fBO_NONBLOCK\fP
+Устанавливает флаг состояния файла \fBO_NONBLOCK\fP для открытого файлового
+описания, на которое ссылаются новые файловые дескрипторы. Использование
+данного флага делает ненужными дополнительные вызовы \fBfcntl\fP(2) для
+достижения того же результата.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1,
+\fIerrno\fP устанавливается в соответствующее значение, а \fIpipefd\fP не
+изменяется.
+.PP
+.\" http://austingroupbugs.net/view.php?id=467
+В Linux (и других системах) \fBpipe\fP() не изменяет \fIpipefd\fP при
+ошибке. Требование стандартизации этого поведения было добавлено в
+POSIX.1\-2016. Системный вызов Linux \fBpipe2\fP() также не изменяет \fIpipefd\fP
+при ошибке.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+\fIpipefd\fP задан некорректно.
+.TP 
+\fBEINVAL\fP
+(\fBpipe2\fP())  Некорректное значение \fIflags\fP.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENFILE\fP
+Достигнуто жёсткое пользовательское ограничение на выделение памяти для
+каналов и вызывающий не имеет дополнительных прав; смотрите \fBpipe\fP(7).
+.SH ВЕРСИИ
+Вызов \fBpipe2\fP() был добавлен в Linux начиная с версии 2.6.27; поддержка в
+glibc появилась начиная с версии 2.9.
+.SH ЗАМЕЧАНИЯ
+.\" See http://math-atlas.sourceforge.net/devel/assembly/64.psabi.1.33.ps.Z
+.\" for example, section 3.2.1 "Registers and the Stack Frame".
+SystemV ABI на некоторых архитектурах позволяет использовать более одного
+регистра для возврата нескольких значений; в нескольких архитектурах (Alpha,
+IA\-64, MIPS, SuperH и SPARC/SPARC64) использована эта возможность для
+реализации системного вызова \fBpipe\fP() подобно функциям: вызов не использует
+параметры и при успешном выполнении возвращает пару файловых дескрипторов
+как результат. Обёрточная функция glibc \fBpipe\fP() учитывает это. Описание
+регистров хранения второго файлового дескриптора смотрите в  \fBsyscall\fP(2).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBpipe\fP(): POSIX.1\-2001, POSIX.1\-2008.
+.PP
+Вызов \fBpipe2\fP() есть только в Linux.
+.SH ПРИМЕР
+.\" fork.2 refers to this example program.
+Следующая программа создаёт канал, и затем выполняет \fBfork\fP(2) для создания
+потомка; потомок наследует скопированный набор файловых дескрипторов,
+которые указывают на тот же канал. После \fBfork\fP(2) каждый процесс закрывает
+файловые дескрипторы, которые ненужны каналу (см. \fBpipe\fP(7)). Затем
+родитель записывает строку, переданную в качестве аргумента командной
+строки, в канал, а потомок читает эту строку из канала по байту за раз, и
+выводит её на стандартный вывод.
+.SS "Исходный код программы"
+.EX
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
+int
+main(int argc, char *argv[])
+{
+    int pipefd[2];
+    pid_t cpid;
+    char buf;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s <string>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    if (pipe(pipefd) == \-1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+
+    cpid = fork();
+    if (cpid == \-1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (cpid == 0) {    /* Потомок читает из канала */
+        close(pipefd[1]);          /* Закрывает неиспользуемый конец для записи */
+
+        while (read(pipefd[0], &buf, 1) > 0)
+            write(STDOUT_FILENO, &buf, 1);
+
+        write(STDOUT_FILENO, "\en", 1);
+        close(pipefd[0]);
+        _exit(EXIT_SUCCESS);
+
+    } else {            /* Родитель пишет значение argv[1] в канал */
+        close(pipefd[0]);          /* Закрывает неиспользуемый конец для чтения */
+        write(pipefd[1], argv[1], strlen(argv[1]));
+        close(pipefd[1]);          /* Читатель видит EOF */
+        wait(NULL);                /* Ожидание потомка */
+        exit(EXIT_SUCCESS);
+    }
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfork\fP(2), \fBread\fP(2), \fBsocketpair\fP(2), \fBsplice\fP(2), \fBtee\fP(2),
+\fBvmsplice\fP(2), \fBwrite\fP(2), \fBpopen\fP(3), \fBpipe\fP(7)

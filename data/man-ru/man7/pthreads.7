@@ -1,0 +1,816 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) 2005 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREADS 7 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthreads \- нити POSIX
+.SH ОПИСАНИЕ
+В POSIX.1 определён набор интерфейсов (функции, заголовочные файлы) для
+работы с нитями, более известными как нити POSIX или Pthreads. В одном
+процессе может быть несколько нитей, которые выполняют одну программу. Эти
+нити работают с общей глобальной памятью (сегментами данных и кучи), но у
+каждой нити есть собственный стек (автоматические переменные).
+.PP
+Также, в POSIX.1 требуется, чтобы нити имели общий диапазон других атрибутов
+(т. е., эти атрибуты процесса, а не нити):
+.IP \- 3
+идентификатор процесса
+.IP \- 3
+идентификатор родительского процесса
+.IP \- 3
+Идентификатор группы процессов и сеанса
+.IP \- 3
+Управляющий терминал
+.IP \- 3
+Идентификаторы пользователя и группы
+.IP \- 3
+Открытые файловые дескрипторы
+.IP \- 3
+Обычные блокировки (смотрите \fBfcntl\fP(2))
+.IP \- 3
+Обработчики сигналов
+.IP \- 3
+Маска создания режима доступа к файлу (\fBumask\fP(2))
+.IP \- 3
+Текущий каталог (\fBchdir\fP(2)) и корневой каталог (\fBchroot\fP(2))
+.IP \- 3
+Интервальные таймеры (\fBsetitimer\fP(2)) и таймеры POSIX (\fBtimer_create\fP(2))
+.IP \- 3
+Значение уступчивости (\fBsetpriority\fP(2))
+.IP \- 3
+Ограничения по ресурсам (\fBsetrlimit\fP(2))
+.IP \- 3
+Измерители потребления времени ЦП (\fBtimes\fP(2)) и ресурсов (\fBgetrusage\fP(2))
+.PP
+Как и для стека, в POSIX.1 определены другие атрибуты, которые уникальны в
+каждой нити:
+.IP \- 3
+Идентификатор нити (тип данных \fIpthread_t\fP)
+.IP \- 3
+Маска сигналов (\fBpthread_sigmask\fP(3))
+.IP \- 3
+Переменная \fIerrno\fP
+.IP \- 3
+Альтернативный стек сигнала (\fBsigaltstack\fP(2))
+.IP \- 3
+Алгоритм и приоритет планирования реального времени (\fBsched\fP(7))
+.PP
+Следующие свойства есть только в Linux и также уникальны в каждой нити:
+.IP \- 3
+мандаты (смотрите \fBcapabilities\fP(7))
+.IP \- 3
+Привязка к ЦП (\fBsched_setaffinity\fP(2))
+.SS "Возвращаемые значения из функций pthreads"
+Большинство функций pthreads при успешном выполнении возвращает 0 или номер
+ошибки в противном случае. Заметим, что функции pthreads не изменяют
+\fIerrno\fP. Для каждой функции pthreads, которая может вернуть ошибку, в
+POSIX.1\-2001 определено, что функция никогда не может завершиться с ошибкой
+\fBEINTR\fP.
+.SS "Идентификатор нити"
+Каждой нити процесса назначается уникальный идентификатор нити (имеет тип
+\fIpthread_t\fP). Этот идентификатор возвращается вызывающему
+\fBpthread_create\fP(3), а в самой нити её идентификатор можно получить с
+помощью \fBpthread_self\fP(3).
+.PP
+Внутри процесса гарантируется уникальность идентификаторов нитей (во всех
+функциях pthreads, которые принимают аргумент идентификатора нити,
+подразумевается, что указана нить из процесса вызывающего).
+.PP
+Система может повторно использовать идентификатор нити после объединения
+завершённой нити или отсоединения завершённой нити. В POSIX сказано: «Если
+приложение пытается использовать идентификатор нити, у который закончился
+срок жизни, то поведение не предсказуемо».
+.SS "Нитебезопасные функции"
+Нитебезопасная функция — это функция, которую можно безопасно (т. е., это
+приведёт к единым результатам независимо от окружения) вызывать из
+нескольких нитей одновременно.
+.PP
+В POSIX.1\-2001 и POSIX.1\-2008 требуется, чтобы все функции, описанные в
+стандарте, были нитебезопасными, за исключением следующих функций:
+.PP
+.in +4n
+.EX
+asctime()
+basename()
+catgets()
+crypt()
+ctermid() если передаётся аргумент не NULL
+ctime()
+dbm_clearerr()
+dbm_close()
+dbm_delete()
+dbm_error()
+dbm_fetch()
+dbm_firstkey()
+dbm_nextkey()
+dbm_open()
+dbm_store()
+dirname()
+dlerror()
+drand48()
+ecvt() [только POSIX.1\-2001 (удалена из POSIX.1\-2008)]
+encrypt()
+endgrent()
+endpwent()
+endutxent()
+fcvt() [только POSIX.1\-2001 (удалена из POSIX.1\-2008)]
+ftw()
+gcvt() [только POSIX.1\-2001 (удалена из POSIX.1\-2008)]
+getc_unlocked()
+getchar_unlocked()
+getdate()
+getenv()
+getgrent()
+getgrgid()
+getgrnam()
+gethostbyaddr() [только POSIX.1\-2001 (удалена из POSIX.1\-2008)]
+gethostbyname() [только POSIX.1\-2001 (удалена из POSIX.1\-2008)]
+gethostent()
+getlogin()
+getnetbyaddr()
+getnetbyname()
+getnetent()
+getopt()
+getprotobyname()
+getprotobynumber()
+getprotoent()
+getpwent()
+getpwnam()
+getpwuid()
+getservbyname()
+getservbyport()
+getservent()
+getutxent()
+getutxid()
+getutxline()
+gmtime()
+hcreate()
+hdestroy()
+hsearch()
+inet_ntoa()
+l64a()
+lgamma()
+lgammaf()
+lgammal()
+localeconv()
+localtime()
+lrand48()
+mrand48()
+nftw()
+nl_langinfo()
+ptsname()
+putc_unlocked()
+putchar_unlocked()
+putenv()
+pututxline()
+rand()
+readdir()
+setenv()
+setgrent()
+setkey()
+setpwent()
+setutxent()
+strerror()
+strsignal() [добавлена в POSIX.1\-2008]
+strtok()
+system() [добавлена в POSIX.1\-2008]
+tmpnam() если передаётся аргумент не NULL
+ttyname()
+unsetenv()
+wcrtomb() если конечный аргумент NULL
+wcsrtombs() если конечный аргумент NULL
+wcstombs()
+wctomb()
+.EE
+.in
+.SS "Безопасные асинхронные отменяемые функции"
+Безопасная асинхронная отменяемая функция (async\-cancel\-safe function) — это
+функция, которую можно безопасно вызывать в приложении, в котором разрешено
+асинхронная отмена (смотрите \fBpthread_setcancelstate\fP(3)).
+.PP
+Согласно POSIX.1\-2001 и POSIX.1\-2008 только следующие функции должны быть
+безопасными асинхронными отменяемыми:
+.PP
+.in +4n
+.EX
+pthread_cancel()
+pthread_setcancelstate()
+pthread_setcanceltype()
+.EE
+.in
+.SS "Точки отмены"
+В POSIX.1 определено, что некоторые функции должны, а несколько других могут
+было точками отмены. Если нить отменяема, её тип отменяемости откладывается,
+и ожидается запрос отмены нити, затем нить отменяется, когда она вызывает
+функцию, которая является точкой отмены.
+.PP
+Следующие функции должны быть точками отмены согласно POSIX.1\-2001 и/или
+POSIX.1\-2008:
+.PP
+.\" FIXME
+.\" Document the list of all functions that are cancellation points in glibc
+.in +4n
+.EX
+accept()
+aio_suspend()
+clock_nanosleep()
+close()
+connect()
+creat()
+fcntl() F_SETLKW
+fdatasync()
+fsync()
+getmsg()
+getpmsg()
+lockf() F_LOCK
+mq_receive()
+mq_send()
+mq_timedreceive()
+mq_timedsend()
+msgrcv()
+msgsnd()
+msync()
+nanosleep()
+open()
+openat() [добавлена в POSIX.1\-2008]
+pause()
+poll()
+pread()
+pselect()
+pthread_cond_timedwait()
+pthread_cond_wait()
+pthread_join()
+pthread_testcancel()
+putmsg()
+putpmsg()
+pwrite()
+read()
+readv()
+recv()
+recvfrom()
+recvmsg()
+select()
+sem_timedwait()
+sem_wait()
+send()
+sendmsg()
+sendto()
+sigpause() [только POSIX.1\-2001 (перемещена в список «может» в POSIX.1\-2008)]
+sigsuspend()
+sigtimedwait()
+sigwait()
+sigwaitinfo()
+sleep()
+system()
+tcdrain()
+usleep() [только POSIX.1\-2001 (функция удалена в POSIX.1\-2008)]
+wait()
+waitid()
+waitpid()
+write()
+writev()
+.EE
+.in
+.PP
+Следующие функции могут быть точками отмены согласно POSIX.1\-2001 и/или
+POSIX.1\-2008:
+.PP
+.in +4n
+.EX
+access()
+asctime()
+asctime_r()
+catclose()
+catgets()
+catopen()
+chmod() [добавлена в POSIX.1\-2008]
+chown() [добавлена в POSIX.1\-2008]
+closedir()
+closelog()
+ctermid()
+ctime()
+ctime_r()
+dbm_close()
+dbm_delete()
+dbm_fetch()
+dbm_nextkey()
+dbm_open()
+dbm_store()
+dlclose()
+dlopen()
+dprintf() [добавлена в POSIX.1\-2008]
+endgrent()
+endhostent()
+endnetent()
+endprotoent()
+endpwent()
+endservent()
+endutxent()
+faccessat() [добавлена в POSIX.1\-2008]
+fchmod() [добавлена в POSIX.1\-2008]
+fchmodat() [добавлена в POSIX.1\-2008]
+fchown() [добавлена в POSIX.1\-2008]
+fchownat() [Added in POSIX.1\-2008]
+fclose()
+fcntl() (для любого значения аргумента cmd)
+fflush()
+fgetc()
+fgetpos()
+fgets()
+fgetwc()
+fgetws()
+fmtmsg()
+fopen()
+fpathconf()
+fprintf()
+fputc()
+fputs()
+fputwc()
+fputws()
+fread()
+freopen()
+fscanf()
+fseek()
+fseeko()
+fsetpos()
+fstat()
+fstatat() [добавлена в POSIX.1\-2008]
+ftell()
+ftello()
+ftw()
+futimens() [добавлена в POSIX.1\-2008]
+fwprintf()
+fwrite()
+fwscanf()
+getaddrinfo()
+getc()
+getc_unlocked()
+getchar()
+getchar_unlocked()
+getcwd()
+getdate()
+getdelim() [добавлена в POSIX.1\-2008]
+getgrent()
+getgrgid()
+getgrgid_r()
+getgrnam()
+getgrnam_r()
+gethostbyaddr() [только SUSv3 (функция удалена из POSIX.1\-2008)]
+gethostbyname() [только SUSv3 (функция удалена из POSIX.1\-2008)]
+gethostent()
+gethostid()
+gethostname()
+getline() [добавлена в POSIX.1\-2008]
+getlogin()
+getlogin_r()
+getnameinfo()
+getnetbyaddr()
+getnetbyname()
+getnetent()
+getopt() (если opterr не равно 0)
+getprotobyname()
+getprotobynumber()
+getprotoent()
+getpwent()
+getpwnam()
+getpwnam_r()
+getpwuid()
+getpwuid_r()
+gets()
+getservbyname()
+getservbyport()
+getservent()
+getutxent()
+getutxid()
+getutxline()
+getwc()
+getwchar()
+getwd() [только SUSv3 (функция удалена из POSIX.1\-2008)]
+glob()
+iconv_close()
+iconv_open()
+ioctl()
+link()
+linkat() [добавлена в POSIX.1\-2008]
+lio_listio() [добавлена в POSIX.1\-2008]
+localtime()
+localtime_r()
+lockf() [добавлена в POSIX.1\-2008]
+lseek()
+lstat()
+mkdir() [добавлена в POSIX.1\-2008]
+mkdirat() [добавлена в POSIX.1\-2008]
+mkdtemp() [добавлена в POSIX.1\-2008]
+mkfifo() [добавлена в POSIX.1\-2008]
+mkfifoat() [добавлена в POSIX.1\-2008]
+mknod() [добавлена в POSIX.1\-2008]
+mknodat() [добавлена в POSIX.1\-2008]
+mkstemp()
+mktime()
+nftw()
+opendir()
+openlog()
+pathconf()
+pclose()
+perror()
+popen()
+posix_fadvise()
+posix_fallocate()
+posix_madvise()
+posix_openpt()
+posix_spawn()
+posix_spawnp()
+posix_trace_clear()
+posix_trace_close()
+posix_trace_create()
+posix_trace_create_withlog()
+posix_trace_eventtypelist_getnext_id()
+posix_trace_eventtypelist_rewind()
+posix_trace_flush()
+posix_trace_get_attr()
+posix_trace_get_filter()
+posix_trace_get_status()
+posix_trace_getnext_event()
+posix_trace_open()
+posix_trace_rewind()
+posix_trace_set_filter()
+posix_trace_shutdown()
+posix_trace_timedgetnext_event()
+posix_typed_mem_open()
+printf()
+psiginfo() [добавлена в POSIX.1\-2008]
+psignal() [добавлена в POSIX.1\-2008]
+pthread_rwlock_rdlock()
+pthread_rwlock_timedrdlock()
+pthread_rwlock_timedwrlock()
+pthread_rwlock_wrlock()
+putc()
+putc_unlocked()
+putchar()
+putchar_unlocked()
+puts()
+pututxline()
+putwc()
+putwchar()
+readdir()
+readdir_r()
+readlink() [добавлена в POSIX.1\-2008]
+readlinkat() [добавлена в POSIX.1\-2008]
+remove()
+rename()
+renameat() [добавлена в POSIX.1\-2008]
+rewind()
+rewinddir()
+scandir() [добавлена в POSIX.1\-2008]
+scanf()
+seekdir()
+semop()
+setgrent()
+sethostent()
+setnetent()
+setprotoent()
+setpwent()
+setservent()
+setutxent()
+sigpause() [добавлена в POSIX.1\-2008]
+stat()
+strerror()
+strerror_r()
+strftime()
+symlink()
+symlinkat() [добавлена в POSIX.1\-2008]
+sync()
+syslog()
+tmpfile()
+tmpnam()
+ttyname()
+ttyname_r()
+tzset()
+ungetc()
+ungetwc()
+unlink()
+unlinkat() [добавлена в POSIX.1\-2008]
+utime() [добавлена в POSIX.1\-2008]
+utimensat() [добавлена в POSIX.1\-2008]
+utimes() [добавлена в POSIX.1\-2008]
+vdprintf() [добавлена в POSIX.1\-2008]
+vfprintf()
+vfwprintf()
+vprintf()
+vwprintf()
+wcsftime()
+wordexp()
+wprintf()
+wscanf()
+.EE
+.in
+.PP
+.\" So, scanning "cancellation point" comments in the glibc 2.8 header
+.\" files, it looks as though at least the following nonstandard
+.\" functions are cancellation points:
+.\" endnetgrent
+.\" endspent
+.\" epoll_pwait
+.\" epoll_wait
+.\" fcloseall
+.\" fdopendir
+.\" fflush_unlocked
+.\" fgetc_unlocked
+.\" fgetgrent
+.\" fgetgrent_r
+.\" fgetpwent
+.\" fgetpwent_r
+.\" fgets_unlocked
+.\" fgetspent
+.\" fgetspent_r
+.\" fgetwc_unlocked
+.\" fgetws_unlocked
+.\" fputc_unlocked
+.\" fputs_unlocked
+.\" fputwc_unlocked
+.\" fputws_unlocked
+.\" fread_unlocked
+.\" fwrite_unlocked
+.\" gai_suspend
+.\" getaddrinfo_a
+.\" getdate_r
+.\" getgrent_r
+.\" getgrouplist
+.\" gethostbyaddr_r
+.\" gethostbyname2
+.\" gethostbyname2_r
+.\" gethostbyname_r
+.\" gethostent_r
+.\" getnetbyaddr_r
+.\" getnetbyname_r
+.\" getnetent_r
+.\" getnetgrent
+.\" getnetgrent_r
+.\" getprotobyname_r
+.\" getprotobynumber_r
+.\" getprotoent_r
+.\" getpw
+.\" getpwent_r
+.\" getservbyname_r
+.\" getservbyport_r
+.\" getservent_r
+.\" getspent
+.\" getspent_r
+.\" getspnam
+.\" getspnam_r
+.\" getutmp
+.\" getutmpx
+.\" getw
+.\" getwc_unlocked
+.\" getwchar_unlocked
+.\" initgroups
+.\" innetgr
+.\" mkostemp
+.\" mkostemp64
+.\" mkstemp64
+.\" ppoll
+.\" pthread_timedjoin_np
+.\" putgrent
+.\" putpwent
+.\" putspent
+.\" putw
+.\" putwc_unlocked
+.\" putwchar_unlocked
+.\" rcmd
+.\" rcmd_af
+.\" rexec
+.\" rexec_af
+.\" rresvport
+.\" rresvport_af
+.\" ruserok
+.\" ruserok_af
+.\" setnetgrent
+.\" setspent
+.\" sgetspent
+.\" sgetspent_r
+.\" updwtmpx
+.\" utmpxname
+.\" vfscanf
+.\" vfwscanf
+.\" vscanf
+.\" vsyslog
+.\" vwscanf
+Реализация также может помечать другие функции, не указанные в стандарте,
+как точки отмены. В частности, реализация, вероятно, пометит как точку
+отмены любую нестандартную функцию, которая может блокироваться (большинство
+функций, работающих с файлами).
+.SS "Компиляция в Linux"
+В Linux, программы, использующие программный интерфейс pthreads, должны
+компилироваться с помощью \fIcc \-pthread\fP.
+.SS "Реализации нитей POSIX в Linux"
+За всё время в библиотеке GNU C было две реализации нитей для Linux:
+.TP 
+\fBLinuxThreads\fP
+Первоначальная реализация pthreads. Начиная с glibc 2.4 эта реализация
+больше не поддерживается.
+.TP 
+\fBNPTL\fP (библиотека нитей POSIX)
+Современная реализация pthreads. По сравнению с LinuxThreads, NPTL более
+точно соответствует требованиям POSIX.1 и более производительна при создании
+большого количества нитей. NPTL появилась в glibc начиная с версии 2.3.2, и
+требует свойства, появившиеся в ядре Linux 2.6.
+.PP
+Обе реализации являются, так называемыми реализациями 1:1, то есть каждая
+нить отображается в планируемый элемента ядра. Обе реализации используют
+системный вызов Linux \fBclone\fP(2). В NPTL примитивы синхронизации нитей
+(мьютексы, объединение нитей и т .п.) реализованы с помощью системного
+вызова Linux \fBfutex\fP(2).
+.SS LinuxThreads
+Отличительные свойства данной реализации:
+.IP \- 3
+В дополнении к главной (начальной) нити, нити программы создаются с помощью
+\fBpthread_create\fP(3), реализация создаёт «управляющую» нить. Эта нить
+выполняет создание и завершение нитей (что приводит к проблемам, если эта
+нить случайно завершится).
+.IP \- 3
+Внутри реализации используются сигналы. В Linux 2.2 и новее используются
+первые три сигнала реального времени (смотрите также \fBsignal\fP(7)). В старых
+ядрах Linux используются сигналы \fBSIGUSR1\fP и \fBSIGUSR2\fP. В приложениях
+нельзя использовать набор сигналов, задействованный в реализации.
+.IP \- 3
+У нитей разные ID процесса (фактически, нити LinuxThreads реализованы как
+процессы, у которых больше общей информации чем обычно, но которые имеют
+разный идентификаторы процесса). Нити LinuxThreads (включая управляющую
+нить) в \fBps\fP(1) видимы как отдельные процессы.
+.PP
+Реализация LinuxThreads отклоняется от спецификации POSIX.1 в нескольких
+местах, а именно:
+.IP \- 3
+Вызов \fBgetpid\fP(2) возвращает разные значения для каждой нити.
+.IP \- 3
+Вызов \fBgetppid\fP(2) в нитях, кроме главной, возвращает идентификатор
+процесса управляющей нити; вместо \fBgetppid\fP(2) в этих нитях будет
+возвращаться тоже значение, что и из \fBgetppid\fP(2) в главной нити.
+.IP \- 3
+Когда нить создаёт новый процесс\-потомок с помощью \fBfork\fP(2), все нити
+должны ожидать потомка в \fBwait\fP(2). Однако реализация позволяет вызвать
+\fBwait\fP(2) только в нити, которая создала потомка.
+.IP \- 3
+Когда нить вызывает \fBexecve\fP(2), остальные нити завершают работу
+(требование POSIX.1). Однако, получаемый процесс имеет тот же PID, что и
+нить, которая вызвала \fBexecve\fP(2): это должен быть тот же PID, что и у
+главной нити.
+.IP \- 3
+У нитей разные ID пользователя и группы. Это может вызвать сложности в
+программах с set\-user\-ID и может привести к ошибкам функций pthreads, если
+приложение изменяет свои учётные данные с помощью \fBseteuid\fP(2) и подобных
+вызовов.
+.IP \- 3
+У нитей разные ID сеанса и группы процессов.
+.IP \- 3
+У нитей разные записи о блокировках, созданных \fBfcntl\fP(2).
+.IP \- 3
+Информация, возвращаемая \fBtimes\fP(2) и \fBgetrusage\fP(2), относится только к
+нити, а не к процессу в целом.
+.IP \- 3
+У нитей разные значения отмен семафоров (смотрите \fBsemop\fP(2)).
+.IP \- 3
+У нитей разные интервалы таймеров.
+.IP \- 3
+У нитей разные значения уступчивости.
+.IP \- 3
+В POSIX.1 различаются сигналы, адресованные процессу в целом и отдельным
+нитям. Согласно POSIX.1, сигналы, направленные процессу (посланные,
+например, с помощью \fBkill\fP(2)), должны обрабатываться одной произвольно
+выбранной нитью внутри процесса. LinuxThreads не поддерживает сигналы,
+направленные процессу: сигналы могут посылаться только определённым нитям.
+.IP \- 3
+Нити имеют разные настройки альтернативного стека сигналов. Однако, новые
+настройки альтернативного стека сигналов копируются из нити, которая его
+создаёт, так что изначально нити имеют единый альтернативный стек сигналов
+(новая нить должна запускаться без альтернативного стека сигналов. Если две
+нити обрабатывают сигналы в едином альтернативном стеке сигналов
+одновременно, то в программе возникнет непредсказуемая ошибка).
+.SS NPTL
+В NPTL все нити процесса помещаются в одну группу нитей; все члены группы
+нитей имеют один PID. В NPTL нет управляющей нити.
+.PP
+Внутри NPTL используются первые два сигнала реального времени; эти сигналы
+нельзя использовать в приложениях. Подробности смотрите в \fBnptl\fP(7).
+.PP
+NPTL тоже не соответствует POSIX.1, как минимум, в одном:
+.IP \- 3
+.\" FIXME . bug report filed for NPTL nice nonconformance
+.\" http://bugzilla.kernel.org/show_bug.cgi?id=6258
+.\" Sep 08: there is a patch by Denys Vlasenko to address this
+.\" "make setpriority POSIX compliant; introduce PRIO_THREAD extension"
+.\" Monitor this to see if it makes it into mainline.
+У нитей разные значения уступчивости.
+.PP
+Несколько несоответствий NPTL проявляется только при работе со старыми
+ядрами:
+.IP \- 3
+Информация, возвращаемая \fBtimes\fP(2) и \fBgetrusage\fP(2), относится только к
+нити, а не к процессу в целом (исправлено в ядре 2.6.9).
+.IP \- 3
+У нитей разные ограничения по ресурсам (исправлено в ядре 2.6.10).
+.IP \- 3
+У нитей разные интервалы таймеров (исправлено в ядре 2.6.12).
+.IP \- 3
+Только из главной нити разрешено запускать новый сеанс с помощью
+\fBsetsid\fP(2) (исправлено в версии 2.6.16).
+.IP \- 3
+Только из главной нити разрешено делать процесс лидером группы процессов с
+помощью \fBsetpgid\fP(2) (исправлено в версии 2.6.16).
+.IP \- 3
+Нити имеют разные настройки альтернативного стека сигналов Однако, новые
+настройки альтернативного стека сигналов копируются из нити, которая его
+создаёт, так что изначально нити имеют единый альтернативный стек сигналов
+(исправлено в ядре 2.6.16).
+.PP
+Также стоит учитывать следующее о реализации NPTL:
+.IP \- 3
+Если мягкое ограничение ресурса на размер стека (смотрите описание
+\fBRLIMIT_STACK\fP в \fBsetrlimit\fP(2)) устанавливается в значение, отличное от
+\fIunlimited\fP, то это значение определяет размер стека по умолчанию для новых
+нитей. В целях эффективности, это ограничение должно быть установлено но
+выполнения программы, возможно с помощью встроенной команды оболочки
+\fIulimit \-s\fP (\fIlimit stacksize\fP в оболочке C).
+.SS "Определение реализации нитей"
+Начиная с glibc 2.3.2, для определение реализации нитей в системе можно
+использовать команду \fBgetconf\fP(1), например:
+.PP
+.in +4n
+.EX
+bash$ getconf GNU_LIBPTHREAD_VERSION
+NPTL 2.3.4
+.EE
+.in
+.PP
+При наличии старых версий glibc можно использовать команду:
+.PP
+.in +4n
+.EX
+bash$ $( ldd /bin/ls | grep libc.so | awk \(aq{print $3}\(aq ) | \e
+                egrep \-i \(aqthreads|nptl\(aq
+        Native POSIX Threads Library by Ulrich Drepper et al
+.EE
+.in
+.SS "Выбор реализации нитей: LD_ASSUME_KERNEL"
+В системах с glibc, которая поддерживает и LinuxThreads и NPTL (например,
+glibc 2.3.\fIx\fP), можно воспользоваться переменной окружения
+\fBLD_ASSUME_KERNEL\fP для замены выбранной динамическим компоновщиков
+реализации нитей по умолчанию. Эта переменная указывает динамическому
+компоновщику считать, что он запускается с определённой версией ядра в
+системе. Указав версию ядра, в которой не поддержки, требуемой NPTL, его
+можно заставить использовать LinuxThreads (наиболее вероятной причиной для
+этого будет необходимость запуска (сломанного) приложения, которое зависит
+от некоторого не совместимого поведения LinuxThreads). Пример:
+.PP
+.in +4n
+.EX
+bash$ $( LD_ASSUME_KERNEL=2.2.5 ldd /bin/ls | grep libc.so | \e
+                awk \(aq{print $3}\(aq ) | egrep \-i \(aqthreads|nptl\(aq
+        linuxthreads\-0.10 by Xavier Leroy
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBclone\fP(2), \fBfork\fP(2), \fBfutex\fP(2), \fBgettid\fP(2), \fBproc\fP(5),
+\fBattributes\fP(7), \fBfutex\fP(7), \fBnptl\fP(7), \fBsigevent\fP(7), \fBsignal\fP(7)
+.PP
+Различные справочные страницы pthreads, например: \fBpthread_atfork\fP(3),
+\fBpthread_attr_init\fP(3), \fBpthread_cancel\fP(3), \fBpthread_cleanup_push\fP(3),
+\fBpthread_cond_signal\fP(3), \fBpthread_cond_wait\fP(3), \fBpthread_create\fP(3),
+\fBpthread_detach\fP(3), \fBpthread_equal\fP(3), \fBpthread_exit\fP(3),
+\fBpthread_key_create\fP(3), \fBpthread_kill\fP(3), \fBpthread_mutex_lock\fP(3),
+\fBpthread_mutex_unlock\fP(3), \fBpthread_mutexattr_destroy\fP(3),
+\fBpthread_mutexattr_init\fP(3), \fBpthread_once\fP(3), \fBpthread_spin_init\fP(3),
+\fBpthread_spin_lock\fP(3), \fBpthread_rwlockattr_setkind_np\fP(3),
+\fBpthread_setcancelstate\fP(3), \fBpthread_setcanceltype\fP(3),
+\fBpthread_setspecific\fP(3), \fBpthread_sigmask\fP(3), \fBpthread_sigqueue\fP(3) и
+\fBpthread_testcancel\fP(3)

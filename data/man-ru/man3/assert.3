@@ -1,0 +1,87 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 21:42:42 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Oct 22 23:44:11 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Thu Jun  2 23:44:11 2016 by Nikos Mavrogiannopoulos <nmav@redhat.com>
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ASSERT 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+assert \- прекращает работу программы при ложном утверждении
+.SH ОБЗОР
+.nf
+\fB#include <assert.h>\fP
+.PP
+\fBvoid assert(scalar \fP\fIexpression\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Данный макрос помогает программистам находить ошибки в своих программах или
+обрабатывать исключительные случаи посредством завершения программы, при
+котором выводится немного отладочной информации.
+.PP
+Если \fIexpression\fP ложно (т. е., при сравнении равно нулю), то \fBassert\fP()
+печатает сообщение об ошибке в стандартный поток ошибок и завершает
+программу вызовом \fBabort\fP(3). Сообщение об ошибке содержит имя файла и
+функцию, содержащую вызов \fBassert\fP(), номер строки исходного кода вызова и
+текст аргумента; пример:
+.PP
+    prog: some_file.c:16: some_func: Assertion `val == 0' failed.
+.PP
+Если определён макрос \fBNDEBUG\fP на момент включения последнего
+\fI<assert.h>\fP, то макрос \fBassert\fP() не генерирует код, и,
+следовательно ничего вызывает. Не рекомендуется определять \fBNDEBUG\fP, если
+\fBassert\fP() используется для обнаружения ошибок условий, так как ПО может
+повести себя непредсказуемо.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Ничего не возвращается.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBassert\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" See Defect Report 107 for more details.
+POSIX.1\-2001, POSIX.1\-2008, C89, C99. В стандарте C89 указано, что значение
+\fIexpression\fP должно иметь тип \fIint\fP, и поведение функции непредсказуемо,
+если это не так; согласно стандарту C99, переменная может быть любого
+скалярного типа.
+.SH ДЕФЕКТЫ
+Функция \fBassert\fP() реализована в виде макроса. Если проверка выражения
+приводит к побочным изменениям, то поведение программы будет различным в
+зависимости от наличия \fBNDEBUG\fP. Это может создавать гейзенбаг, который
+исчезает при включении отладки.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBabort\fP(3), \fBassert_perror\fP(3), \fBexit\fP(3)

@@ -1,0 +1,239 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2012 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" See also https://lwn.net/Articles/519085/
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETAUXVAL 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getauxval \- возвращает значение из вспомогательного вектора
+.SH ОБЗОР
+.nf
+\fB#include <sys/auxv.h>\fP
+.PP
+\fBunsigned long getauxval(unsigned long \fP\fItype\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBgetauxval\fP() возвращает значения из вспомогательного вектора —
+механизма, с помощью которого ядерный загрузчик двоичных файлов ELF передаёт
+информацию в пользовательское пространство при выполнении программы.
+.PP
+Каждая запись в вспомогательном векторе состоит из пары значений: типа —
+которым определяется смысл записи и значением этого типа. Согласно аргументу
+\fItype\fP, \fBgetauxval\fP() возвращает соответствующее значение.
+.PP
+Значения для типов для \fItype\fP представлены в списке далее. Не все значения
+\fItype\fP есть для всех архитектур.
+.TP 
+\fBAT_BASE\fP
+Основной (base) адрес программного интерпретатора (обычно, динамического
+компоновщика).
+.TP 
+\fBAT_BASE_PLATFORM\fP
+Строка, определяющая реальную платформу; может отличаться от \fBAT_PLATFORM\fP
+(только для PowerPC).
+.TP 
+\fBAT_CLKTCK\fP
+Частота, с которой считает \fBtimes\fP(2). Это значение также может быть
+получено с помощью \fIsysconf(_SC_CLK_TCK)\fP.
+.TP 
+\fBAT_DCACHEBSIZE\fP
+Размер блока кэша данных.
+.TP 
+\fBAT_EGID\fP
+Эффективный идентификатор группы нити.
+.TP 
+\fBAT_ENTRY\fP
+Адрес точки старта (entry address) исполняемого файла.
+.TP 
+\fBAT_EUID\fP
+Эффективный идентификатор пользователя нити.
+.TP 
+\fBAT_EXECFD\fP
+Файловый дескриптор программы.
+.TP 
+\fBAT_EXECFN\fP
+Путь, использованный для запуска программы.
+.TP 
+\fBAT_FLAGS\fP
+Флаги (не используется).
+.TP 
+\fBAT_FPUCW\fP
+Используемое слово управления FPU (только для SuperH). Оно даёт некоторую
+информацию о нагрузке FPU, выполняемой ядром.
+.TP 
+\fBAT_GID\fP
+Реальный идентификатор группы нити.
+.TP 
+\fBAT_HWCAP\fP
+Битовая маска, зависящая от архитектуры и двоичного программного интерфейса,
+подробно описывает возможности процессора. Содержимое битовой маски зависит
+от аппаратуры (например, в файле исходного кода ядра
+\fIarch/x86/include/asm/cpufeature.h\fP описана маска для архитектуры Intel
+x86; возвращаемое значение — первое 32\-битное слово описываемого здесь
+массива). Эта же информация в формате, понятном человеку, доступна в файле
+\fI/proc/cpuinfo\fP.
+.TP 
+\fBAT_HWCAP2\fP (начиная с glibc 2.18)
+Дополнительные упоминания о возможностях процессора.
+.TP 
+\fBAT_ICACHEBSIZE\fP
+.\" .TP
+.\" .BR AT_IGNORE
+.\" .TP
+.\" .BR AT_IGNOREPPC
+.\" .TP
+.\" .BR AT_NOTELF
+Размер блока кэша инструкций.
+.TP 
+.\" Kernel commit 98a5f361b8625c6f4841d6ba013bbf0e80d08147
+\fBAT_L1D_CACHEGEOMETRY\fP
+Структура кэша данных L1, в которой закодирован размер строки кэша в байтах
+в младших 16 битах и ассоциативность кэша в следующих 16 битах. Значение
+ассоциативности N выражается 16\-битным числом, указывающим на N\-канальную
+ассоциативность.
+.TP 
+\fBAT_L1D_CACHESIZE\fP
+Размер кэша данных L1.
+.TP 
+\fBAT_L1I_CACHEGEOMETRY\fP
+Структура кэша инструкций L1, кодируется также как \fBAT_L1D_CACHEGEOMETRY\fP.
+.TP 
+\fBAT_L1I_CACHESIZE\fP
+Размер кэша инструкций L1.
+.TP 
+\fBAT_L2_CACHEGEOMETRY\fP
+Структура кэша L2, кодируется также как \fBAT_L1D_CACHEGEOMETRY\fP.
+.TP 
+\fBAT_L2_CACHESIZE\fP
+Размер кэша L2.
+.TP 
+\fBAT_L3_CACHEGEOMETRY\fP
+Структура кэша L3, кодируется также как \fBAT_L1D_CACHEGEOMETRY\fP.
+.TP 
+\fBAT_L3_CACHESIZE\fP
+Размер кэша L3.
+.TP 
+\fBAT_PAGESZ\fP
+Размер системной страницы (это же значение возвращается
+\fIsysconf(_SC_PAGESIZE)\fP).
+.TP 
+\fBAT_PHDR\fP
+Адрес заголовков программы исполняемого файла.
+.TP 
+\fBAT_PHENT\fP
+Размер элемента заголовка программы.
+.TP 
+\fBAT_PHNUM\fP
+Количество заголовков программы.
+.TP 
+\fBAT_PLATFORM\fP
+Указатель на строку, описывающую аппаратную платформу, на которой
+выполняется программа. Динамический компоновщик использует её при
+рассмотрении значений \fIrpath\fP.
+.TP 
+\fBAT_RANDOM\fP
+Адрес 16 байт, содержащих произвольное значение.
+.TP 
+\fBAT_SECURE\fP
+Содержит ненулевое значение, если исполняемый файл должен считаться
+безопасным. Чаще всего, ненулевое значение означает, что процесс выполняет
+программу с установленным set\-user\-ID или set\-group\-ID битом (то есть его
+реальный и эффективный UID или GID отличаются от начального) или же он
+получает мандаты, запуская двоичный файл с другими мандатами (смотрите
+\fBcapabilities\fP(7)). Также ненулевое значение может выставляться Linux
+Security Module. Если значение не ноль, то динамический компоновщик
+прекращает использовать определённые переменные окружения (смотрите
+\fBld\-linux.so\fP(8)) и изменяется некоторое поведение glibc (также смотрите
+\fBsecure_getenv\fP(3)).
+.TP 
+\fBAT_SYSINFO\fP
+Точка входа в функцию системного вызова в vDSO. Отсутствует/не нужна для
+всех архитектур (например, отсутствует на x86\-64).
+.TP 
+\fBAT_SYSINFO_EHDR\fP
+Адрес страницы, содержащий виртуальный Динамический Общий Объект (Dynamic
+Shared Object, vDSO), который ядро создаёт для предоставления более быстрой
+реализации некоторых системных вызовов.
+.TP 
+\fBAT_UCACHEBSIZE\fP
+Размер блока универсального кэша.
+.TP 
+\fBAT_UID\fP
+Реальный идентификатор пользователя нити.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBgetauxval\fP() возвращает значение, соответствующее
+\fItype\fP.Если \fItype\fP не найден, то возвращается 0.
+.SH ОШИБКИ
+.TP 
+\fBENOENT\fP (начиная с glibc 2.19)
+.\" commit b9ab448f980e296eac21ac65f53783967cc6037b
+В вспомогательном векторе не найдено значение, соответствующее \fItype\fP.
+.SH ВЕРСИИ
+Функция \fBgetauxval\fP() впервые появилась в glibc 2.16.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetauxval\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является нестандартным расширением glibc.
+.SH ЗАМЕЧАНИЯ
+Основным пользователем информации из вспомогательного вектора является
+динамический компоновщик \fBld\-linux.so\fP(8). Вспомогательный вектор удобное и
+эффективное средство для предоставления ядром некоторого набора стандартной
+информации, которая обычно или всегда требуется динамическому
+компоновщику. В некоторых случаях эта информация может быть получена через
+системные вызовы, но использование вспомогательного вектора экономичней.
+.PP
+Вспомогательный вектор располагается выше списка аргументов и окружения в
+адресном пространстве процесса. Переданный программе вектор можно
+просмотреть установив переменную окружения \fBLD_SHOW_AUXV\fP и запустив
+программу:
+.PP
+.in +4n
+.EX
+$ LD_SHOW_AUXV=1 sleep 1
+.EE
+.in
+.PP
+Вспомогательный вектор любого процесса может быть получен (при наличии прав
+доступа) через \fI/proc/[pid]/auxv\fP; подробней смотрите в \fBproc\fP(5).
+.SH ДЕФЕКТЫ
+До того как ошибка \fBENOENT\fP не была добавлена в glibc 2.19, не было способа
+достоверно определить, что \fItype\fP не найден, если значение \fItype\fP равно
+нулю.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsecure_getenv\fP(3), \fBvdso\fP(7), \fBld\-linux.so\fP(8)

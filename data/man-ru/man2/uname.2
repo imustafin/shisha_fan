@@ -1,0 +1,115 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2001 Andries Brouwer <aeb@cwi.nl>.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2007-07-05 mtk: Added details on underlying system call interfaces
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UNAME 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+uname \- получает название и информацию о текущем ядре
+.SH ОБЗОР
+\fB#include <sys/utsname.h>\fP
+.PP
+\fBint uname(struct utsname *\fP\fIbuf\fP\fB);\fP
+.SH ОПИСАНИЕ
+\fBuname\fP() возвращает информацию о системе в структуру с адресом
+\fIbuf\fP. Структура \fIutsname\fP определена в \fI<sys/utsname.h>\fP:
+.PP
+.in +4n
+.EX
+struct utsname {
+    char sysname[];    /* название операционной системы
+                          (например, «Linux») */
+    char nodename[];   /* имя в сети, зависящее от реализации */
+    char release[];    /* идентификатор выпуска ОС (например, «2.6.28») */
+    char version[];    /* версия ОС */
+    char machine[];    /* идентификатор аппаратного обеспечения */
+#ifdef _GNU_SOURCE
+    char domainname[]; /* доменное имя NIS или YP */
+#endif
+};
+.EE
+.in
+.PP
+Размеры массивов в \fIstruct utsname\fP не определены (см. ЗАМЕЧАНИЯ); поля
+завершаются байтом с null (\(aq\e0\(aq).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Значение \fIbuf\fP не определено.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4. Вызов \fBuname\fP() отсутствует в 4.3BSD.
+.PP
+Поле \fIdomainname\fP (доменное имя NIS или YP) является расширением GNU.
+.SH ЗАМЕЧАНИЯ
+Это системный вызов, и операционная система, предположительно, знает своё
+имя, номер выпуска и версию. Она также знает, на каком аппаратном
+обеспечении она работает. Таким образом, четыре поля структуры несут
+полезную информацию. С другой стороны, поле \fInodename\fP её не несет: оно
+указывает имя машины в некой неопределённой сети, но обычно машины находятся
+в более чем одной сети и имеют несколько имён. Более того, ядро не может
+каким\-либо образом получить информацию о таких вещах, поэтому ему необходимо
+сообщить что же возвращать в этом поле. То же относится и к дополнительному
+полю \fIdomainname\fP.
+.PP
+С этой целью в Linux используются системные вызовы \fBsethostname\fP(2) и
+\fBsetdomainname\fP(2). Обратите внимание, что хотя не существует стандарта,
+который бы указывал, что имя машины, установленное \fBsethostname\fP(2),
+является той же строкой, что возвращается в поле \fInodename\fP при вызове
+\fBuname\fP(), для Linux это именно так (в действительности некоторые системы
+позволяют 256\-символьное имя машины и 8\-символьное имя узла). То же
+относится и к \fBsetdomainname\fP(2) и полю \fIdomainname\fP.
+.PP
+Длина полей в структуре может быть различна. Некоторые операционные системы
+или библиотеки используют жёстко заданные значения 9, 33, 65 или 257. Другие
+используют константы \fBSYS_NMLN\fP, \fB_SYS_NMLN\fP, \fBUTSLEN\fP и
+\fB_UTSNAME_LENGTH\fP. Несомненно, идея использовать эти константы не очень
+хороша \(em можно просто использовать sizeof(...). Часто выбирается 257 для
+того, чтобы имелось достаточно места для хранения имени машины в сети
+интернет.
+.PP
+Часть информации из структуры utsname может быть получена также через
+\fI/proc/sys/kernel/\fP {\fIostype\fP, \fIhostname\fP, \fIosrelease\fP, \fIversion\fP,
+\fIdomainname\fP}.
+.SS "Отличия между библиотекой C и ядром"
+.PP
+.\" That was back before Linux 1.0
+.\" That was also back before Linux 1.0
+Со временем, увеличение размера структуры \fIutsname\fP последовательно привело
+к трём версиям \fBuname\fP(): \fIsys_olduname\fP() (слот \fI__NR_oldolduname\fP),
+\fIsys_uname\fP() (слот \fI__NR_olduname\fP) и \fIsys_newuname\fP() (слот
+\fI__NR_uname)\fP. В первой длина каждого поля равна 9; во второй 65; в третьей
+также 65, но добавилось поле \fIdomainname\fP. Обёрточная функция \fBuname\fP() в
+glibc скрывает эти подробности от приложений, вызывая самую новую версию
+системного вызова, предоставляемого ядром.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBuname\fP(1), \fBgetdomainname\fP(2), \fBgethostname\fP(2), \fButs_namespaces\fP(7)

@@ -1,0 +1,104 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) Tom Bjorkholm & Markus Kuhn, 1996
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 1996-04-01 Tom Bjorkholm <tomb@mydata.se>
+.\"            First version written
+.\" 1996-04-10 Markus Kuhn <mskuhn@cip.informatik.uni-erlangen.de>
+.\"            revision
+.\" Modified 2004-05-27 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SCHED_SETPARAM 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sched_setparam, sched_getparam \- получает и устанавливает параметры
+планирования
+.SH ОБЗОР
+.nf
+\fB#include <sched.h>\fP
+.PP
+\fBint sched_setparam(pid_t \fP\fIpid\fP\fB, const struct sched_param *\fP\fIparam\fP\fB);\fP
+.PP
+\fBint sched_getparam(pid_t \fP\fIpid\fP\fB, struct sched_param *\fP\fIparam\fP\fB);\fP
+.PP
+\fBstruct sched_param {
+    ...
+    int \fP\fIsched_priority\fP\fB;
+    ...
+};\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBsched_setparam\fP() устанавливает параметры планирования, связанные с
+алгоритмом планирования нити, идентификатор которой задан в \fIpid\fP. Если
+\fIpid\fP равен нулю, то устанавливаются параметры вызывающей нити. Тип и
+значение аргумента \fIparam\fP зависит от алгоритма планирования, назначенного
+нити с идентификатором \fIpid\fP. Описание алгоритмов планирования,
+поддерживаемых в Linux, смотрите в \fBsched\fP(7).
+.PP
+Вызов \fBsched_getparam\fP() получает текущие параметры планирования нити с
+идентификатором \fIpid\fP. Если \fIpid\fP равно нулю, то возвращаются параметры
+вызывающей нити.
+.PP
+Вызов \fBsched_setparam\fP() проверяет соответствие значения аргумента \fIparam\fP
+политике планирования заданной нити. Значение \fIparam\->sched_priority\fP
+должно находиться в диапазоне от \fBsched_get_priority_min\fP(2) до
+\fBsched_get_priority_max\fP(2).
+.PP
+Описание привилегий и ограничений ресурсов, связанных с планирование и
+алгоритмами, смотрите в \fBsched\fP(7).
+.PP
+В POSIX\-системах, в которых существуют вызовы \fBsched_setparam\fP() и
+\fBsched_getparam\fP(), в \fI<unistd.h>\fP определён макрос
+\fB_POSIX_PRIORITY_SCHEDULING\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsched_setparam\fP() и \fBsched_getparam\fP() возвращают
+0. В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Некорректные аргументы: значение \fIpid\fP отрицательно или \fIparam\fP равно NULL
+.TP 
+\fBEINVAL\fP
+(\fBsched_setparam\fP()) Аргумент \fIparam\fP не соответствует текущей политике
+планирования.
+.TP 
+\fBEPERM\fP
+(\fBsched_setparam\fP()) Вызывающий не имеет достаточного количества прав
+(Linux: не имеет мандата \fBCAP_SYS_NICE\fP).
+.TP 
+\fBESRCH\fP
+Нить с идентификатором \fIpid\fP не найдена.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBgetpriority\fP(2), \fBgettid\fP(2), \fBnice\fP(2), \fBsched_get_priority_max\fP(2),
+\fBsched_get_priority_min\fP(2), \fBsched_getaffinity\fP(2),
+\fBsched_getscheduler\fP(2), \fBsched_setaffinity\fP(2), \fBsched_setattr\fP(2),
+\fBsched_setscheduler\fP(2), \fBsetpriority\fP(2), \fBcapabilities\fP(7), \fBsched\fP(7)

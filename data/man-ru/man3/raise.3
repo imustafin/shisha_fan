@@ -1,0 +1,87 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\" and Copyright (C) 2008 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 18:40:56 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 1995 by Mike Battersby (mib@deakin.edu.au)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RAISE 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+raise \- посылает сигнал вызывающему
+.SH ОБЗОР
+.nf
+\fB#include <signal.h>\fP
+.PP
+\fBint raise(int \fP\fIsig\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBraise\fP() посылает сигнал вызвавшему процессу или нити. В
+однонитевых программах это эквивалентно
+.PP
+.in +4n
+.EX
+kill(getpid(), sig);
+.EE
+.in
+.PP
+В многонитевых программах это эквивалентно
+.PP
+.in +4n
+.EX
+pthread_kill(pthread_self(), sig);
+.EE
+.in
+.PP
+Если из\-за сигнала вызвался обработчик, то \fBraise\fP() вернёт управление
+только после завершения обработчика сигнала.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBraise\fP() возвращает 0 или иное значение
+при ошибке.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBraise\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99.
+.SH ЗАМЕЧАНИЯ
+.\" 2.3.2 used the obsolete tkill(), if available.
+Начиная с версии 2.3.3 glibc реализует \fBraise\fP() с помощью \fBtgkill\fP(2),
+если ядро поддерживает этот системный вызов. Предыдущие версии glibc
+реализовали \fBraise\fP() с помощью \fBkill\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetpid\fP(2), \fBkill\fP(2), \fBsigaction\fP(2), \fBsignal\fP(2), \fBpthread_kill\fP(3),
+\fBsignal\fP(7)

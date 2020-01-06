@@ -1,0 +1,251 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1995 by Jim Van Zandt <jrv@vanzandt.mv.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TSEARCH 3 2019\-05\-09 GNU "Руководство программиста Linux"
+.SH ИМЯ
+tsearch, tfind, tdelete, twalk, tdestroy \- работа с двоичным деревом поиска
+.SH ОБЗОР
+.nf
+\fB#include <search.h>\fP
+.PP
+\fBtypedef enum { preorder, postorder, endorder, leaf } VISIT;\fP
+.PP
+\fBvoid *tsearch(const void *\fP\fIkey\fP\fB, void **\fP\fIrootp\fP\fB,\fP
+\fB                int (*\fP\fIcompar\fP\fB)(const void *, const void *));\fP
+.PP
+\fBvoid *tfind(const void *\fP\fIkey\fP\fB, void *const *\fP\fIrootp\fP\fB,\fP
+\fB                int (*\fP\fIcompar\fP\fB)(const void *, const void *));\fP
+.PP
+\fBvoid *tdelete(const void *\fP\fIkey\fP\fB, void **\fP\fIrootp\fP\fB,\fP
+\fB                int (*\fP\fIcompar\fP\fB)(const void *, const void *));\fP
+.PP
+\fBvoid twalk(const void *\fP\fIroot\fP\fB,\fP
+\fB                void (*\fP\fIaction\fP\fB)(const void *\fP\fInodep\fP\fB, VISIT \fP\fIwhich\fP\fB,\fP
+\fB                               int \fP\fIdepth\fP\fB));\fP
+.PP
+\fB#define _GNU_SOURCE\fP         /* смотрите feature_test_macros(7) */
+\fB#include <search.h>\fP
+.PP
+\fBvoid twalk_r(const void *\fP\fIroot\fP\fB,\fP
+\fB                void (*\fP\fIaction\fP\fB)(const void *\fP\fInodep\fP\fB, VISIT \fP\fIwhich\fP\fB,\fP
+\fB                               void *\fP\fIclosure\fP\fB),\fP
+\fB                void *\fP\fIclosure\fP\fB);\fP
+.PP
+\fBvoid tdestroy(void *\fP\fIroot\fP\fB, void (*\fP\fIfree_node\fP\fB)(void *\fP\fInodep\fP\fB));\fP
+.fi
+.SH ОПИСАНИЕ
+Функции \fBtsearch\fP(), \fBtfind\fP(), \fBtwalk\fP() и \fBtdelete\fP() позволяют
+работать с двоичным деревом поиска. Они реализуют «Algorithm T» Д. Кнута
+(6.2.2). Первое поле в каждом узле дерева является указателем на
+соответствующий элемент данных (вызывающая программа должна хранить реальные
+данные). Аргумент \fIcompar\fP указывает на процедуру сравнения, которой
+передаются указатели на два элемента данных. Эта процедура должна возвращать
+отрицательное, нулевое или положительное значение, если первый элемент
+меньше, равен или больше чем второй.
+.PP
+Функция \fBtsearch\fP() ищет элемент в дереве. В \fIkey\fP задаётся разыскиваемый
+элемент. В \fIrootp\fP указывает на переменную, указывающую на корень
+дерева. Если дерево пустое, то переменная, на которую ссылается \fIrootp\fP,
+должна быть равна NULL. Если элемент найден, то \fBtsearch\fP() возвращает
+указатель на соответствующий узел дерева (иначе говоря, \fBtsearch\fP()
+возвращает указатель на элемент данных). Если элемент не найден, то
+\fBtsearch\fP() добавляет его и возвращает указатель на соответствующий узел
+дерева.
+.PP
+Функция \fBtfind\fP() похожа на \fBtsearch\fP(), за исключением того, что
+\fBtfind\fP() в случае нулевого результата поиска возвращает NULL.
+.PP
+Функция \fBtdelete\fP() удаляет элемент из дерева. Аргументы те же, что и для
+\fBtsearch\fP().
+.PP
+Функция \fBtwalk\fP() выполняет обход дерева, сначала в глубину, затем слева
+направо. Аргумент \fIroot\fP указывает на начальный элемент обхода. Если этот
+узел не является корневым, то будет пройдена только часть дерева. Функция
+\fBtwalk\fP вызывает пользовательскую функцию \fIaction\fP для каждого посещаемого
+узла (то есть три раза для внутреннего узла и один раз для конечного
+узла\-листа). Функция \fIaction\fP получает три аргумента. Первый — указатель на
+посещаемый узел. Структура узла не определена, но возможно привести
+указатель к указателю на указатель на элемент, чтобы получить доступ к
+элементу, хранящемуся внутри узла. Приложение не должно изменять структуру,
+на которую указывает этот аргумент. Второй — целое число, принимающее
+значение \fBpreorder\fP, \fBpostorder\fP или \fBendorder\fP в зависимости от того, в
+первый, второй или третий раз посещается внутренний узел, или значение
+\fIleaf\fP, если это единственный просмотр узла\-листа. Эти символы определены в
+\fI<search.h>\fP. Третий аргумент — это глубина текущего погружения в
+дерево; для корня она равна нулю.
+.PP
+(В общем случае, функции \fBpreorder\fP, \fBpostorder\fP и \fBendorder\fP известны
+как \fBpreorder\fP, \fBinorder\fP и \fBpostorder\fP: перед посещением потомков, после
+первого посещения и перед вторым и после посещения. Таким образом, выбор
+имени \fBpost\%order\fP приводит к путанице.)
+.PP
+Функция \fBtwalk_r\fP() подобна \fBtwalk\fP(), но вместо аргумента \fIdepth\fP
+передаётся неизменяемый аргумент\-указатель \fIclosure\fP в каждый вызов функции
+обратного вызова. Этот указатель можно использовать для передачи информации
+в и из функции обратного вызова безопасным для нитей образом, не задействуя
+глобальные переменные.
+.PP
+Функция \fBtdestroy\fP() удаляет всё дерево, на которое указывает \fIrootp\fP,
+высвобождая все ресурсы, выделенные функцией \fBtsearch\fP(). Для данных
+каждого узла дерева вызывается функция \fIfree_node\fP. Указатель на данные
+передаётся в аргумент функции. Если делать ничего не нужно, то в
+\fIfree_node\fP нужно указать функцию, которая ничего не делает.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBtsearch\fP() возвращает указатель на найденный узел дерева или
+добавляет новый узел, а также возвращает NULL, если для добавления
+недостаточно памяти. Функция \fBtfind\fP() возвращает указатель на узел или
+NULL, если совпадений не найдено. Если есть несколько элементов с одинаковым
+ключом, то какой из них будет возвращён — не определено.
+.PP
+Функция \fBtdelete\fP() возвращает указатель на родителя удалённого узла или
+NULL, если элемент не найден. Если удалённый узел был корневым узлом, то
+\fBtdelete\fP() возвращает повисшую ссылку, по которой нельзя обращаться.
+.PP
+Функции \fBtsearch\fP(), \fBtfind\fP() и \fBtdelete\fP() также возвращают NULL, если
+\fIrootp\fP для записи был равен NULL.
+.SH ВЕРСИИ
+Функция \fBtwalk_r\fP() доступна в glibc начиная с версии 2.30.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBtsearch\fP(),
+\fBtfind\fP(),
+.br
+\fBtdelete\fP()
+T}	Безвредность в нитях	MT\-Safe race:rootp
+T{
+\fBtwalk\fP()
+T}	Безвредность в нитях	MT\-Safe race:root
+T{
+\fBtwalk_r\fP()
+T}	Безвредность в нитях	MT\-Safe race:root
+T{
+\fBtdestroy\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4. Функции \fBtdestroy\fP() и \fBtwalk_r\fP()
+являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+Функции \fBtwalk\fP() передаётся указатель на корень, а остальные функции
+ожидают указатель на переменную, которая указывает на корень.
+.PP
+Функция \fBtdelete\fP() освобождает память, которая необходима для хранения
+элемента в дереве. Пользователь отвечает за освобождение памяти,
+использованной для хранения соответствующих данных.
+.PP
+Программа в примере зависит от того, что \fBtwalk\fP() больше не ссылается на
+узел после вызова пользовательской функции с аргументом «endorder» или
+«leaf». Это работает с реализацией библиотеки GNU, но этого нет в
+документации System V.
+.SH ПРИМЕР
+Приведённая ниже программа вставляет двенадцать случайных чисел в двоичное
+дерево, в котором повторяющиеся числа удаляются, а затем печатает их по
+порядку.
+.PP
+.EX
+#define _GNU_SOURCE     /* для объявления tdestroy() */
+#include <search.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+
+static void *root = NULL;
+
+static void *
+xmalloc(unsigned n)
+{
+    void *p;
+    p = malloc(n);
+    if (p)
+        return p;
+    fprintf(stderr, "недостаточно памяти\en");
+    exit(EXIT_FAILURE);
+}
+
+static int
+compare(const void *pa, const void *pb)
+{
+    if (*(int *) pa < *(int *) pb)
+        return \-1;
+    if (*(int *) pa > *(int *) pb)
+        return 1;
+    return 0;
+}
+
+static void
+action(const void *nodep, VISIT which, int depth)
+{
+    int *datap;
+
+    switch (which) {
+    case preorder:
+        break;
+    case postorder:
+        datap = *(int **) nodep;
+        printf("%6d\en", *datap);
+        break;
+    case endorder:
+        break;
+    case leaf:
+        datap = *(int **) nodep;
+        printf("%6d\en", *datap);
+        break;
+    }
+}
+
+int
+main(void)
+{
+    int i, *ptr;
+    void *val;
+
+    srand(time(NULL));
+    for (i = 0; i < 12; i++) {
+        ptr = xmalloc(sizeof(int));
+        *ptr = rand() & 0xff;
+        val = tsearch((void *) ptr, &root, compare);
+        if (val == NULL)
+            exit(EXIT_FAILURE);
+        else if ((*(int **) val) != ptr)
+            free(ptr);
+    }
+    twalk(root, action);
+    tdestroy(root, free);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbsearch\fP(3), \fBhsearch\fP(3), \fBlsearch\fP(3), \fBqsort\fP(3)

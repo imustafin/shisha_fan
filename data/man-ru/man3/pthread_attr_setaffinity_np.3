@@ -1,0 +1,110 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_ATTR_SETAFFINITY_NP 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_attr_setaffinity_np, pthread_attr_getaffinity_np \-
+изменяет/возвращает атрибут увязывания ЦП из объекта атрибутов нити
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_attr_setaffinity_np(pthread_attr_t *\fP\fIattr\fP\fB,\fP
+\fB                   size_t \fP\fIcpusetsize\fP\fB, const cpu_set_t *\fP\fIcpuset\fP\fB);\fP
+\fBint pthread_attr_getaffinity_np(const pthread_attr_t *\fP\fIattr\fP\fB,\fP
+\fB                   size_t \fP\fIcpusetsize\fP\fB, cpu_set_t *\fP\fIcpuset\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_attr_setaffinity_np\fP() изменяет атрибут маски увязывания
+ЦП в объекте атрибутов нити, на который указывает \fIattr\fP, в значение
+\fIcpuset\fP. Данным атрибутом определяется маска увязывания ЦП у нити,
+созданной с учётом объекта атрибутов нити \fIattr\fP.
+.PP
+Функция \fBpthread_attr_getaffinity_np\fP() возвращает атрибут маски увязывания
+ЦП из объекта атрибутов нити, на который указывает \fIattr\fP, в буфер на
+который указывает \fIcpuset\fP.
+.PP
+В аргументе \fIcpusetsize\fP указывается длина буфера (в байтах), на который
+указывает \fIcpuset\fP. Обычно, этот аргумент должен задаваться как
+\fIsizeof(cpu_set_t)\fP.
+.PP
+Дополнительную информацию по маскам увязывания ЦП смотрите в
+\fBsched_setaffinity\fP(2). Описание набора макросов, которые можно
+использовать для просмотра и изменения наборов ЦП, смотрите в \fBCPU_SET\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+.\" cpumask_t
+.\" The raw sched_getaffinity() system call returns the size (in bytes)
+.\" of the cpumask_t type.
+(\fBpthread_attr_setaffinity_np\fP()) В \fIcpuset\fP указан ЦП, который находится
+вне набора поддерживаемых ядром (в параметре сборки ядра \fBCONFIG_NR_CPUS\fP
+определён диапазон для набора, поддерживаемого типом данных ядра, который
+используется для представления наборов ЦП).
+.TP 
+\fBEINVAL\fP
+(\fBpthread_attr_getaffinity_np\fP()) ЦП в маске увязывания из объекта
+атрибутов нити, на который указывает \fIattr\fP, находится вне диапазона,
+задаваемого \fIcpusetsize\fP (т. е., \fIcpuset\fP/\fIcpusetsize\fP слишком мал).
+.TP 
+\fBENOMEM\fP
+(\fBpthread_attr_setaffinity_np\fP()) Невозможно выделить память.
+.SH ВЕРСИИ
+Эти функции определены в glibc начиная с версии 2.3.4.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw30 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_attr_setaffinity_np\fP(),
+\fBpthread_attr_getaffinity_np\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции являются не стандартизированными расширениями GNU, о чём
+свидетельствует наличие суффикса «_np» (nonportable).
+.SH ЗАМЕЧАНИЯ
+В glibc 2.3.3 версии этих функций не имеют аргумента \fIcpusetsize\fP. Вместо
+него размер набора ЦП, передаваемый используемым системным вызовам, всегда
+равен \fIsizeof(cpu_set_t)\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsched_setaffinity\fP(2), \fBpthread_attr_init\fP(3),
+\fBpthread_setaffinity_np\fP(3), \fBcpuset\fP(7), \fBpthreads\fP(7)

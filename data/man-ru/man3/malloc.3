@@ -1,0 +1,232 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 19:00:59 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Clarification concerning realloc, iwj10@cus.cam.ac.uk (Ian Jackson), 950701
+.\" Documented MALLOC_CHECK_, Wolfram Gloger (wmglo@dent.med.uni-muenchen.de)
+.\" 2007-09-15 mtk: added notes on malloc()'s use of sbrk() and mmap().
+.\"
+.\" FIXME . Review http://austingroupbugs.net/view.php?id=374
+.\" to see what changes are required on this page.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MALLOC 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+malloc, free, calloc, realloc \- распределяет и освобождает динамическую
+память
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBvoid *malloc(size_t \fP\fIsize\fP\fB);\fP
+\fBvoid free(void \fP\fI*ptr\fP\fB);\fP
+\fBvoid *calloc(size_t \fP\fInmemb\fP\fB, size_t \fP\fIsize\fP\fB);\fP
+\fBvoid *realloc(void \fP\fI*ptr\fP\fB, size_t \fP\fIsize\fP\fB);\fP
+\fBvoid *reallocarray(void \fP\fI*ptr\fP\fB, size_t \fP\fInmemb\fP\fB, size_t \fP\fIsize\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc (смотрите
+\fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBreallocarray\fP():
+.ad l
+_GNU_SOURCE
+    Начиная с glibc 2.29:
+        _DEFAULT_SOURCE
+    В glibc 2.28 и старее:
+        _GNU_SOURCE
+.ad
+.SH ОПИСАНИЕ
+.PP
+.\" glibc does this:
+Функция \fBmalloc\fP() распределяет \fIsize\fP байтов и возвращает указатель на
+распределённую память. \fIПамять при этом не инициализируется\fP. Если значение
+\fIsize\fP равно 0, то \fBmalloc\fP() возвращает или NULL, или уникальный
+указатель, который можно без опасений передавать \fBfree\fP().
+.PP
+Функция \fBfree\fP() освобождает место в памяти, указанное в \fIptr\fP, которое
+должно быть получено ранее вызовом функции \fBmalloc\fP(), \fBcalloc\fP() или
+\fBrealloc\fP(). Иначе (или если вызов \fIfree(ptr)\fP уже выполнялся) дальнейшее
+поведение не определено. Если значение \fIptr\fP равно NULL, то не выполняется
+никаких действий.
+.PP
+.\" glibc does this:
+Функция \fBсalloc\fP() распределяет память для массива размером \fInmemb\fP
+элементов по \fIsize\fP байтов каждый и возвращает указатель на распределённую
+память. Данные в выделенной памяти при этом обнуляются. Если значение
+\fInmemb\fP или \fIsize\fP равно 0, то \fBcalloc\fP() возвращает NULL или уникальный
+указатель, который можно без опасений передавать \fBfree\fP(). Если
+перемножение \fInmemb\fP и \fIsize\fP приводит к целочисленному переполнению, то
+\fBcalloc\fP() возвращает ошибку. Это отличает её от \fBmalloc\fP(), которая не
+обнаруживает целочисленное переполнение и возвращает блок памяти
+неправильного размера:
+.PP
+.in +4n
+.EX
+malloc(nmemb * size);
+.EE
+.in
+.PP
+Функция \fBrealloc\fP() меняет размер блока памяти, на который указывает
+\fIptr\fP, на размер, равный \fIsize\fP байт. Содержимое памяти не будет изменено
+от начала области в пределах наименьшего из старого и нового размеров. Если
+новый размер больше старого, то добавленная память \fIне\fP будет
+инициализирована. Если значение \fIptr\fP равно NULL, то вызов эквивалентен
+\fImalloc(size)\fP для всех значений \fIsize\fP; если значение \fIsize\fP равно нулю
+и \fIptr\fP не равно NULL, то вызов эквивалентен \fIfree(ptr)\fP. Если только
+значение \fIptr\fP не равно NULL, то должно быть возвращено ранее полученное
+значение от \fBmalloc\fP(), \fBcalloc\fP() или \fBrealloc\fP(). Если область была
+перемещена, то выполняется \fIfree(ptr)\fP.
+.PP
+Функция \fBreallocarray\fP() изменяет размер блока памяти, на который указывает
+\fIptr\fP, таким образом, чтобы он смог вместить массив из \fInmemb\fP элементов,
+каждый из которых занимает \fIsize\fP байт. Она эквивалентна вызову
+.PP
+.in +4n
+    realloc(ptr, nmemb * size);
+.in
+.PP
+Однако в отличие от вызова \fBrealloc\fP(), функция \fBreallocarray\fP() безопасно
+завершается ошибкой в случае возникновения переполнения умножения. Если это
+происходит, то \fBreallocarray\fP() возвращает NULL, присваивает \fIerrno\fP
+значение \fBENOMEM\fP и оставляет первоначальный блок памяти в неизменном виде.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBmalloc\fP() и \fBcalloc\fP() возвращают указатель на распределённую
+память, выровненную должным образом для любого встроенного типа. При ошибке
+возвращается NULL. Значение NULL также может быть получено при успешной
+работе вызова \fBmalloc\fP(), если значение \fIsize\fP равно нулю, или \fBcalloc\fP()
+— если значение \fInmemb\fP или \fIsize\fP равно нулю.
+.PP
+Функция \fBfree\fP() ничего не возвращает.
+.PP
+Функция \fBrealloc\fP() возвращает указатель на новую распределённую память,
+выровненную должным образом для любого встроенного типа. Возвращаемый
+указатель может отличаться от \fIptr\fP, или равняться NULL, если запрос
+завершился с ошибкой. Если значение \fIsize\fP было равно нулю, то возвращается
+либо NULL, либо указатель, который может быть передан \fBfree\fP(). Если
+\fBrealloc\fP() завершилась с ошибкой, то начальный блок памяти остаётся
+нетронутым: он не освобождается или перемещается.
+.PP
+При успешном выполнении функция \fBreallocarray\fP() возвращает указатель на
+новую выделенную память. При ошибке возвращается NULL, а первоначальный блок
+памяти не изменяется.
+.SH ОШИБКИ
+Функции \fBcalloc\fP(), \fBmalloc\fP(), \fBrealloc\fP() и \fBreallocarray\fP() могут
+завершаться со следующей ошибкой:
+.TP 
+\fBENOMEM\fP
+Не хватает памяти. Вероятно приложение достигнут лимит \fBRLIMIT_AS\fP или
+\fBRLIMIT_DATA\fP, описанный в \fBgetrlimit\fP(2).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw20 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmalloc\fP(),
+\fBfree\fP(),
+.br
+\fBcalloc\fP(),
+\fBrealloc\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBmalloc\fP(), \fBfree\fP(), \fBcalloc\fP(), \fBrealloc\fP(): POSIX.1\-2001,
+POSIX.1\-2008, C89, C99.
+.PP
+Функция \fBreallocarray\fP() является нестандартным расширением, впервые
+появилась в OpenBSD 5.6 и FreeBSD 11.0.
+.SH ЗАМЕЧАНИЯ
+По умолчанию, Linux придерживается оптимистичной стратегии распределения
+памяти. Это означает, что когда \fBmalloc\fP() возвращает значение не NULL, то
+нет никаких гарантий, что память в действительности доступна. Если
+обнаружится, что системе не хватает памяти, то один или несколько процессов
+будут завершены OOM. Дополнительную информацию можно получить из описания
+\fI/proc/sys/vm/overcommit_memory\fP и \fI/proc/sys/vm/oom_adj\fP в \fBproc\fP(5) и
+файле из исходного кода ядра Linux
+\fIDocumentation/vm/overcommit\-accounting.rst\fP.
+.PP
+Обычно, \fBmalloc\fP() выделяет память из кучи и подгоняет размер кучи
+соответствующим образом с помощью \fBsbrk\fP(2). Если выделяемый блок памяти
+больше чем \fBMMAP_THRESHOLD\fP байт, то реализация \fBmalloc\fP() в glibc
+выделяет память с помощью \fBmmap\fP(2) в виде частного анонимного
+отображения. По умолчанию, значение \fBMMAP_THRESHOLD\fP равно 128\ КБ, но его
+можно изменить с помощью \fBmallopt\fP(3). До Linux 4.7 на выделения,
+выполняемые с помощью \fBmmap\fP(2), не влияет ограничитель ресурса
+\fBRLIMIT_DATA\fP; начиная с Linux 4.7 это ограничение также применяется к
+выделениям, созданным с помощью \fBmmap\fP(2).
+.PP
+Внутри данных функций для защиты от повреждений выделяемых структур данных
+управления памятью, используются мьютексы. В многонитевых приложениях, в
+которых нити одновременно выделяют и освобождают память, может возникнуть
+конфликт за обладание этими мьютексами. Чтобы расширить обработку выделения
+памяти в многонитевых приложениях библиотека glibc создаёт дополнительные
+\fIобласти выделения памяти\fP (memory allocation arenas), если обнаруживается
+конфликт. Каждая область представляет собой большой кусок памяти, который
+внутренне выделен системой (с помощью \fBbrk\fP(2) или \fBmmap\fP(2)) и
+управляется своими собственными мьютексами.
+.PP
+Стандарт SUSv2 требует, чтобы функции \fBmalloc\fP(), \fBcalloc\fP() и
+\fBrealloc\fP() при ошибках присваивали значение \fBENOMEM\fP переменной
+\fIerrno\fP. Glibc допускает, что это уже реализовано (и версии glibc этих
+функций делают это); если вы используете свою реализацию функции malloc,
+которая не изменяет \fIerrno\fP, то некоторые функции библиотеки могут
+закончить работу с ошибкой без указания причины в \fIerrno\fP.
+.PP
+Аварийные ситуации в \fBmalloc\fP(), \fBcalloc\fP(), \fBrealloc\fP() или \fBfree\fP()
+почти всегда связаны с повреждением кучи, например, с переполнением больших
+распределённых участков памяти или освобождением одного и того же указателя
+дважды.
+.PP
+Реализация \fBmalloc\fP() настраивается с помощью переменных окружения;
+подробности смотрите в \fBmallopt\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+.\" http://g.oswego.edu/dl/html/malloc.html
+.\" A Memory Allocator - by Doug Lea
+.\"
+.\" http://www.bozemanpass.com/info/linux/malloc/Linux_Heap_Contention.html
+.\" Linux Heap, Contention in free() - David Boreham
+.\"
+.\" http://www.citi.umich.edu/projects/linux-scalability/reports/malloc.html
+.\" malloc() Performance in a Multithreaded Linux Environment -
+.\"     Check Lever, David Boreham
+.\"
+.ad l
+.nh
+\fBvalgrind\fP(1), \fBbrk\fP(2), \fBmmap\fP(2), \fBalloca\fP(3), \fBmalloc_get_state\fP(3),
+\fBmalloc_info\fP(3), \fBmalloc_trim\fP(3), \fBmalloc_usable_size\fP(3),
+\fBmallopt\fP(3), \fBmcheck\fP(3), \fBmtrace\fP(3), \fBposix_memalign\fP(3)
+.PP
+Информацию о реализации в библиотеке GNU C смотрите в
+.UR https://sourceware.org/glibc/wiki/MallocInternals
+.UE .

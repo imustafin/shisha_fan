@@ -1,0 +1,103 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 18:42:59 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PUTS 3 2018\-04\-30 GNU "Руководство программиста Linux"
+.SH ИМЯ
+fputc, fputs, putc, putchar, puts \- вывод символов и строк
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+.PP
+\fBint fputc(int \fP\fIc\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.PP
+\fBint fputs(const char *\fP\fIs\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.PP
+\fBint putc(int \fP\fIc\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.PP
+\fBint putchar(int \fP\fIc\fP\fB);\fP
+.PP
+\fBint puts(const char *\fP\fIs\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBfputc\fP() записывает символ \fIc\fP, преобразуя его в \fIunsigned
+char\fP, в \fIstream\fP.
+.PP
+Функция \fBfputs\fP() записывает строку \fIs\fP в \fIstream\fP без добавления
+нулевого байта (\(aq\e0\(aq).
+.PP
+Функция \fBputc\fP() является эквивалентом \fBfputc\fP() за исключением того, что
+она может быть реализована в качестве макрокоманды, которая проверяет
+\fIstream\fP более одного раза.
+.PP
+Вызов \fBputchar(\fP\fIc\fP\fB)\fP является эквивалентом \fBputc(\fP\fIc\fP\fB,
+\fP\fIstdout\fP\fB)\fP.
+.PP
+Функция \fBputs\fP() записывает строку \fIs\fP и завершающую новую строку в
+\fIstdout\fP.
+.PP
+Вызовы описанных здесь функций могут быть смешаны между собой и вызовами
+других функций вывода из библиотеки \fIstdio\fP в пределах одного и того же
+потока вывода.
+.PP
+Для неблокирующих аналогов, см. \fBunlocked_stdio\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBfputc\fP(), \fBputc\fP()  and \fBputchar\fP() возвращают записанный
+символ, преобразованный из \fIunsigned char\fP в \fIint\fP или \fBEOF\fP в случае
+ошибки.
+.PP
+Функции \fBputs\fP() и \fBfputs\fP() возвращают неотрицательное число в случае
+успеха или \fBEOF\fP в случае ошибки.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw25 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfputc\fP(),
+\fBfputs\fP(),
+\fBputc\fP(),
+\fBputchar\fP(),
+\fBputs\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99.
+.SH ДЕФЕКТЫ
+Не рекомендуется смешивать вызовы функций вывода из библиотеки \fIstdio\fP с
+вызовами \fBwrite\fP(2) для файлового дескриптора, связанного с одним и тем же
+потоком вывода. Результаты могут быть непредсказуемыми и, очень вероятно,
+совсем не теми, что вы ожидали увидеть.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBwrite\fP(2), \fBferror\fP(3), \fBfgets\fP(3), \fBfopen\fP(3), \fBfputwc\fP(3),
+\fBfputws\fP(3), \fBfseek\fP(3), \fBfwrite\fP(3), \fBputwchar\fP(3), \fBscanf\fP(3),
+\fBunlocked_stdio\fP(3)

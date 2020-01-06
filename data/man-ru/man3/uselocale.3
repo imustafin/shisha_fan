@@ -1,0 +1,99 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH USELOCALE 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+uselocale \- задаёт/получает локаль для вызывающей нити
+.SH ОБЗОР
+.nf
+\fB#include <locale.h>\fP
+.PP
+\fBlocale_t uselocale(locale_t \fP\fInewloc\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBuselocale\fP():
+.PD 0
+.RS 4
+.TP 
+Начиная с glibc 2.10:
+_XOPEN_SOURCE\ >=\ 700
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.PD
+.SH ОПИСАНИЕ
+Функция \fBuselocale\fP() задаёт текущую локаль в вызвавшей нити и возвращает
+использовавшуюся локаль в этой нити ранее. После успешного выполнения
+\fBuselocale\fP() любые выполняемые нитью вызовы функций, зависящие от локали,
+будут работать с учётом установленной локали \fInewloc\fP.
+.PP
+В аргументе \fInewloc\fP можно указать одно из следующих значений:
+.TP 
+Обработчик, полученный от вызовов \fBnewlocale\fP(3) или \fBduplocale\fP(3)
+Текущая локаль вызвавшей нити будет равна указанной локали.
+.TP 
+Специальный обработчик объекта локали \fBLC_GLOBAL_LOCALE\fP
+Текущая локаль вызвавшей нити будет равна глобальной локали, установленной
+\fBsetlocale\fP(3).
+.TP 
+\fI(locale_t) 0\fP
+Текущая локаль вызвавшей нити останется неизменной (и текущая локаль
+возвращается как результат работы функции).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBuselocale\fP() возвращает обработчик локали, который
+был установлен предыдущим вызовом \fBuselocale\fP() в этой нити или
+\fBLC_GLOBAL_LOCALE\fP, если это первый вызов. При ошибке возвращается
+\fI(locale_t)\ 0\fP, а \fIerrno\fP присваивается код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Значение \fInewloc\fP не указывает на допустимый объект локали.
+.SH ВЕРСИИ
+Функция \fBuselocale\fP() впервые появилась в версии 2.3 библиотеки GNU C.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В отличие от \fBsetlocale\fP(3), \fBuselocale\fP() не позволяет выборочно
+указывать отдельные категории локали. Для задания локали, которая отличается
+только отдельными категориями от текущей локали, используйте вызов
+\fBduplocale\fP(3) и \fBnewlocale\fP(3) для получения эквивалента объекта локали
+для текущей локали и измените желаемые категории в этом объекте.
+.SH ПРИМЕР
+Смотрите \fBnewlocale\fP(3) и \fBduplocale\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlocale\fP(1), \fBduplocale\fP(3), \fBfreelocale\fP(3), \fBnewlocale\fP(3),
+\fBsetlocale\fP(3), \fBlocale\fP(5), \fBlocale\fP(7)

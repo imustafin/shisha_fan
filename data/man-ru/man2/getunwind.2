@@ -1,0 +1,94 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Red Hat, Inc. All Rights Reserved.
+.\" Written by Marcela Maslanova <mmaslano@redhat.com>
+.\" and Copyright 2013, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETUNWIND 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getunwind \- копирует раскрученные данные в буфер вызывающего
+.SH ОБЗОР
+.nf
+\fB#include <syscall.h>\fP
+\fB#include <linux/unwind.h>\fP
+.PP
+\fBlong getunwind(void \fP\fI*buf\fP\fB, size_t \fP\fIbuf_size\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: в glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+\fIЗамечание: этот вызов устарел.\fP
+.PP
+Специальный системный вызов \fBgetunwind\fP() для IA\-64 копирует раскрученные
+данные кадра вызова ядра в буфер, указанный в \fIbuf\fP, и возвращает размер
+раскрученных данных; эти данные описывают шлюзовую страницу (gate page, код
+ядра, который отображается в адресное пространство пользователя).
+.PP
+Размер буфера \fIbuf\fP задаётся в \fIbuf_size\fP. Данные копируются только, если
+значение \fIbuf_size\fP больше или равно размеру раскрученных данных и значение
+\fIbuf\fP не равно NULL; в противном случае, данные не копируются и вызов
+завершается без ошибки, возвращая размер, который необходим для хранения
+раскрученных данных.
+.PP
+В начале раскрученных данных содержится таблица раскрутки. После неё
+хранится связанная с раскруткой информация в произвольном порядке. В таблице
+раскрутки содержатся записи в следующем виде:
+.PP
+.in +4n
+.EX
+u64 start;    (64\-битный адрес начала функции)
+u64 end;      (64\-битный адрес конца функции)
+u64 info;     (смещение относительно BUF на раскрученную информацию)
+.EE
+.in
+.PP
+Запись, у которой значение \fIstart\fP равно нулю, указывает на конец
+таблицы. Подробности формата смотрите в руководстве \fIIA\-64 Software
+Conventions and Runtime Architecture\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBgetunwind\fP() возвращает размер раскрученных
+данных. При ошибке возвращается \-1, а в \fIerrno\fP задаётся причина ошибки.
+.SH ОШИБКИ
+Вызов \fBgetunwind\fP() завершается с ошибкой \fBEFAULT\fP, если раскрученную
+информацию невозможно сохранить в пространство, указанное \fIbuf\fP.
+.SH ВЕРСИИ
+Данный системный вызов доступен в Linux начиная с версии 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный системный вызов есть только в Linux и доступен только на архитектуре
+IA\-64.
+.SH ЗАМЕЧАНИЯ
+Данный системный вызов устарел. Современным способом получить раскрученные
+данные ядра является работа через \fBvdso\fP(7).
+.PP
+В glibc нет обёрточной функции для данного системного вызова; в
+маловероятном случае, когда вам нужно использовать его, используйте
+\fBsyscall\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetauxval\fP(3)

@@ -1,0 +1,81 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C), 1995, Graeme W. Wilford. (Wilf.)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Wed Jun 14 16:10:28 BST 1995 Wilf. (G.Wilford@@ee.surrey.ac.uk)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RE_COMP 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+re_comp, re_exec \- функции BSD для регулярных выражений
+.SH ОБЗОР
+\fB#define _REGEX_RE_COMP\fP
+.br
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <regex.h>\fP
+.PP
+\fBchar *re_comp(const char *\fP\fIregex\fP\fB);\fP
+.PP
+\fBint re_exec(const char *\fP\fIstring\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функция \fBre_comp\fP() используется для компиляции регулярного выражения
+(завершающегося null), указанного \fIregex\fP. Скомпилированный шаблон
+располагается в статической области (буфере шаблонов), которая
+перезаписывается заново каждый раз при вызове \fBre_comp\fP(). Если значение
+\fIregex\fP равно NULL, то действие не выполняется и содержимое буфера шаблонов
+остаётся неизменным.
+.PP
+Функция \fBre_exec\fP() используется для проверки совпадения строки
+(завершается null), на которую указывает \fIstring\fP, с предварительно
+скомпилированным \fIregex\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBre_comp\fP() возвращает NULL при успешной компиляции \fIregex\fP или
+указатель на соответствующее сообщение об ошибке.
+.PP
+Функция \fBre_exec\fP() возвращает 1 при совпадении или 0, если совпадения не
+было.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw20 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBre_comp\fP(),
+\fBre_exec\fP()
+T}	Безвредность в нитях	MT\-Unsafe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Эти функции устарели; вместо них следует использовать функции, описанные в
+\fBregcomp\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBregcomp\fP(3), \fBregex\fP(7), руководство по регулярным выражениям GNU

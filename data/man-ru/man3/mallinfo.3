@@ -1,0 +1,281 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) 2012 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MALLINFO 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+mallinfo — возвращает информацию о выделении памяти
+.SH ОБЗОР
+\fB#include <malloc.h>\fP
+.PP
+\fBstruct mallinfo mallinfo(void);\fP
+.SH ОПИСАНИЕ
+Функция \fBmallinfo\fP() возвращает копию структуры, содержащую информацию о
+выделении памяти, выполненной функцией \fBmalloc\fP(3) и связанными с ней
+функциями.
+.PP
+Заметим, что не все приложения видимы в \fBmallinfo\fP(); смотрите ДЕФЕКТЫ и
+вместо неё используйте \fBmalloc_info\fP(3).
+.PP
+Возвращаемая структура определена следующим образом:
+.PP
+.in +4n
+.EX
+struct mallinfo {
+    int arena;     /* не размеченная область памяти выделенная под кучу (в байтах) */
+    int ordblks;   /* Количество свободных блоков */
+    int smblks;    /* Количество свободных блоков fastbin */
+    int hblks;     /* Количество размеченных областей */
+    int hblkhd;    /* Пространство, выделенное в размеченных областях (в байтах) */
+    int usmblks;   /* Максимум общей выделенной области (в байтах) */
+    int fsmblks;   /* Пространство в освобожденных fastbin блоках (в байтах) */
+    int uordblks;  /* Общее выделенное пространство (в байтах) */
+    int fordblks;  /* Общее свободное пространство (в байтах) */
+    int keepcost;  /* Верхнее пространство, которое можно освободить (в байтах) */
+};
+.EE
+.in
+.PP
+Поля структуры \fImallinfo\fP содержат следующую информацию:
+.TP  10
+\fIarena\fP
+Общее количество памяти, выделенной способами отличными от \fBmmap\fP(2)
+(т. е., память, выделенная из кучи). Это значение включает используемые и
+свободные блоки из списка.
+.TP 
+\fIordblks\fP
+Количество обычных (т. е., не fastbin) свободных блоков.
+.TP 
+\fIsmblks\fP
+Количество свободных блоков fastbin (смотрите \fBmallopt\fP(3)).
+.TP 
+\fIhblks\fP
+Количество блоков, выделенных с помощью \fBmmap\fP(2) на настоящий момент
+(смотрите описание \fBM_MMAP_THRESHOLD\fP в \fBmallopt\fP(3)).
+.TP 
+\fIhblkhd\fP
+Количество байт в блоках, выделенных с помощью \fBmmap\fP(2) на настоящий
+момент.
+.TP 
+\fIusmblks\fP
+«Верхняя отметка» выделенного пространства, то есть максимальное количество
+места, которое когда\-либо выделялось. Это поле изменяется только в
+окружениях без нитей.
+.TP 
+\fIfsmblks\fP
+Общее количество байт в свободных блоках fastbin.
+.TP 
+\fIuordblks\fP
+Общее количество байт, в используемой выделенной памяти.
+.TP 
+\fIfordblks\fP
+Общее количество байт в свободных блоках.
+.TP 
+\fIkeepcost\fP
+.\" .SH VERSIONS
+.\" Available already in glibc 2.0, possibly earlier
+Общее количество освобождаемого свободного пространства сверху кучи. Это
+значение является максимальным количеством байт, которое будет освобождено
+\fBmalloc_trim\fP(3) в идеальном случае (т. е., без учёта ограничений по
+выравниванию и т. п.).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw28
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmallinfo\fP()
+T}	Безвредность в нитях	MT\-Unsafe init const:mallopt
+.TE
+.sp 1
+Функция \fBmallinfo\fP() получила бы доступ к некоторым глобальным внутренним
+переменным. Если изменять их не атомарно, то можно нарушить целостность
+результатов. Идентификатор \fImallopt\fP в \fIconst:mallopt\fP означает, что
+\fBmallopt\fP() изменяла бы глобальные внутренние переменные атомарно, что
+делает \fBmallinfo\fP() достаточно безопасной, но другие изменения могут
+выполняться не атомарно.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция не определена в стандартах POSIX и С. Подобная функция
+существует на многих производных от System V и была определена в SVID.
+.SH ДЕФЕКТЫ
+.\" FIXME . http://sourceware.org/bugzilla/show_bug.cgi?id=208
+.\" See the 24 Aug 2011 mail by Paul Pluzhnikov:
+.\"     "[patch] Fix mallinfo() to accumulate results for all arenas"
+.\" on libc-alpha@sourceware.org
+\fBИнформация возвращается только для главной области выделяемой памяти.\fP
+Выделение в других областях не учитываются. Альтернативой, возвращаемой
+информацию о других частях, являются \fBmalloc_stats\fP(3) и \fBmalloc_info\fP(3).
+.PP
+Поля структуры \fImallinfo\fP имеют тип \fIint\fP. Однако, из\-за того, что
+некоторые внутренние значения поддержки (bookkeeping) могут иметь тип
+\fIlong\fP, возвращаемые значения могут быть близкими к нулю и поэтому не
+точны.
+.SH ПРИМЕР
+Программа, представленная ниже, вызывает \fBmallinfo\fP() для получения
+статистики по выделенной памяти перед и после выделения и освобождения
+нескольких блоков памяти. Статистика выдаётся в стандартный вывод.
+.PP
+Первые два параметра командной строки определяют количество и размер блоков,
+которые будут выделены с помощью \fBmalloc\fP(3).
+.PP
+В оставшихся трёх аргументах задаётся какие из выделенных блоков должны быть
+освобождены с помощью \fBfree\fP(3). Эти аргументы необязательны и определяют
+(по порядку): размер шага, используемый в цикле освобождения блоков (по
+умолчанию 1, что приводит к освобождению всех блоков диапазона); порядковая
+позиция первого освобождаемого блока (по умолчанию 0, то есть первый
+выделенный блок); номер, на единицу больший порядковой позиции последнего
+освобождаемого блока (по умолчанию, на единицу больше, чем максимальное
+количество блоков). Если эти аргументы не указаны, то по умолчанию
+освобождаются все выделенные блоки.
+.PP
+Пример запуска программы, где память выделяется 1000 раз по 100 байт, а
+затем освобождается каждый второй выделенный блок:
+.PP
+.in +4n
+.EX
+$ \fB./a.out 1000 100 2\fP
+============== перед выделением блоков ==============
+всего неотображённых байт (часть):       0
+кол\-во свободных порций (ordblks):            1
+кол\-во свободных блоков fastbin (smblks):     0
+кол\-во отображённых областей (hblks):           0
+байтов в отображённых областях (hblkhd):      0
+максимальное количество выделенного пространства (usmblks):  0
+свободных байт в fastbins (fsmblks): 0
+полное выделенное пространство (uordblks):      0
+полное свободное пространство (fordblks):           0
+освобождаемых блоков сверху (keepcost):   0
+
+============== после выделения блоков ==============
+всего неотображённых байт (часть):       1
+кол\-во свободных порций (ordblks):            0
+кол\-во свободных блоков fastbin (smblks):     0
+кол\-во отображённых областей (hblks):           0
+байтов в отображённых областях (hblkhd):      0
+максимальное количество выделенного пространства (usmblks):  0
+свободных байт в fastbins (fsmblks): 0
+полное выделенное пространство (uordblks):      104000
+полное свободное пространство (fordblks):           31168
+освобождаемых блоков сверху (keepcost):   31168
+
+============== после освобождения блоков ==============
+всего неотображённых байт (часть):       135168
+кол\-во свободных порций (ordblks):            501
+кол\-во свободных блоков fastbin (smblks):     0
+кол\-во отображённых областей (hblks):           0
+байтов в отображённых областях (hblkhd):      0
+максимальное количество выделенного пространства (usmblks):  0
+свободных байт в fastbins (fsmblks): 0
+полное выделенное пространство (uordblks):      52000
+полное свободное пространство (fordblks):           83168
+освобождаемых блоков сверху (keepcost):   31168
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <malloc.h>
+#include <stdlib.h>
+#include <string.h>
+
+static void
+display_mallinfo(void)
+{
+    struct mallinfo mi;
+
+    mi = mallinfo();
+
+    printf("всего неотображённых байт (часть):       %d\en", mi.arena);
+    printf("кол\-во свободных порций (ordblks):            %d\en", mi.ordblks);
+    printf("кол\-во свободных блоков fastbin (smblks):     %d\en", mi.smblks);
+    printf("кол\-во отображённых областей (hblks):           %d\en", mi.hblks);
+    printf("байтов в отображённых областях (hblkhd):      %d\en", mi.hblkhd);
+    printf("максимальное количество выделенного пространства (usmblks):  %d\en", mi.usmblks);
+    printf("свободных байт в fastbins (fsmblks): %d\en", mi.fsmblks);
+    printf("полное выделенное пространство (uordblks):      %d\en", mi.uordblks);
+    printf("полное свободное пространство (fordblks):           %d\en", mi.fordblks);
+    printf("освобождаемых блоков сверху (keepcost):   %d\en", mi.keepcost);
+}
+
+int
+main(int argc, char *argv[])
+{
+#define MAX_ALLOCS 2000000
+    char *alloc[MAX_ALLOCS];
+    int numBlocks, j, freeBegin, freeEnd, freeStep;
+    size_t blockSize;
+
+    if (argc < 3 || strcmp(argv[1], "\-\-help") == 0) {
+        fprintf(stderr, "%s кол\-во блоков размер блока [шаг освобождения"
+                "[начало освобождения [конец освобождения]]]\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    numBlocks = atoi(argv[1]);
+    blockSize = atoi(argv[2]);
+    freeStep = (argc > 3) ? atoi(argv[3]) : 1;
+    freeBegin = (argc > 4) ? atoi(argv[4]) : 0;
+    freeEnd = (argc > 5) ? atoi(argv[5]) : numBlocks;
+
+    printf("============== перед выделением блоков ==============\en");
+    display_mallinfo();
+
+    for (j = 0; j < numBlocks; j++) {
+        if (numBlocks >= MAX_ALLOCS) {
+            fprintf(stderr, "слишком много выделений\en");
+            exit(EXIT_FAILURE);
+        }
+
+        alloc[j] = malloc(blockSize);
+        if (alloc[j] == NULL) {
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    printf("\en============== после выделения блоков ==============\en");
+    display_mallinfo();
+
+    for (j = freeBegin; j < freeEnd; j += freeStep)
+        free(alloc[j]);
+
+    printf("\en============== после освобождения блоков ==============\en");
+    display_mallinfo();
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBmmap\fP(2), \fBmalloc\fP(3), \fBmalloc_info\fP(3), \fBmalloc_stats\fP(3),
+\fBmalloc_trim\fP(3), \fBmallopt\fP(3)

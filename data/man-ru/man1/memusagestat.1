@@ -1,0 +1,78 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2013, Peter Schiffer <pschiffe@redhat.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MEMUSAGESTAT 1 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+memusagestat \-  генерирует график по данным профилирования памяти
+.SH ОБЗОР
+\fBmemusagestat\fP [\fIпараметр\fP]... \fIфайл_с_данными\fP [\fIфайл_результата\fP]
+.SH ОПИСАНИЕ
+Программа \fBmemusagestat\fP создаёт файл в формате PNG с графическим
+представлением данных профилирования памяти из файла \fIdatafile\fP; этот файл
+генерируется с программой \fBmemusage\fP(1), запущенной с параметром \fI\-d\fP (или
+\fI\-\-data\fP).
+.PP
+Красной линией на графике показывается использование кучи (выделяемой
+памяти), а зелёной — использование стека. По оси Х отражается количество
+вызовов функций работы с памятью (если указан параметр \fI\-t\fP) или время.
+.SH ПАРАМЕТРЫ
+.TP 
+\fB\-o\ \fP\fIфайл\fP,\ \fB\-\-output=\fP\fIфайл\fP
+Имя выходного файла.
+.TP 
+\fB\-s\ \fP\fIстрока\fP,\ \fB\-\-string=\fP\fIстрока\fP
+Использовать \fIстроку\fP в качестве заголовка графика.
+.TP 
+\fB\-t\fP,\ \fB\-\-time\fP
+По оси X — время (а не количество вызовов функций).
+.TP 
+\fB\-T\fP,\ \fB\-\-total\fP
+Также строить график общего потребления памяти.
+.TP 
+\fB\-x\ \fP\fIsize\fP,\ \fB\-\-x\-size=\fP\fIsize\fP
+Рисовать график шириной в \fIsize\fP пикселов.
+.TP 
+\fB\-y\ \fP\fIsize\fP,\ \fB\-\-y\-size=\fP\fIsize\fP
+Рисовать график высотой в \fIsize\fP пикселов.
+.TP 
+\fB\-?\fP,\ \fB\-\-help\fP
+Показать сообщение об использовании и завершить работу.
+.TP 
+\fB\-\-usage\fP
+Показать короткое сообщение об использовании и завершить работу.
+.TP 
+\fB\-V\fP,\ \fB\-\-version\fP
+Показать информацию о версии и завершить работу.
+.SH ДЕФЕКТЫ
+Сообщения об ошибках доступны по адресу
+.UR http://www.gnu.org/software/libc/bugs.html
+.UE
+.SH ПРИМЕР
+Смотрите \fBmemusage\fP(1).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmemusage\fP(1), \fBmtrace\fP(1)

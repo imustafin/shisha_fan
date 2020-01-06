@@ -1,0 +1,60 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2009 Intel Corporation, Author Andi Kleen
+.\" Some sentences copied from comments in arch/x86/kernel/msr.c
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MSR 4 2009\-03\-31 Linux "Руководство программиста Linux"
+.SH ИМЯ
+msr \- устройство доступа к MSR процессоров x86
+.SH ОПИСАНИЕ
+Устройство \fI/dev/cpu/CPUNUM/msr\fP предоставляет интерфейс для чтения и
+записи в специальные регистры модели (model\-specific registers, MSR)
+процессоров x86. В \fICPUNUM\fP задаётся номер процессора для доступа; номера
+перечислены в \fI/proc/cpuinfo\fP.
+.PP
+Доступ к регистру выполняется открытием файла и переходом в файле по
+смещению под номером нужного MSR; чтение и запись производится порциями по 8
+байт. Ввод/вывод более 8 байт выполняется несколькими операциями чтения или
+записи в нужный регистр.
+.PP
+Файл доступен на чтение и запись только пользователю \fIroot\fP или членам
+группы \fIroot\fP.
+.SH ЗАМЕЧАНИЯ
+Драйвер \fImsr\fP автоматически не загружается. В модульных ядрах нужно
+выполнить загрузку явно:
+.PP
+.in +4n
+.EX
+$ modprobe msr
+.EE
+.in
+.PP
+.SH "СМОТРИТЕ ТАКЖЕ"
+Intel Corporation Intel 64 and IA\-32 Architectures Software Developer's
+Manual Volume 3B Appendix B for an overview of the Intel CPU MSRs.

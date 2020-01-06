@@ -1,0 +1,131 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified 1993-07-24 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 2001-04-01 by aeb
+.\" Modified 2003-07-23 by aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH USLEEP 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+usleep \- задерживает выполнение на определенное количество микросекунд
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBint usleep(useconds_t \fP\fIusec\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBusleep\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Начиная с glibc 2.12:
+.nf
+(_XOPEN_SOURCE\ >=\ 500) && ! (_POSIX_C_SOURCE\ >=\ 200809L)
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версиях glibc <= 2.19: */ _BSD_SOURCE
+.TP  4
+.fi
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+До glibc 2.12: _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.PD
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBusleep\fP() приостанавливает выполнение вызвавшей нити на (не менее)
+\fIusec\fP микросекунд. Остановка может продлиться слегка больше при большой
+загруженности системы, из\-за, собственно, времени обработки этого вызова или
+из\-за неточности хода системных часов.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBusleep\fP() возвращается 0. При ошибке возвращается
+\-1, а в \fIerrno\fP содержится код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINTR\fP
+Прервано сигналом; см. \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Значение \fIusec\fP больше или равно 1000000 (в тех системах, где это считается
+ошибкой).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBusleep\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.3BSD, POSIX.1\-2001. В POSIX.1\-2001 эта функция объявлена устаревшей;
+вместо неё используйте \fBnanosleep\fP(2). Из POSIX.1\-2008 описание \fBusleep\fP()
+было удалено.
+.PP
+В первоначальной реализации BSD и в glibc до версии 2.2.2 типом
+возвращаемого значение функции был \fIvoid\fP. В версии POSIX возвращается
+\fIint\fP, и этот прототип также используется в glibc начиная с версии 2.2.2.
+.PP
+Возвращаемая ошибка \fBEINVAL\fP определена только в SUSv2 и POSIX.1\-2001.
+.SH ЗАМЕЧАНИЯ
+Тип \fIuseconds_t\fP является беззнаковым целым типом, способным хранить целые
+числа в диапазоне [0,1000000]. Программы будут иметь более высокий уровень
+переносимости на другие ОС, если они никогда не будут явно упоминать этот
+тип. Используйте
+.PP
+.in +4n
+.EX
+#include <unistd.h>
+\&...
+    unsigned int usecs;
+\&...
+    usleep(usecs);
+.EE
+.in
+.PP
+Взаимодействие этой функции с сигналом \fBSIGALRM\fP и другими функциями
+таймера, такими как \fBalarm\fP(2), \fBsleep\fP(3), \fBnanosleep\fP(2),
+\fBsetitimer\fP(2), \fBtimer_create\fP(2), \fBtimer_delete\fP(2),
+\fBtimer_getoverrun\fP(2), \fBtimer_gettime\fP(2), \fBtimer_settime\fP(2),
+\fBualarm\fP(3), не определено.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBalarm\fP(2), \fBgetitimer\fP(2), \fBnanosleep\fP(2), \fBselect\fP(2),
+\fBsetitimer\fP(2), \fBsleep\fP(3), \fBualarm\fP(3), \fBtime\fP(7)

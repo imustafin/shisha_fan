@@ -1,0 +1,392 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1990, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     $Id: recv.2,v 1.3 1999/05/13 11:33:38 freitag Exp $
+.\"
+.\" Modified Sat Jul 24 00:22:20 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Oct 22 17:45:19 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1998,1999 by Andi Kleen
+.\" 2001-06-19 corrected SO_EE_OFFENDER, bug report by James Hawtin
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RECV 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+recv, recvfrom, recvmsg \- принимает сообщение из сокета
+.SH ОБЗОР
+.\" .B #include <sys/uio.h>
+.\" .br
+.nf
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <sys/socket.h>\fP
+.PP
+\fBssize_t recv(int \fP\fIsockfd\fP\fB, void *\fP\fIbuf\fP\fB, size_t \fP\fIlen\fP\fB, int \fP\fIflags\fP\fB);\fP
+.PP
+\fBssize_t recvfrom(int \fP\fIsockfd\fP\fB, void *\fP\fIbuf\fP\fB, size_t \fP\fIlen\fP\fB, int \fP\fIflags\fP\fB,\fP
+\fB                 struct sockaddr *\fP\fIsrc_addr\fP\fB, socklen_t *\fP\fIaddrlen\fP\fB);\fP
+.PP
+\fBssize_t recvmsg(int \fP\fIsockfd\fP\fB, struct msghdr *\fP\fImsg\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системные вызовы \fBrecv\fP(), \fBrecvfrom\fP() и \fBrecvmsg\fP() используются для
+получения сообщений из сокета. Они могут использоваться для получения
+данных, независимо от того, является ли сокет ориентированным на соединения
+или нет. В этой странице сперва описаны общие свойства всех трёх системных
+вызовов, а затем описываются различия между ними.
+.PP
+Вызов \fBrecv\fP() отличается от \fBread\fP(2) только наличием аргумента
+\fIflags\fP. Если значение \fIflags\fP равно нулю, то вызов \fBrecv\fP() эквивалентен
+\fBread\fP(2) (но смотрите ЗАМЕЧАНИЯ). Также, вызов
+.PP
+    recv(sockfd, buf, len, flags);
+.PP
+эквивалентен
+.PP
+    recvfrom(sockfd, buf, len, flags, NULL, NULL);
+.PP
+При успешном выполнении все три вызова возвращают длину сообщения. Если
+сообщение слишком длинное и не поместилось в предоставленный буфер, лишние
+байты могут быть отброшены, в зависимости от типа сокета, на котором
+принимаются сообщения.
+.PP
+Если на сокете не доступно ни одного сообщения, то обсуждаемые вызовы
+ожидают их прибытия, если сокет не помечен как неблокирующий
+(см. \fBfcntl\fP(2)), в противном случае возвращается значение \-1, а внешняя
+переменная \fIerrno\fP устанавливается в значение \fBEAGAIN\fP или
+\fBEWOULDBLOCK\fP. Все эти вызовы обычно сразу возвращают все доступные данные
+вплоть до запрошенного объема, а не ждут, пока появятся данные полной
+запрошенной длины.
+.PP
+Для определения появления новых данных в сокете приложение может
+использовать \fBselect\fP(2), \fBpoll\fP(2) или \fBepoll\fP(7).
+.SS "Аргумент флагов"
+Аргумент \fIflags\fP формируется с помощью объединения логической операцией ИЛИ
+одного или более следующих значений:
+.TP 
+\fBMSG_CMSG_CLOEXEC\fP (только для \fBrecvmsg\fP(); начиная с Linux 2.6.23)
+Установить флаг close\-on\-exec для файлового дескриптора, полученного через
+доменный файловый дескриптор UNIX, с помощью операции \fBSCM_RIGHTS\fP (описана
+в \fBunix\fP(7)). Этот флаг полезен по тем же причинам что и флаг \fBO_CLOEXEC\fP
+у \fBopen\fP(2).
+.TP 
+\fBMSG_DONTWAIT\fP (начиная с Linux 2.2)
+Включить неблокирующий режим. Если операция могла бы привести к блокировке,
+возвращается \fBEAGAIN\fP или \fBEWOULDBLOCK\fP. Такое поведение подобно заданию
+флага \fBO_NONBLOCK\fP (в \fBfcntl\fP(2) операцией \fBF_SETFL\fP), но отличие в том,
+что \fBMSG_DONTWAIT\fP указывается в вызове, а \fBO_NONBLOCK\fP задаётся в
+описании открытого файла (смотрите \fBopen\fP(2)), что влияет на все нити
+вызывающего процесса, а также на другие процессы, у которых есть файловые
+дескрипторы, ссылающиеся на это описание открытого файла.
+.TP 
+\fBMSG_ERRQUEUE\fP (начиная с Linux 2.2)
+Указание этого флага позволяет получить из очереди ошибок сокета
+накопившиеся ошибки. Ошибка передаётся в вспомогательном сообщении тип
+которого зависит от протокола (для IPv4 это \fBIP_RECVERR\fP). Вызывающий
+должен предоставить буфер достаточного размера. Дополнительная информация
+приведена в \fBcmsg\fP(3) и \fBip\fP(7). Содержимое исходного пакета, который
+привёл к ошибке, передаётся в виде обычных данных через
+\fImsg_iovec\fP. Исходный адрес назначения датаграммы, которая привела к
+ошибке, передаётся через \fImsg_name\fP.
+.IP
+Ошибка передаётся в виде структуры \fIsock_extended_err\fP:
+.IP
+.in +4n
+.EX
+#define SO_EE_ORIGIN_NONE    0
+#define SO_EE_ORIGIN_LOCAL   1
+#define SO_EE_ORIGIN_ICMP    2
+#define SO_EE_ORIGIN_ICMP6   3
+
+struct sock_extended_err
+{
+    uint32_t ee_errno;   /* номер ошибки */
+    uint8_t  ee_origin;  /* источник её происхождения */
+    uint8_t  ee_type;    /* тип */
+    uint8_t  ee_code;    /* код */
+    uint8_t  ee_pad;     /* заполнение для выравнивания */
+    uint32_t ee_info;    /* дополнительная информация */
+    uint32_t ee_data;    /* прочие данные */
+    /* далее могут содержаться ещё данные */
+};
+
+struct sockaddr *SO_EE_OFFENDER(struct sock_extended_err *);
+.EE
+.in
+.IP
+В \fIee_errno\fP содержится значение \fIerrno\fP для ожидающей ошибки. В
+\fIee_origin\fP содержится источник происхождения ошибки. Смысл остальных полей
+зависит от протокола. Макрос \fBSOCK_EE_OFFENDER\fP возвращает указатель на
+адрес сетевого объекта, породившего ошибку. Если этот адрес неизвестен, то
+поле \fIsa_family\fP структуры \fIsockaddr\fP содержит значение \fBAF_UNSPEC\fP, а
+прочие поля структуры \fIsockaddr\fP не определены. Содержимое пакета,
+вызвавшего ошибку, передаётся в виде обычных данных.
+.IP
+Для локальных ошибок адрес не передаётся (это можно выяснить, проверив поле
+\fIcmsg_len\fP структуры \fIcmsghdr\fP). Для ошибок при приёме устанавливается
+флаг \fBMSG_ERRQUEUE\fP в \fImsghdr\fP. После того, как ошибка передана программе,
+следующая ошибка в очереди ошибок становится ожидающей ошибкой и передается
+программе при следующей операции на сокете.
+.TP 
+\fBMSG_OOB\fP
+Этот флаг запрашивает приём внеполосных данных, которые в противном случае
+не были бы получены в обычном потоке данных. Некоторые протоколы помещают
+данные повышенной срочности в начало очереди с обычными данными, и поэтому
+этот флаг не может использоваться с такими протоколами.
+.TP 
+\fBMSG_PEEK\fP
+Этот флаг заставляет выбрать данные из начала очереди приёма, но не удалять
+их оттуда. Таким образом, последующий вызов вернёт те же самые данные.
+.TP 
+\fBMSG_TRUNC\fP (начиная с Linux 2.2)
+.\" commit 9f6f9af7694ede6314bed281eec74d588ba9474f
+Для «сырых» данных (\fBAF_PACKET\fP), дейтаграмм Интернета (начиная с Linux
+2.4.27/2.6.8), netlink (начиная с Linux 2.6.22) и дейтаграмм UNIX (начиная с
+Linux 3.4) возвращает реальную длину пакета или дейтаграммы, даже если она
+была больше, чем предоставленный буфер.
+.IP
+Описание использования с потоковым сокетами Интернета смотрите в \fBtcp\fP(7).
+.TP 
+\fBMSG_WAITALL\fP (начиная с Linux 2.2)
+.\"
+Этим флагом включается блокирование операции до полной обработки
+запроса. Однако, этот вызов всё равно может вернуть меньше данных, чем было
+запрошено, если был пойман сигнал, произошла ошибка или разрыв соединения,
+или если начали поступать данные другого типа, не того, который был
+сначала. Этот флаг не влияет на датаграммные сокеты.
+.SS recvfrom()
+Вызов \fBrecvfrom\fP() помещает принятое сообщение в буфер \fIbuf\fP. Вызывающий
+должен указать размер буфера в \fIlen\fP.
+.PP
+.\" (Note: for datagram sockets in both the UNIX and Internet domains,
+.\" .I src_addr
+.\" is filled in.
+.\" .I src_addr
+.\" is also filled in for stream sockets in the UNIX domain, but is not
+.\" filled in for stream sockets in the Internet domain.)
+.\" [The above notes on AF_UNIX and AF_INET sockets apply as at
+.\" Kernel 2.4.18. (MTK, 22 Jul 02)]
+Если значение \fIsrc_addr\fP не равно NULL, и в нижележащем протоколе
+используется адрес источника сообщения, то адрес источника помещается в
+буфер, указанный в \fIsrc_addr\fP. В этом случае \fIaddrlen\fP является
+аргументом\-результатом. Перед вызовом ему должно быть присвоено значение
+длины буфера, связанного с \fIsrc_addr\fP. При возврате \fIaddrlen\fP обновляется
+и содержит действительный размер адреса источника. Возвращаемый адрес
+обрезается, если предоставленный буфер слишком мал; в этом случае \fIaddrlen\fP
+будет содержать значение большее, чем указывалось в вызове.
+.PP
+.\"
+Если вызывающему адрес источника не нужен, то значение \fIsrc_addr\fP и
+\fIaddrlen\fP должно быть равно NULL.
+.SS recv()
+Вызов \fBrecv\fP(), обычно, используется только на \fIсоединённом\fP сокете
+(смотрите \fBconnect\fP(2)). Он идентичен вызову:
+.PP
+.\"
+    recvfrom(fd, buf, len, flags, NULL, 0);
+.SS recvmsg()
+Для минимизации количества передаваемых аргументов в вызов \fBrecvmsg\fP()
+используется структура \fImsghdr\fP. Она определена в \fI<sys/socket.h>\fP
+следующим образом:
+.PP
+.in +4n
+.EX
+struct iovec {                    /* массив элементов приёма/передачи */
+    void  *iov_base;              /* начальный адрес */
+    size_t iov_len;               /* количество передаваемых байт */
+};
+
+struct msghdr {
+    void         *msg_name;       /* необязательный адрес */
+    socklen_t     msg_namelen;    /* размер адреса */
+    struct iovec *msg_iov;        /* массив приёма/передачи */
+    size_t        msg_iovlen;     /* количество элементов в msg_iov */
+    void         *msg_control;    /* вспомогательные данные,
+                                     см. ниже */
+    size_t        msg_controllen; /* размер буфера вспомогательных
+                                     данных */
+    int           msg_flags;      /* флаги принятого сообщения */
+};
+.EE
+.in
+.PP
+Поле \fImsg_name\fP указывает на выделенный вызывающим буфер, который
+используется для возврата адреса источника, если сокет не
+соединён. Вызывающий должен указать в \fImsg_namelen\fP размер этого буфера
+перед вызовом; при успешном выполнении вызова в \fImsg_namelen\fP будет
+содержаться длина возвращаемого адреса. Если приложению не нужно знать адрес
+источника, то в \fImsg_name\fP можно указать NULL.
+.PP
+В полях \fImsg_iov\fP и \fImsg_iovlen\fP описываются место приёма/передачи,
+обсуждаемые в \fBreadv\fP(2).
+.PP
+Поле \fImsg_control\fP длиной \fImsg_controllen\fP указывает на буфер для других
+сообщений, связанных с управлением протоколом или на буфер для разнообразных
+вспомогательных данных. При вызове \fBrecvmsg\fP() в поле \fImsg_controllen\fP
+должен указываться размер доступного буфера, чей адрес передан в
+\fImsg_control\fP; при успешном выполнении вызова в этом параметре будет
+находиться длина последовательности контрольных сообщений.
+.PP
+Сообщения имеют следующий вид:
+.PP
+.in +4n
+.EX
+struct cmsghdr {
+    size_t cmsg_len;    /* счетчик байтов данных с заголовком
+                           (тип — socklen_t в POSIX) */
+    int    cmsg_level;  /* начальный протокол */
+    int    cmsg_type;   /* тип, зависящий от протокола */
+/* после
+   unsigned char cmsg_data[]; */
+};
+.EE
+.in
+.PP
+К вспомогательным данным нужно обращаться только с помощью макросов,
+определённых в \fBcmsg\fP(3).
+.PP
+Например, этот механизм вспомогательных данных используется в Linux для
+передачи расширенных ошибок, флагов IP и файловых дескрипторов через
+доменные сокеты Unix.
+.PP
+При возврате из \fBrecvmsg\fP() устанавливается значение поля \fImsg_flags\fP в
+\fImsghdr\fP. Оно может содержать несколько флагов:
+.TP 
+\fBMSG_EOR\fP
+означает конец записи: возвращённые данные заканчивают запись (обычно
+используется вместе с сокетами типа \fBSOCK_SEQPACKET\fP).
+.TP 
+\fBMSG_TRUNC\fP
+означает, что хвостовая часть датаграммы была отброшена, потому что
+датаграмма была больше, чем предоставленный буфер.
+.TP 
+\fBMSG_CTRUNC\fP
+означает, что часть управляющих данных была отброшена из\-за недостатка места
+в буфере вспомогательных данных.
+.TP 
+\fBMSG_OOB\fP
+возвращается для индикации, что получены курируемые или внеполосные данные.
+.TP 
+\fBMSG_ERRQUEUE\fP
+означает, что были получены не данные, а расширенное сообщение об ошибке из
+очереди ошибок сокета.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Эти вызовы возвращают количество принятых байт или \-1, если произошла
+ошибка. В случае ошибки в \fIerrno\fP записывается код ошибки.
+.PP
+Когда ответная сторона потока выполняет корректное отключение (shutdown), то
+возвращается 0 (обычный возврат «конец файла»).
+.PP
+В датаграмных сокетах некоторых доменов (например, доменах UNIX и Internet)
+разрешены датаграммы нулевой длины. При получении такой датаграммы
+возвращается значение 0.
+.PP
+Также значение 0 может возвращаться, если запрошенное количество принимаемых
+байт из потокового сокета равно 0.
+.SH ОШИБКИ
+Здесь представлено несколько стандартных ошибок, возвращаемых с уровня
+сокетов. Могут также появиться другие ошибки, возвращаемые из
+соответствующих протокольных модулей; их описание находится в
+соответствующих справочных страницах.
+.TP 
+\fBEAGAIN\fP или \fBEWOULDBLOCK\fP
+.\" Actually EAGAIN on Linux
+Сокет помечен как неблокируемый, а операция приёма привела бы к блокировке,
+или установлено время ожидания данных и это время истекло до получения
+данных. Согласно POSIX.1 в этом случае может возвращаться любая ошибка и не
+требуется, чтобы эти константы имели одинаковое значение, поэтому
+переносимое приложение должно проверить оба случая.
+.TP 
+\fBEBADF\fP
+Аргумент \fIsockfd\fP содержит неверный файловый дескриптор.
+.TP 
+\fBECONNREFUSED\fP
+Удалённый узел отказался устанавливать сетевое соединение (обычно потому,
+что там не работает запрошенная служба).
+.TP 
+\fBEFAULT\fP
+Указатель на приёмный буфер указывает вне адресного пространства процесса.
+.TP 
+\fBEINTR\fP
+Приём данных был прерван сигналом, а данные ещё не были доступны; смотрите
+\fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+.\" e.g., msg_namelen < 0 for recvmsg() or addrlen < 0 for recvfrom()
+Передан неверный аргумент.
+.TP 
+\fBENOMEM\fP
+Не удалось выделить память для \fBrecvmsg\fP().
+.TP 
+\fBENOTCONN\fP
+Сокет, связанный с протоколом, ориентированным на соединение, не был
+соединён (см. \fBconnect\fP(2) и \fBaccept\fP(2)).
+.TP 
+\fBENOTSOCK\fP
+Файловый дескриптор \fIsockfd\fP указывает не на каталог.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.4BSD (эти интерфейсы впервые появились в
+4.2BSD).
+.PP
+В POSIX.1 описаны только флаги \fBMSG_OOB\fP, \fBMSG_PEEK\fP и \fBMSG_WAITALL\fP.
+.SH ЗАМЕЧАНИЯ
+Если ожидает дейтаграмма нулевой длины, то \fBread\fP(2) и \fBrecv\fP() с нулевым
+аргументом \fIflags\fP работают по\-разному. В этом случае \fBread\fP(2) ничего не
+делает (дейтаграмма продолжает ждать), а \fBrecv\fP() обрабатывает ожидающую
+дейтаграмму.
+.PP
+Тип \fIsocklen_t\fP появился из POSIX. Также смотрите \fBaccept\fP(2).
+.PP
+.\" POSIX.1-2001, POSIX.1-2008
+.\" glibc bug raised 12 Mar 2006
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=2448
+.\" The problem is an underlying kernel issue: the size of the
+.\" __kernel_size_t type used to type this field varies
+.\" across architectures, but socklen_t is always 32 bits.
+В соответствие с POSIX.1 поле \fImsg_controllen\fP структуры \fImsghdr\fP должно
+иметь тип \fIsocklen_t\fP, но в настоящее время в glibc оно имеет тип
+\fIsize_t\fP.
+.PP
+В \fBrecvmmsg\fP(2) можно найти информацию о специальном системном вызове
+Linux, который можно использовать для приёма нескольких датаграмм за один
+вызов.
+.SH ПРИМЕР
+Пример использования \fBrecvfrom\fP() показан в \fBgetaddrinfo\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfcntl\fP(2), \fBgetsockopt\fP(2), \fBread\fP(2), \fBrecvmmsg\fP(2), \fBselect\fP(2),
+\fBshutdown\fP(2), \fBsocket\fP(2), \fBcmsg\fP(3), \fBsockatmark\fP(3), \fBip\fP(7),
+\fBipv6\fP(7), \fBsocket\fP(7), \fBtcp\fP(7), \fBudp\fP(7), \fBunix\fP(7)

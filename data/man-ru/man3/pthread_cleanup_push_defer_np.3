@@ -1,0 +1,110 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_CLEANUP_PUSH_DEFER_NP 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_cleanup_push_defer_np, pthread_cleanup_pop_restore_np \- добавляет и
+удаляет очищающие обработчики отмены нити при сохранении типа отмены
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBvoid pthread_cleanup_push_defer_np(void (*\fP\fIroutine\fP\fB)(void *),\fP
+\fB                                   void *\fP\fIarg\fP\fB);\fP
+\fBvoid pthread_cleanup_pop_restore_np(int \fP\fIexecute\fP\fB);\fP
+.fi
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBpthread_cleanup_push_defer_np\fP(), \fBpthread_cleanup_pop_defer_np\fP():
+.RS 4
+_GNU_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Эти функции работают также как \fBpthread_cleanup_push\fP(3) и
+\fBpthread_cleanup_pop\fP(3), за исключением различий, описанных в данной
+справочной странице.
+.PP
+Подобно \fBpthread_cleanup_push\fP(3), \fBpthread_cleanup_push_defer_np\fP()
+добавляет \fIroutine\fP в стек нити к очищающим обработчикам отмены. Кроме
+этого, она также сохраняет текущий тип отмены нити, и изменяет тип отмены на
+«отложенный» (смотрите \fBpthread_setcanceltype\fP(3)); это гарантирует, что
+очистка при отмене произойдёт даже, если тип отмены нити перед вызовом был
+«асинхронный».
+.PP
+Подобно \fBpthread_cleanup_pop\fP(3), \fBpthread_cleanup_pop_restore_np\fP()
+удаляет самый верхний очищающий обработчик из стека нити очищающих
+обработчиков отмены. Кроме этого, она восстанавливает тип отмены нити в
+значение на момент, когда была вызвана \fBpthread_cleanup_push_defer_np\fP().
+.PP
+Вызывающий должен гарантировать, что вызовы этих функций будут попарными
+внутри одной функции, и на одном лексическом уровне вложенности. Остальные
+ограничения описаны в \fBpthread_cleanup_push\fP(3).
+.PP
+Последовательность вызовов:
+.PP
+.in +4n
+.EX
+pthread_cleanup_push_defer_np(routine, arg);
+pthread_cleanup_pop_restore_np(execute);
+.EE
+.in
+.PP
+эквивалентна (но короче и эффективнее):
+.PP
+.\" As far as I can see, LinuxThreads reverses the two substeps
+.\" in the push and pop below.
+.in +4n
+.EX
+int oldtype;
+
+pthread_cleanup_push(routine, arg);
+pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, &oldtype);
+\&...
+pthread_setcanceltype(oldtype, NULL);
+pthread_cleanup_pop(execute);
+.EE
+.in
+.\" SH VERSIONS
+.\" Available since glibc 2.0
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции являются не стандартизированными расширениями GNU, о чём
+свидетельствует наличие суффикса «_np» (nonportable).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthread_cancel\fP(3), \fBpthread_cleanup_push\fP(3),
+\fBpthread_setcancelstate\fP(3), \fBpthread_testcancel\fP(3), \fBpthreads\fP(7)

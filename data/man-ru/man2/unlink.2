@@ -1,0 +1,216 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Ian Jackson
+.\"             and Copyright (C) 2006, 2014 Michael Kerrisk.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-09-08 by Arnt Gulbrandsen <agulbra@troll.no>
+.\" Modified 1997-01-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2001-05-17 by aeb
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UNLINK 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+unlink, unlinkat \- удаляет имя и, возможно, файл, на который оно ссылается
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBint unlink(const char *\fP\fIpathname\fP\fB);\fP
+
+\fB#include <fcntl.h>           \fP/* определения констант of AT_* */
+\fB#include <unistd.h>\fP
+.PP
+\fBint unlinkat(int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBunlinkat\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_ATFILE_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+\fBunlink\fP() удаляет имя из файловой системы. Если это имя было последней
+ссылкой на файл и больше нет процессов, которые держат этот файл открытым,
+данный файл удаляется и место, которое он занимает, освобождается для
+дальнейшего использования.
+.PP
+Если имя было последней ссылкой на файл, но какие\-либо процессы всё ещё
+держат этот файл открытым, файл будет оставлен, пока последний файловый
+дескриптор, указывающий на него, не будет закрыт.
+.PP
+Если имя указывает на символьную ссылку, то будет удалена ссылка.
+.PP
+Если имя указывает на сокет, FIFO или устройство, то имя будет удалено, но
+процессы, которые открыли любой из этих объектов могут продолжать его
+использовать.
+.SS unlinkat()
+Системный вызов \fBunlinkat\fP() работает также как \fBunlink\fP() или \fBrmdir\fP(2)
+(в зависимости от того, есть ли флаг \fBAT_REMOVEDIR\fP во \fIflags\fP), за
+исключением случаев, описанных здесь.
+.PP
+Если в \fIpathname\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBunlink\fP() и \fBrmdir\fP(2)).
+.PP
+Если в \fIpathname\fP задан относительный путь и \fIdirfd\fP равно специальному
+значению \fBAT_FDCWD\fP, то \fIpathname\fP рассматривается относительно текущего
+рабочего каталога вызывающего процесса (как \fBunlink\fP() и \fBrmdir\fP(2)).
+.PP
+Если в \fIpathname\fP задан абсолютный путь, то \fIdirfd\fP игнорируется.
+.PP
+Аргумент \fIflags\fP представляет собой битовую маску, значение которой может
+быть 0, или объединённым значением флагов с помощью OR, определяющих
+операцию \fBunlinkat\fP(). В настоящее время определён только один флаг:
+.TP 
+\fBAT_REMOVEDIR\fP
+По умолчанию, \fBunlinkat\fP() выполняет действие, эквивалентное \fBunlink\fP() с
+параметром \fIpathname\fP. Если указан флаг \fBAT_REMOVEDIR\fP, то выполняется
+действие, эквивалентное \fBrmdir\fP(2) с параметром \fIpathname\fP.
+.PP
+Смотрите в \fBopenat\fP(2) объяснение необходимости \fBunlinkat\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Для эффективного UID процесса нет прав на запись в каталог, содержащийся в
+\fIpathname\fP, или в одном из каталогов в \fIpathname\fP не разрешён поиск
+(смотрите также \fBpath_resolution\fP(7)).
+.TP 
+\fBEBUSY\fP
+Файл \fIpathname\fP не может быть удалён, так как он ещё используется системой
+или другим процессом; например, это точка монтирования или его создал клиент
+NFS для представления активной, но пока безымянной inode («NFS silly
+renamed»).
+.TP 
+\fBEFAULT\fP
+Аргумент \fIpathname\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEIO\fP
+Произошла ошибка ввода\-вывода.
+.TP 
+\fBEISDIR\fP
+\fIpathname\fP ссылается на каталог. (Этого значения нет в POSIX, возвращается
+в Linux начиная с 2.1.132.)
+.TP 
+\fBELOOP\fP
+Во время определения \fIpathname\fP встретилось слишком много символьных
+ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+\fIpathname\fP слишком длинен.
+.TP 
+\fBENOENT\fP
+Компонент \fIpathname\fP не существует, является повисшей ссылкой или
+\fIpathname\fP пуст.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOTDIR\fP
+Компонент пути, использованный как каталог в \fIpathname\fP, в действительности
+таковым не является.
+.TP 
+\fBEPERM\fP
+Система не разрешает удаление каталогов или для удаления каталогов требуются
+права, которыми не обладает вызвавший процесс. (Этот код ошибки предусмотрен
+в POSIX; как описано выше, в Linux в этом случае возвращается \fBEISDIR\fP.)
+.TP 
+\fBEPERM\fP (только в Linux)
+Файловая система не позволяет удаление файлов.
+.TP 
+\fBEPERM\fP или \fBEACCES\fP
+На каталоге, содержащемся в \fIpathname\fP, установлен закрепляющий бит
+(\fBS_ISVTX\fP) и эффективный UID процесса не совпадает ни с UID удаляемого
+файла, ни с каталогом, в котором он содержится, и у процесса нет прав
+(Linux: нет мандата \fBCAP_FOWNER\fP).
+.TP 
+\fBEPERM\fP
+Файл для удаления помечен как неизменяемый (immutable) или только для
+добавления (смотрите \fBioctl_iflags\fP(2)).
+.TP 
+\fBEROFS\fP
+\fIpathname\fP указывает на файл в файловой системе, доступной только для
+чтения.
+.PP
+В \fBunlinkat\fP() могут возникнуть те же ошибки, что и в \fBunlink\fP() и
+\fBrmdir\fP(2). Также, в \fBunlinkat\fP() могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+\fIdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указано неверное значение флага.
+.TP 
+\fBEISDIR\fP
+Значение \fIpathname\fP ссылается на каталог и в \fIflags\fP не указан
+\fBAT_REMOVEDIR\fP.
+.TP 
+\fBENOTDIR\fP
+Значение \fIpathname\fP содержит относительный путь и \fIdirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог.
+.SH ВЕРСИИ
+Системный вызов \fBunlinkat\fP() был добавлен в ядро Linux версии 2.6.16;
+поддержка в glibc доступна с версии 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents additional error
+.\" conditions EINTR, EMULTIHOP, ETXTBSY, ENOLINK.
+\fBunlink\fP(): SVr4, 4.3BSD, POSIX.1\-2001, POSIX.1\-2008.
+.PP
+\fBunlinkat\fP(): POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.SS "Замечания по glibc"
+В старых ядрах, где \fBunlinkat\fP() отсутствует, обёрточная функция glibc
+использует \fBunlink\fP(2) или \fBrmdir\fP(2). Если \fIpathname\fP является
+относительным путём, то glibc собирает путь относительно символической
+ссылки в \fI/proc/self/fd\fP, которая соответствует аргументу \fIdirfd\fP.
+.SH ДЕФЕКТЫ
+Неточности в протоколе NFS могут приводить к неожиданному исчезновению
+файлов, которые всё ещё используются.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBrm\fP(1), \fBunlink\fP(1), \fBchmod\fP(2), \fBlink\fP(2), \fBmknod\fP(2), \fBopen\fP(2),
+\fBrename\fP(2), \fBrmdir\fP(2), \fBmkfifo\fP(3), \fBremove\fP(3),
+\fBpath_resolution\fP(7), \fBsymlink\fP(7)

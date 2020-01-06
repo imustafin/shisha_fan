@@ -1,0 +1,103 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_ATTR_SETDETACHSTATE 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_attr_setdetachstate, pthread_attr_getdetachstate \-
+изменяет/возвращает из объекта атрибутов нити атрибут отключённости
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_attr_setdetachstate(pthread_attr_t *\fP\fIattr\fP\fB, int \fP\fIdetachstate\fP\fB);\fP
+\fBint pthread_attr_getdetachstate(const pthread_attr_t *\fP\fIattr\fP\fB, int *\fP\fIdetachstate\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_attr_setdetachstate\fP() изменяет атрибут состояния
+отключённости у объекта атрибутов нити, на который указывает \fIattr\fP, на
+значение, заданное в \fIdetachstate\fP. Атрибутом состояния отключённости
+определяется, будет ли нить, созданная с объектом атрибутов нити \fIattr\fP,
+находиться в присоединяемом или отключённом состоянии.
+.PP
+В \fIdetachstate\fP можно указать следующие значения:
+.TP 
+\fBPTHREAD_CREATE_DETACHED\fP
+Нити, создаваемые с \fIattr\fP, будут созданы в отключённом состоянии.
+.TP 
+\fBPTHREAD_CREATE_JOINABLE\fP
+Нити, создаваемые с \fIattr\fP, будут созданы в присоединяемом состоянии.
+.PP
+Значением по умолчанию для атрибута состояния отключённости в
+инициализируемом объекте атрибутов нити является \fBPTHREAD_CREATE_JOINABLE\fP.
+.PP
+Функция \fBpthread_attr_getdetachstate\fP() возвращает атрибут состояния
+отключённости нити у объекта атрибутов нити, на который указывает \fIattr\fP, в
+буфер на который указывает \fIdetachstate\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+Функция \fBpthread_attr_setdetachstate\fP() может завершиться со следующей
+ошибкой:
+.TP 
+\fBEINVAL\fP
+Указано неверное значение в \fIdetachstate\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw30 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_attr_setdetachstate\fP(),
+\fBpthread_attr_getdetachstate\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Дополнительную информацию об отключённых и присоединяемых нитях смотрите в
+\fBpthread_create\fP(3).
+.PP
+Нить, созданная в присоединяемом состоянии, должна быть в последствии
+присоединена с помощью \fBpthread_join\fP(3) или отключена с помощью
+\fBpthread_detach\fP(3); смотрите \fBpthread_create\fP(3).
+.PP
+Если указать ID нити, которая была создана в отключённом состоянии в вызове
+\fBpthread_detach\fP(3) или \fBpthread_join\fP(3), то возникает ошибка.
+.SH ПРИМЕР
+Смотрите \fBpthread_attr_init\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthread_attr_init\fP(3), \fBpthread_create\fP(3), \fBpthread_detach\fP(3),
+\fBpthread_join\fP(3), \fBpthreads\fP(7)

@@ -1,0 +1,109 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Mon Mar 29 22:31:13 1993, David Metcalfe
+.\" Modified Sun Jun  6 23:27:50 1993, David Metcalfe
+.\" Modified Sat Jul 24 21:45:37 1993, Rik Faith (faith@cs.unc.edu)
+.\" Modified Sat Dec 16 15:02:59 2000, Joseph S. Myers
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ABS 3 2016\-03\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+abs, labs, llabs, imaxabs \- вычисление абсолютного значения целого числа
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint abs(int \fP\fIj\fP\fB);\fP
+\fBlong int labs(long int \fP\fIj\fP\fB);\fP
+\fBlong long int llabs(long long int \fP\fIj\fP\fB);\fP
+
+\fB#include <inttypes.h>\fP
+.PP
+\fBintmax_t imaxabs(intmax_t \fP\fIj\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBllabs\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBabs\fP() вычисляет абсолютное значение целого аргумента
+\fIj\fP. Функции \fBlabs\fP(), \fBllabs\fP() и \fBimaxabs\fP() вычисляют абсолютное
+значение аргумента \fIj\fP соответствующего типа целого.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Возвращают абсолютное значение целого аргумента в соответствующем типе
+целого.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBabs\fP(),
+\fBlabs\fP(),
+\fBllabs\fP(),
+\fBimaxabs\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" POSIX.1 (1996 edition) requires only the
+.\" .BR abs ()
+.\" function.
+POSIX.1\-2001, POSIX.1\-2008, C99, SVr4, 4.3BSD. В C89 включены только функции
+\fBabs\fP() и \fBlabs\fP; функции \fBllabs\fP() и \fBimaxabs\fP() были добавлены в C99.
+.SH ЗАМЕЧАНИЯ
+Абсолютное значение минимального отрицательного целого не определено.
+.PP
+Функция \fBllabs\fP() включена в glibc начиная с версии 2.0. Функция
+\fBimaxabs\fP() включена в glibc начиная с версии 2.1.1.
+.PP
+Чтобы объявить \fBllabs\fP(), необходимо определить \fB_ISOC99_SOURCE\fP или
+\fB_ISOC9X_SOURCE\fP (в зависимости от версии glibc) до включения любых
+стандартных заголовочных файлов.
+.PP
+По умолчанию, GCC обращается с \fBabs\fP(), \fBlabs\fP() и (начиная с GCC 3.0)
+\fBllabs\fP() и \fBimaxabs\fP() как со встроенными функциями.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcabs\fP(3), \fBceil\fP(3), \fBfabs\fP(3), \fBfloor\fP(3), \fBrint\fP(3)

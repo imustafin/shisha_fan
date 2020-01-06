@@ -1,0 +1,95 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2002 Andries Brouwer <aeb@cwi.nl>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" This replaces an earlier man page written by Walter Harms
+.\" <walter.harms@informatik.uni-oldenburg.de>.
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GSIGNAL 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+gsignal, ssignal \- программная фабрика сигналов
+.SH ОБЗОР
+.nf
+\fB#include <signal.h>\fP
+.PP
+\fBtypedef void (*sighandler_t)(int);\fP
+.PP
+\fBint gsignal(int \fP\fIsignum\fP\fB);\fP
+.PP
+\fBsighandler_t ssignal(int \fP\fIsignum\fP\fB, sighandler_t \fP\fIaction\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgsignal\fP(),
+\fBssignal\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _SVID_SOURCE
+.SH ОПИСАНИЕ
+Не используйте эти функции в Linux. Из\-за исторической ошибки, в Linux эти
+функции являются псевдонимами \fBraise\fP(3) и \fBsignal\fP(2), соответственно.
+.PP
+В остальных, System V\-подобных системах, эти функции реализуют программные
+сигналы, абсолютно отличающиеся от классических вызовов \fBsignal\fP(2) и
+\fBkill\fP(2). Функция \fBssignal\fP() определяет действие при получении
+программного сигнала с номером \fIsignum\fP,  выполняемое функцией
+\fBgsignal\fP(), и возвращает предыдущее такое действие или \fBSIG_DFL\fP. Функция
+\fBgsignal\fP() делает следующее: если для сигнала \fIsignum\fP не было определено
+действие (или оно \fBSIG_DFL\fP), то ничего не делается и возвращается 0. Если
+было определено действие \fBSIG_IGN\fP для \fIsignum\fP, то ничего не делается и
+возвращается . Иначе, действие сбрасывается в \fBSIG_DFL\fP, вызывается функция
+действия с параметром \fIsignum\fP, а также возвращается значение, возвращенное
+этой функцией. Диапазон возможных значений \fIsignum\fP различен (часто он
+равен 1\(en15 или 1\(en17).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgsignal\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBssignal\fP()
+T}	Безвредность в нитях	MT\-Safe sigintr
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции доступны в AIX, DG\-UX, HP\-UX, SCO, Solaris, Tru64. Они
+определены, как устаревшие в большинстве этих систем, и некорректны в Linux
+libc и glibc. В некоторых системах также есть функции \fBgsignal_r\fP() и
+\fBssignal_r\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBsignal\fP(2), \fBraise\fP(3)

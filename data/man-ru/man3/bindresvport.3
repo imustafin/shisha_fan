@@ -1,0 +1,105 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2007, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" and Copyright (C) 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2007-05-31, mtk: Rewrite and substantial additional text.
+.\" 2008-12-03, mtk: Rewrote some pieces and fixed some errors
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BINDRESVPORT 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+bindresvport \- привязывает сокет к привилегированному порту IP
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <netinet/in.h>\fP
+.PP
+\fBint bindresvport(int \fP\fIsockfd\fP\fB, struct sockaddr_in *\fP\fIsin\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+.PP
+.\" Glibc actually starts searching with a port # in the range 600 to 1023
+Функция \fBbindresvport\fP() используется для привязки сокета, на который
+указывает файловый дескриптор \fIsockfd\fP, к привилегированному анонимному
+порту IP, то есть произвольно выбранному порту с номером из диапазона от 512
+до 1023.
+.PP
+Если \fBbind\fP(2), вызываемый из \fBbindresvport\fP(), выполнен без ошибок, и
+значение \fIsin\fP не равно NULL, то в \fIsin\->sin_port\fP возвращается
+выделенный номер порта.
+.PP
+Значение \fIsin\fP может быть NULL; в этом случае \fIsin\->sin_family\fP неявно
+присваивается значение \fBAF_INET\fP. Однако в этом случае \fBbindresvport\fP() не
+возвращает номер порта, который был в действительности выделен (эта
+информация может быть получена позже с помощью \fBgetsockname\fP(2)).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBbindresvport\fP() возвращает 0; иначе
+возвращается \-1 и в \fIerrno\fP указывается номер возникшей ошибки.
+.SH ОШИБКИ
+Функция \fBbindresvport\fP() может завершиться с ошибкой по тем же причинам что
+и \fBbind\fP(2). Также могут возникать следующие ошибки:
+.TP 
+\fBEACCES\fP
+Вызывающий процесс не имеет прав (в Linux: вызывающий процесс не имеет
+мандата \fBCAP_NET_BIND_SERVICE\fP в пользовательском пространстве, управляющим
+своим сетевым пространством имён).
+.TP 
+\fBEADDRINUSE\fP
+Все привилегированные порты заняты.
+.TP 
+\fBEAFNOSUPPORT\fP (\fBEPFNOSUPPORT\fP в glibc 2.7 и старше)
+Значение \fIsin\fP не равно NULL и \fIsin\->sin_family\fP не равно \fBAF_INET\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l lw23.
+Интерфейс	Атрибут	Значение
+T{
+\fBbindresvport\fP()
+T}	Безвредность в нитях	T{
+.\" commit f6da27e53695ad1cc0e2a9490358decbbfdff5e5
+glibc >= 2.17: MT\-Safe
+.br
+glibc < 2.17: MT\-Unsafe
+T}
+.TE
+.PP
+До glibc 2.17 в функции \fBbindresvport\fP() используется статическая
+незащищённая блокировкой переменная, поэтому функцию нельзя использовать в
+нескольких нитях одновременно.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Нет в POSIX.1. Присутствует в BSD, Solaris и многих других системах.
+.SH ЗАМЕЧАНИЯ
+В отличие от других реализаций \fBbindresvport\fP(), версия glibc игнорирует
+любые значения, которые передал вызывающий в \fIsin\->sin_port\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbind\fP(2), \fBgetsockname\fP(2)

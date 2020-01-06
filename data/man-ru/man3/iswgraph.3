@@ -1,0 +1,70 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ISWGRAPH 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+iswgraph \- проверяет, является ли широкий символ графическим символом
+.SH ОБЗОР
+.nf
+\fB#include <wctype.h>\fP
+.PP
+\fBint iswgraph(wint_t \fP\fIwc\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBiswgraph\fP() является эквивалентом функции \fBisgraph\fP(3), но для
+широких символов. Она проверяет, является ли \fIwc\fP широким символом,
+принадлежащим классу широких символов «graph».
+.PP
+Класс широких символов «graph» является подклассом широких символов «print».
+.PP
+Будучи подклассом класса широких символов «print», «graph» не пересекается с
+классом широких символов «cntrl».
+.PP
+.\" Note: UNIX98 (susv2/xbd/locale.html) says that "graph" and "space" may
+.\" have characters in common, except U+0020. But C99 (ISO/IEC 9899:1999
+.\" section 7.25.2.1.10) says that "space" and "graph" are disjoint.
+Класс широких символов «graph» не пересекается с классом широких символов
+«space» и, следовательно, также не пересекается с его подклассом «blank».
+.PP
+Класс широких символов «graph» содержит все широкие символы класса «print»,
+за исключением символа пробела. Следовательно, класс содержит широкие
+символы классов «alnum» и «punct».
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBiswgraph\fP() возвращает ненулевое значение, если \fIwc\fP является
+широким символом, принадлежащим классу широких символов «graph». В других
+случаях возвращается 0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBiswgraph\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBiswgraph\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBisgraph\fP(3), \fBiswctype\fP(3)

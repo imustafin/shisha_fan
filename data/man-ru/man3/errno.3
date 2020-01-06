@@ -1,0 +1,580 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1996 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 5 Oct 2002, Modified by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" 	Updated for POSIX.1 2001
+.\" 2004-12-17 Martin Schulze <joey@infodrom.org>, mtk
+.\"	Removed errno declaration prototype, added notes
+.\" 2006-02-09 Kurt Wall, mtk
+.\"     Added non-POSIX errors
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ERRNO 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+errno \- код последней ошибки
+.SH ОБЗОР
+.\".PP
+.\".BI "extern int " errno ;
+\fB#include <errno.h>\fP
+.SH ОПИСАНИЕ
+.\"
+В заголовочном файле \fI<errno.h>\fP определяется целочисленная
+переменная \fIerrno\fP, которая используется системными вызовами и некоторыми
+библиотечными функциями при ошибках для указания того, что именно произошло.
+.SS errno
+Значение \fIerrno\fP имеет смысл только тогда, когда вызов возвратил ошибку (а
+именно: \-1 — для большинства системных вызовов; NULL — для большинства
+библиотечных функций); при успешном выполнении функции также \fIмогут\fP менять
+значение \fIerrno\fP. Системные вызовы и библиотечные функции никогда не
+присваивают \fIerrno\fP значение нуля.
+.PP
+Некоторые системные вызовы или библиотечные функции (например,
+\fBgetpriority\fP(2)), при успешном выполнении возвращают \-1. В этих случаях
+успешность выполнения можно отличить от ошибки присвоив \fIerrno\fP значение
+нуля перед вызовом, и затем, если вызов вернул состояние, которое может
+указывать на ошибку, проверить, равно ли \fIerrno\fP ненулевому значению.
+.PP
+.\"
+Переменная \fIerrno\fP определена в стандарте ISO C как изменяемое lvalue
+\fIint\fP и не объявляемая явно; \fIerrno\fP может быть и макросом. Переменная
+\fIerrno\fP является локальным значением нити; её изменение в одной нити не
+влияет на её значение в другой нити.
+.SS "Номера и имена ошибок"
+Все положительные числа считаются допустимыми номерами ошибок. В
+заголовочном файле \fI<errno.h>\fP определены символические имена для
+каждого номера возможной ошибки, который может появиться в \fIerrno\fP.
+.PP
+Всем названиям ошибок, определённым в POSIX.1, должны соответствовать разные
+значения, за исключением \fBEAGAIN\fP и \fBEWOULDBLOCK\fP, которые могут быть
+одинаковыми. В Linux эти они имеют одинаковое значение на всех архитектурах.
+.PP
+В разных системах UNIX символическим именам ошибок назначены разные номера,
+и это верно даже в Linux для разных архитектур. Поэтому числовые значение не
+указаны в представленном далее списке имён ошибок. Для преобразования этих
+имён в текстовые сообщения об ошибках можно использовать функции
+\fBperror\fP(3) и \fBstrerror\fP(3).
+.PP
+В любой системе Linux можно получить список всех символических имён ошибок и
+соответствующие им номера с помощью команды \fBerrno\fP(1)) (является частью
+пакета \fImoreutils\fP):
+.PP
+.in +4n
+.EX
+$ \fBerrno \-l\fP
+EPERM 1 Операция не позволена
+ENOENT 2 Нет такого файла или каталога
+ESRCH 3 Нет такого процесса
+EINTR 4 Прерван системный вызов
+EIO 5 Ошибка ввода/вывода
+\&...
+.EE
+.in
+.PP
+Команду \fBerrno\fP(1) также можно использовать для поиска ошибок по имени или
+номеру, а также по строке, входящей в описание ошибки:
+.PP
+.in +4n
+.EX
+$ \fBerrno 2\fP
+ENOENT 2 Нет такого файла или каталога
+$ \fBerrno ESRCH\fP
+ESRCH 3 Нет такого процесса
+$ \fBerrno \-s permission\fP
+EACCES 13 Отказано в доступе
+.EE
+.in
+.PP
+.\" POSIX.1 (2001 edition) lists the following symbolic error names.  Of
+.\" these, \fBEDOM\fP and \fBERANGE\fP are in the ISO C standard.  ISO C
+.\" Amendment 1 defines the additional error number \fBEILSEQ\fP for
+.\" coding errors in multibyte or wide characters.
+.\"
+.SS "Список имён ошибок"
+В представленном далее списки символических имён ошибок у некоторых есть
+некоторые примечания:
+.IP * 3
+\fIPOSIX.1\-2001\fP: Имя определено в POSIX.1\-2001, а также, если не указано
+обратного, в новых версиях POSIX.1.
+.IP *
+\fIPOSIX.1\-2008\fP: Имя определено в POSIX.1\-2008, но отсутствует в более
+старых версиях POSIX.1.
+.IP *
+\fIC99\fP: Имя определено в C99. Ниже представлен список символических имён
+ошибок, определённых в Linux:
+.TP  16
+\fBE2BIG\fP
+Слишком длинный список параметров (POSIX.1\-2001).
+.TP 
+\fBEACCES\fP
+Доступ запрещён (POSIX.1\-2001).
+.TP 
+\fBEADDRINUSE\fP
+Адрес уже используется (POSIX.1\-2001).
+.TP 
+\fBEADDRNOTAVAIL\fP
+.\" EADV is only an error on HURD(?)
+Адрес недоступен (POSIX.1\-2001).
+.TP 
+\fBEAFNOSUPPORT\fP
+Семейство адресов не поддерживается (POSIX.1\-2001).
+.TP 
+\fBEAGAIN\fP
+Ресурс временно недоступен (значение может быть равным \fBEWOULDBLOCK\fP)
+(POSIX.1\-2001).
+.TP 
+\fBEALREADY\fP
+Соединение уже выполняется (POSIX.1\-2001).
+.TP 
+\fBEBADE\fP
+Некорректный обмен.
+.TP 
+\fBEBADF\fP
+Неправильный дескриптор файла (POSIX.1\-2001).
+.TP 
+\fBEBADFD\fP
+Некорректное состояние дескриптора файла.
+.TP 
+\fBEBADMSG\fP
+Неправильное сообщение (POSIX.1\-2001).
+.TP 
+\fBEBADR\fP
+Неверный дескриптор запроса.
+.TP 
+\fBEBADRQC\fP
+Неверный код запроса.
+.TP 
+\fBEBADSLT\fP
+.\" EBFONT is defined but appears not to be used by kernel or glibc.
+Некорректный слот.
+.TP 
+\fBEBUSY\fP
+Устройство или ресурс заняты (POSIX.1\-2001).
+.TP 
+\fBECANCELED\fP
+Операция отменена (POSIX.1\-2001).
+.TP 
+\fBECHILD\fP
+Отсутствуют дочерние процессы (POSIX.1\-2001).
+.TP 
+\fBECHRNG\fP
+Номер канала вне диапазона.
+.TP 
+\fBECOMM\fP
+Ошибка связи при отправке.
+.TP 
+\fBECONNABORTED\fP
+Соединение было прервано (POSIX.1\-2001).
+.TP 
+\fBECONNREFUSED\fP
+В соединении отказано (POSIX.1\-2001).
+.TP 
+\fBECONNRESET\fP
+Соединение сброшено другой стороной (POSIX.1\-2001).
+.TP 
+\fBEDEADLK\fP
+Предотвращена тупиковая ситуация при обращении к ресурсу (POSIX.1\-2001).
+.TP 
+\fBEDEADLOCK\fP
+На большинстве архитектур является синонимом \fBEDEADLK\fP. На некоторых
+архитектурах (например, Linux MIPS, PowerPC, SPARC), это отдельный код
+ошибки «Ошибка перекрёстной блокировки файла».
+.TP 
+\fBEDESTADDRREQ\fP
+Требуется указать адрес назначения (POSIX.1\-2001).
+.TP 
+\fBEDOM\fP
+.\" EDOTDOT is defined but appears to be unused
+Математический аргумент вне области определения функции (POSIX.1, C99).
+.TP 
+\fBEDQUOT\fP
+.\" POSIX just says "Reserved"
+Превышена дисковая квота (POSIX.1\-2001).
+.TP 
+\fBEEXIST\fP
+Файл существует (POSIX.1\-2001).
+.TP 
+\fBEFAULT\fP
+Неправильный адрес (POSIX.1\-2001).
+.TP 
+\fBEFBIG\fP
+Файл слишком велик (POSIX.1\-2001).
+.TP 
+\fBEHOSTDOWN\fP
+Узел выключен.
+.TP 
+\fBEHOSTUNREACH\fP
+Узел недоступен (POSIX.1\-2001).
+.TP 
+\fBEHWPOISON\fP
+В странице памяти аппаратная ошибка.
+.TP 
+\fBEIDRM\fP
+Идентификатор удалён (POSIX.1\-2001).
+.TP 
+\fBEILSEQ\fP
+Неверный или неполный мультибайтный или широкий символ (POSIX.1, C99).
+.IP
+Этот текст взят из описания ошибки glibc; в POSIX.1 эта ошибка звучит как
+«Недопустимая последовательность байт».
+.TP 
+\fBEINPROGRESS\fP
+Операция выполняется (POSIX.1\-2001).
+.TP 
+\fBEINTR\fP
+Прерванный вызов функции (POSIX.1\-2001); смотрите \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Неверный аргумент (POSIX.1\-2001).
+.TP 
+\fBEIO\fP
+Ошибка ввода/вывода (POSIX.1\-2001).
+.TP 
+\fBEISCONN\fP
+Сокет подключён (POSIX.1\-2001).
+.TP 
+\fBEISDIR\fP
+Это каталог (POSIX.1\-2001).
+.TP 
+\fBEISNAM\fP
+Является файлом именованного типа.
+.TP 
+\fBEKEYEXPIRED\fP
+Ключ с истёкшим сроком.
+.TP 
+\fBEKEYREJECTED\fP
+Ключ был отвергнут службой.
+.TP 
+\fBEKEYREVOKED\fP
+Ключ был отозван.
+.TP 
+\fBEL2HLT\fP
+Уровень 2 остановлен.
+.TP 
+\fBEL2NSYNC\fP
+Уровень 2 не синхронизирован.
+.TP 
+\fBEL3HLT\fP
+Уровень 3 остановлен.
+.TP 
+\fBEL3RST\fP
+Уровень 3 сброшен.
+.TP 
+\fBELIBACC\fP
+Невозможно получить доступ к нужной общей библиотеке.
+.TP 
+\fBELIBBAD\fP
+Обращение к повреждённой общей библиотеке.
+.TP 
+\fBELIBMAX\fP
+Попытка компоновки с слишком большим количеством общих библиотек.
+.TP 
+\fBELIBSCN\fP
+Секция \&.lib в a.out повреждена
+.TP 
+\fBELIBEXEC\fP
+Невозможно непосредственно выполнить общую библиотеку.
+.TP 
+\fBELNRANGE\fP
+.\" ELNRNG appears to be used by a few drivers
+Число ссылок вне допустимого диапазона.
+.TP 
+\fBELOOP\fP
+Слишком много уровней символьных ссылок (POSIX.1\-2001).
+.TP 
+\fBEMEDIUMTYPE\fP
+Неправильный тип носителя.
+.TP 
+\fBEMFILE\fP
+Слишком много открытых файлов (POSIX.1\-2001). Обычно, это происходит из\-за
+превышения ограничения ресурса \fBRLIMIT_NOFILE\fP, описанного в
+\fBgetrlimit\fP(2).
+.TP 
+\fBEMLINK\fP
+Слишком много ссылок (POSIX.1\-2001).
+.TP 
+\fBEMSGSIZE\fP
+Сообщение слишком длинное (POSIX.1\-2001).
+.TP 
+\fBEMULTIHOP\fP
+.\" POSIX says "Reserved"
+Попытка Multihop (POSIX.1\-2001).
+.TP 
+\fBENAMETOOLONG\fP
+.\" ENAVAIL is defined, but appears not to be used
+Слишком длинное название файла (POSIX.1\-2001).
+.TP 
+\fBENETDOWN\fP
+Сеть не работает (POSIX.1\-2001).
+.TP 
+\fBENETRESET\fP
+Соединение прервано из\-за сети (POSIX.1\-2001).
+.TP 
+\fBENETUNREACH\fP
+Сеть недоступна (POSIX.1\-2001).
+.TP 
+\fBENFILE\fP
+Слишком много открытых файлов в системе (POSIX.1\-2001). В Linux это,
+вероятно, результат достижения ограничения \fI/proc/sys/fs/file\-max\fP
+(смотрите \fBproc\fP(5)).
+.TP 
+\fBENOANO\fP
+.\" ENOANO appears to be used by a few drivers
+Не anode.
+.TP 
+\fBENOBUFS\fP
+.\" ENOCSI is defined but appears to be unused.
+Недостаточно буферного пространства (POSIX.1 (часть XSI STREAMS)).
+.TP 
+\fBENODATA\fP
+Сообщение в голове очереди чтения STREAM отсутствует (POSIX.1\-2001).
+.TP 
+\fBENODEV\fP
+Нет такого устройства (POSIX.1\-2001).
+.TP 
+\fBENOENT\fP
+Нет такого файла или каталога (POSIX.1\-2001).
+.IP
+Обычно, эта ошибка является результатом указания несуществующего пути или
+отсутствия одного из компонентов каталогов пути, или указанный путь является
+символической ссылкой на несуществующий объект.
+.TP 
+\fBENOEXEC\fP
+Ошибка формата выполняемого файла (POSIX.1\-2001).
+.TP 
+\fBENOKEY\fP
+Требуемый ключ недоступен.
+.TP 
+\fBENOLCK\fP
+Нет доступных блокировок (POSIX.1\-2001).
+.TP 
+\fBENOLINK\fP
+.\" POSIX says "Reserved"
+Соединение было разорвано (POSIX.1\-2001).
+.TP 
+\fBENOMEDIUM\fP
+Носитель не найден.
+.TP 
+\fBENOMEM\fP
+Недостаточно места/невозможно выделить память (POSIX.1\-2001).
+.TP 
+\fBENOMSG\fP
+Нет сообщения желаемого типа (POSIX.1\-2001).
+.TP 
+\fBENONET\fP
+Машина не в сети.
+.TP 
+\fBENOPKG\fP
+Пакет не установлен.
+.TP 
+\fBENOPROTOOPT\fP
+Протокол недоступен (POSIX.1\-2001).
+.TP 
+\fBENOSPC\fP
+На устройстве не осталось места (POSIX.1\-2001).
+.TP 
+\fBENOSR\fP
+Отсутствую ресурсы STREAM (POSIX.1 (часть XSI STREAMS)).
+.TP 
+\fBENOSTR\fP
+Нет STREAM (POSIX.1 (часть XSI STREAMS)).
+.TP 
+\fBENOSYS\fP
+Функция не реализована (POSIX.1\-2001).
+.TP 
+\fBENOTBLK\fP
+Требуется блочное устройство.
+.TP 
+\fBENOTCONN\fP
+Сокет не подключён (POSIX.1\-2001).
+.TP 
+\fBENOTDIR\fP
+Не каталог (POSIX.1\-2001).
+.TP 
+\fBENOTEMPTY\fP
+.\" ENOTNAM is defined but appears to be unused.
+Каталог не пуст (POSIX.1\-2001).
+.TP 
+\fBENOTRECOVERABLE\fP
+Состояние нельзя восстановить (POSIX.1\-2008).
+.TP 
+\fBENOTSOCK\fP
+Не сокет (POSIX.1\-2001).
+.TP 
+\fBENOTSUP\fP
+Операция не поддерживается (POSIX.1\-2001).
+.TP 
+\fBENOTTY\fP
+Неподходящая операция управления вводом/выводом (POSIX.1\-2001).
+.TP 
+\fBENOTUNIQ\fP
+Имя не уникально в сети.
+.TP 
+\fBENXIO\fP
+Нет такого устройства или адреса (POSIX.1\-2001).
+.TP 
+\fBEOPNOTSUPP\fP
+Операция не поддерживается на сокете (POSIX.1\-2001).
+.IP
+(\fBENOTSUP\fP и \fBEOPNOTSUPP\fP в Linux имеют одинаковые значения, но согласно
+POSIX.1 значения этих ошибок должны различаться.)
+.TP 
+\fBEOVERFLOW\fP
+Значение слишком велико для хранения в таком типе данных (POSIX.1\-2001).
+.TP 
+\fBEOWNERDEAD\fP
+.\" Used at least by the user-space side of rubost mutexes
+Владелец умер (POSIX.1\-2008).
+.TP 
+\fBEPERM\fP
+Операция не позволена (POSIX.1\-2001).
+.TP 
+\fBEPFNOSUPPORT\fP
+Семейство протоколов не поддерживается.
+.TP 
+\fBEPIPE\fP
+Обрыв канала (POSIX.1\-2001).
+.TP 
+\fBEPROTO\fP
+Ошибка протокола (POSIX.1\-2001).
+.TP 
+\fBEPROTONOSUPPORT\fP
+Протокол не поддерживается (POSIX.1\-2001).
+.TP 
+\fBEPROTOTYPE\fP
+Неверный тип протокола для сокета (POSIX.1\-2001).
+.TP 
+\fBERANGE\fP
+Результат слишком большой (POSIX.1, C99).
+.TP 
+\fBEREMCHG\fP
+Удалённый адрес был изменён.
+.TP 
+\fBEREMOTE\fP
+Это удалённый объект.
+.TP 
+\fBEREMOTEIO\fP
+Ошибка удалённого ввода/вывода.
+.TP 
+\fBERESTART\fP
+Прерванный системный вызов следует перезапустить.
+.TP 
+\fBERFKILL\fP
+.\" ERFKILL appears to be used by various drivers
+Операция не позволяется из\-за RF\-kill.
+.TP 
+\fBEROFS\fP
+Файловая система доступна только для чтения (POSIX.1\-2001).
+.TP 
+\fBESHUTDOWN\fP
+Невозможно отправить данные после выключения конечной точки передачи.
+.TP 
+\fBESPIPE\fP
+Недопустимое перемещение (POSIX.1\-2001).
+.TP 
+\fBESOCKTNOSUPPORT\fP
+Тип сокета не поддерживается.
+.TP 
+\fBESRCH\fP
+.\" ESRMNT is defined but appears not to be used
+Нет такого процесса (POSIX.1\-2001).
+.TP 
+\fBESTALE\fP
+Неактуальный дескриптор файла (POSIX.1\-2001).
+.IP
+Эта ошибка может возникать в NFS и других файловых системах.
+.TP 
+\fBESTRPIPE\fP
+Ошибка потоков канала.
+.TP 
+\fBETIME\fP
+Таймер истёк (POSIX.1 (часть XSI STREAMS)).
+.IP
+(в POSIX.1 описывается как «в \fBioctl\fP(2) истекло время ожидания STREAM»)
+.TP 
+\fBETIMEDOUT\fP
+Время ожидания соединения истекло (POSIX.1\-2001).
+.TP 
+\fBETOOMANYREFS\fP
+.\" ETOOMANYREFS seems to be used in net/unix/af_unix.c
+Слишком много ссылок: невозможно объединить.
+.TP 
+\fBETXTBSY\fP
+Текстовый файл занят (POSIX.1\-2001).
+.TP 
+\fBEUCLEAN\fP
+Структуру необходимо очистить.
+.TP 
+\fBEUNATCH\fP
+Драйвер протокола не подсоединён.
+.TP 
+\fBEUSERS\fP
+Слишком много пользователей.
+.TP 
+\fBEWOULDBLOCK\fP
+Операция приведёт к блокировке (значение может быть равно \fBEAGAIN\fP)
+(POSIX.1\-2001).
+.TP 
+\fBEXDEV\fP
+Некорректная ссылка (POSIX.1\-2001).
+.TP 
+\fBEXFULL\fP
+Обмен полон.
+.SH ЗАМЕЧАНИЯ
+Распространённая ошибка:
+.PP
+.in +4n
+.EX
+if (somecall() == \-1) {
+    printf("somecall() failed\en");
+    if (errno == ...) { ... }
+}
+.EE
+.in
+.PP
+Здесь \fIerrno\fP может больше не иметь значение результата последнего вызова
+\fIsomecall\fP() (т.е., значение может измениться из\-за \fBprintf\fP(3)). Если
+значение \fIerrno\fP важно, то его нужно сохранять между библиотечными
+вызовами:
+.PP
+.in +4n
+.EX
+if (somecall() == \-1) {
+    int errsv = errno;
+    printf("somecall() failed\en");
+    if (errsv == ...) { ... }
+}
+.EE
+.in
+.PP
+В некоторых древних системах файл \fI<errno.h>\fP отсутствовал или не
+объявлял \fIerrno\fP, поэтому это нужно было делать вручную (например, \fIextern
+int errno\fP). \fBНе делайте этого\fP. Это давно уже не нужно, и вызовет проблемы
+с современными версиями библиотеки C.
+.SH "СМОТРИТЕ ТАКЖЕ"
+.\" In the moreutils package
+\fBerrno\fP(1), \fBerr\fP(3), \fBerror\fP(3), \fBperror\fP(3), \fBstrerror\fP(3)

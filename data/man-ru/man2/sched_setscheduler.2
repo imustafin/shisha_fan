@@ -1,0 +1,176 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SCHED_SETSCHEDULER 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sched_setscheduler, sched_getscheduler \- устанавливает или получает алгоритм
+планирования (и его параметры)
+.SH ОБЗОР
+.nf
+\fB#include <sched.h>\fP
+.PP
+\fBint sched_setscheduler(pid_t \fP\fIpid\fP\fB, int \fP\fIpolicy\fP\fB,\fP
+\fB                       const struct sched_param *\fP\fIparam\fP\fB);\fP
+.PP
+\fBint sched_getscheduler(pid_t \fP\fIpid\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBsched_setscheduler\fP() задаёт алгоритм и параметры планирования
+выполнения нити с идентификатором \fIpid\fP. Если \fIpid\fP равен нулю, то будет
+изменён алгоритм и параметры планирования вызывающей нити.
+.PP
+Параметры планирования указываются в аргументе \fIparam\fP, который является
+указателем на следующую структуру:
+.PP
+.in +4n
+.EX
+struct sched_param {
+    ...
+    int sched_priority;
+    ...
+};
+.EE
+.in
+.PP
+В текущей реализации структура содержит только одно поле —
+\fIsched_priority\fP. Интерпретация \fIparam\fP зависит от выбранного алгоритма.
+.PP
+В настоящее время в Linux поддерживаются следующие «обычные» (т. е. не
+реального времени) алгоритмы планирования, которые можно указать в
+\fIpolicy\fP:
+.TP  14
+\fBSCHED_OTHER\fP
+.\" In the 2.6 kernel sources, SCHED_OTHER is actually called
+.\" SCHED_NORMAL.
+алгоритм циклического обслуживания с разделением времени;
+.TP 
+\fBSCHED_BATCH\fP
+«пакетный» стиль выполнения процессов;
+.TP 
+\fBSCHED_IDLE\fP
+для выполнения фоновых заданий с \fIочень\fP низким приоритетом.
+.PP
+Для каждого алгоритма, перечисленного выше, значение
+\fIparam\->sched_priority\fP должно быть равно 0.
+.PP
+Также поддерживаются различные алгоритмы «реального времени», для
+специальных, критичных ко времени приложений, которым требуется точное
+управление методом выбора приложением исполняемых нитей. Правила управления,
+когда процесс может использовать эти алгоритмы, смотрите в
+\fBsched\fP(7). Алгоритмы реального времени, которые могут быть указаны в
+\fIpolicy\fP:
+.TP  14
+\fBSCHED_FIFO\fP
+алгоритм «первым вошёл — первым вышел»;
+.TP 
+\fBSCHED_RR\fP
+алгоритм циклического обслуживания.
+.PP
+Для каждого перечисленного выше алгоритма в \fIparam\->sched_priority\fP
+задаётся приоритет планирования для нити. Это число в диапазоне,
+возвращаемом вызовами \fBsched_get_priority_min\fP(2) и
+\fBsched_get_priority_max\fP(2) с указанным \fIpolicy\fP. В Linux эти системные
+вызовы возвращают 1 и 99, соответственно.
+.PP
+Начиная с Linux 2.6.32, флаг \fBSCHED_RESET_ON_FORK\fP может быть добавлен (OR)
+в \fIpolicy\fP при вызове \fBsched_setscheduler\fP(). В результате включения этого
+флага потомок, созданный \fBfork\fP(2), не наследует алгоритмы
+привилегированные алгоритмы планирования. Подробней смотрите в \fBsched\fP(7).
+.PP
+Вызов \fBsched_getscheduler\fP() возвращает текущий алгоритм планирования нити
+с идентификатором \fIpid\fP. Если значение \fIpid\fP равно нулю, то будет выдан
+алгоритм вызывающей нити.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsched_setscheduler\fP()  возвращается ноль. При
+успешном выполнении \fBsched_getscheduler\fP()  возвращается алгоритм нити
+(неотрицательное целое). При ошибках оба вызова возвращают \-1, а переменной
+\fIerrno\fP присваивается соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Некорректные аргументы: значение \fIpid\fP отрицательно или \fIparam\fP равно
+NULL.
+.TP 
+\fBEINVAL\fP
+(\fBsched_setscheduler\fP()) Значение \fIpolicy\fP не равно одному из известных
+значений алгоритмов.
+.TP 
+\fBEINVAL\fP
+(\fBsched_setscheduler\fP()) Значение \fIparam\fP не имеет смысла для заданного
+\fIpolicy\fP.
+.TP 
+\fBEPERM\fP
+Вызывающая нить не имеет достаточно привилегий.
+.TP 
+\fBESRCH\fP
+Нить с идентификатором \fIpid\fP не найдена.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008 (но смотрите ДЕФЕКТЫ далее). Алгоритмы
+\fBSCHED_BATCH\fP и \fBSCHED_IDLE\fP есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Подробное описание семантики всех алгоритмов планирования («обычных» и
+«реального времени») можно найти в справочной странице \fBsched\fP(7). В этой
+странице также описывается дополнительный алгоритм, \fBSCHED_DEADLINE\fP,
+который доступен только через вызов \fBsched_setattr\fP(2).
+.PP
+В системах POSIX, в которых доступны \fBsched_setscheduler\fP() и
+\fBsched_getscheduler\fP(), в \fI<unistd.h>\fP определён макрос
+\fB_POSIX_PRIORITY_SCHEDULING\fP.
+.PP
+В POSIX.1 не описаны права, которые требуются привилегированной нити для
+вызова \fBsched_setscheduler\fP(), и в разных системах используются разные
+права. Например, в справочной странице Solaris 7 сказано, что реальный и
+эффективный пользовательский идентификатор вызывающего должен совпадать с
+реальным пользовательским идентификатором или сохранённым set\-user\-ID
+изменяемой нити.
+.PP
+Алгоритм планирования и параметры, фактически, являются атрибутами нить в
+Linux. Значение, возвращаемое из вызова \fBgettid\fP(2), можно передавать в
+аргументе \fIpid\fP. При указании в \fIpid\fP значения 0 операции будут
+выполняться на атрибутах вызывающей нити, а при передаче значения,
+полученном из вызова \fBgetpid\fP(2), операции будут выполнятся на атрибутах
+главной нити группы нитей (если вы используете интерфейс нитей POSIX, то
+используйте \fBpthread_setschedparam\fP(3), \fBpthread_getschedparam\fP(3) и
+\fBpthread_setschedprio\fP(3) вместо системных вызовов \fBsched_*\fP(2)).
+.SH ДЕФЕКТЫ
+В POSIX.1 указано, что при успешном выполнении \fBsched_setscheduler\fP()
+должно возвращаться предыдущее значение алгоритма планирования. В Linux
+вызов \fBsched_setscheduler\fP() не выполняет это требование, так как при
+успешном выполнении всегда возвращает 0.
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBchrt\fP(1), \fBnice\fP(2), \fBsched_get_priority_max\fP(2),
+\fBsched_get_priority_min\fP(2), \fBsched_getaffinity\fP(2), \fBsched_getattr\fP(2),
+\fBsched_getparam\fP(2), \fBsched_rr_get_interval\fP(2), \fBsched_setaffinity\fP(2),
+\fBsched_setattr\fP(2), \fBsched_setparam\fP(2), \fBsched_yield\fP(2),
+\fBsetpriority\fP(2), \fBcapabilities\fP(7), \fBcpuset\fP(7), \fBsched\fP(7)
+.ad

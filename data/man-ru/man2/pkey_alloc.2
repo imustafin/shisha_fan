@@ -1,0 +1,106 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2016 Intel Corporation
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and author of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PKEY_ALLOC 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pkey_alloc, pkey_free \- выделяет или освобождает ключ защиты
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* смотрите feature_test_macros(7) */
+\fB#include <sys/mman.h>\fP
+.PP
+\fBint pkey_alloc(unsigned int \fP\fIflags\fP\fB, unsigned int \fP\fIaccess_rights\fP\fB);\fP
+\fBint pkey_free(int \fP\fIpkey\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBpkey_alloc\fP() выделяет ключ защиты (pkey), который можно передавать
+в \fBpkey_mprotect\fP(2).
+.PP
+Аргумент \fIflags\fP вызова \fBpkey_alloc\fP() зарезервирован для использования в
+будущем и в настоящее время должен равняться 0.
+.PP
+Аргумент \fIaccess_rights\fP вызова \fBpkey_alloc\fP() может содержать ноль или
+более запретительных операций:
+.TP 
+\fBPKEY_DISABLE_ACCESS\fP
+Запретить доступ ко всем данным памяти, на которую наложен возвращаемый
+ключ.
+.TP 
+\fBPKEY_DISABLE_WRITE\fP
+Запретить доступ на запись в память, на которую наложен возвращаемый ключ.
+.PP
+Вызов \fBpkey_free\fP() освобождает ключ защиты и делает его доступным для
+будущего выделения. После освобождения ключа защиты он может больше не
+использоваться в операциях по защите ключом.
+.PP
+Приложение не должно вызывать \fBpkey_free\fP() с ключом защиты, который был
+назначен адресному диапазону с помощью \fBpkey_mprotect\fP(2) и который пока
+используется. Это вызывает непредсказуемое поведение и может привести к
+ошибке.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBpkey_alloc\fP() возвращается положительное значение
+ключа защиты. При успешном выполнении \fBpkey_free\fP() возвращается ноль. При
+ошибке возвращается \-1 и \fIerrno\fP присваивается соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Неверное значение \fIpkey\fP, \fIflags\fP или \fIaccess_rights\fP.
+.TP 
+\fBENOSPC\fP
+(\fBpkey_alloc\fP()) Все ключи защиты, доступные текущему процессу уже
+распределены. Количество доступных ключей зависит от архитектуры и
+реализации и может быть меньшим из\-за использования отдельных ключей самим
+ядром. В настоящее время на x86 для пользовательской программы доступно 15
+ключей.
+.IP
+Также эта ошибка возвращается, если процессор или операционная система не
+поддерживают ключи защиты. Приложения всегда должны быть готовы к получению
+этой ошибки, так как приложение не может контролировать сокращение
+количества доступных pkey.
+.SH ВЕРСИИ
+Вызовы \fBpkey_alloc\fP() и \fBpkey_free\fP() были добавлены в Linux 4.9;
+поддержка в glibc доступна с версии 2.27.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Системные вызовы \fBpkey_alloc\fP() и \fBpkey_free\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Вызов \fBpkey_alloc\fP() всегда безопасен в независимости от поддержки ключей
+операционной системой. Его можно использовать как механизм определения
+поддержки pkey; он всегда просто возвращает ошибку \fBENOSPC\fP, если
+операционная система не поддерживает pkey.
+.PP
+Ядро гарантирует, что содержимое аппаратных регистров прав (PKRU) будет
+сохранено только для выделенных ключей защиты. Пока ключ не выделен (до
+первого вызова, возвращающего этот ключ \fBpkey_alloc\fP(), или после его
+освобождения с помощью \fBpkey_free\fP()), ядро может вносить произвольные
+изменения в части регистров прав, относящихся к этому ключу.
+.SH ПРИМЕР
+Смотрите \fBpkeys\fP(7).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpkey_mprotect\fP(2), \fBpkeys\fP(7)

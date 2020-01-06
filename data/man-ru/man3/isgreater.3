@@ -1,0 +1,115 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" 2002-07-27 Walter Harms
+.\" this was done with the help of the glibc manual
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ISGREATER 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+isgreater, isgreaterequal, isless, islessequal, islessgreater, isunordered \-
+сравнение чисел с плавающей запятой с учётом NaN
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBint isgreater(\fP\fIx\fP\fB, \fP\fIy\fP\fB);\fP
+.PP
+\fBint isgreaterequal(\fP\fIx\fP\fB, \fP\fIy\fP\fB);\fP
+.PP
+\fBint isless(\fP\fIx\fP\fB, \fP\fIy\fP\fB);\fP
+.PP
+\fBint islessequal(\fP\fIx\fP\fB, \fP\fIy\fP\fB);\fP
+.PP
+\fBint islessgreater(\fP\fIx\fP\fB, \fP\fIy\fP\fB);\fP
+.PP
+\fBint isunordered(\fP\fIx\fP\fB, \fP\fIy\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+Все функции, перечисленные здесь:
+.RS
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Обычные операции сравнения (такие как \fB<\fP — «меньше чем») завершаются
+ошибкой, если одним из операндов является NaN. При этом возникает
+исключение. Для избежания подобной ситуации в C99 определены макросы,
+описанные ниже.
+.PP
+В данных макросах гарантируется однократное вычисление
+операндов. Аргументами могут быть любые типы с плавающей запятой
+(примечание: не передавайте в аргументах целочисленные значения, так как они
+не будут приведены к типу с плавающей запятой).
+.TP 
+\fBisgreater\fP()
+Вычисляет \fI(x)\ >\ (y)\fP даже, если значение \fIx\fP или \fIy\fP равно NaN.
+.TP 
+\fBisgreaterequal\fP()
+Вычисляет \fI(x)\ >=\ (y)\fP даже, если значение \fIx\fP или \fIy\fP равно NaN.
+.TP 
+\fBisless\fP()
+Вычисляет \fI(x)\ <\ (y)\fP даже, если значение \fIx\fP или \fIy\fP равно NaN.
+.TP 
+\fBislessequal\fP()
+Вычисляет \fI(x)\ <=\ (y)\fP даже, если значение \fIx\fP или \fIy\fP равно NaN.
+.TP 
+\fBislessgreater\fP()
+Вычисляет \fI(x)\ < (y) || (x) >\ (y)\fP даже, если значение \fIx\fP или
+\fIy\fP равно NaN. Этот макрос не эквивалентен \fIx\ !=\ y\fP, так как это
+выражение правдиво (true), если значение \fIx\fP или \fIy\fP равно NaN.
+.TP 
+\fBisunordered\fP()
+Вычисляет, являются ли аргументы неупорядоченными (unordered), то есть не
+равен ли один из аргументов NaN.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Все макросы, кроме \fBisunordered\fP(), возвращают результат сравнения; они
+возвращают 0, если один из аргументов равен NaN.
+.PP
+Макрос \fBisunordered\fP() возвращает 1, если значение \fIx\fP или \fIy\fP равно NaN,
+и 0 в противном случае.
+.SH ОШИБКИ
+Ошибки не возникают.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw30 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBisgreater\fP(),
+\fBisgreaterequal\fP(),
+\fBisless\fP(),
+\fBislessequal\fP(),
+\fBislessgreater\fP(),
+\fBisunordered\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Не всё оборудование имеет эти возможности, и там, где их нет, они будут
+эмулироваться макросами. Это приведёт к небольшим потерям
+производительности. Не используйте эти макросы, если значения NaN для вас не
+существенны.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfpclassify\fP(3), \fBisnan\fP(3)

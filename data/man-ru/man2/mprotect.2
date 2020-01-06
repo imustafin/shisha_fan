@@ -1,0 +1,283 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2007 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" and Copyright (C) 1995 Michael Shields <shields@tembel.org>.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and author of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1996-10-22 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1997-05-31 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 2003-08-24 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 2004-08-16 by Andi Kleen <ak@muc.de>
+.\" 2007-06-02, mtk: Fairly substantial rewrites and additions, and
+.\" a much improved example program.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MPROTECT 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+mprotect, pkey_mprotect \- контролирует доступ к области памяти
+.SH ОБЗОР
+.nf
+\fB#include <sys/mman.h>\fP
+.PP
+\fBint mprotect(void *\fP\fIaddr\fP\fB, size_t \fP\fIlen\fP\fB, int \fP\fIprot\fP\fB);\fP
+
+\fB#define _GNU_SOURCE\fP             /* смотрите feature_test_macros(7) */
+\fB#include <sys/mman.h>\fP
+.PP
+\fBint pkey_mprotect(void *\fP\fIaddr\fP\fB, size_t \fP\fIlen\fP\fB, int \fP\fIprot\fP\fB, int \fP\fIpkey\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBmprotect\fP() изменяет параметры доступа страниц памяти вызывающего
+процесса, которые содержатся, даже частично, в адресном диапазоне [\fIaddr\fP,\ \fIaddr\fP+\fIlen\fP\-1]. Значение \fIaddr\fP должно быть выровнено на границу
+страницы.
+.PP
+Если вызывающий процесс нарушает защиту доступа к памяти, то ядро посылает
+процессу сигнал \fBSIGSEGV\fP.
+.PP
+Значение \fIprot\fP представляет собой комбинацию следующих флагов доступа:
+\fBPROT_NONE\fP или побитово сложенные другие значения из следующего списка:
+.TP  1.1i
+\fBPROT_NONE\fP
+Доступ к памяти запрещён.
+.TP 
+\fBPROT_READ\fP
+Память можно читать.
+.TP 
+\fBPROT_WRITE\fP
+Память можно изменять.
+.TP 
+\fBPROT_EXEC\fP
+Память можно выполнять.
+.TP 
+\fBPROT_SEM\fP (начиная с Linux 2.5.7)
+Память можно использовать для атомарных операций. Этот флаг появился как
+часть реализации \fBfutex\fP(2) (для гарантии способности выполнять атомарные
+операции, требуемые таким командам как \fBFUTEX_WAIT\fP), но пока не
+используется ни в одной архитектуре.
+.TP 
+\fBPROT_SAO\fP (начиная с Linux 2.6.26)
+.\" commit aba46c5027cb59d98052231b36efcbbde9c77a1d
+.\" commit ef3d3246a0d06be622867d21af25f997aeeb105f
+Память должна иметь строгий порядок доступа. Это свойство есть только в
+архитектуре PowerPC (в спецификации архитектуры версии 2.06 добавлено
+свойство ЦП SAO и оно доступно, например, на POWER 7 или PowerPC A2).
+.PP
+Также (начиная с Linux 2.6.0), \fIprot\fP может содержать один из следующих
+установленных флагов:
+.TP  1.1i
+.\" mm/mmap.c:
+.\"	vm_flags |= calc_vm_prot_bits(prot, pkey) | calc_vm_flag_bits(flags) |
+.\"			mm->def_flags | VM_MAYREAD | VM_MAYWRITE | VM_MAYEXEC;
+.\" And calc_vm_flag_bits converts only GROWSDOWN/DENYWRITE/LOCKED.
+\fBPROT_GROWSUP\fP
+.\" The VMA is one that was marked with VM_GROWSUP by the kernel
+.\" when the stack was created. Note that (unlike VM_GROWSDOWN),
+.\" there is no mmap() flag (analogous to MAP_GROWSDOWN) for
+.\" creating a VMA that is marked VM_GROWSUP.
+Применить режим защиты до конца отображения, которое растёт вверх (такие
+отображения создаются для области стека например в архитектуре HP\-PARISC,
+где стек растёт вверх).
+.TP 
+\fBPROT_GROWSDOWN\fP
+Применить режим защиты до начала отображения, которое растёт вниз (которое
+должно быть сегментом стека или сегментом, отображённым с установленным
+флагом \fBMAP_GROWSDOWN\fP).
+.PP
+Подобно \fBmprotect\fP(), вызов \fBpkey_mprotect\fP() изменяет защиту страниц,
+указанных \fIaddr\fP и \fIlen\fP. Аргумент \fIpkey\fP содержит ключ защиты (смотрите
+\fBpkeys\fP(7)), назначаемый памяти. Ключ защиты должен быть выделен с помощью
+\fBpkey_alloc\fP(2) до передачи в \fBpkey_mprotect\fP(). Пример использования
+этого системного вызова смотрите в \fBpkeys\fP(7).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBmprotect\fP() и \fBpkey_mprotect\fP() возвращают 0. В
+случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в соответствующее
+значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Нельзя задать этот вид доступа. Например, это может случиться, если при
+вызове \fBmmap\fP(2) файл доступен только на чтение, а запрос \fBmprotect\fP() был
+\fBPROT_WRITE\fP.
+.TP 
+\fBEINVAL\fP
+Значение \fIaddr\fP не является правильным указателем или не кратен размеру
+системной страницы.
+.TP 
+\fBEINVAL\fP
+(\fBpkey_mprotect\fP())  \fIpkey\fP не был выделен с помощью \fBpkey_alloc\fP(2).
+.TP 
+\fBEINVAL\fP
+В \fIprot\fP указаны оба флага, \fBPROT_GROWSUP\fP и \fBPROT_GROWSDOWN\fP.
+.TP 
+\fBEINVAL\fP
+Указано неверное значение в \fIprot\fP.
+.TP 
+\fBEINVAL\fP
+(архитектура PowerPC ) В \fIprot\fP указан \fBPROT_SAO\fP, но недоступно
+аппаратное свойство SAO.
+.TP 
+\fBENOMEM\fP
+Не удалось выделить место под внутренние структуры ядра.
+.TP 
+\fBENOMEM\fP
+Адреса в диапазоне [\fIaddr\fP, \fIaddr\fP+\fIlen\fP\-1] некорректны для адресного
+пространства процесса, или одна или более указанных страниц не отображена
+(до ядра версии 2.4.19 в этих случаях некорректно возвращалась ошибка
+\fBEFAULT\fP).
+.TP 
+\fBENOMEM\fP
+.\" I.e., the number of VMAs would exceed the 64 kB maximum
+Изменение защиты области памяти привело бы к превышению разрешённого
+максимума на количество отображений с различающимися атрибутами (защита на
+чтение и на чтение/запись). Например, защита диапазона \fBPROT_READ\fP в
+середине области, которая сейчас защищена \fBPROT_READ|PROT_WRITE\fP, привела
+бы к трём отображениям: два отображения на концах, доступных на
+чтение/запись и доступное только для чтение отображение посередине.
+.SH ВЕРСИИ
+Вызов \fBpkey_mprotect\fP() впервые появился в Linux 4.9; поддержка в
+библиотеке glibc добавлена в версии 2.27.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 defines an additional error
+.\" code EAGAIN. The SVr4 error conditions don't map neatly onto Linux's.
+\fBmprotect\fP(): В POSIX.1\-2001, POSIX.1\-2008,  SVr4 сказано, что поведение
+\fBmprotect\fP() не определено, если переданная область памяти не получена
+через \fBmmap\fP(2).
+.PP
+Вызов \fBpkey_mprotect\fP является непереносимым расширением Linux.
+.SH ЗАМЕЧАНИЯ
+В Linux всегда можно вызвать \fBmprotect\fP() с любым адресом из адресного
+пространства процесса (за исключением области ядра vsyscall). В частности,
+это можно использовать для изменения отображений существующего кода на
+записываемые.
+.PP
+Отличается ли действие \fBPROT_EXEC\fP от \fBPROT_READ\fP зависит от архитектуры
+процессора, версии ядра и состояния процесса. Если в флагах специализаций
+процессора установлен \fBREAD_IMPLIES_EXEC\fP (смотрите \fBpersonality\fP(2)), то
+указание \fBPROT_READ\fP подразумевает добавление \fBPROT_EXEC\fP.
+.PP
+На некоторых аппаратных архитектурах (например, i386) \fBPROT_WRITE\fP
+подразумевает \fBPROT_READ\fP.
+.PP
+В POSIX.1 сказано, что реализация может разрешить доступ отличный от
+указанного в \fIprot\fP, но для доступа на запись должен быть обязательно
+установлен флаг \fBPROT_WRITE\fP, и любой доступ должен быть запрещён, если
+установлен флаг \fBPROT_NONE\fP.
+.PP
+В приложениях нужно осторожно использовать \fBmprotect\fP() и
+\fBpkey_mprotect\fP() вместе. На x86, если \fBmprotect\fP() используется с
+установленным в \fIprot\fP значением  \fBPROT_EXEC\fP, то pkey может быть выделен
+и установлен ядром в память неявным образом, но только если до этого pkey
+был равен 0.
+.PP
+В системах без аппаратной поддержки ключей защиты \fBpkey_mprotect\fP() всё ещё
+можно использовать, но значение \fIpkey\fP должно быть равно \-1. При таком
+вызове операция \fBpkey_mprotect\fP() эквивалентна \fBmprotect\fP().
+.SH ПРИМЕР
+.\" sigaction.2 refers to this example
+.PP
+Программа, представленная далее, показывает использование \fBmprotect\fP(). Она
+выделяет четыре страницы памяти, делает третью доступной только на чтение, а
+затем запускает цикл, который проходит по выделенной области, меняя байты.
+.PP
+Результат работы программы:
+.PP
+.in +4n
+.EX
+$\fB ./a.out\fP
+Начало области:             0x804c000
+Получен SIGSEGV при адресе: 0x804e000
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <unistd.h>
+#include <signal.h>
+#include <stdio.h>
+#include <malloc.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <sys/mman.h>
+
+#define handle_error(msg) \e
+    do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+static char *buffer;
+
+static void
+handler(int sig, siginfo_t *si, void *unused)
+{
+    /* Замечание: вызов printf() из обработчика сигнала небезопасен
+       (и не должен выполняться в готовых программах), так как
+       printf() не async\-signal\-safe; смотрите signal\-safety(7).
+       Тем не менее, здесь мы используем printf(), так как это простой
+       способ показать когда вызывается обработчик. */
+
+    printf("Получен SIGSEGV при адресе: 0x%lx\en",
+            (long) si\->si_addr);
+    exit(EXIT_FAILURE);
+}
+
+int
+main(int argc, char *argv[])
+{
+    char *p;
+    int pagesize;
+    struct sigaction sa;
+
+    sa.sa_flags = SA_SIGINFO;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_sigaction = handler;
+    if (sigaction(SIGSEGV, &sa, NULL) == \-1)
+        handle_error("sigaction");
+
+    pagesize = sysconf(_SC_PAGE_SIZE);
+    if (pagesize == \-1)
+        handle_error("sysconf");
+
+    /* выделить буфер с выравниванием на границу страницы;
+       начальная защита: PROT_READ | PROT_WRITE */
+
+    buffer = memalign(pagesize, 4 * pagesize);
+    if (buffer == NULL)
+        handle_error("memalign");
+
+    printf("Начало области:             0x%lx\en", (long) buffer);
+
+    if (mprotect(buffer + pagesize * 2, pagesize,
+                PROT_READ) == \-1)
+        handle_error("mprotect");
+
+    for (p = buffer ; ; )
+        *(p++) = \(aqa\(aq;
+
+    printf("Цикл завершён\en");     /* никогда не должно случиться */
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmmap\fP(2), \fBsysconf\fP(3), \fBpkeys\fP(7)

@@ -1,0 +1,103 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2005 Michael Kerrisk
+.\" based on earlier work by faith@cs.unc.edu and
+.\" Mike Battersby <mib@deakin.edu.au>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2005-09-15, mtk, Created new page by splitting off from sigaction.2
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGSUSPEND 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sigsuspend, rt_sigsuspend \- ожидание сигнала
+.SH ОБЗОР
+\fB#include <signal.h>\fP
+.PP
+\fBint sigsuspend(const sigset_t *\fP\fImask\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBsigsuspend\fP(): _POSIX_C_SOURCE
+.ad b
+.SH ОПИСАНИЕ
+Вызов \fBsigsuspend\fP() временно заменяет маску сигналов вызывающей нити
+маской, указанной в \fImask\fP, и затем приостанавливает нить до тех пор, пока
+не поступит сигнал, для которого запустится обработчик сигнала или это
+приведёт к завершению процесса.
+.PP
+Если по сигналу процесс завершается, то вызов \fBsigsuspend\fP() не возвращает
+управление обратно в программу. Если сигнал пойман, то возврат из
+\fBsigsuspend\fP() произойдёт после завершения выполнения обработчика, и маска
+сигналов восстановится в значение, которое было до вызова \fBsigsuspend\fP().
+.PP
+Сигналы \fBSIGKILL\fP и \fBSIGSTOP\fP невозможно заблокировать; указание этих этих
+сигналов в \fImask\fP не влияет на маску сигналов нити.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Вызов \fBsigsuspend\fP() всегда возвращает \-1; \fIerrno\fP присваивается номер
+ошибки (обычно \fBEINTR\fP).
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Аргумент \fImask\fP указывает на память в недопустимой части адресного
+пространства процесса.
+.TP 
+\fBEINTR\fP
+Вызов был прерван по сигналу; смотрите \fBsignal\fP(7).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.PP
+Обычно, \fBsigsuspend\fP() используется вместе с \fBsigprocmask\fP(2), чтобы
+предотвратить доставку сигнала при выполнении критического участка
+кода. Сначала вызывающий блокирует сигналы с помощью
+\fBsigprocmask\fP(2). Когда критический участок выполнен, вызывающий начинает
+ждать сигналов с помощью вызова \fBsigsuspend\fP(), указав маску, значение
+которой было возвращено вызовом \fBsigprocmask\fP(2) (в аргументе \fIoldset\fP).
+.PP
+.\"
+Подробная информация о работе с наборами сигналов есть на странице
+\fBsigsetops\fP(3).
+.SS "Отличия между библиотекой C и ядром"
+.\"
+Первоначально, системный вызов Linux назывался \fBsigsuspend\fP(). Однако, с
+добавлением сигналов реального времени в Linux 2.2, 32\-битный аргумент
+\fIsigset_t\fP неизменяемого размера, поддерживаемый этим системным вызовом, не
+мог больше использоваться. В результате был добавлен новый системный вызов
+\fBrt_sigsuspend\fP() с увеличенным типом \fIsigset_t\fP. У нового системного
+вызова появился второй аргумент, \fIsize_t sigsetsize\fP, в котором указывается
+размер (в байтах) набора сигналов \fImask\fP. В настоящее время значение этого
+аргумента должно быть равно \fIsizeof(sigset_t)\fP (иначе возникает ошибка
+\fBEINVAL\fP). Обёрточная функция glibc \fBsigsuspend\fP() скрывает это и вызывает
+\fBrt_sigsuspend\fP(), если он есть в ядре.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBpause\fP(2), \fBsigaction\fP(2), \fBsignal\fP(2), \fBsigprocmask\fP(2),
+\fBsigwaitinfo\fP(2), \fBsigsetops\fP(3), \fBsigwait\fP(3), \fBsignal\fP(7)

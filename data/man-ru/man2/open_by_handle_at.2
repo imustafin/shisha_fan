@@ -1,0 +1,560 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2014 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH OPEN_BY_HANDLE_AT 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+name_to_handle_at, open_by_handle_at \- получение описателя для пути и
+открытие файла через описатель
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* Смотрите feature_test_macros(7) */
+\fB#include <sys/types.h>\fP
+\fB#include <sys/stat.h>\fP
+\fB#include <fcntl.h>\fP
+.PP
+\fBint name_to_handle_at(int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB,\fP
+\fB                      struct file_handle *\fP\fIhandle\fP\fB,\fP
+\fB                      int *\fP\fImount_id\fP\fB, int \fP\fIflags\fP\fB);\fP
+.PP
+\fBint open_by_handle_at(int \fP\fImount_fd\fP\fB, struct file_handle *\fP\fIhandle\fP\fB,\fP
+\fB                      int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+.\"
+.\"
+Функциональное назначение \fBopenat\fP(2) было разделено на две части и
+добавлено в системные вызовы \fBname_to_handle_at\fP() и
+\fBopen_by_handle_at\fP(): \fBname_to_handle_at\fP() возвращает  описатель с
+произвольной формой(opaque), который соответствует указанному файлу;
+\fBopen_by_handle_at\fP() открывает файл по описателю, который был возвращён
+предыдущим вызовом \fBname_to_handle_at\fP() и возвращает дескриптор открытого
+файла.
+.SS name_to_handle_at()
+Системный вызов \fBname_to_handle_at\fP() возвращает файловый описатель и
+идентификатор монтирования для файла, указанного в аргументах \fIdirfd\fP и
+\fIpathname\fP. Файловый описатель возвращается через аргумент \fIhandle\fP,
+который является указателем на следующую структуру:
+.PP
+.in +4n
+.EX
+struct file_handle {
+    unsigned int  handle_bytes;   /* размер f_handle [in, out] */
+    int           handle_type;    /* тип описателя [out] */
+    unsigned char f_handle[0];    /* идентификатор файла (размер
+                                     задаёт вызывающий) [out] */
+};
+.EE
+.in
+.PP
+Вызывающий должен выделить память достаточного размера под структуру
+описателя, возвращаемого в \fIf_handle\fP. Перед вызовом поле \fIhandle_bytes\fP
+должно содержать размер выделенной памяти для \fIf_handle\fP (константа
+\fBMAX_HANDLE_SZ\fP, определённая в \fI<fcntl.h>\fP, равна максимально
+ожидаемому размеру описателя файла. Это не гарантированное верхнее
+ограничение, так как файловые системы в будущем могут потребовать больше
+места). При успешном выполнении поле \fIhandle_bytes\fP обновляется и содержит
+количество байт действительно занятых под \fIf_handle\fP.
+.PP
+Вызывающий может определить требуемый размер структуры \fIfile_handle\fP указав
+при вызове значение \fIhandle\->handle_bytes\fP равное нулю; в этому случае
+вызов завершается с ошибкой \fBEOVERFLOW\fP, а в поле
+\fIhandle\->handle_bytes\fP записывается требуемый размер; затем вызывающий
+может использовать эту информацию для выделения памяти под структуру
+правильного размера (смотрите ПРИМЕР ниже). Здесь нужно учесть, что
+\fBEOVERFLOW\fP может указывать на то, что файловый описатель недоступен для
+этого заданного имени в файловой системе, которая, обычно, поддерживает
+поиск файловых описателей. На данный случай указывает то, что ошибка
+\fBEOVERFLOW\fP возвращается без увеличившегося значения \fIhandle_bytes\fP.
+.PP
+Все остальные поля, кроме \fIhandle_bytes\fP структуры \fIfile_handle\fP,
+вызывающий должен считать неизвестными: поля \fIhandle_type\fP и \fIf_handle\fP
+требуются только в последующих вызовах \fBopen_by_handle_at\fP().
+.PP
+Аргумент \fIflags\fP представляет собой битовую маску (OR) из комбинации нуля
+или более флагов \fBAT_EMPTY_PATH\fP и \fBAT_SYMLINK_FOLLOW\fP, описанных ниже.
+.PP
+Аргументы \fIpathname\fP и \fIdirfd\fP вместе задают файл, для которого будет
+получен описатель. Есть четыре различных варианта:
+.IP * 3
+Если значение \fIpathname\fP — непустая строка, содержащая абсолютный путь, то
+описатель возвращается для файла, на который указывает путь. В этом случае
+\fIdirfd\fP игнорируется.
+.IP *
+Если значение \fIpathname\fP — непустая строка, содержащая относительный путь и
+\fIdirfd\fP равно специальному значению \fBAT_FDCWD\fP, то \fIpathname\fP
+рассматривается относительно текущего рабочего каталога вызывающего и
+описатель возвращается для файла, на который он указывает.
+.IP *
+Если значение \fIpathname\fP — непустая строка, содержащая относительный путь и
+\fIdirfd\fP равно файловому дескриптору, указывающему на каталог, то
+\fIpathname\fP рассматривается относительно каталога, на который указывает
+\fIdirfd\fP, и описатель возвращается для файла, на который он указывает
+(смотрите в \fBopenat\fP(2) объяснение полезности «файловых дескрипторов
+каталогов»).
+.IP *
+Если значение \fIpathname\fP — пустая строка и значение \fIflags\fP равно
+\fBAT_EMPTY_PATH\fP, то \fIdirfd\fP может быть открытым файловым дескриптором,
+указывающим на файл любого типа, или \fBAT_FDCWD\fP, означающим текущий рабочий
+каталог, и описатель возвращается для файла, на который он указывает.
+.PP
+В аргументе \fImount_id\fP возвращается идентификатор точки монтирования в
+файловой системе, соответствующий \fIpathname\fP. Это значение соответствует
+первому полю одной из записей в \fI/proc/self/mountinfo\fP. Открытие пути из
+пятого поля этой записи возвращает файловый дескриптор этой точки
+монтирования; этот файловый дескриптор можно использовать в последующем
+вызове \fBopen_by_handle_at\fP(). Аргумент \fImount_id\fP возвращается при
+успешном выполнении, а также при ошибке \fBEOVERFLOW\fP().
+.PP
+По умолчанию, \fBname_to_handle_at\fP() не разыменовывает \fIpathname\fP, если это
+символическая ссылка, и поэтому возвращается описатель самой ссылки. Если в
+\fIflags\fP указан \fBAT_SYMLINK_FOLLOW\fP, то \fIpathname\fP разыменовывается, если
+это символическая ссылка (то есть вызов возвращает описатель файла, на
+который указывает ссылка).
+.PP
+.\" commit 20fa19027286983ab2734b5910c4a687436e0c31
+Системный вызов \fBname_to_handle_at\fP() не вызывает монтирования, если
+конечная часть пути является автоматической точкой монтирования. Если
+файловая система поддерживает файловые описатели и автоматические точки
+монтирования, то вызов \fBname_to_handle_at\fP() для автоматической точки
+монтирования завершится ошибкой \fBEOVERFLOW\fP без увеличения значения
+\fIhandle_bytes\fP. Это может происходить с NFS начиная с версии Linux 4.13,
+когда задействованный каталог находится в отдельной файловой системе на
+сервере. В этом случае автомонтирование можно получить добавлением «/» в
+конец пути.
+.SS open_by_handle_at()
+Системный вызов \fBopen_by_handle_at\fP() открывает файл, на который указывает
+\fIhandle\fP, файловый описатель, полученный от предшествующего вызова
+\fBname_to_handle_at\fP().
+.PP
+Аргумент \fImount_fd\fP — это файловый дескриптор любого объекта (файла,
+каталога и т. д.) в смонтированной файловой системе, в которой должен
+находиться \fIhandle\fP. Может быть равен специальному значению \fBAT_FDCWD\fP,
+которое обозначает текущий рабочий каталог вызывающего.
+.PP
+Значение аргумента \fIflags\fP как у \fBopen\fP(2). Если \fIhandle\fP указывает на
+символическую ссылку, то вызывающий должен указать флаг \fBO_PATH\fP, и
+символическая ссылка не разыменовывается; флаг \fBO_NOFOLLOW\fP игнорируется.
+.PP
+Для вызова \fBopen_by_handle_at\fP() вызывающий должен иметь мандат
+\fBCAP_DAC_READ_SEARCH\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBname_to_handle_at\fP() возвращает 0, а
+\fBopen_by_handle_at\fP() возвращает неотрицательный файловый дескриптор.
+.PP
+В случае ошибки системные вызовы возвращают \-1, а в \fIerrno\fP записывается
+код ошибки.
+.SH ОШИБКИ
+Вызовы \fBname_to_handle_at\fP() и \fBopen_by_handle_at\fP() могут завершиться с
+теми же ошибками что и \fBopenat\fP(2). Также могут возникать следующие ошибки:
+.PP
+Вызов \fBname_to_handle_at\fP() может завершиться со следующими ошибками:
+.TP 
+\fBEFAULT\fP
+Значение \fIpathname\fP, \fImount_id\fP или \fIhandle\fP указывает за пределы
+доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+Значение \fIflags\fP содержит некорректно установленный бит.
+.TP 
+\fBEINVAL\fP
+Значение \fIhandle\->handle_bytes\fP больше \fBMAX_HANDLE_SZ\fP.
+.TP 
+\fBENOENT\fP
+Значение \fIpathname\fP равно пустой строке, но в \fIflags\fP не указано значение
+\fBAT_EMPTY_PATH\fP.
+.TP 
+\fBENOTDIR\fP
+Файловый дескриптор, указанный в \fIdirfd\fP, не ссылается на каталог и это не
+тот случай, когда \fIflags\fP содержит \fBAT_EMPTY_PATH\fP и \fIpathname\fP равно
+пустой строке.
+.TP 
+\fBEOPNOTSUPP\fP
+Файловая система не поддерживает преобразование пути в файловый описатель.
+.TP 
+\fBEOVERFLOW\fP
+.\"
+.\"
+Значение \fIhandle\->handle_bytes\fP, переданное в вызов, слишком мало. При
+этой ошибке \fIhandle\->handle_bytes\fP присваивается требуемый размер для
+описателя.
+.PP
+Вызов \fBopen_by_handle_at\fP() может завершиться со следующими ошибками:
+.TP 
+\fBEBADF\fP
+Значение \fImount_fd\fP не является открытым файловым дескриптором.
+.TP 
+\fBEFAULT\fP
+Значение \fIhandle\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+Значение \fIhandle\->handle_bytes\fP больше \fBMAX_HANDLE_SZ\fP или равно нулю.
+.TP 
+\fBELOOP\fP
+Значение \fIhandle\fP указывает на символическую ссылку, но в \fIflags\fP не
+указан \fBO_PATH\fP.
+.TP 
+\fBEPERM\fP
+Вызывающий не имеет мандата \fBCAP_DAC_READ_SEARCH\fP.
+.TP 
+\fBESTALE\fP
+Значение \fIhandle\fP некорректно. Эта ошибка возникает, например, из\-за
+удаления файла.
+.SH ВЕРСИИ
+Данные системные вызовы впервые появились в Linux 2.6.39. Поддержка в glibc
+появилась в версии 2.14.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные системные вызовы являются нестандартными расширениями Linux.
+.PP
+В FreeBSD есть относительно похожая пара системных вызовов \fBgetfh\fP() и
+\fBopenfh\fP().
+.SH ЗАМЕЧАНИЯ
+Файловый описатель может быть сгенерирован с помощью \fBname_to_handle_at\fP()
+в одном процессе и использован в вызовах \fBopen_by_handle_at\fP() в другом.
+.PP
+Некоторые файловые системы не поддерживают трансляцию путей в файловые
+описатели, например: \fI/proc\fP, \fI/sys\fP и различные сетевые файловые системы.
+.PP
+Файловый описатель может стать некорректным («просроченным»), если файл
+удалён, или по другим причинам, относящимся к файловой системе. Для
+некорректных описателей \fBopen_by_handle_at\fP() возвращает ошибку \fBESTALE\fP.
+.PP
+.\" https://lwn.net/Articles/375888/
+.\"	"Open by handle" - Jonathan Corbet, 2010-02-23
+Данные системные вызовы предназначены для использования в файловых серверах
+пространства пользователя. Например, сервер пользовательского пространства
+NFS может генерировать файловый описатель и передавать его клиенту
+NFS. Позднее, когда клиент захочет открыть файл, он может передать описатель
+обратно серверу. Такого рода возможность позволяет файловому серверу
+пространства пользователя работать без формирования состояния (stateless
+fashion) для файлов, которые они обслуживают.
+.PP
+.\" commit bcda76524cd1fa32af748536f27f674a13e56700
+Если \fIpathname\fP указывает на символическую ссылку и в \fIflags\fP отсутствует
+\fBAT_SYMLINK_FOLLOW\fP, то \fBname_to_handle_at\fP() возвращает описатель ссылки
+(а не файла, на который она ссылается). Процесс, получивший описатель, может
+позднее выполнить операции над символической ссылкой, преобразовав описатель
+в файловый дескриптор, используя \fBopen_by_handle_at\fP() с флагом \fBO_PATH\fP,
+и затем передав файловый дескриптор через аргумент \fIdirfd\fP в системные
+вызовы \fBreadlinkat\fP(2) и \fBfchownat\fP(2).
+.SS "Получение постоянного идентификатора файловой системы"
+Идентификаторы монтирования в \fI/proc/self/mountinfo\fP могут быть
+использованы повторно после размонтирования и монтирования файловой
+системы. Поэтому, идентификатор монтирования, возвращаемый
+\fBname_to_handle_at\fP() (в \fI*mount_id\fP), не должен считаться постоянным
+идентификатором соответствующей файловой системы. Однако, приложение может
+использовать информацию в записи \fImountinfo\fP, которая соответствует
+идентификатору монтирования, для получения постоянного идентификатора.
+.PP
+.\" e.g., http://stackoverflow.com/questions/6748429/using-libblkid-to-find-uuid-of-a-partition
+Например, можно использовать имя устройства в пятом поле записи \fImountinfo\fP
+для поиска соответствующего устройству UUID через символические ссылки в
+\fI/dev/disks/by\-uuid\fP (более удобный способ получения UUID — использовать
+библиотеку \fBlibblkid\fP(3)). Этот процесс может быть и обратным — используя
+UUID найти имя устройства, и затем получить соответствующую точку
+монтирования, чтобы создать аргумент \fImount_fd\fP, используемый для
+\fBopen_by_handle_at\fP().
+.SH ПРИМЕР
+Две представленные далее программы демонстрируют использование
+\fBname_to_handle_at\fP() и \fBopen_by_handle_at\fP(). Первая программа
+(\fIt_name_to_handle_at.c\fP) использует \fBname_to_handle_at\fP() для получения
+файлового описателя и идентификатора монтирования для файла, указанного в
+аргументе командной строки; описатель и идентификатор монтирования
+записываются в стандартный вывод.
+.PP
+Вторая программа (\fIt_open_by_handle_at.c\fP) читает идентификатор
+монтирования и файловый описатель из стандартного ввода. Затем программа,
+используя описатель, применяет \fBopen_by_handle_at\fP() для открытия
+файла. Если указан необязательный параметр командной строки, то аргумент
+\fImount_fd\fP для \fBopen_by_handle_at\fP() создаётся из открытия каталога,
+указанного в аргументе. В противном случае \fImount_fd\fP заполняется
+результатом сканированием \fI/proc/self/mountinfo\fP в целях найти запись, чей
+идентификатор монтирования совпадает с идентификатором монтирования из
+стандартного ввода, и открывается каталог монтирования, указанный в этой
+записи (эти программы не учитывают, что идентификатор монтирования не
+постоянен).
+.PP
+Следующий сеанс работы в оболочке показывает использование этих программ:
+.PP
+.in +4n
+.EX
+$ \fBecho 'Can you please think about it?' > cecilia.txt\fP
+$ \fB./t_name_to_handle_at cecilia.txt > fh\fP
+$ \fB./t_open_by_handle_at < fh\fP
+open_by_handle_at: Operation not permitted
+$ \fBsudo ./t_open_by_handle_at < fh\fP      # требуется CAP_SYS_ADMIN
+Read 31 bytes
+$ \fBrm cecilia.txt\fP
+.EE
+.in
+.PP
+.\" Christoph Hellwig: That's why the file handles contain a generation
+.\" counter that gets incremented in this case.
+Теперь мы удаляем и (быстро) пересоздаём файл с тем же содержимым и (если
+повезёт) с той же инодой. Не смотря на это, \fBopen_by_handle_at\fP()
+распознаёт, что первоначальный файл, на который указывал файловый описатель,
+больше не существует.
+.PP
+.in +4n
+.EX
+$ \fBstat \-\-printf="%i\en" cecilia.txt\fP     # вывести номер иноды
+4072121
+$ \fBrm cecilia.txt\fP
+$ \fBecho 'Can you please think about it?' > cecilia.txt\fP
+$ \fBstat \-\-printf="%i\en" cecilia.txt\fP     # проверить номер иноды
+4072121
+$ \fBsudo ./t_open_by_handle_at < fh\fP
+open_by_handle_at: Stale NFS file handle
+.EE
+.in
+.SS "Исходный код программы: t_name_to_handle_at.c"
+\&
+.EX
+#define _GNU_SOURCE
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    struct file_handle *fhp;
+    int mount_id, fhsize, flags, dirfd, j;
+    char *pathname;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s путь\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    pathname = argv[1];
+
+    /* выделяем место под структуру file_handle */
+
+    fhsize = sizeof(*fhp);
+    fhp = malloc(fhsize);
+    if (fhp == NULL)
+        errExit("malloc");
+
+    /* выполняем первоначальный вызов name_to_handle_at() для
+       определения требуемого размера файлового описателя */
+
+    dirfd = AT_FDCWD;           /* для вызовов name_to_handle_at() */
+    flags = 0;                  /* для вызовов name_to_handle_at() */
+    fhp\->handle_bytes = 0;
+    if (name_to_handle_at(dirfd, pathname, fhp,
+                &mount_id, flags) != \-1 || errno != EOVERFLOW) {
+        fprintf(stderr, "Unexpected result from name_to_handle_at()\en");
+        exit(EXIT_FAILURE);
+    }
+
+    /* перераспределяем структуру file_handle с правильным размером */
+
+    fhsize = sizeof(struct file_handle) + fhp\->handle_bytes;
+    fhp = realloc(fhp, fhsize);         /* копируем fhp\->handle_bytes */
+    if (fhp == NULL)
+        errExit("realloc");
+
+    /* получаем файловый описатель из пути, который
+       указан в командной строке */
+
+    if (name_to_handle_at(dirfd, pathname, fhp, &mount_id, flags) == \-1)
+        errExit("name_to_handle_at");
+
+    /* пишем идентификатор монтирования, размер файлового описателя
+       и файловый описатель в stdout
+       для повторного использования в t_open_by_handle_at.c */
+
+    printf("%d\en", mount_id);
+    printf("%d %d   ", fhp\->handle_bytes, fhp\->handle_type);
+    for (j = 0; j < fhp\->handle_bytes; j++)
+        printf(" %02x", fhp\->f_handle[j]);
+    printf("\en");
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SS "Исходный код программы: t_open_by_handle_at.c"
+\&
+.EX
+#define _GNU_SOURCE
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+/* сканируем /proc/self/mountinfo в поиске строки, чей идентификатор
+   монтирования совпадает с \(aqmount_id\(aq (простейший способ,
+   это установить и использовать библиотеку
+   «libmount», предоставляемую проектом «util\-linux»).
+   Открываем соответствующий путь монтирования и возвращаем
+   полученный файловый дескриптор. */
+
+static int
+open_mount_path_by_id(int mount_id)
+{
+    char *linep;
+    size_t lsize;
+    char mount_path[PATH_MAX];
+    int mi_mount_id, found;
+    ssize_t nread;
+    FILE *fp;
+
+    fp = fopen("/proc/self/mountinfo", "r");
+    if (fp == NULL)
+        errExit("fopen");
+
+    found = 0;
+    linep = NULL;
+    while (!found) {
+        nread = getline(&linep, &lsize, fp);
+        if (nread == \-1)
+            break;
+
+        nread = sscanf(linep, "%d %*d %*s %*s %s",
+                       &mi_mount_id, mount_path);
+        if (nread != 2) {
+            fprintf(stderr, "Bad sscanf()\en");
+            exit(EXIT_FAILURE);
+        }
+
+        if (mi_mount_id == mount_id)
+            found = 1;
+    }
+    free(linep);
+
+    fclose(fp);
+
+    if (!found) {
+        fprintf(stderr, "Could not find mount point\en");
+        exit(EXIT_FAILURE);
+    }
+
+    return open(mount_path, O_RDONLY);
+}
+
+int
+main(int argc, char *argv[])
+{
+    struct file_handle *fhp;
+    int mount_id, fd, mount_fd, handle_bytes, j;
+    ssize_t nread;
+    char buf[1000];
+#define LINE_SIZE 100
+    char line1[LINE_SIZE], line2[LINE_SIZE];
+    char *nextp;
+
+    if ((argc > 1 && strcmp(argv[1], "\-\-help") == 0) || argc > 2) {
+        fprintf(stderr, "Использование: %s [путь\-монт.]\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /* Стандартный ввод содержит идентификатор монтирования и
+       информацию о файловом описателе:
+
+         Строка 1: <идентификатор монтирования>
+         Строка 2: <handle_bytes> <handle_type>
+                    <байты описателя в шестнад. системе счисления>
+    */
+
+    if ((fgets(line1, sizeof(line1), stdin) == NULL) ||
+           (fgets(line2, sizeof(line2), stdin) == NULL)) {
+        fprintf(stderr, "Missing mount_id / file handle\en");
+        exit(EXIT_FAILURE);
+    }
+
+    mount_id = atoi(line1);
+
+    handle_bytes = strtoul(line2, &nextp, 0);
+
+    /* получаем handle_bytes, теперь мы можем выделить место
+       под структуру file_handle */
+
+    fhp = malloc(sizeof(struct file_handle) + handle_bytes);
+    if (fhp == NULL)
+        errExit("malloc");
+
+    fhp\->handle_bytes = handle_bytes;
+
+    fhp\->handle_type = strtoul(nextp, &nextp, 0);
+
+    for (j = 0; j < fhp\->handle_bytes; j++)
+        fhp\->f_handle[j] = strtoul(nextp, &nextp, 16);
+
+    /* получаем файловый дескриптор для точки монтирования, или
+       открываем путь, указанный в командной строке, или сканируем
+       /proc/self/mounts в поиске монтирования, которое совпадает с
+       «mount_id», который мы получили из stdin. */
+
+    if (argc > 1)
+        mount_fd = open(argv[1], O_RDONLY);
+    else
+        mount_fd = open_mount_path_by_id(mount_id);
+
+    if (mount_fd == \-1)
+        errExit("opening mount fd");
+
+    /* открываем файл, используя описатель и точку монтирования */
+
+    fd = open_by_handle_at(mount_fd, fhp, O_RDONLY);
+    if (fd == \-1)
+        errExit("open_by_handle_at");
+
+    /* пытаемся прочитать несколько байт из файла */
+
+    nread = read(fd, buf, sizeof(buf));
+    if (nread == \-1)
+        errExit("read");
+
+    printf("Read %zd bytes\en", nread);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBopen\fP(2), \fBlibblkid\fP(3), \fBblkid\fP(8), \fBfindfs\fP(8), \fBmount\fP(8)
+.PP
+Документация \fIlibblkid\fP и \fIlibmount\fP в последнем выпуске \fIutil\-linux\fP
+.UR https://www.kernel.org/pub/linux/utils/util\-linux/
+.UE

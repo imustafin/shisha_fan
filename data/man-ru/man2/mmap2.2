@@ -1,0 +1,85 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2002, Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 31 Jan 2002, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Added description of mmap2
+.\" Modified, 2004-11-25, mtk -- removed stray #endif in prototype
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MMAP2 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+mmap2 \- отображает файлы или устройства в память
+.SH ОБЗОР
+.nf
+\fB#include <sys/mman.h>\fP
+.PP
+\fBvoid *mmap2(void *\fP\fIaddr\fP\fB, size_t \fP\fIlength\fP\fB, int \fP\fIprot\fP\fB,\fP
+\fB             int \fP\fIflags\fP\fB, int \fP\fIfd\fP\fB, off_t \fP\fIpgoffset\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вероятно, вам нужен не сам системный вызов; смотрите \fBmmap\fP(2), описывающую
+обёрточную функцию glibc, которая вызывает данный системный вызов.
+.PP
+Системный вызов \fBmmap2\fP() предоставляет тот же интерфейс что и \fBmmap\fP(2),
+за исключением того, что последний аргумент задаёт смещение в файле в
+4096\-байтовых единицах (вместо байт, как это делается в \fBmmap\fP(2)). Это
+позволяет приложениям использовать 32\-битное значение \fIoff_t\fP для
+отображения больших файлов (до 2^44 байт).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При удачном завершении \fBmmap2\fP() возвращает указатель на область
+отображения. В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Проблема получения данных из пользовательского пространства.
+.TP 
+\fBEINVAL\fP
+(Различные платформы, где размер страницы не равен 4096 байтам.) Значение
+\fIoffset\ *\ 4096\fP не кратно размеру страницы системы.
+.PP
+Вызов \fBmmap2\fP() также может вернуть любую ошибку из описанных в \fBmmap\fP(2).
+.SH ВЕРСИИ
+Вызов \fBmmap2\fP() доступен начиная с Linux 2.3.31.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+На архитектурах, имеющих данный системный вызов, обёрточная функция glibc
+\fBmmap\fP() вызывает данный системный вызов вместо системного вызова
+\fBmmap\fP(2).
+.PP
+Этот системный вызов отсутствует на x86\-64.
+.PP
+.\" ia64 can have page sizes ranging from 4 kB to 64 kB.
+.\" On cris, it looks like the unit might also be the page size,
+.\" which is 8192 bytes. -- mtk, June 2007
+На ia64 единица \fIoffset\fP на самом деле имеет размер страницы системы, а не
+равна 4096 байтам.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetpagesize\fP(2), \fBmmap\fP(2), \fBmremap\fP(2), \fBmsync\fP(2), \fBshm_open\fP(3)

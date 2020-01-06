@@ -1,0 +1,160 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_SETCANCELSTATE 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_setcancelstate, pthread_setcanceltype \- изменяет состояния и тип
+отменяемости
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_setcancelstate(int \fP\fIstate\fP\fB, int *\fP\fIoldstate\fP\fB);\fP
+\fBint pthread_setcanceltype(int \fP\fItype\fP\fB, int *\fP\fIoldtype\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_setcancelstate\fP() изменяет состояние отменяемости
+вызывающий нити на значение \fIstate\fP. Предыдущее состояние отменяемости нити
+возвращается в буфер, на который указывает \fIoldstate\fP. Аргументом \fIstate\fP
+должно быть одно из следующих значений:
+.TP 
+\fBPTHREAD_CANCEL_ENABLE\fP
+Нить является отменяемой. Для всех новых нитей, включая начальную, это
+состояние является основным по умолчанию. Тип отменяемости нити определяет,
+когда нить будет отвечать на запрос об отмене.
+.TP 
+\fBPTHREAD_CANCEL_DISABLE\fP
+Нить является неотменяемой. Если был получен запрос об отмене, он будет
+блокироваться до тех пор, пока не будет включена отменяемость.
+.PP
+Функция \fBpthread_setcanceltype\fP() изменяет тип отменяемости вызывающий нити
+на значение \fItype\fP. Предыдущий тип отменяемости нити возвращается в буфер,
+на который указывает \fIoldstate\fP. Аргументом \fItype\fP должно быть одно из
+следующих значений:
+.TP 
+\fBPTHREAD_CANCEL_DEFERRED\fP
+Запрос отменяемости откладывается до тех пор, пока нить не вызовет функцию,
+являющуюся точкой отмены (смотрите \fBpthreads\fP(7)). Данный тип является
+умолчательным для всех нитей, включая начальную.
+.TP 
+\fBPTHREAD_CANCEL_ASYNCHRONOUS\fP
+Нить может быть отменена в любой момент (практически сразу же после
+получения запроса об отмене, однако система не гарантирует этого).
+.PP
+Операции установки и получения (set\-and\-get), выполняемые каждой из этих
+функций, являются атомарными для предотвращения пересечения с другими
+процессами, вызывающими ту же функцию.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+Функция \fBpthread_setcancelstate\fP() может завершиться со следующей ошибкой:
+.TP 
+\fBEINVAL\fP
+Неправильное значение для \fIstate\fP.
+.PP
+Функция \fBpthread_setcanceltype\fP() может завершиться со следующей ошибкой:
+.TP 
+\fBEINVAL\fP
+.\" .SH VERSIONS
+.\" Available since glibc 2.0
+Неправильное значение для \fItype\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lb lb lb
+lw25 l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_setcancelstate\fP(),
+\fBpthread_setcanceltype\fP()
+T}	Безвредность в нитях	T{
+MT\-Safe
+T}
+T{
+\fBpthread_setcancelstate\fP(),
+\fBpthread_setcanceltype\fP()
+T}	Async\-cancel\-safety	T{
+AC\-Safe
+T}
+.TE
+.ad
+.hy
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Информацию о том, что происходит с отменяемой нитью, смотрите в
+\fBpthread_cancel\fP(3).
+.PP
+Запрет отмены на короткое время полезен, если нить выполняет какое\-то важное
+действие, которое не должно прерываться запросом отмены. Остерегайтесь
+запретов отмены на длительный срок или для операций, которые могут занять
+много времени, так как нить при этом перестанет отвечать на запросы отмены.
+.SS "Асинхронная отменяемость"
+Задание типа отменяемости \fBPTHREAD_CANCEL_ASYNCHRONOUS\fP полезно редко. Так
+как нить может быть отменена в \fIлюбой\fP момент, невозможно безопасно
+резервировать ресурсы (например, выделять память с помощью \fBmalloc\fP(3)),
+захватывать мьютексы, семафоры или блокировки и так далее. Резервирование
+ресурсов небезопасно, так как приложение не может узнать состояние этих
+ресурсов при отмене нити; то есть, произошла ли отмена до резервирования
+ресурсов, во время из резервирования или после их освобождения? Кроме того,
+некоторые внутренние структуры данных (например, связные списки свободных
+блоков, управляемые семейством функций \fBmalloc\fP(3)) могут остаться в не
+целостном состоянии, если отмена происходит в середине вызова
+функции. Следовательно, обработчики очистки перестают быть полезными.
+.PP
+Функции, которые можно безопасно асинхронно отменять называются \fIфункциями
+async\-cancel\-safe\fP. В POSIX.1\-2001 и POSIX.1\-2008 требуется, чтобы такими
+функция были только \fBpthread_cancel\fP(3), \fBpthread_setcancelstate\fP() и
+\fBpthread_setcanceltype\fP(). В общем, другие функции библиотеки нельзя
+безопасно вызывать из асинхронно отменяемой нити.
+.PP
+Одной из нескольких ситуаций, в которых асинхронная отменяемость полезна,
+является отменяемость нити, которая находится в цикле, занимающимся только
+вычислениями.
+.SS "Замечания о переносимости"
+.\" It looks like at least Solaris, FreeBSD and Tru64 support this.
+Реализации нитей в Linux позволяют присваивать аргументу \fIoldstate\fP функции
+\fBpthread_setcancelstate\fP()  значение NULL; в этом случае информация о
+предыдущем состоянии отмены не возвращается вызывающему. Многие другие
+реализации также допускают NULL в качестве значения \fIoldstat\fP, но POSIX.1
+этот случай не рассматривается, поэтому переносимые приложения должны всегда
+указывать в \fIoldstate\fP значение, отличное от NULL. Эти утверждения
+относятся и к аргументу \fIoldtype\fP функции \fBpthread_setcanceltype\fP().
+.SH ПРИМЕР
+Смотрите \fBpthread_cancel\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthread_cancel\fP(3), \fBpthread_cleanup_push\fP(3), \fBpthread_testcancel\fP(3),
+\fBpthreads\fP(7)

@@ -1,0 +1,85 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) 2012 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MALLOC_TRIM 3 2019\-05\-09 Linux "Руководство программиста Linux"
+.SH ИМЯ
+malloc_trim — освобождает свободную память из кучи
+.SH ОБЗОР
+\fB#include <malloc.h>\fP
+.PP
+\fBint malloc_trim(size_t \fP\fIpad\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функция \fBmalloc_trim\fP() освобождает свободную память из кучи (используя
+\fBsbrk\fP(2) или \fBmadvise\fP(2) с подходящими аргументами).
+.PP
+Аргумент \fIpad\fP определяет размер свободного пространства, оставляемого на
+верху кучи. Если он 0, то поддерживается минимум памяти (одна страница или
+меньше). Если значение отлично от нуля, то освобождается пространство для
+будущего распределения без необходимости использовать \fBsbrk\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+\fBmalloc_trim\fP() возвращает 1 если память была освобождена, 0 если это не
+возможно.
+.SH ОШИБКИ
+.\" .SH VERSIONS
+.\" Available already in glibc 2.0, possibly earlier
+Ошибки не установлены.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmalloc_trim\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является расширением GNU.
+.SH ЗАМЕЧАНИЯ
+Эта функция автоматически вызывается функцией \fBfree\fP(3) в определённых
+обстоятельствах. Смотрите обсуждение \fBM_TOP_PAD\fP и \fBM_TRIM_THRESHOLD\fP в
+\fBmallopt\fP(3).
+.PP
+В аргументе \fIpad\fP учитывается только главная куча (использующаяся в
+\fBsbrk\fP(2)); с кучами нитей не работает.
+.PP
+.\" See commit 68631c8eb92ff38d9da1ae34f6aa048539b199cc
+.\" (dated 2007-12-16) which adds iteration over all
+.\" arenas and frees all pages in chunks which are free.
+Начиная с glibc 2.8 эта функция освобождает память во всех областях (arenas)
+и во всех кусках (chunks) со свободными страницами целиком.
+.PP
+До glibc 2.8 эта функция освобождает память только с вершины кучи в главной
+области.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsbrk\fP(2), \fBmalloc\fP(3), \fBmallopt\fP(3)

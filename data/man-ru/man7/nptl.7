@@ -1,0 +1,104 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2015 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NPTL 7 2015\-08\-08 Linux "Руководство программиста Linux"
+.SH ИМЯ
+nptl \- библиотека нитей POSIX
+.SH ОПИСАНИЕ
+.\"
+NPTL (Native POSIX Threads Library — библиотека нитей POSIX) это библиотека
+GNU C, в которой реализованы нити POSIX, используется в современных версиях
+Linux.
+.SS "NPTL и сигналы"
+Внутри NPTL используются два первых сигнала реального времени (с номерами 32
+и 33). Один из них служит для поддержки удаления (cancellation) нитей и
+таймеров POSIX (смотрите \fBtimer_create\fP(2)); второй используется как часть
+механизма обеспечения всех нитей в одном процессе единым UID и GID, как того
+требует POSIX. Данные сигналы нельзя использовать в приложениях.
+.PP
+Чтобы не допустить случайного использования этих сигналов в приложениях, что
+может помешать работе реализации NPTL, в различных функциях библиотеки glibc
+и обёрточных функциях системных вызовов добавлено сокрытие этих сигналов от
+приложений:
+.IP * 3
+Сигнал \fBSIGRTMIN\fP определён со значением 34 (а не 32).
+.IP *
+Интерфейсы \fBsigwaitinfo\fP(2), \fBsigtimedwait\fP(2) и \fBsigwait\fP(3) игнорируют
+запросы на ожидание этих сигналов, если но указаны в аргументе набора
+сигналов.
+.IP *
+Интерфейсы \fBsigprocmask\fP(2) и \fBpthread_sigmask\fP(3) игнорируют попытки
+блокировки этих сигналов.
+.IP *
+Интерфейсы \fBsigaction\fP(2), \fBpthread_kill\fP(3) и \fBpthread_sigqueue\fP(3)
+завершаются с ошибкой \fBEINVAL\fP (указан некорректный номер сигнала), если
+заданы эти сигналы.
+.IP *
+.\"
+Функция \fBsigfillset\fP(3) не включает эти сигналы при создании полного набора
+сигналов.
+.SS "NPTL и изменение идентификаторов процесса"
+На уровне ядра Linux идентификаторы (пользовательский и групповой ID)
+являются атрибутов нити. Однако в POSIX требуется, чтобы все нити POSIX
+одного процесса имели одинаковые идентификаторы. Для удовлетворения этого
+требования в реализации NPTL для всех системных вызовов, изменяющих
+идентификаторы процесса, созданы обёрточные функции, которые при обращении к
+нижележащим вызовам, также изменяют идентификаторы и всем остальным нитям
+процесса.
+.PP
+В реализации каждого из этих системных вызовов используется сигнал реального
+времени, который посылается (с помощью \fBtgkill\fP(2)) всем остальным нитях,
+которым нужно изменить идентификаторы. Перед отправкой этих сигналов, нить,
+у которой изменяются идентификаторы, сохраняет новые идентификаторы и
+записывает использующийся системный вызов в глобальный буфер. Обработчик
+сигнала в принимающей нити извлекает эту информацию и использует тот же
+системный вызов для изменения своих идентификаторов.
+.PP
+.\" FIXME .
+.\" Maybe say something about vfork() not being serialized wrt set*id() APIs?
+.\" https://sourceware.org/bugzilla/show_bug.cgi?id=14749
+Обёрточные функции, использующие такую же технику: \fBsetgid\fP(2),
+\fBsetuid\fP(2), \fBsetegid\fP(2), \fBseteuid\fP(2), \fBsetregid\fP(2), \fBsetreuid\fP(2),
+\fBsetresgid\fP(2), \fBsetresuid\fP(2) и \fBsetgroups\fP(2).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Дополнительную информацию о соответствии NPTL стандарту POSIX находится в
+\fBpthreads\fP(7).
+.SH ЗАМЕЧАНИЯ
+.\" See POSIX.1-2008 specification of pthread_mutexattr_init()
+.\" See sysdeps/x86/bits/pthreadtypes.h
+В POSIX сказано, что всем нитям процесса с доступом к памяти, содержащей
+общие для процесса (\fBPTHREAD_PROCESS_SHARED\fP) мьютексы, доступны эти
+мьютексы. Однако в 64\-битных системах с архитектурой x86 определение
+мьютекса для x86\-64 несовместимо с определением для i386, что означает, что
+исполняемые 32\-битные и 64\-битные файлы не могут иметь общих мьютексов в
+системах x86\-64.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcredentials\fP(7), \fBpthreads\fP(7), \fBsignal\fP(7), \fBstandards\fP(7)

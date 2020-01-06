@@ -1,0 +1,68 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2002 Andries Brouwer <aeb@cwi.nl>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" This replaces an earlier man page written by Walter Harms
+.\" <walter.harms@informatik.uni-oldenburg.de>.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETUMASK 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getumask \- возвращает маску создания файла
+.SH ОБЗОР
+\fB#define _GNU_SOURCE\fP /* смотрите feature_test_macros(7) */
+.br
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <sys/stat.h>\fP
+.PP
+\fBmode_t getumask(void);\fP
+.SH ОПИСАНИЕ
+Функция возвращает текущую маску создания файла. Она эквивалентна
+.PP
+.in +4n
+.EX
+mode_t getumask(void)
+{
+    mode_t mask = umask( 0 );
+    umask(mask);
+    return mask;
+}
+.EE
+.in
+.PP
+за исключением того, что без проблем может использоваться нитях (то есть
+использует общую блокировку с библиотечным вызовом \fBumask\fP(2)).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Это «дутое» расширение GNU.
+.SH ЗАМЕЧАНИЯ
+Эта функция описана в руководстве glibc, но на момент версии glibc 2.24, оно
+не реализовано для Linux (смотрите в \fBumask\fP(2) нитебезопасный метод
+определения umask процесса).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBumask\fP(2)

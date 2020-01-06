@@ -1,0 +1,249 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2016 Intel Corporation
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PKEYS 7 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pkeys \- обзор ключей защиты памяти
+.SH ОПИСАНИЕ
+Ключи защиты памяти (pkeys) — это расширение существующих постраничных прав
+на память. Для обычных прав на страницу используются страничные таблицы,
+требующие для изменении прав затратных системных вызовов и аннулирования
+TLB. Ключи защиты памяти предоставляют механизм изменения защиты без
+необходимости изменять страничные таблицы при каждом изменении прав.
+.PP
+Чтобы использовать pkeys, ПО сначала должно «пометить» (tag) страницу в
+страничных таблицах значением pkey. После размещения этой метки для удаления
+прав на запись или весь доступ к помеченной странице приложению нужно
+изменить только содержимое регистра.
+.PP
+Ключи защиты вместе с существующими правами \fBPROT_READ\fP/ \fBPROT_WRITE\fP/
+\fBPROT_EXEC\fP передаются в системные вызовы, такие как \fBmprotect\fP(2) и
+\fBmmap\fP(2), но всегда считаются как дополнительное ограничение к
+существующим традиционным механизмам прав доступа.
+.PP
+Если процесс осуществляет доступ, нарушающий ограничения pkey, то он
+получает сигнал \fBSIGSEGV\fP. Подробную информацию об этом сигнале смотрите в
+\fBsigaction\fP(2).
+.PP
+Чтобы использовать свойство pkeys, это должен поддерживать процессор, а ядро
+должно включать поддержку этого свойства для этого процессора. К началу
+2016 года это относится только к будущим процессорам Intel x86, и данная
+аппаратура поддерживает 16 ключей защиты на каждый процесс. Однако pkey 0
+используется как ключ по умолчанию, поэтому для приложения доступно только
+15. Ключ по умолчанию назначается любой области памяти, для которой pkey не
+был назначен явным образом с помощью \fBpkey_mprotect\fP(2).
+.PP
+Потенциально, ключи защиты могут добавить уровень безопасности и надежности
+приложений. Но, прежде всего, они не разрабатывались как средство
+защиты. Например, WRPKRU — это полностью непривилегированная инструкция,
+поэтому pkeys бесполезны, когда атакующий контролирует регистр PKRU или
+может выполнять любые инструкции.
+.PP
+Приложения должны следить за тем, чтобы их ключи защиты не «не
+утекли». Например, перед вызовом \fBpkey_free\fP(2) приложение должно
+проверить, что pkey не назначен памяти. Если приложение оставит назначенным
+освобождённый pkey,  то будущий пользователь этого pkey может
+непреднамеренно изменить права на не относящуюся к делу структуру данных,
+что может привести к проблемам с безопасностью или стабильностью. В
+настоящее время ядро позволяет вызывать \fBpkey_free\fP(2) для задействованных
+pkeys, так как выполнение дополнительных проверок повлияло бы на
+производительность процессора или памяти. Реализация необходимых проверок
+переложена на приложение. Приложения могут найти области памяти, которым
+назначен pkey, в файле \fI/proc/[pid]/smaps\fP. Дополнительная информация
+представлена в \fBproc\fP(5).
+.PP
+Приложение, которое хочет воспользоваться ключами защиты, может работать и
+без них. Ключи могут быть недоступны из\-за отсутствия аппаратной поддержки
+системе, где запускается приложение, в коде ядра может не быть поддержки,
+поддержка в ядре может быть выключена или все ключи уже задействованы
+библиотекой, которую использует приложение. В приложениях рекомендуется
+просто вызывать \fBpkey_alloc\fP(2) и проверять успешность выполнения, а не
+пытаться проверять наличие поддержки каким\-то другим образом.
+.PP
+Хотя и необязательно, поддержку ключей защиты в аппаратуре можно определить
+помощью инструкции \fIcpuid\fP. От том, как это сделать, смотрите в программном
+руководстве разработчика Intel. Ядро определяет наличие поддержки и выводит
+информацию в \fI/proc/cpuinfo\fP в поле «flags». Строка «pku» в этом поле
+означает, что аппаратура поддерживает ключи защиты, а строка «ospke»
+означает, что ядро содержит включённую поддержку защиты.
+.PP
+.\"
+Если приложение использует нити и ключи защиты, то нужно быть особенно
+осторожным. Нити наследуют права ключей защиты родителя при выполнении
+системного вызова \fBclone\fP(2). Приложения должны убедиться, что их
+собственные права подходят для дочерних нитей до вызова \fBclone\fP(2) или
+выполнять инициализацию прав ключей защиты в самих нитях.
+.SS "Поведение обработчика сигналов"
+Каждый раз, когда вызывается обработчик сигнала (включая вложенные сигналы),
+нити временно даётся новый набор прав ключа защиты по умолчанию, который
+заменяет права прерванного контекста. Это означает, что приложения должны
+переустанавливать свои желаемые права ключа защиты при входе в обработчик
+сигнала, если желаемые права отличаются от значения по умолчанию. Права
+любого прерванного контекста восстанавливаются при завершении обработчика
+сигналов.
+.PP
+.\"
+Данное поведение сигнала необычно из\-за того, что регистр x86 PKRU (который
+хранит права доступа ключа защиты) управляется тем же аппаратным механизмом
+(XSAVE) что и регистры плавающей запятой. Поведение сигнала такое же как у
+регистров плавающей запятой.
+.SS "Системные вызовы ключей защиты"
+В ядре Linux реализованы следующие системные вызовы для работы с pkey:
+\fBpkey_mprotect\fP(2), \fBpkey_alloc\fP(2) и \fBpkey_free\fP(2).
+.PP
+Системные вызовы Linux pkey доступны только, если ядро было собрано с
+включённым параметром  \fBCONFIG_X86_INTEL_MEMORY_PROTECTION_KEYS\fP.
+.SH ПРИМЕР
+.PP
+Программа, представленная далее, выделяет страницу памяти с правами на
+чтение и запись. Затем она записывает кусок данных в памяти и читает
+его. После этого она пытается выделить ключ защиты и запретить доступ к
+странице с помощью инструкции WRPKRU. Далее она пытается получить доступ к
+странице, что, как мы ожидаем, вызовет сигнал завершения приложения.
+.PP
+.in +4n
+.EX
+$\fB ./a.out\fP
+буфер содержит: 73
+читаем буфер снова...
+Segmentation fault (core dumped)
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <stdio.h>
+#include <sys/mman.h>
+
+static inline void
+wrpkru(unsigned int pkru)
+{
+    unsigned int eax = pkru;
+    unsigned int ecx = 0;
+    unsigned int edx = 0;
+
+    asm volatile(".byte 0x0f,0x01,0xef\en\et"
+                 : : "a" (eax), "c" (ecx), "d" (edx));
+}
+
+int
+pkey_set(int pkey, unsigned long rights, unsigned long flags)
+{
+    unsigned int pkru = (rights << (2 * pkey));
+    return wrpkru(pkru);
+}
+
+int
+pkey_mprotect(void *ptr, size_t size, unsigned long orig_prot,
+              unsigned long pkey)
+{
+    return syscall(SYS_pkey_mprotect, ptr, size, orig_prot, pkey);
+}
+
+int
+pkey_alloc(void)
+{
+    return syscall(SYS_pkey_alloc, 0, 0);
+}
+
+int
+pkey_free(unsigned long pkey)
+{
+    return syscall(SYS_pkey_free, pkey);
+}
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                           } while (0)
+
+int
+main(void)
+{
+    int status;
+    int pkey;
+    int *buffer;
+
+    /*
+     * выделяем страницу памяти
+     */
+    buffer = mmap(NULL, getpagesize(), PROT_READ | PROT_WRITE,
+                  MAP_ANONYMOUS | MAP_PRIVATE, \-1, 0);
+    if (buffer == MAP_FAILED)
+        errExit("mmap");
+
+    /*
+     * пишем произвольные данные в страницу (чуть)
+     */
+    *buffer = __LINE__;
+    printf("буфер содержит: %d\en", *buffer);
+
+    /*
+     * выделяем ключ защиты:
+     */
+    pkey = pkey_alloc();
+    if (pkey == \-1)
+        errExit("pkey_alloc");
+
+    /*
+     * запрещаем доступ к памяти, на которой будет установлен «pkey»,
+     * хотя пока ничего не запрещено
+     */
+    status = pkey_set(pkey, PKEY_DISABLE_ACCESS, 0);
+    if (status)
+        errExit("pkey_set");
+
+    /*
+     * установим ключ защиты на «буфер»
+     * заметим, что он доступен пока не применён mprotect()
+     * и ключ не заменен созданным ранее pkey_set()
+     */
+    status = pkey_mprotect(buffer, getpagesize(),
+                           PROT_READ | PROT_WRITE, pkey);
+    if (status == \-1)
+        errExit("pkey_mprotect");
+
+    printf("читаем буфер снова...\en");
+
+    /*
+     * приложение падает, так как мы запретили доступ
+     */
+    printf("буфер содержит: %d\en", *buffer);
+
+    status = pkey_free(pkey);
+    if (status == \-1)
+        errExit("pkey_free");
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpkey_alloc\fP(2), \fBpkey_free\fP(2), \fBpkey_mprotect\fP(2), \fBsigaction\fP(2)

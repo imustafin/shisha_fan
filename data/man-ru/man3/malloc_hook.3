@@ -1,0 +1,125 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" Heavily based on glibc documentation
+.\" Polished, added docs, removed glibc doc bug, 2002-07-20, aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MALLOC_HOOK 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+__malloc_hook, __malloc_initialize_hook, __memalign_hook, __free_hook,
+__realloc_hook, __after_morecore_hook \- переменные отладки malloc
+.SH ОБЗОР
+.nf
+\fB#include <malloc.h>\fP
+.PP
+\fBvoid *(*__malloc_hook)(size_t \fP\fIsize\fP\fB, const void *\fP\fIcaller\fP\fB);\fP
+.PP
+\fBvoid *(*__realloc_hook)(void *\fP\fIptr\fP\fB, size_t \fP\fIsize\fP\fB, const void *\fP\fIcaller\fP\fB);\fP
+.PP
+\fBvoid *(*__memalign_hook)(size_t \fP\fIalignment\fP\fB, size_t \fP\fIsize\fP\fB,\fP
+\fB                         const void *\fP\fIcaller\fP\fB);\fP
+.PP
+\fBvoid (*__free_hook)(void *\fP\fIptr\fP\fB, const void *\fP\fIcaller\fP\fB);\fP
+.PP
+\fBvoid (*__malloc_initialize_hook)(void);\fP
+.PP
+\fBvoid (*__after_morecore_hook)(void);\fP
+.fi
+.SH ОПИСАНИЕ
+Библиотека GNU C позволяет изменить поведение \fBmalloc\fP(3), \fBrealoc\fP(3) и
+\fBfree\fP(3), указав соответствующие «обрабатывающие» (hook) функции. Вы
+можете использовать эти функции\-обработчики для отладки программ,
+использующих динамическое выделение памяти.
+.PP
+Переменная \fB__ malloc_initialize_hook\fP указывает на функцию, которая
+однократно вызывается при инициализации реализации malloc. Это — слабая
+переменная, поэтому она может быть переопределена в приложении как показано
+далее:
+.PP
+.in +4n
+.EX
+void (*__malloc_initialize_hook)(void) = my_init_hook;
+.EE
+.in
+.PP
+Теперь функция \fImy_init_hook\fP() может проинициализировать все
+функции\-обработчики.
+.PP
+У четырёх функций, на которые указывают переменные \fB__malloc_hook\fP,
+\fB__realloc_hook\fP, \fB__memalign_hook\fP, \fB__free_hook\fP, имеются прототипы,
+подобные функциям \fBmalloc\fP(3), \fBrealloc\fP(3), \fBmemalign\fP(3), \fBfree\fP(3),
+соответственно, однако у них есть дополнительный последний параметр
+\fIcaller\fP, в который передаётся адрес вызывающего \fBmalloc\fP(3) и т.д.
+.PP
+Переменная \fB__ after_morecore_hook\fP указывает на функцию, которая
+вызывается каждый раз после того, как \fBsbrk\fP(2) просят увеличить память.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+.\" https://bugzilla.redhat.com/show_bug.cgi?id=450187
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=9957
+Использование этих обрабатывающих функций не безопасно в многонитевых
+программах, и теперь они считаются устаревшими. Начиная с glibc версии 2.24,
+переменная \fB__ malloc_initialize_hook\fP  была удалена из программного
+интерфейса. Теперь вместо неё программисты должны подменять вызовы
+соответствующих функций, определяя и экспортируя такие функции как «malloc»
+и «free».
+.SH ПРИМЕР
+Вот короткий пример того, как использовать эти переменные.
+.PP
+.EX
+#include <stdio.h>
+#include <malloc.h>
+
+/* прототипы наших функций */
+static void my_init_hook(void);
+static void *my_malloc_hook(size_t, const void *);
+
+/* переменные для сохранения имеющихся обрабатывающих функций */
+static void *(*old_malloc_hook)(size_t, const void *);
+
+/* переопределяем первоначальные функции библиотеки C */
+void (*__malloc_initialize_hook) (void) = my_init_hook;
+
+static void
+my_init_hook(void)
+{
+    old_malloc_hook = __malloc_hook;
+    __malloc_hook = my_malloc_hook;
+}
+
+static void *
+my_malloc_hook(size_t size, const void *caller)
+{
+    void *result;
+
+    /* Восстанавливаем старые функции */
+    __malloc_hook = old_malloc_hook;
+
+    /* вызываем рекурсивно */
+    result = malloc(size);
+
+    /* сохраняем нижележащие функции */
+    old_malloc_hook = __malloc_hook;
+
+    /* printf() тоже может вызвать malloc(), поэтому его тоже надо защитить */
+    printf("malloc(%u) called from %p returns %p\en",
+            (unsigned int) size, caller, result);
+
+    /* восстанавливаем наши функции */
+    __malloc_hook = my_malloc_hook;
+
+    return result;
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmallinfo\fP(3), \fBmalloc\fP(3), \fBmcheck\fP(3), \fBmtrace\fP(3)

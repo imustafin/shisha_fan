@@ -1,0 +1,76 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" heavily based on glibc infopages, copyright Free Software Foundation
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGNIFICAND 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+significand, significandf, significandl \- возвращает мантиссу числа с
+плавающей запятой
+.SH ОБЗОР
+\fB#include <math.h>\fP
+.PP
+\fBdouble significand(double \fP\fIx\fP\fB);\fP
+.br
+\fBfloat significandf(float \fP\fIx\fP\fB);\fP
+.br
+\fBlong double significandl(long double \fP\fIx\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBsignificand\fP(), \fBsignificandf\fP(), \fBsignificandl\fP():
+.RS 4
+/* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Эти функции возвращают мантиссу \fIx\fP, приведённую к диапазону [1,2). Они
+эквивалентны
+.PP
+.in +4n
+.EX
+scalb(x, (double) \-ilogb(x))
+.EE
+.in
+.PP
+В основном, эта функция используется в определённых стандартизованных тестах
+для соответствия IEEE 754.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsignificand\fP(),
+.br
+\fBsignificandf\fP(),
+.br
+\fBsignificandl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" .SH HISTORY
+.\" This function came from BSD.
+Эти функции являются нестандартными; в некоторых системах есть функция
+\fIdouble\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBilogb\fP(3), \fBscalb\fP(3)

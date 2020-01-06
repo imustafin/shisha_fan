@@ -1,0 +1,121 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2000 Manoj Srivastava <srivasta@debian.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Minor polishing, aeb
+.\" Modified, 2002-06-16, Mike Coleman
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH HOSTS 5 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+hosts \- статическая таблица для поиска имён узлов
+.SH ОБЗОР
+\fB/etc/hosts\fP
+.SH ОПИСАНИЕ
+Данная справочная страница описывает формат файла \fI/etc/hosts\fP. Это простой
+текстовый файл, который связывает IP\-адреса с именами узлов (по одному
+IP\-адресу на строку). Для каждого узла в отдельной строке должна быть
+представлена запись со следующей информацией:
+.RS
+.PP
+IP\-адрес каноническое_имя_узла [псевдонимы...]
+.RE
+.PP
+Поля записи разделяются пробелами и/или символами табуляции. Текст,
+начинающийся с символа "#" до конца строки считается комментарием и
+игнорируется. Имена узлов могут содержать только буквы, цифры, знаки минус
+("\-") и точки ("."). Они должны начинаться с буквы и заканчиваться буквой
+или цифрой. Псевдонимы предоставляются для возможности выбора более одного
+имени, альтернативного произношения, сокращения имени узла или для указания
+наиболее общего имени узла (например, \fIlocalhost\fP).
+.PP
+DNS сервер Berkeley Internet Name Domain (BIND) реализует сервер службы имён
+для UNIX систем. Он расширяет или замещает файл \fI/etc/hosts\fP при операциях
+поиска имени узла, а также освобождает от необходимости поддерживать
+актуальность и полноту \fI/etc/hosts\fP.
+.PP
+В современных системах, даже таблица узлов может быть заменена на DNS, это
+широко используется в следующих случаях:
+.TP 
+\fBначальная загрузка\fP
+Большинство систем имеют маленькую таблицу узлов, которая обычно содержит
+имена и адреса наиболее важных узлов локальной сети. Это полезно, когда
+служба DNS не запущена, например во время загрузки системы.
+.TP 
+\fBNIS\fP
+Сайты, которые используют NIS, хранят таблицу узлов в базе данных узлов
+NIS. Но даже при работе с NIS остаётся возможность использовать DNS,
+большинство NIS сайтов также используют для целей резервирования и таблицу
+узлов, где размещаются записи о всех локальных узлах.
+.TP 
+\fBизолированные узлы\fP
+Очень маленькие сайты, которые изолированы от сети, используют таблицу узлов
+вместо DNS. Если локальная информация меняется редко и сеть не подключена к
+Интернет, DNS не даёт ощутимых преимуществ.
+.SH ФАЙЛЫ
+\fI/etc/hosts\fP
+.SH ЗАМЕЧАНИЯ
+Изменения этого файла сразу начинают действовать, если этот файл не
+кэшируется используемым его приложением.
+.SS "Исторические замечания"
+В RFC\ 952 показан первоначальный формат таблицы узлов, хотя позднее он был
+изменён.
+.PP
+Перед появлением DNS, таблица узлов была единственным способом определения
+IP\-адресов по именам узлов в развивающейся сети Интернет. В самом деле, этот
+файл мог быть создан из официальной базы данных узлов, которая обслуживалась
+Центром управления сетевой информацией (Network Information Control Center
+(NIC)), и внесения локальных изменений, которые часто требовались для
+поддержки актуальности данных и добавления неофициальных псевдонимов и/или
+неизвестных узлов. NIC больше не поддерживает файлы hosts.txt
+(приблизительно с 2000 года), но на их WWW существуют исторические файлы
+hosts.txt. Я обнаружил три: от 92, 94 и 95 годов.
+.SH ПРИМЕР
+.EX
+# Следующие строки желательно иметь для узлов, поддерживающих IPv4
+127.0.0.1       localhost
+
+# 127.0.1.1 часто используется для FQDN машины
+127.0.1.1       thishost.mydomain.org  thishost
+192.168.1.10    foo.mydomain.org       foo
+192.168.1.13    bar.mydomain.org       bar
+146.82.138.7    master.debian.org      master
+209.237.226.90  www.opensource.org
+
+# Следующие строки желательно иметь для узлов, поддерживающих IPv6
+::1             localhost ip6\-localhost ip6\-loopback
+ff02::1         ip6\-allnodes
+ff02::2         ip6\-allrouters
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBhostname\fP(1), \fBresolver\fP(3), \fBhost.conf\fP(5), \fBresolv.conf\fP(5),
+\fBresolver\fP(5), \fBhostname\fP(7), \fBnamed\fP(8)
+.PP
+Internet RFC\ 952
+.\" .SH AUTHOR
+.\" This manual page was written by Manoj Srivastava <srivasta@debian.org>,
+.\" for the Debian GNU/Linux system.

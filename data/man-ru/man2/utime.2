@@ -1,0 +1,140 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1995-06-10 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2004-10-10 by Andries Brouwer <aeb@cwi.nl>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UTIME 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+utime, utimes \- изменить последнее время доступа и изменения к inode
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <utime.h>\fP
+.PP
+\fBint utime(const char *\fP\fIfilename\fP\fB, const struct utimbuf *\fP\fItimes\fP\fB);\fP
+.PP
+\fB#include <sys/time.h>\fP
+.PP
+\fBint utimes(const char *\fP\fIfilename\fP\fB, const struct timeval \fP\fItimes\fP\fB[2]);\fP
+.fi
+.SH ОПИСАНИЕ
+\fBЗамечание:\fP современным приложениям лучше использовать интерфейсы,
+описанные в \fButimensat\fP(2).
+.PP
+Системный вызов \fButime\fP() изменяет время доступа и изменения у inode,
+указанного в \fIfilename\fP на значения полей \fIactime\fP и \fImodtime\fP из
+структуры \fItimes\fP, соответственно.
+.PP
+Если значение \fItimes\fP равно NULL, то время доступа и изменения файла
+устанавливаются в текущее время.
+.PP
+Изменение временных меток разрешено если: процесс имеет соответствующие
+права или эффективный пользовательский идентификатор равен пользовательскому
+идентификатору файла, или значение \fItimes\fP равно NULL и процесс имеет права
+на запись в файл.
+.PP
+Структура \fIutimbuf\fP выглядит так:
+.PP
+.in +4n
+.EX
+struct utimbuf {
+    time_t actime;       /* время доступа */
+    time_t modtime;      /* время изменения */
+};
+.EE
+.in
+.PP
+Системный вызов \fButime\fP() позволяет указывать временные метки с точностью
+до 1 секунды.
+.PP
+Системный вызов \fButimes\fP() выполняет подобное  действие, но аргумент
+\fItimes\fP указывает на массив, а не на структуру. Элементы массива
+представляют собой структуры \fItimeval\fP, с помощью которых можно указывать
+временные метки с точностью до 1 микросекунды . Структура \fItimeval\fP:
+.PP
+.in +4n
+.EX
+struct timeval {
+    long tv_sec;        /* секунды */
+    long tv_usec;       /* микросекунды */
+};
+.EE
+.in
+.PP
+В \fItimes\fP[0] задаётся новое время доступа, а в \fItimes\fP[1] новое время
+изменения. Если значение \fItimes\fP равно NULL, то аналогично \fButime\fP(),
+время доступа и изменения файла устанавливаются в текущее время.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Запрещён поиск в одном из каталогов пути \fIpath\fP (см. также
+\fBpath_resolution\fP(7)).
+.TP 
+\fBEACCES\fP
+Значение \fItimes\fP равно NULL, эффективный пользовательский идентификатор
+вызывающего процесса не совпадает с владельцем файла, вызывающий не имеет
+права на запись в файл, и у вызывающего нет привилегий (Linux: не имеет
+мандата \fBCAP_DAC_OVERRIDE\fP или \fBCAP_FOWNER\fP).
+.TP 
+\fBENOENT\fP
+Файл \fIfilename\fP не существует.
+.TP 
+\fBEPERM\fP
+Значение \fItimes\fP не равно NULL, эффективный пользовательский идентификатор
+вызывающего процесса не совпадает с владельцем файла и у вызывающего нет
+привилегий (Linux: не имеет мандата \fBCAP_FOWNER\fP).
+.TP 
+\fBEROFS\fP
+\fIpath\fP располагается на файловой системе, доступной только для чтения.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fButime\fP(): SVr4, POSIX.1\-2001. В POSIX.1\-2008 вызов \fButime\fP() помечен как
+устаревший.
+.PP
+\fButimes\fP(): 4.3BSD, POSIX.1\-2001.
+.SH ЗАМЕЧАНИЯ
+.\"
+.\" In libc4 and libc5,
+.\" .BR utimes ()
+.\" is just a wrapper for
+.\" .BR utime ()
+.\" and hence does not allow a subsecond resolution.
+В Linux нельзя изменять временные метки у недосягаемых (immutable) файлов
+или задавать временные метки, отличные от текущего времени для файлов, в
+которые можно только дописывать.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchattr\fP(1), \fBtouch\fP(1), \fBfutimesat\fP(2), \fBstat\fP(2), \fButimensat\fP(2),
+\fBfutimens\fP(3), \fBfutimes\fP(3), \fBinode\fP(7)

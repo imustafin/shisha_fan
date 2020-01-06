@@ -1,0 +1,227 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)truncate.2	6.9 (Berkeley) 3/10/91
+.\"
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-10-22 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1998-12-21 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 2002-01-07 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2002-04-06 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TRUNCATE 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+truncate, ftruncate \- обрезает файл до заданного размера
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.br
+\fB#include <sys/types.h>\fP
+.PP
+\fBint truncate(const char *\fP\fIpath\fP\fB, off_t \fP\fIlength\fP\fB);\fP
+.br
+\fBint ftruncate(int \fP\fIfd\fP\fB, off_t \fP\fIlength\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.ad l
+.PP
+\fBtruncate\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+.br
+    || /* начиная с glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+    || /* в версиях glibc <= 2.19: */ _BSD_SOURCE
+.RE
+.PP
+\fBftruncate\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.3.5: */ _POSIX_C_SOURCE\ >=\ 200112L
+    || /* в версиях glibc <= 2.19: */ _BSD_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Функции \fBtruncate\fP() и \fBftruncate\fP() обрезают обычный файл, указанный по
+имени \fIpath\fP или ссылке  \fIfd\fP, до размера, указанного в \fIlength\fP (в
+байтах).
+.PP
+Если до этого файл был больше указанного размера, все лишние данные будут
+утеряны. Если файл был меньше, он будет увеличен, а дополнительная часть
+будет заполнена нулевыми байтами («\e0»).
+.PP
+Смещение файла не изменяется.
+.PP
+Если размер изменился, поля st_ctime и st_mtime (время последнего изменения
+состояния и время последнего изменения, соответственно; смотрите
+\fBinode\fP(7)) файла будут обновлены, а биты режимов set\-user\-ID и
+set\-group\-ID могут быть сброшены.
+.PP
+Для \fBftruncate\fP() файл должен быть открыт на запись; для \fBtruncate\fP() файл
+должен быть доступен на запись.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+Для \fBtruncate\fP():
+.TP 
+\fBEACCES\fP
+В одном из каталогов префикса не разрешен поиск, либо указанный файл не
+доступен на запись для пользователя (смотрите также \fBpath_resolution\fP(7)).
+.TP 
+\fBEFAULT\fP
+Значение \fIpath\fP указывает за пределы адресного пространства, выделенного
+процессу.
+.TP 
+\fBEFBIG\fP
+Аргумент \fIlength\fP больше максимально допустимого размера файла (XSI).
+.TP 
+\fBEINTR\fP
+При блокирующем ожидании завершения вызов был прерван обработчиком сигналов;
+смотрите \fBfcntl\fP(2) и \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Аргумент \fIlength\fP является отрицательным или больше максимально допустимого
+размера файла.
+.TP 
+\fBEIO\fP
+Во время обновления индексного дескриптора (inode) возникла ошибка
+ввода/вывода.
+.TP 
+\fBEISDIR\fP
+Указанный файл является каталогом.
+.TP 
+\fBELOOP\fP
+Во время определения pathname встретилось слишком много символьных ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+Компонент имени пути содержит более 255 символов, или весь путь содержит
+более 1023 символов.
+.TP 
+\fBENOENT\fP
+Указанный файл не существует.
+.TP 
+\fBENOTDIR\fP
+Компонент в префиксе пути не является каталогом.
+.TP 
+\fBEPERM\fP
+.\" This happens for at least MSDOS and VFAT filesystems
+.\" on kernel 2.6.13
+Используемая файловая система не поддерживает расширение файла больше его
+текущего размера.
+.TP 
+\fBEPERM\fP
+Выполнение операции предотвращено опечатыванием (file seal); смотрите
+\fBfcntl\fP(2).
+.TP 
+\fBEROFS\fP
+Указанный файл находится на файловой системе, смонтированной только для
+чтения.
+.TP 
+\fBETXTBSY\fP
+Файл является исполняемым файлом, который в данный момент исполняется.
+.PP
+Для \fBftruncate\fP() действуют те же ошибки, за исключением того, что вместо
+ошибок, связанных с неправильным \fIpath\fP, появляются ошибки, связанные с
+файловым дескриптором \fIfd\fP:
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEBADF\fP или \fBEINVAL\fP
+Дескриптор \fIfd\fP не открыт для записи.
+.TP 
+\fBEINVAL\fP
+Дескриптор \fIfd\fP не указывает на обычный файл или объект общей памяти POSIX.
+.TP 
+\fBEINVAL\fP или \fBEBADF\fP
+Файловый дескриптор \fIfd\fP не открыт на запись. В POSIX это допускается и
+переносимые приложения должны обрабатывать любую ошибку для этого случая
+(Linux возвращает \fBEINVAL\fP).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" POSIX.1-1996 has
+.\" .BR ftruncate ().
+.\" POSIX.1-2001 also has
+.\" .BR truncate (),
+.\" as an XSI extension.
+.\" .LP
+.\" SVr4 documents additional
+.\" .BR truncate ()
+.\" error conditions EMFILE, EMULTIHP, ENFILE, ENOLINK.  SVr4 documents for
+.\" .BR ftruncate ()
+.\" an additional EAGAIN error condition.
+POSIX.1\-2001, POSIX.1\-2008, 4.4BSD, SVr4 (данные вызовы впервые появились в
+4.2BSD).
+.SH ЗАМЕЧАНИЯ
+Вызов \fBftruncate\fP()  также может использоваться для установки размера
+объекта общей памяти POSIX; смотрите \fBshm_open\fP(7).
+.PP
+.\" At the very least: OSF/1, Solaris 7, and FreeBSD conform, mtk, Jan 2002
+В ОПИСАНИИ приведена информация для XSI\-совместимых систем. Для не
+XSI\-совместимых систем в стандарте POSIX описано два поведения
+\fBftruncate\fP(), когда \fIlength\fP превышает длину файла (заметим, что
+\fBtruncate\fP() не обязательно быть во всех таких окружениях): или вернуть
+ошибку, или расширить файл. Подобно большинству реализаций UNIX, Linux
+соответствует требованию XSI, когда работает с родными файловыми
+системами. Однако, в некоторых неродных файловых системах не разрешается
+использовать \fBtruncate\fP() и \fBftruncate\fP() для расширения файла больше его
+текущей длины: например, в Linux это касается VFAT.
+.PP
+Первоначальные версии системных вызовов \fBtruncate\fP() и \fBftruncate\fP() в
+Linux не умели работать с большими файловыми смещениями. Позднее, в Linux
+2.4 были добавлены системные вызовы \fBtruncate64\fP() и \fBftruncate64\fP() для
+работы с большими файлами. Однако это различие может игнорироваться
+приложениями, которые используют glibc, так как имеющиеся в ней обёрточные
+функции самостоятельно задействуют более новый системный вызов, если он
+доступен.
+.PP
+На некоторых 32\-битных архитектурах интерфейс этих системных вызовов
+отличается от описанного выше по причинам, указанным в \fBsyscall\fP(2).
+.SH ДЕФЕКТЫ
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=12037
+Из\-за ошибки в заголовочном файле glibc 2.12 минимальное значение
+\fB_POSIX_C_SOURCE\fP, требуемое для объявления декларации \fBftruncate\fP(), было
+равно 200809L вместо 200112L. В последующих версиях glibc эта ошибка была
+исправлена.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBtruncate\fP(1), \fBopen\fP(2), \fBstat\fP(2), \fBpath_resolution\fP(7)

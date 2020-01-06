@@ -1,0 +1,90 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Wed Jul 28 11:12:07 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Fri Sep  8 15:48:13 1995 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified 2013-12-31, David Malcolm <dmalcolm@redhat.com>
+.\"     Split gets(3) into its own page; fgetc() et al. move to fgetc(3)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETS 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+gets \- получает строку из стандартного потока ввода (УСТАРЕЛА)
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+.PP
+\fBchar *gets(char *\fP\fIs\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fIНикогда не используйте эту функцию\fP.
+.PP
+Функция \fBgets\fP() считывает строку из \fIstdin\fP и записывает её в буфер, на
+который указывает \fIs\fP, пока не встретится символ новой строки или \fBEOF\fP,
+которые заменяются байтом null (\(aq\e0\(aq). Проверка на переполнение
+буфера не производится (смотрите ДЕФЕКТЫ далее).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBgets\fP() возвращает \fIs\fP и NULL при ошибке
+или если достигнут конец файла, а символы остались несчитанными. Тем не
+менее, из\-за невозможности проверить переполнение буфера, нет гарантии, что
+функция вообще что\-нибудь сможет вернуть.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgets\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C89, C99, POSIX.1\-2001.
+.PP
+В LSB функция \fBgets\fP() указана как устаревшая. В POSIX.1\-2008 функция
+\fBgets\fP() как вышедшая из употребления. В ISO C11 описание \fBgets\fP() удалено
+из языка Си, и начиная с версии 2.16, заголовочные файлы glibc не объявляют
+эту функцию, если не определён макрос тестирования свойств
+\fB_ISOC11_SOURCE\fP.
+.SH ДЕФЕКТЫ
+Никогда не используйте \fBgets\fP(), потому что без предварительного знакомства
+с данными невозможно узнать, какое количество символов считает \fBgets\fP(), а
+также потому, что \fBgets\fP() будет продолжать заносить символы в буфер даже
+по достижении его конца, что представляет собой большую опасность. Эта
+функция использовалась для взлома систем безопасности компьютера. Вместо
+этой функции используйте \fBfgets\fP().
+.PP
+Подробное описание смотрите в CWE\-242 (или «Use of Inherently Dangerous
+Function») на http://cwe.mitre.org/data/definitions/242.html
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBread\fP(2), \fBwrite\fP(2), \fBferror\fP(3), \fBfgetc\fP(3), \fBfgets\fP(3),
+\fBfgetwc\fP(3), \fBfgetws\fP(3), \fBfopen\fP(3), \fBfread\fP(3), \fBfseek\fP(3),
+\fBgetline\fP(3), \fBgetwchar\fP(3), \fBputs\fP(3), \fBscanf\fP(3), \fBungetwc\fP(3),
+\fBunlocked_stdio\fP(3), \fBfeature_test_macros\fP(7)

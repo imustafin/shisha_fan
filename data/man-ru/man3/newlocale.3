@@ -1,0 +1,271 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t -*- coding: UTF-8 -*-
+.\" Copyright (C) 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NEWLOCALE 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+newlocale, freelocale \- создаёт, изменяет и освобождает объект локали
+.SH ОБЗОР
+.nf
+\fB#include <locale.h>\fP
+.PP
+\fBlocale_t newlocale(int \fP\fIcategory_mask\fP\fB, const char *\fP\fIlocale\fP\fB,\fP
+\fB                   locale_t \fP\fIbase\fP\fB);\fP
+.PP
+\fBvoid freelocale(locale_t \fP\fIlocobj\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBnewlocale\fP(), \fBfreelocale\fP():
+.PD 0
+.RS 4
+.TP 
+Начиная с glibc 2.10:
+_XOPEN_SOURCE\ >=\ 700
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.PD
+.SH ОПИСАНИЕ
+Функция \fBnewlocale\fP() создаёт новый объект локали или изменяет
+существующий, возвращая ссылку на новый или изменённый объект. Значение
+\fIbase\fP определяет что именно делает вызов — создаёт или изменяет
+существующий объект:
+.IP * 3
+Если \fIbase\fP равно \fI(locale_t)\ 0\fP, то создаётся новый объект.
+.IP *
+Если \fIbase\fP ссылается на корректный существующий объект локали (т. е.,
+объект, полученный ранее от вызовов \fBnewlocale\fP() или \fBduplocale\fP(3)), то
+этот объект изменяется при вызове. При успешном выполнении содержимое
+\fIbase\fP не определено (в частности, объект, на который ссылается \fIbase\fP,
+может быть освобождён и создан новый объект). Поэтому вызывающий должен
+понимать до вызова \fBnewlocale\fP(), что не использует \fIbase\fP, и,
+следовательно, ссылаться на изменённый объект через ссылку, возвращённую
+функцией. При ошибке вызова, содержимое \fIbase\fP остаётся корректным и не
+изменяется.
+.PP
+Если значение \fIbase\fP равно специальному объекту локали \fBLC_GLOBAL_LOCALE\fP
+(смотрите \fBduplocale\fP(3)) или не равно \fI(locale_t)\ 0\fP и это некорректный
+указатель объекта локали, то поведение не определено.
+.PP
+Аргумент \fIcategory_mask\fP представляет собой битовую маску, которая
+определяет категории локали, устанавливаемые в создаваемом объекте локали
+или в изменяемом существующем объекте. Маска создаёт побитовым OR из
+констант \fBLC_ADDRESS_MASK\fP, \fBLC_CTYPE_MASK\fP, \fBLC_COLLATE_MASK\fP,
+\fBLC_IDENTIFICATION_MASK\fP, \fBLC_MEASUREMENT_MASK\fP, \fBLC_MESSAGES_MASK\fP,
+\fBLC_MONETARY_MASK\fP, \fBLC_NUMERIC_MASK\fP, \fBLC_NAME_MASK\fP, \fBLC_PAPER_MASK\fP,
+\fBLC_TELEPHONE_MASK\fP и \fBLC_TIME_MASK\fP. Также значением маски может быть
+\fBLC_ALL_MASK\fP, которая эквивалентна сложению всех указанных ранее констант.
+.PP
+Для каждой категории, указанной в \fIcategory_mask\fP, данные локали из
+\fIlocale\fP будут использованы в объекте, возвращаемом \fBnewlocale\fP(). Если
+создаётся новый объект локали, то данные для всех категорий, не указанных в
+\fIcategory_mask\fP, берутся из локали по умолчанию («POSIX»).
+.PP
+Для всех категорий, которые можно указать в \fIcategory_mask\fP, уже определены
+следующие значения \fIlocale\fP:
+.TP 
+"POSIX"
+Минимальное окружение локали для программ на языке Си.
+.TP 
+"C"
+Эквивалентно «POSIX».
+.TP 
+""
+Определяемое реализацией родное окружение соответствует значениям переменных
+окружения \fBLC_*\fP и \fBLANG\fP (смотрите \fBlocale\fP(7)).
+.SS freelocale()
+Функция \fBfreelocale\fP() освобождает ресурсы, связанные с \fIlocobj\fP, объектом
+локали, ранее полученным из вызова \fBnewlocale\fP() или \fBduplocale\fP(3). Если
+значение \fIlocobj\fP равно \fBLC_GLOBAL_LOCALE\fP или не является корректным
+объектом локали, то результат не определён.
+.PP
+После того, как объект локали освобождён, программа не должна больше его
+использовать.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBnewlocale\fP() возвращает описатель, который можно
+использовать в вызовах \fBduplocale\fP(3), \fBfreelocale\fP() и других функциях,
+принимающих аргумент \fIlocale_t\fP. При ошибке \fBnewlocale\fP() возвращает
+\fI(locale_t)\ 0\fP и присваивает \fIerrno\fP код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Один или более бит в \fIcategory_mask\fP не соответствуют корректной категории
+локали.
+.TP 
+\fBEINVAL\fP
+Значение \fIlocale\fP равно NULL.
+.TP 
+\fBENOENT\fP
+Значение \fIlocale\fP не является указателем на строку, ссылающуюся на
+корректную локаль.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для создания объекта локали.
+.SH ВЕРСИИ
+Функции \fBnewlocale\fP() и \fBfreelocale\fP() впервые появились в версии 2.3
+библиотеки GNU C.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Каждый объект локали, созданный \fBnewlocale\fP(), должен освобождаться с
+помощью \fBfreelocale\fP().
+.SH ПРИМЕР
+Следующая программа принимает два аргумента командной строки, каждый из
+которых описывает локаль. Первый аргумент обязателен и используется для
+назначения категории \fBLC_NUMERIC\fP в объекте локали, создаваемой
+\fBnewlocale\fP(). Второй аргумент необязателен; если он задан, то используется
+для назначения категории \fBLC_TIME\fP объекта локали.
+.PP
+После создания и инициализации объекта, программа применяет его с помощью
+\fBuselocale\fP(3), а затем тестирует изменения локали:
+.IP 1. 3
+Выводит число с плавающей запятой с дробной частью. На результат будет
+влиять значение \fBLC_NUMERIC\fP. Во многих локалях европейских языков дробная
+часть числа отделяется от целой запятой, а не точкой.
+.IP 2.
+Выводит дату. На формат и язык влияет значение \fBLC_TIME\fP.
+.PP
+В следующих сеансах работы показан пример запуска программы.
+.PP
+Категории \fBLC_NUMERIC\fP присвоено \fIfr_FR\fP (французская):
+.PP
+.in +4n
+.EX
+$ \fB./a.out fr_FR\fP
+123456,789
+Fri Mar  7 00:25:08 2014
+.EE
+.in
+.PP
+Категории \fBLC_NUMERIC\fP присвоено \fIfr_FR\fP (французская), а категории
+\fBLC_TIME\fP — \fIit_IT\fP (итальянская):
+.PP
+.in +4n
+.EX
+$ \fB./a.out fr_FR it_IT\fP
+123456,789
+ven 07 mar 2014 00:26:01 CET
+.EE
+.in
+.PP
+Значению \fBLC_TIME\fP присвоена пустая строка, что приводит к получению
+настройки из переменных окружения (которые, в данном случае, равны \fImi_NZ\fP,
+новозеландская маори):
+.PP
+.in +4n
+.EX
+$ LC_ALL=mi_NZ ./a.out fr_FR ""
+123456,789
+Te Paraire, te 07 o Poutū\-te\-rangi, 2014 00:38:44 CET
+.EE
+.in
+.SS "Исходный код программы"
+.EX
+#define _XOPEN_SOURCE 700
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+#include <time.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    char buf[100];
+    time_t t;
+    size_t s;
+    struct tm *tm;
+    locale_t loc, nloc;
+
+    if (argc < 2) {
+        fprintf(stderr, "Использование: %s лок1 [лок2]\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /* создание нового объекта локали, получение LC_NUMERIC
+       из локали, указанной в argv[1] */
+
+    loc = newlocale(LC_NUMERIC_MASK, argv[1], (locale_t) 0);
+    if (loc == (locale_t) 0)
+        errExit("newlocale");
+
+    /* Если в командной строке указан второй аргумент, то в объекте
+       локали изменяется настройка LC_TIME, которая берётся из локали,
+       указанной в argv[2]. Мы назначаем результат вызова newlocale()
+       «nloc», а не «loc», так как в некоторых случаях может
+       потребоваться сохранить «loc», если этот вызов завершится
+       с ошибкой. */
+
+    if (argc > 2) {
+        nloc = newlocale(LC_TIME_MASK, argv[2], loc);
+        if (nloc == (locale_t) 0)
+            errExit("newlocale");
+        loc = nloc;
+    }
+
+    /* Применение созданной локали к этой нити */
+
+    uselocale(loc);
+
+    /* Тест влияния LC_NUMERIC */
+
+    printf("%8.3f\en", 123456.789);
+
+    /* Тест влияния LC_TIME */
+
+    t = time(NULL);
+    tm = localtime(&t);
+    if (tm == NULL)
+        errExit("time");
+
+    s = strftime(buf, sizeof(buf), "%c", tm);
+    if (s == 0)
+        errExit("strftime");
+
+    printf("%s\en", buf);
+
+    /* Освобождение объекта локали */
+
+    freelocale(loc);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlocale\fP(1), \fBduplocale\fP(3), \fBsetlocale\fP(3), \fBuselocale\fP(3),
+\fBlocale\fP(5), \fBlocale\fP(7)

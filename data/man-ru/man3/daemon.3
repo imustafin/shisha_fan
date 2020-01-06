@@ -1,0 +1,118 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"	@(#)daemon.3	8.1 (Berkeley) 6/9/93
+.\" Added mentioning of glibc weirdness wrt unistd.h. 5/11/98, Al Viro
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DAEMON 3 2017\-11\-26 GNU "Руководство программиста Linux"
+.SH ИМЯ
+daemon \- выполнение в фоновом режиме
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint daemon(int \fP\fInochdir\fP\fB, int \fP\fInoclose\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBdaemon\fP():
+.nf
+.\"             commit 266865c0e7b79d4196e2cc393693463f03c90bd8
+    начиная с glibc 2.21:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и 2.20:
+        _DEFAULT_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+    до glibc 2.19, включительно:
+        _BSD_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+.fi
+.SH ОПИСАНИЕ
+Функция \fBdaemon\fP() необходима для того, чтобы отключить программу от
+управляющего терминала и запустить её в фоновом режиме подобно тому, как
+выполняются системные службы.
+.PP
+Если аргумент \fInochdir\fP равен нулю, то \fBdaemon\fP() изменяет текущий рабочий
+каталог процесса на корневой («/»); в противном случае текущий рабочий
+каталог не изменяется.
+.PP
+Если аргумент \fInoclose\fP равен нулю, то \fBdaemon\fP() перенаправляет
+стандартный поток ввода, вывода и ошибок в \fI/dev/null\fP;  в противном случае
+данные файловые дескрипторы не изменяется.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.\" not .IR in order not to underline _
+Эта функция порождает новый процесс и, если \fBfork\fP(2) завершается без
+ошибок, родительский процесс вызывает \fB_exit\fP(2), чтобы дальнейшие ошибки
+воспринимались только дочерним процессом. В случае успешного выполнения
+\fBdaemon\fP() возвращается ноль. Если возникла ошибка, то \fBdaemon\fP()
+возвращает \-1 и присваивает глобальной переменной \fIerrno\fP одно из значений,
+указанных для \fBfork\fP(2) и \fBsetsid\fP(2).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBdaemon\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Отсутствует в POSIX.1. Подобная функция есть в BSD. Впервые функция
+\fBdaemon\fP() появилась в 4.4BSD.
+.SH ЗАМЕЧАНИЯ
+Реализация в glibc может также возвращать \-1 в случаях, когда \fI/dev/null\fP
+существует, но не является файлом символьного устройства с ожидаемыми
+основным и вспомогательным номерами. В этом случае нет необходимости
+устанавливать \fIerrno\fP.
+.SH ДЕФЕКТЫ
+.\" FIXME . https://sourceware.org/bugzilla/show_bug.cgi?id=19144
+.\" Tested using a program that uses daemon() and then opens an
+.\" otherwise unused console device (/dev/ttyN) that does not
+.\" have an associated getty process.
+Для библиотеки GNU C реализация этой функции была взята из BSD, и в ней не
+применяется техника двойного fork (т. е., \fBfork\fP(2), \fBsetsid\fP(2),
+\fBfork\fP(2)), поэтому необходимо проверить, что полученный процесс службы не
+является лидером сеанса. Вместо этого полученная служба \fIявляется\fP лидером
+сеанса. В системах, следующих семантике System V (например, Linux), это
+означает, что если служба открывает терминал, которой пока не является
+управляющим для другого сеанса, то этот терминал непреднамеренно станет
+управляющим терминалом для службы.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfork\fP(2), \fBsetsid\fP(2), \fBdaemon\fP(7), \fBlogrotate\fP(8)

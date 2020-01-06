@@ -1,0 +1,95 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright 2015 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sun Jul 25 10:41:09 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MEMCPY 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+memcpy \- копирует участок памяти
+.SH ОБЗОР
+.nf
+\fB#include <string.h>\fP
+.PP
+\fBvoid *memcpy(void *\fP\fIdest\fP\fB, const void *\fP\fIsrc\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBmemcpy\fP() копирует \fIn\fP байт из участка памяти \fIsrc\fP в участок
+памяти \fIdest\fP. Адреса участков памяти не должны перекрываться друг
+другом. Если это неизбежно, используйте \fBmemmove\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBmemcpy\fP() возвращает указатель на \fIdest\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmemcpy\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+.\" glibc commit 6fb8cbcb58a29fff73eb2101b34caa19a7f88eba
+.\" From forward copying to backward copying
+Несоблюдение требования не перекрытия областей памяти является источником
+серьёзных ошибок (в стандартах POSIX и C явно указано, что выполнение
+\fBmemcpy\fP() над перекрывающимися областями приводит к непредсказуемому
+поведению). Что особенно важно, в glibc 2.13 для оптимизации
+производительности \fBmemcpy\fP() на некоторых платформах (включая x86\-64)
+изменён порядок копирования байт из \fIsrc\fP в \fIdest\fP.
+.PP
+.\" Adobe Flash player was the highest profile example:
+.\"   https://bugzilla.redhat.com/show_bug.cgi?id=638477
+.\"   Reported: 2010-09-29 02:35 EDT by JCHuynh
+.\"   Bug 638477 - Strange sound on mp3 flash website
+.\"
+.\"   https://sourceware.org/bugzilla/show_bug.cgi?id=12518
+.\"   Bug 12518 - memcpy acts randomly (and differently) with overlapping areas
+.\"   Reported:       2011-02-25 02:26 UTC by Linus Torvalds
+.\"
+.\" glibc commit 0354e355014b7bfda32622e0255399d859862fcd
+Это изменение привело к поломкам многих приложений, которые выполняли
+копирование перекрывающихся областей. В предыдущей реализации порядок, в
+котором копировались байты, случайно скрывал ошибку, который выявилась при
+изменении порядка копирования. В glibc 2.14 был добавлен символ версии для
+того, чтобы старые двоичные файлы (т.е., скомпонованные с версиями glibc до
+2.14) вызывали реализацию \fBmemcpy\fP(), которая безопасно обрабатывает случай
+перекрывающихся буферов (предоставляя «старую» реализацию \fBmemcpy\fP(),
+которая была просто ещё одним именем \fBmemmove\fP(3)).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbcopy\fP(3), \fBbstring\fP(3), \fBmemccpy\fP(3), \fBmemmove\fP(3), \fBmempcpy\fP(3),
+\fBstrcpy\fP(3), \fBstrncpy\fP(3), \fBwmemcpy\fP(3)

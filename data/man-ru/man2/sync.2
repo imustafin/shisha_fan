@@ -1,0 +1,113 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\" and Copyright (c) 2011 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified Sat Jul 24 12:02:47 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 15 Apr 1995 by Michael Chastain <mec@shell.portal.com>:
+.\"   Added reference to `bdflush(2)'.
+.\" Modified 960414 by Andries Brouwer <aeb@cwi.nl>:
+.\"   Added the fact that since 1.3.20 sync actually waits.
+.\" Modified Tue Oct 22 22:27:07 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2001-10-10 by aeb, following Michael Kerrisk.
+.\" 2011-09-07, mtk, Added syncfs() documentation,
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYNC 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sync, syncfs \- записывает кэши файловых систем на диск
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBvoid sync(void);\fP
+.PP
+\fBint syncfs(int \fP\fIfd\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsync\fP():
+.ad l
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE
+.RE
+.ad
+.PP
+\fBsyncfs\fP():
+.ad l
+.RS 4
+_GNU_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Вызов \fBsync\fP() приводит к записи в файловую систему всех отложенных
+изменений метаданных файловой системы и кэшированных файловых данных.
+.PP
+Вызов \fBsyncfs\fP() подобен \fBsync\fP(), но синхронизирует только файловую
+систему, содержащую файл, на который указывает открытый файловый дескриптор
+\fIfd\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При нормальном завершении работы \fBsyncfs\fP() возвращает 0. В случае ошибки
+возвращается \-1, а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+Вызов \fBsync\fP() всегда выполняется без ошибок.
+.PP
+Вызов \fBsyncfs\fP() может завершиться с ошибкой, по крайней мере, по следующей
+причине:
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором.
+.SH ВЕРСИИ
+Системный вызов \fBsyncfs\fP() впервые появился в Linux 2.6.39; поддержка в
+glibc добавлена в версии 2.14.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBsync\fP(): POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.PP
+\fBsyncfs\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Начиная с glibc 2.2.2 Linux\-прототип \fBsync\fP() стал соответствовать
+различным стандартам. В glibc 2.21 и старее он объявлялся как «int
+sync(void)» и вызов \fBsync\fP() всегда возвращал 0.
+.PP
+В соответствии со стандартной спецификацией (например POSIX.1\-2001),
+\fBsync\fP() только планирует запись, и может закончить работу до того как
+запись будет на самом деле произведена. Однако в Linux выполняется ожидание
+завершения операций ввода\-вывода и поэтому \fBsync\fP() или \fBsyncfs\fP()
+предоставляют такие же гарантии как fsync при вызове для каждого файла в
+системе или файловой системы, соответственно.
+.SH ДЕФЕКТЫ
+До версии 1.3.20 Linux не ждёт завершения операций ввода\-вывода перед
+возвращением.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsync\fP(1), \fBfdatasync\fP(2), \fBfsync\fP(2)

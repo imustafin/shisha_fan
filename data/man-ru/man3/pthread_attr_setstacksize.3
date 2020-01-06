@@ -1,0 +1,104 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_ATTR_SETSTACKSIZE 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_attr_setstacksize, pthread_attr_getstacksize \- изменяет/возвращает
+атрибут размера стека у объекта атрибутов нити
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_attr_setstacksize(pthread_attr_t *\fP\fIattr\fP\fB, size_t \fP\fIstacksize\fP\fB);\fP
+\fBint pthread_attr_getstacksize(const pthread_attr_t *\fP\fIattr\fP\fB, size_t *\fP\fIstacksize\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_attr_setstacksize\fP() изменяет атрибут размера стека у
+объекта атрибутов нити, на который указывает \fIattr\fP, в значение
+\fIstacksize\fP.
+.PP
+Атрибутом размера стека определяется минимальный размер (в байтах), который
+будет выделен для нитей, созданных с учётом объекта атрибутов нити \fIattr\fP.
+.PP
+Функция \fBpthread_attr_getstacksize\fP() возвращает атрибут размера стека у
+объекта атрибутов нити, на который указывает \fIattr\fP, в буфер на который
+указывает \fIstacksize\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+Функция \fBpthread_attr_setstacksize\fP() может завершиться со следующей
+ошибкой:
+.TP 
+\fBEINVAL\fP
+Размер стека меньше \fBPTHREAD_STACK_MIN\fP (16384) байт.
+.PP
+.\" e.g., MacOS
+В некоторых системах \fBpthread_attr_setstacksize\fP() может завершиться
+ошибкой \fBEINVAL\fP, если значение \fIstacksize\fP не кратно размеру системной
+страницы.
+.SH ВЕРСИИ
+Эти функции доступны в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw28 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_attr_setstacksize\fP(),
+\fBpthread_attr_getstacksize\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Подробную информацию о размере стека по умолчанию для новых нитей смотрите в
+\fBpthread_create\fP(3).
+.PP
+Размер стека нити не изменяется во время создания нити. Только главная нить
+может динамически увеличивать свой стек.
+.PP
+Функция \fBpthread_attr_setstack\fP(3) позволяет приложению изменять размер и
+положение стека вызывающего, который будет использован нитью.
+.SH ДЕФЕКТЫ
+Как указано в glibc 2.8, если указанное значение \fIstacksize\fP не кратно
+\fBSTACK_ALIGN\fP (для большинства архитектур 16 байт), то оно может быть
+округлено \fIв меньшую сторону\fP, нарушая при этом POSIX.1, где говорится, что
+выделенный стек должен быть не менее \fIstacksize\fP байт.
+.SH ПРИМЕР
+Смотрите \fBpthread_create\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetrlimit\fP(2), \fBpthread_attr_init\fP(3), \fBpthread_attr_setguardsize\fP(3),
+\fBpthread_attr_setstack\fP(3), \fBpthread_create\fP(3), \fBpthreads\fP(7)

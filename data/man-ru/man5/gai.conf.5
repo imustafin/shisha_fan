@@ -1,0 +1,91 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Red Hat, Inc. All rights reserved.
+.\" Author: Ulrich Drepper <drepper@redhat.com>
+.\"
+.\" %%%LICENSE_START(GPLv2_MISC)
+.\" This copyrighted material is made available to anyone wishing to use,
+.\" modify, copy, or redistribute it subject to the terms and conditions of the
+.\" GNU General Public License v.2.
+.\"
+.\" This program is distributed in the hope that it will be useful, but WITHOUT
+.\" ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+.\" FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+.\" more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GAI.CONF 5 2016\-03\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+gai.conf \- файл настройки getaddrinfo(3)
+.SH ОПИСАНИЕ
+Вызов \fBgetaddrinfo\fP(3) может вернуть несколько результатов. Согласно RFC\ 3484 эти результаты должны быть отсортированы так, что первым в списке будет
+ответ с высшим показателем достоверности (success rate). В RFC имеется
+алгоритм сортировки. Но статические правила не всегда приемлемы. По этой
+причине в RFC также требуется, чтобы системный администратор имел
+возможность динамически изменять сортировку. В реализации glibc это можно
+делать через файл \fI/etc/gai.conf\fP.
+.PP
+Каждая строка файла настройки состоит из ключевого слова и его
+параметров. Пробельные символы в любом месте игнорируются. Строки,
+начинающиеся с \(aq#\(aq, являются комментариями и игнорируются.
+.PP
+Распознаваемые ключевые слова:
+.TP 
+\fBlabel\fP \fIмаска_сети\fP \fIприоритет\fP
+Значение, добавляемое в таблицу ярлыков (label), используемую в RFC\ 3484
+при сортировке. Если определение \fBlabel\fP, имеющееся в файле настройке,
+существует, то таблица по умолчанию не используется. Все определения ярлыков
+таблицы по умолчанию, которые нужно поддерживать, будут являться дублями. За
+ключевым словом указывается маска сети и значение приоритета.
+.TP 
+\fBprecedence\fP \fIмаска_сети\fP \fIприоритет\fP
+Данное ключевое слово подобно \fBlabel\fP, но значение добавляется в таблицу
+приоритетов (precedence), как описано в RFC\ 3484. И здесь наличие
+единственной строки \fBprecedence\fP в файле настройки отключает использование
+таблицы по умолчанию.
+.TP 
+\fBreload\fP <\fByes\fP|\fBno\fP>
+Данное ключевое слово определяет будет ли процесс проверять изменился ли
+файл настройки с момента последнего чтения. Если значение \fByes\fP, то файл
+перечитывается. Это может привести к проблемам в многонитевых
+приложениях. Значение по умолчанию \fBno\fP.
+.TP 
+\fBscopev4\fP \fIмаска\fP \fIзначение\fP
+Добавляет новое правило в таблицу областей RFC\ 3484 для адресов IPv4. По
+умолчанию используются ID областей, описанные в разделе 3.2 RFC\ 3438. Изменять значения по умолчанию почти никогда не требуется.
+.SH ФАЙЛЫ
+\fI/etc/gai.conf\fP
+.SH ВЕРСИИ
+.\" Added in 2006
+Файл \fIgai.conf\fP поддерживается glibc начиная с версии 2.5.
+.SH ПРИМЕР
+Таблица по умолчанию согласно RFC\ 3484 должна задаваться следующим файлом
+настройки:
+.PP
+.in +4n
+.EX
+label  ::1/128       0
+label  ::/0          1
+label  2002::/16     2
+label ::/96          3
+label ::ffff:0:0/96  4
+precedence  ::1/128       50
+precedence  ::/0          40
+precedence  2002::/16     30
+precedence ::/96          20
+precedence ::ffff:0:0/96  10
+.EE
+.in
+.\" .SH AUTHOR
+.\" Ulrich Drepper <drepper@redhat.com>
+.\"
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetaddrinfo\fP(3), RFC\ 3484

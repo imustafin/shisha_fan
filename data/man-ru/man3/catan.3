@@ -1,0 +1,85 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\" and Copyright (C) 2011 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CATAN 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+catan, catanf, catanl \- вычисление арктангенса комплексного числа
+.SH ОБЗОР
+\fB#include <complex.h>\fP
+.PP
+\fBdouble complex catan(double complex \fP\fIz\fP\fB);\fP
+.br
+\fBfloat complex catanf(float complex \fP\fIz\fP\fB);\fP
+.br
+\fBlong double complex catanl(long double complex \fP\fIz\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.SH ОПИСАНИЕ
+Эти функции вычисляют арктангенс комплексного числа \fIz\fP. Если \fIy\ =\ catan(z)\fP, то \fIz\ =\ ctan(y)\fP. Реальная часть \fIy\fP лежит в интервале
+[\-pi/2,pi/2].
+.PP
+Формула вычисления:
+.PP
+.nf
+    catan(z) = (clog(1 + i * z) \- clog(1 \- i * z)) / (2 * i)
+.fi
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBcatan\fP(),
+\fBcatanf\fP(),
+\fBcatanl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.SH ПРИМЕР
+.EX
+/* Компонуется при указании параметра «\-lm» */
+
+#include <complex.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+    double complex z, c, f;
+    double complex i = I;
+
+    if (argc != 3) {
+        fprintf(stderr, "Использование: %s <real> <imag>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    z = atof(argv[1]) + atof(argv[2]) * I;
+
+    c = catan(z);
+    printf("catan() = %6.3f %6.3f*i\en", creal(c), cimag(c));
+
+    f = (clog(1 + i * z) \- clog(1 \- i * z)) / (2 * i);
+    printf("formula = %6.3f %6.3f*i\en", creal(f2), cimag(f2));
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBccos\fP(3), \fBclog\fP(3), \fBctan\fP(3), \fBcomplex\fP(7)

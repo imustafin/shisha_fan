@@ -1,0 +1,128 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Red Hat, Inc. All Rights Reserved.
+.\" Written by Ivana Varekova <varekova@redhat.com>
+.\" and Copyright (c) 2017, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" FIXME Something could be added to this page (or exit(2))
+.\" about exit_robust_list processing
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GET_ROBUST_LIST 2 2017\-09\-15 Linux "Системные вызовы Linux"
+.SH ИМЯ
+get_robust_list, set_robust_list \- возвращает/назначает список надёжных
+фьютексов (futexes)
+.SH ОБЗОР
+.nf
+\fB#include <linux/futex.h>\fP
+\fB#include <sys/types.h>\fP
+\fB#include <syscall.h>\fP
+.PP
+\fBlong get_robust_list(int \fP\fIpid\fP\fB, struct robust_list_head **\fP\fIhead_ptr\fP\fB,\fP
+\fB                     size_t *\fP\fIlen_ptr\fP\fB);\fP
+\fBlong set_robust_list(struct robust_list_head *\fP\fIhead\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточных функций для этих системных вызовов;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Данные системные вызовы служат для ведения понетевых списков надёжных
+фьютексов. Данные списки управляются из пользовательского пространства: ядро
+знает только расположение начала списка. Нить может информировать ядро о
+расположении своего списка надёжных фьютексов с помощью
+\fBset_robust_list\fP(). Адрес списка надёжных фьютексов нити можно получить с
+помощью \fBget_robust_list\fP().
+.PP
+Предназначением списка надёжных фьютексов является гарантия того, что если
+нить неожиданно из\-за ошибки не разблокирует фьютекс перед завершением или
+вызовом \fBexecve\fP(2), другая ожидающая этот фьютекс нить получит уведомление
+о том, что бывший владелец фьютекса прекратил работу. Данное уведомление
+состоит из двух частей: установленного бита \fBFUTEX_OWNER_DIED\fP в слове
+фьютекса и выполнение ядром \fBfutex\fP(2) с операцией \fBFUTEX_WAKE\fP для одной
+из нитей, ожидающих фьютекс.
+.PP
+Системный вызов \fBget_robust_list\fP() возвращает начало списка надёжных
+фьютексов нити, идентификатор которой указан в \fIpid\fP. Если значение \fIpid\fP
+равно 0, то возвращается начало списка вызывающей нити. Начало списка
+сохраняется в расположение, указанное \fIhead_ptr\fP. Размер объекта,
+указываемый \fI**head_ptr\fP, сохраняется в \fIlen_ptr\fP.
+.PP
+Право вызывать \fBget_robust_list\fP() определяется проверкой режима доступа
+ptrace \fBPTRACE_MODE_READ_REALCREDS\fP; смотрите \fBptrace\fP(2).
+.PP
+Системный вызов \fBset_robust_list\fP() запрашивает ядро записать начало списка
+надёжных фьютексов, принадлежащего вызывающей нити. Аргумент \fIhead\fP
+содержит начало списка для записи. Аргумент \fIlen\fP должен быть равен
+\fIsizeof(*head)\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Системные вызовы \fBset_robust_list\fP() и \fBget_robust_list\fP() возвращают ноль
+при успешном выполнении и код ошибки в противном случае.
+.SH ОШИБКИ
+Системный вызов \fBpthread_setcancelstate\fP() может завершиться со следующей
+ошибкой:
+.TP 
+\fBEINVAL\fP
+Значение \fIlen\fP не равно \fIsizeof(struct\ robust_list_head)\fP.
+.PP
+Системный вызов \fBget_robust_list\fP() может завершиться со следующими
+ошибками:
+.TP 
+\fBEFAULT\fP
+Начало списка надёжных фьютексов невозможно сохранить в расположение
+\fIhead\fP.
+.TP 
+\fBEPERM\fP
+Вызывающий процесс не имеет прав на просмотр списка надёжных фьютексов нити
+с идентификатором \fIpid\fP и не имеет мандата \fBCAP_SYS_PTRACE\fP.
+.TP 
+\fBESRCH\fP
+Нить с идентификатором \fIpid\fP не найдена.
+.SH ВЕРСИИ
+Данные системные вызовы были добавлены в Linux 2.6.17.
+.SH ЗАМЕЧАНИЯ
+Эти системные вызовы не нужны обычным приложениям. Поддержка в glibc
+отсутствует. В маловероятном случае, когда вы хотите вызвать их напрямую,
+используйте \fBsyscall\fP(2).
+.PP
+В нити может быть только один список надёжных фьютексов; поэтому приложения,
+которым требуется данное свойство, должны использовать мьютексы,
+предоставляемые glibc.
+.PP
+.\" commit 8141c7f3e7aee618312fa1c15109e1219de784a7
+В первоначальной реализации нить, ожидающая фьютекс, уведомлялась о кончине
+владельца только, если владелец прекращал работу. Начиная с Linux 2.6.28
+уведомление также посылается при выполнении владельцем \fBexecve\fP(2).
+.PP
+Идентификаторы нитей, упоминаемые в основном тексте, являются \fIядерными\fP
+идентификаторами нити, которые возвращаются из \fBclone\fP(2) и \fBgettid\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfutex\fP(2), \fBpthread_mutexattr_setrobust\fP(3)
+.PP
+Файлы \fIDocumentation/robust\-futexes.txt\fP и
+\fIDocumentation/robust\-futex\-ABI.txt\fP в дереве исходного кода ядра Linux
+.\" http://lwn.net/Articles/172149/

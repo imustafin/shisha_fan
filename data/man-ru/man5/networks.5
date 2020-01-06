@@ -1,0 +1,73 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2001 Martin Schulze <joey@infodrom.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 2008-09-04, mtk, taken from Debian downstream, with a few light edits
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NETWORKS 5 2008\-09\-04 GNU/Linux "Системное администрирование Linux"
+.SH ИМЯ
+networks \- информация об имени сети
+.SH ОПИСАНИЕ
+Файл \fI/etc/networks\fP представляет собой простой файл в формате ASCII и
+описывает известные сети DARPA и символические имена этих сетей. Каждая
+строка описывает одну сеть и имеет следующую структуру:
+.PP
+.RS
+\fIимя номер псевдонимы ...\fP
+.RE
+.PP
+Поля отделяются друг от друга пробелами или символами табуляции. Пустые
+строки игнорируются. Если строка содержит символ решётки (\fB#\fP), то он сам и
+часть строки, которая следует за этим символом, игнорируется библиотечными
+функциями обработки данного файла.
+.PP
+Описание полей:
+.TP 
+\fIимя\fP
+Символическое имя сети. Имена сетей могут состоять из любых печатных
+символов за исключением пробельных или символа комментария.
+.TP 
+\fIномер\fP
+Официальный номер данной сети в цифро\-точечной форме
+(см. \fBinet\fP(3)). Завершающий ".0" (компонент узла в адресе сети) можно не
+указывать.
+.TP 
+\fIпсевдонимы\fP
+Необязательные псевдонимы сети.
+.PP
+.PP
+Этот файл используется программами \fBroute\fP(8) и
+\fBnetstat\fP(8). Поддерживаются только сети классов A, B или C, бесклассовая
+адресация (то есть, сеть/26 или сеть/28) не поддерживаются данным средством.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/networks\fP
+Файл с именами сетей.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetnetbyaddr\fP(3), \fBgetnetbyname\fP(3), \fBgetnetent\fP(3), \fBnetstat\fP(8),
+\fBroute\fP(8)

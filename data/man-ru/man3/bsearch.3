@@ -1,0 +1,126 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Mon Mar 29 22:41:16 1993, David Metcalfe
+.\" Modified Sat Jul 24 21:35:16 1993, Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BSEARCH 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+bsearch \- выполняет двоичный поиск в упорядоченном массиве
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBvoid *bsearch(const void *\fP\fIkey\fP\fB, const void *\fP\fIbase\fP\fB,\fP
+\fB              size_t \fP\fInmemb\fP\fB, size_t \fP\fIsize\fP\fB,\fP
+\fB              int (*\fP\fIcompar\fP\fB)(const void *, const void *));\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBbsearch\fP() ищет в массиве размером \fInmemb\fP ( \fIbase\fP указывает на
+начальный элемент) элемент, который совпадает с элементом, указываемым в
+\fIkey\fP. Размер каждого элемента массива задаётся в \fIsize\fP.
+.PP
+Содержимое массива должно быть отсортировано по возрастанию с помощью
+функции сравнения, на которую ссылается \fIcompar\fP. Функция \fIcompar\fP
+принимает два аргумента, один указывает на элемент \fIkey\fP, а другой на
+элемент массива (в таком порядке), и должна возвращать целое, которое
+меньше, равно или больше нуля, если найденный элемент \fIkey\fP меньше,
+совпадает или больше элемента массива, соответственно.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBbsearch\fP() возвращает указатель на совпадающий элемент массива или
+NULL, если ничего не найдено. Если с ключом совпадает несколько элементов,
+то какой из них будет возвращён стандартом не определено.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBbsearch\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4, 4.3BSD.
+.SH ПРИМЕР
+В этом примере сначала выполняется сортировка массива структур с помощью
+\fBqsort\fP(3), а затем возвращается желаемый элемент с помощью \fBbsearch\fP().
+.PP
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct mi {
+    int nr;
+    char *name;
+} months[] = {
+    { 1, "jan" }, { 2, "feb" }, { 3, "mar" }, { 4, "apr" },
+    { 5, "may" }, { 6, "jun" }, { 7, "jul" }, { 8, "aug" },
+    { 9, "sep" }, {10, "oct" }, {11, "nov" }, {12, "dec" }
+};
+
+#define nr_of_months (sizeof(months)/sizeof(months[0]))
+
+static int
+compmi(const void *m1, const void *m2)
+{
+    struct mi *mi1 = (struct mi *) m1;
+    struct mi *mi2 = (struct mi *) m2;
+    return strcmp(mi1\->name, mi2\->name);
+}
+
+int
+main(int argc, char **argv)
+{
+    int i;
+
+    qsort(months, nr_of_months, sizeof(struct mi), compmi);
+    for (i = 1; i < argc; i++) {
+        struct mi key, *res;
+        key.name = argv[i];
+        res = bsearch(&key, months, nr_of_months,
+                      sizeof(struct mi), compmi);
+        if (res == NULL)
+            printf("\(aq%s\(aq: неизвестный месяц\en", argv[i]);
+        else
+            printf("%s: месяц #%d\en", res\->name, res\->nr);
+    }
+    exit(EXIT_SUCCESS);
+}
+.EE
+.\" this example referred to in qsort.3
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBhsearch\fP(3), \fBlsearch\fP(3), \fBqsort\fP(3), \fBtsearch\fP(3)

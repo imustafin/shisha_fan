@@ -1,0 +1,312 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Luigi P. Bai (lpb@softint.com) July 28, 1993
+.\" and Copyright 1993 Giorgio Ciucci <giorgio@crcc.it>
+.\" and Copyright 2004, 2005 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1993-07-28, Rik Faith <faith@cs.unc.edu>
+.\" Modified 1993-11-28, Giorgio Ciucci <giorgio@crcc.it>
+.\" Modified 1997-01-31, Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2001-02-18, Andries Brouwer <aeb@cwi.nl>
+.\" Modified 2002-01-05, 2004-05-27, 2004-06-17,
+.\"    Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2004-10-11, aeb
+.\" Modified, Nov 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Language and formatting clean-ups
+.\"	Updated shmid_ds structure definitions
+.\"	Added information on SHM_DEST and SHM_LOCKED flags
+.\"	Noted that CAP_IPC_LOCK is not required for SHM_UNLOCK
+.\"		since kernel 2.6.9
+.\" Modified, 2004-11-25, mtk, notes on 2.6.9 RLIMIT_MEMLOCK changes
+.\" 2005-04-25, mtk -- noted aberrant Linux behavior w.r.t. new
+.\"	attaches to a segment that has already been marked for deletion.
+.\" 2005-08-02, mtk: Added IPC_INFO, SHM_INFO, SHM_STAT descriptions.
+.\" 2018-03-20, dbueso: Added SHM_STAT_ANY description.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SHMCTL 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+shmctl \- управление общей памятью System V
+.SH ОБЗОР
+.ad l
+\fB#include <sys/ipc.h>\fP
+.br
+\fB#include <sys/shm.h>\fP
+.PP
+\fBint shmctl(int \fP\fIshmid\fP\fB, int \fP\fIcmd\fP\fB, struct shmid_ds *\fP\fIbuf\fP\fB);\fP
+.ad b
+.SH ОПИСАНИЕ
+Вызов \fBshmctl\fP() выполняет управляющую операцию, указанную в \fIcmd\fP, над
+общим сегментом памяти System\ V, чей идентификатор задан в \fIshmid\fP.
+.PP
+В аргументе \fIbuf\fP содержится указатель на структуру \fIshmid_ds\fP,
+определённую в \fI<sys/shm.h>\fP следующим образом:
+.PP
+.in +4n
+.EX
+struct shmid_ds {
+    struct ipc_perm shm_perm;    /* владелец и права */
+    size_t          shm_segsz;   /* размер сегмента (байты) */
+    time_t          shm_atime;   /* время последнего подключения */
+    time_t          shm_dtime;   /* время последнего отключения */
+    time_t          shm_ctime;   /* время последнего изменения */
+    pid_t           shm_cpid;    /* PID создателя */
+    pid_t           shm_lpid;    /* PID последнего выполнявшего
+                                    shmat(2)/shmdt(2) */
+    shmatt_t        shm_nattch;  /* текущее количество подключений */
+    ...
+};
+.EE
+.in
+.PP
+Структура \fIipc_perm\fP определена следующим образом (значения полей
+устанавливаются с помощью \fBIPC_SET\fP):
+.PP
+.in +4n
+.EX
+struct ipc_perm {
+    key_t          __key;    /* ключ, передаваемый в shmget(2) */
+    uid_t          \fBuid\fP;      /* эффективный UID владельца */
+    gid_t          \fBgid\fP;      /* эффективный GID владельца */
+    uid_t          cuid;     /* эффективный UID создателя */
+    gid_t          cgid;     /* эффективный GID создателя */
+    unsigned short \fBmode\fP;     /* \fBправа\fP + флаги SHM_DEST и
+                                SHM_LOCKED */
+    unsigned short __seq;    /* порядковый номер */
+};
+.EE
+.in
+.PP
+Возможные значения \fIcmd\fP:
+.TP  10
+\fBIPC_STAT\fP
+Копирует информацию из структуры данных ядра, связанной с \fIshmid\fP, в
+структуру \fIshsid_ds\fP, расположенную по адресу \fIbuf\fP. Вызывающий должен
+иметь права на чтение общего сегмента памяти.
+.TP 
+\fBIPC_SET\fP
+Записывает значения некоторых полей структуры \fIshmid_ds\fP, указанной в
+\fIbuf\fP, в структуру данных ядра, связанную с общим сегментом памяти,
+обновляя при этом поле \fIshm_ctime\fP. Могут измениться следующие поля:
+\fIshm_perm.uid\fP, \fIshm_perm.gid\fP и \fIshm_perm.mode\fP (младшие 9
+битов). Эффективный UID вызывающего процесса должен совпадать с UID
+владельца (\fIshm_perm.uid\fP) или создателя (\fIshm_perm.cuid\fP) общего сегмента
+памяти, или вызывающий должен иметь привилегии.
+.TP 
+\fBIPC_RMID\fP
+Помечает сегмент как удалённый. Сегмент будет удалён только после того как
+от него отключится последний процесс (т.е. когда поле \fIshm_nattch\fP из
+связанной структуры \fIshmid_ds\fP станет равно нулю). Вызывающий должен быть
+владельцем, создателем или иметь соответствующие привилегии. Аргумент \fIbuf\fP
+игнорируется.
+.IP
+Если сегмент помечен на удаление, то в поле \fIshm_perm.mode\fP устанавливается
+(нестандартный) флаг \fBSHM_DEST\fP в связанной структуре данных, которая
+возвращается при операции \fBIPC_STAT\fP.
+.IP
+Вызывающий \fIдолжен\fP удостовериться, что сегмент в конечном итоге удалён;
+иначе ошибочные страницы останутся в памяти или в пространстве подкачки.
+.IP
+Смотрите также описание \fI/proc/sys/kernel/shm_rmid_forced\fP в \fBproc\fP(5).
+.TP  10
+\fBIPC_INFO\fP (есть только в Linux)
+Возвращает параметры и информацию о системных максимальных значениях общей
+памяти в структуре, указанной в \fIbuf\fP. Данная структура имеет тип
+\fIshminfo\fP (то есть, требуется приведение типов) и определена в
+\fI<sys/shm.h>\fP, если определён макрос тестирования свойств
+\fB_GNU_SOURCE\fP:
+.IP
+.in +4n
+.EX
+struct shminfo {
+    unsigned long shmmax; /* максимальный размер
+                             сегмента */
+    unsigned long shmmin; /* минимальный размер сегмента;
+                             всегда 1 */
+    unsigned long shmmni; /* максимальное количество
+                             сегментов */
+    unsigned long shmseg; /* максимальное количество
+                             сегментов, к которому может
+                             подключиться; процесс
+                             не используется в ядре */
+    unsigned long shmall; /* макс. количество страниц
+                             общей памяти в системе */
+};
+.EE
+.in
+.IP
+Значения \fIshmmni\fP, \fIshmmax\fP и \fIshmall\fP можно изменить с помощью файлов в
+\fI/proc\fP с теми же именами; подробней см. \fBproc\fP(5).
+.TP 
+\fBSHM_INFO\fP (есть только в Linux)
+Возвращает структуру \fIshm_info\fP, чьи поля содержат информацию о системных
+ресурсах, использованных общей памятью. Эта структура определена в
+\fI<sys/shm.h>\fP, если определён макрос тестирования свойств
+\fB_GNU_SOURCE\fP:
+.IP
+.in +4n
+.EX
+struct shm_info {
+    int           used_ids; /* количество используемых в
+                               данный момент сегментов */
+    unsigned long shm_tot;  /* общее количество общих
+                               страниц памяти */
+    unsigned long shm_rss;  /* количество общих страниц,
+                               находящихся в памяти */
+    unsigned long shm_swp;  /* количество страниц памяти в
+                               пространстве подкачки */
+    unsigned long swap_attempts; /* не используется,
+                                    начиная с Linux 2.4 */
+    unsigned long swap_successes; /* не используется,
+                                     начиная с Linux 2.4 */
+};
+.EE
+.in
+.TP 
+\fBSHM_STAT\fP (есть только в Linux)
+Возвращает структуру \fIshmid_ds\fP как в операции \fBIPC_STAT\fP. Однако аргумент
+\fIshmid\fP является не идентификатором сегмента, а индексом во внутреннем
+массиве ядра, в котором содержится информации о всех общих сегментов памяти
+в системе.
+.TP 
+\fBSHM_STAT_ANY\fP (есть только в Linux, начиная с Linux 4.17)
+Возвращает структуру \fIshmid_ds\fP как для \fBSHM_STAT\fP. Однако
+\fIshm_perm.mode\fP не проверяется на доступность чтения для \fIshmid\fP, что
+означает, что эту операцию может выполнять пользователь (как и любой
+пользователь, который может прочитать эту же информацию из
+\fI/proc/sysvipc/shm\fP).
+.PP
+Вызывающий может запретить или разрешить размещение общего сегмента памяти в
+пространство подкачки с помощью следующих значений \fIcmd\fP:
+.TP  10
+\fBSHM_LOCK\fP (есть только в Linux)
+Запрещает подкачку общего сегмента памяти. После включения блокировки
+вызывающий должен считать сбойными все страницы, наличие которых
+требуется. Если сегмент заблокирован, то в поле \fIshm_perm.mode\fP
+устанавливается (нестандартный) флаг \fBSHM_LOCKED\fP в связанной структуре,
+которая возвращается при операции \fBIPC_STAT\fP.
+.TP 
+\fBSHM_UNLOCK\fP (есть только в Linux)
+Разблокирует сегмент, разрешая выполнение подкачки.
+.PP
+.\" There was some weirdness in 2.6.9: SHM_LOCK and SHM_UNLOCK could
+.\" be applied to a segment, regardless of ownership of the segment.
+.\" This was a botch-up in the move to RLIMIT_MEMLOCK, and was fixed
+.\" in 2.6.10.  MTK, May 2005
+В ядрах до версии 2.6.10 только привилегированный процесс мог использовать
+\fBSHM_LOCK\fP и \fBSHM_UNLOCK\fP. Начиная с ядра версии 2.6.10
+непривилегированный процесс может использовать эти операции, если его
+эффективный UID совпадает с UID владельца или создателя сегмента и (для
+\fBSHM_LOCK\fP) количество блокируемой памяти находится в пределах ресурса
+\fBRLIMIT_MEMLOCK\fP (см. \fBsetrlimit\fP(2)).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении операции \fBIPC_INFO\fP или \fBSHM_INFO\fP возвращается
+индекс самого последнего использованного элемента внутреннего массива ядра,
+в котором записывается информация о всех общих сегментах памяти (эта
+информация может быть использована в повторяющихся операциях \fBSHM_STAT\fP или
+\fBSHM_STAT_ANY\fP для получения информации о всех общих сегментах памяти
+системы). При успешном выполнении операции \fBSHM_STAT\fP возвращается
+идентификатор общего сегмента памяти, чей индекс был указан в \fIshmid\fP. При
+успешном выполнении других операций возвращается 0.
+.PP
+В случае ошибки возвращается \-1 и значение \fIerrno\fP устанавливается
+соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Указана операция \fBIPC_STAT\fP или \fBSHM_STAT\fP, но в \fIshm_perm.mode\fP не
+установлено право на чтение \fIshmid\fP, и вызывающий процесс не имеет мандата
+\fBCAP_IPC_OWNER\fP в пространстве имён пользователя, который управляет его
+пространством имён IPC.
+.TP 
+\fBEFAULT\fP
+Значение аргумента \fIcmd\fP равно \fBIPC_SET\fP или \fBIPC_STAT\fP, но адрес,
+указанный в \fIbuf\fP, недоступен.
+.TP 
+\fBEIDRM\fP
+Значение \fIshmid\fP указывает на удалённый идентификатор.
+.TP 
+\fBEINVAL\fP
+Значение \fIshmid\fP содержит недопустимый идентификатор, или \fIcmd\fP содержит
+недопустимую команду. Или (для \fBSHM_STAT\fP или \fBSHM_STAT_ANY\fP) индекс
+\fIshmid\fP ссылается на элемент массива, который в данный момент не
+используется.
+.TP 
+\fBENOMEM\fP
+(в ядрах, начиная с 2.6.9) Указана операция \fBSHM_LOCK\fP и размер
+блокируемого сегмента таков, что общее количество байт, блокируемое общими
+сегментами памяти, превысило бы ограничение, установленное для
+действительного идентификатора пользователя вызывающего процесса. Этот лимит
+определён мягким ограничителем ресурса \fBRLIMIT_MEMLOCK\fP
+(см. \fBsetrlimit\fP(2)).
+.TP 
+\fBEOVERFLOW\fP
+Попытка выполнить \fBIPC_STAT\fP, но значения GID или UID слишком велики для
+помещения в структуру, на которую указывает \fIbuf\fP.
+.TP 
+\fBEPERM\fP
+Попытка выполнить \fBIPC_SET\fP или \fBIPC_RMID\fP, но эффективный
+пользовательский идентификатор вызывающего процесса не равен идентификатору
+создателя (\fIshm_perm.cuid\fP) или владельца (\fIshm_perm.uid\fP) и процесс не
+привилегированный (Linux: не имеет мандата \fBCAP_SYS_ADMIN\fP).
+.IP
+Или (в ядрах до 2.6.9) процесс не имеет привилегий (Linux: не имеет мандата
+\fBCAP_IPC_LOCK\fP) для выполнения \fBSHM_LOCK\fP или \fBSHM_UNLOCK\fP. Начиная с
+Linux 2.6.9 эта ошибка также возникает, если значение \fBRLIMIT_MEMLOCK\fP
+равно 0 и вызывающий не имеет привилегий.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents additional error conditions EINVAL,
+.\" ENOENT, ENOSPC, ENOMEM, EEXIST.  Neither SVr4 nor SVID documents
+.\" an EIDRM error condition.
+POSIX.1\-2001, POSIX.1\-2008, SVr4.
+.SH ЗАМЕЧАНИЯ
+.\" Like Linux, the FreeBSD man pages still document
+.\" the inclusion of these header files.
+Включение файлов \fI<sys/types.h>\fP и \fI<sys/ipc.h>\fP не
+требуется в Linux или любых версий POSIX. Однако, некоторые старые
+реализации требуют включения данных заголовочных файлов, и это также
+требуется по SVID. В приложениях, которые нужно перенести на такие старые
+системы, может потребоваться включить данных заголовочные файлы.
+.PP
+Операции \fBIPC_INFO\fP, \fBSHM_STAT\fP и \fBSHM_INFO\fP используются программой
+\fBipcs\fP(1) для получения информации о выделенных ресурсах. В будущем для
+этого может быть задействован интерфейс файловой системы \fI/proc\fP.
+.PP
+Linux разрешает процессу подключаться (\fBshmat\fP(2)) к общему сегменту
+память, который уже помечен как удалённый с помощью \fIshmctl(IPC_RMID)\fP. Это
+свойство недоступно в других реализациях UNIX; в переносимых приложениях
+лучше не использовать это свойство.
+.PP
+В Linux 2.2 различные поля \fIstruct shmid_ds\fP имели тип \fIshort\fP. В Linux
+2.4 тип был изменён на \fIlong\fP. Для задействования преимуществ этого
+изменения необходима перекомпиляция программы с glibc\-2.1.91 или более
+поздней версией (ядро различает старые и новые вызовы по флагу \fBIPC_64\fP в
+аргументе \fIcmd\fP).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmlock\fP(2), \fBsetrlimit\fP(2), \fBshmget\fP(2), \fBshmop\fP(2), \fBcapabilities\fP(7),
+\fBsysvipc\fP(7)

@@ -1,0 +1,235 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SEM_WAIT 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sem_wait, sem_timedwait, sem_trywait \- блокирует семафор
+.SH ОБЗОР
+.nf
+\fB#include <semaphore.h>\fP
+.PP
+\fBint sem_wait(sem_t *\fP\fIsem\fP\fB);\fP
+.PP
+\fBint sem_trywait(sem_t *\fP\fIsem\fP\fB);\fP
+.PP
+\fBint sem_timedwait(sem_t *\fP\fIsem\fP\fB, const struct timespec *\fP\fIabs_timeout\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-pthread\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsem_timedwait\fP(): _POSIX_C_SOURCE\ >=\ 200112L
+.SH ОПИСАНИЕ
+Функция \fBsem_wait\fP() уменьшает (блокирует) семафор, на который указывает
+\fIsem\fP. Если значение семафор больше нуля, то выполняется уменьшение и
+функция сразу завершается. Если значение семафора равно нулю, то вызов
+блокируется до тех пор, пока не станет возможным выполнить уменьшение
+(т. е., значение семафора не станет больше нуля), или пока не вызовется
+обработчик сигнала.
+.PP
+Функция \fBsem_trywait\fP() подобна \fBsem_wait\fP(), за исключением того, что
+если уменьшение нельзя выполнить сразу, то вызов завершается с ошибкой
+(\fIerrno\fP становится равным \fBEAGAIN\fP), а не блокируется.
+.PP
+Функция \fBsem_timedwait\fP() подобна \fBsem_wait\fP(), за исключением того, что в
+\fIabs_timeout\fP задаётся ограничение по количеству времени, на которое вызов
+должен заблокироваться, если уменьшение невозможно выполнить сразу. Аргумент
+\fIabs_timeout\fP указывает на структуру, в которой задаётся абсолютное время
+ожидания в секундах и наносекундах, начиная с эпохи, 1970\-01\-01 00:00:00
++0000 (UTC). Эта структура определена следующим образом:
+.PP
+.in +4n
+.EX
+struct timespec {
+    time_t tv_sec;      /* секунды */
+    long   tv_nsec;     /* наносекунды [0 .. 999999999] */
+};
+.EE
+.in
+.PP
+Если на момент вызова время ожидания уже истекло и семафор нельзя
+заблокировать сразу, то \fBsem_timedwait\fP() завершается с ошибкой просрочки
+(\fIerrno\fP становится равным \fBETIMEDOUT\fP).
+.PP
+Если операцию можно выполнить сразу, то \fBsem_timedwait\fP() никогда не
+завершится с ошибкой просрочки, независимо от значения \fIabs_timeout\fP. Кроме
+того, в этом случае не проверяется корректность \fIabs_timeout\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении все функции возвращают 0; при ошибке значение
+семафора не изменяется, возвращается \-1, а в \fIerrno\fP указывается причина
+ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINTR\fP
+Вызов был прерван обработчиком сигнала; смотрите \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Значение \fIsem\fP не является корректным для семафора.
+.PP
+В \fBsem_trywait\fP() может возникать следующая дополнительная ошибка:
+.TP 
+\fBEAGAIN\fP
+Операция не может быть выполнена без блокировки (т. е., значение семафор
+равно нулю).
+.PP
+В \fBsem_timedwait\fP() дополнительно могут возникать следующие ошибки:
+.TP 
+\fBEINVAL\fP
+Значение \fIabs_timeout.tv_nsecs\fP меньше 0, или больше или равно 1000
+миллионов.
+.TP 
+\fBETIMEDOUT\fP
+.\" POSIX.1-2001 also allows EDEADLK -- "A deadlock condition
+.\" was detected", but this does not occur on Linux(?).
+Истёк период ожидания в вызове раньше возможности блокировки семафора.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw26 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsem_wait\fP(),
+\fBsem_trywait\fP(),
+\fBsem_timedwait\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ПРИМЕР
+.PP
+Программа (несколько упрощённая), показанная ниже, работает с безымянным
+семафором. Она ожидает два аргумента командной строки. В первом аргументе
+задаётся значение в секундах, которое используется в будильнике для
+генерации сигнала \fBSIGALRM\fP. Этот обработчик выполняет \fBsem_post\fP(3) для
+увеличения семафора, которого ждёт в \fImain()\fP вызов \fBsem_timedwait\fP(). Во
+втором аргументе задаётся период ожидания в секундах для
+\fBsem_timedwait\fP(). Далее показано что происходит в двух разных запусках
+программы:
+.PP
+.in +4n
+.EX
+$\fB ./a.out 2 3\fP
+About to call sem_timedwait()
+sem_post() из обработчика
+sem_timedwait() выполнена успешно
+$\fB ./a.out 2 1\fP
+About to call sem_timedwait()
+истекло время ожидания sem_timedwait()
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <semaphore.h>
+#include <time.h>
+#include <assert.h>
+#include <errno.h>
+#include <signal.h>
+
+sem_t sem;
+
+#define handle_error(msg) \e
+    do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+static void
+handler(int sig)
+{
+    write(STDOUT_FILENO, "sem_post() из обработчика\en", 24);
+    if (sem_post(&sem) == \-1) {
+        write(STDERR_FILENO, "ошибка sem_post()\en", 18);
+        _exit(EXIT_FAILURE);
+    }
+}
+
+int
+main(int argc, char *argv[])
+{
+    struct sigaction sa;
+    struct timespec ts;
+    int s;
+
+    if (argc != 3) {
+        fprintf(stderr, "Использование: %s <alarm\-secs> <wait\-secs>\en",
+                argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    if (sem_init(&sem, 0, 0) == \-1)
+        handle_error("sem_init");
+
+    /* установка обработчика SIGALRM; зададим таймер будильника,
+       используя argv[1] */
+
+    sa.sa_handler = handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    if (sigaction(SIGALRM, &sa, NULL) == \-1)
+        handle_error("sigaction");
+
+    alarm(atoi(argv[1]));
+
+    /* вычисляем относительный интервал как текущее время плюс
+       количество секунд из argv[2] */
+
+    if (clock_gettime(CLOCK_REALTIME, &ts) == \-1)
+        handle_error("clock_gettime");
+
+    ts.tv_sec += atoi(argv[2]);
+
+    printf("в main() вызывается sem_timedwait()\en");
+    while ((s = sem_timedwait(&sem, &ts)) == \-1 && errno == EINTR)
+        continue;       /* перезапускаем, если прервано обработчиком */
+
+    /* проверяем  что произошло */
+
+    if (s == \-1) {
+        if (errno == ETIMEDOUT)
+            printf("истекло время ожидания sem_timedwait()\en");
+        else
+            perror("sem_timedwait");
+    } else
+        printf("sem_timedwait() выполнена успешно\en");
+
+    exit((s == 0) ? EXIT_SUCCESS : EXIT_FAILURE);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclock_gettime\fP(2), \fBsem_getvalue\fP(3), \fBsem_post\fP(3), \fBsem_overview\fP(7),
+\fBtime\fP(7)

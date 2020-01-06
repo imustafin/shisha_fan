@@ -1,0 +1,142 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2004 Andries Brouwer <aeb@cwi.nl>.
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Inspired by a page by Walter Harms created 2002-08-10
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ILOGB 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+logb, logbf, logbl \- получение целочисленной экспоненты значения числа с
+плавающей запятой
+.SH ОБЗОР
+\fB#include <math.h>\fP
+.PP
+\fBint ilogb(double \fP\fIx\fP\fB);\fP
+.br
+\fBint ilogbf(float \fP\fIx\fP\fB);\fP
+.br
+\fBint ilogbl(long double \fP\fIx\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBilogb\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || _XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.br
+\fBilogbf\fP(), \fBilogbl\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Данные функции возвращают экспоненту своих аргументов в виде целого числа со
+знаком. При отсутствии ошибок они эквивалентны соответствующим функциям
+\fBlogb\fP(3), значение которых приведено к \fIint\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают экспоненту от \fIx\fP в виде
+целого числа со знаком.
+.PP
+.\" the POSIX.1 spec for logb() says logb() gives pole error for this
+.\" case, but for ilogb() it says domain error.
+.\" glibc: The numeric value is either `INT_MIN' or `-INT_MAX'.
+Если \fIx\fP равно нулю, то будет сгенерирована ошибка выхода за пределы
+области, а в качестве результата будет возвращено \fBFP_ILOGB0\fP.
+.PP
+.\" glibc: The numeric value is either `INT_MIN' or `INT_MAX'.
+.\" On i386, FP_ILOGB0 and FP_ILOGBNAN have the same value.
+Если \fIx\fP равно NaN, то будет сгенерирована ошибка выхода за пределы
+области, а в качестве результата будет возвращено \fBFP_ILOGBNAN\fP.
+.PP
+.\"
+.\" POSIX.1-2001 also says:
+.\" If the correct value is greater than {INT_MAX}, {INT_MAX}
+.\" shall be returned and a domain error shall occur.
+.\"
+.\" If the correct value is less than {INT_MIN}, {INT_MIN}
+.\" shall be returned and a domain error shall occur.
+Если \fIx\fP равно отрицательной или положительной бесконечности, то будет
+сгенерирована ошибка выхода за пределы области, а в качестве результата
+будет возвращено \fBINT_MAX\fP.
+.SH ОШИБКИ
+Смотрите \fBmath_error\fP(7), чтобы определить, какие ошибки могут возникать
+при вызове этих функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка области: \fIx\fP равно 0 или NaN
+Вызывается исключение неправильной плавающей запятой (\fBFE_INVALID\fP)) и
+\fIerrno\fP устанавливается в \fBEDOM\fP (но смотрите ДЕФЕКТЫ).
+.IP
+.TP 
+Ошибка области: \fIx\fP стремится к бесконечности
+Вызывается исключение неправильной плавающей запятой (\fBFE_INVALID\fP)) и
+\fIerrno\fP устанавливается в \fBEDOM\fP (но смотрите ДЕФЕКТЫ).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBilogb\fP(),
+\fBilogbf\fP(),
+\fBilogbl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.SH ДЕФЕКТЫ
+.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6794
+До версии 2.16 в реализации этих функций в glibc существовали следующие
+дефекты:
+.IP * 3
+При ошибке области, когда \fIx\fP равно 0 или NaN, не изменялось значение
+\fIerrno\fP или (на некоторых архитектурах) не возникало исключение
+неправильной плавающей запятой.
+.IP * 3
+При ошибке области, когда \fIx\fP равно бесконечности, не изменялось значение
+\fIerrno\fP или не возникало исключение неправильной плавающей запятой.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlog\fP(3), \fBlogb\fP(3), \fBsignificand\fP(3)

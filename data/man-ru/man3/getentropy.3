@@ -1,0 +1,96 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2017, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume.
+.\" no responsibility for errors or omissions, or for damages resulting.
+.\" from the use of the information contained herein.  The author(s) may.
+.\" not have taken the same level of care in the production of this.
+.\" manual, which is licensed free of charge, as they might when working.
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETENTROPY 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getentropy \- заполнение буфера случайными байтами
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint getentropy(void *\fP\fIbuffer\fP\fB, size_t \fP\fIlength\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgetentropy\fP():
+.br
+.RS 4
+.ad l
+_DEFAULT_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBgetentropy\fP() записывает \fIlength\fP байт высококачественных
+случайных данных в буфер, начинающийся в области, указанной в
+\fIbuffer\fP. Максимально разрешенное значение аргумента \fIlength\fP равно 256.
+.PP
+Успешный вызов \fBgetentropy\fP() всегда предоставляет затребованное число байт
+энтропии.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае успеха функция возвращает 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Часть или весь буфер, указанный в \fIbuffer\fP и \fIlength\fP, не является
+валидной адресуемой памятью.
+.TP 
+\fBEIO\fP
+Значение \fIlength\fP больше 256.
+.TP 
+\fBEIO\fP
+При попытке перезаписать \fIbuffer\fP случайными данными произошла ошибка.
+.TP 
+\fBENOSYS\fP
+Данная версия ядра не имеет реализации системного вызова \fBgetrandom\fP(2),
+необходимого для реализации данной функции.
+.SH ВЕРСИИ
+Функция \fBgetentropy\fP() впервые появилась в glibc 2.25.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является нестандартной. Она также присутствует в OpenBSD.
+.SH ЗАМЕЧАНИЯ
+Функция \fBgetentropy\fP() реализована через вызов \fBgetrandom\fP(2).
+.PP
+Следует учитывать, что в glibc обертка делает \fBgetrandom\fP(2) точкой отмены,
+а точкой отмены \fBgetentropy\fP() не является.
+.PP
+Функция \fBgetentropy\fP() также объявлена в \fB<sys/random.h>\fP (для
+получения этого объявления из заголовочного файла макроса тестирования
+свойств не требуется).
+.PP
+Вызов \fBgetentropy\fP() может блокировать работу, если система только что
+загрузилась и ядро ещё не успело набрать достаточно случайных событий для
+инициализации пула энтропии. В этом случае \fBgetentropy\fP() продолжает
+блокировать работу даже при обработке сигнала и вернёт управление только
+после завершения инициализации пула энтропии.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetrandom\fP(2), \fBurandom\fP(4), \fBrandom\fP(7)

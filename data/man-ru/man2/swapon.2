@@ -1,0 +1,161 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1995-07-22 by Michael Chastain <mec@duracef.shout.net>
+.\" Modified 1995-07-23 by aeb
+.\" Modified 1996-10-22 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1998-09-08 by aeb
+.\" Modified 2004-06-17 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2004-10-10 by aeb
+.\" 2004-12-14 mtk, Anand Kumria: added new errors
+.\" 2007-06-22 Ivana Varekova <varekova@redhat.com>, mtk
+.\"     Update text describing limit on number of swap files.
+.\"
+.\" FIXME Linux 3.11 added SWAP_FLAG_DISCARD_ONCE and SWAP_FLAG_DISCARD_PAGES
+.\"	commit dcf6b7ddd7df8965727746f89c59229b23180e5a
+.\"	Author: Rafael Aquini <aquini@redhat.com>
+.\"	Date:   Wed Jul 3 15:02:46 2013 -0700
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SWAPON 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+swapon, swapoff \- запускает/останавливает подкачку данных в файл/устройство
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.br
+\fB#include <sys/swap.h>\fP
+.PP
+\fBint swapon(const char *\fP\fIpath\fP\fB, int \fP\fIswapflags\fP\fB);\fP
+.br
+\fBint swapoff(const char *\fP\fIpath\fP\fB);\fP
+.SH ОПИСАНИЕ
+\fBswapon\fP() включает использование файла или блочного устройства, указанного
+в \fIpath\fP, в качестве подкачки данных. \fBswapoff\fP() выключает использование
+файла или блочного устройства, указанного в \fIpath\fP, в качестве подкачки
+данных.
+.PP
+Если при вызове \fBswapon\fP() в аргументе \fIswapflags\fP установлен флаг
+\fBSWAP_FLAG_PREFER\fP, то новое пространство подкачки будет иметь больший
+приоритет, чем используемый по умолчанию. Приоритет задаётся в \fIswapflags\fP
+следующим образом:
+.PP
+.in +4n
+.EX
+\fI(prio << SWAP_FLAG_PRIO_SHIFT) & SWAP_FLAG_PRIO_MASK\fP
+.EE
+.in
+.PP
+Если в аргументе \fIswapflags\fP вызова \fBswapon\fP() указан флаг
+\fBSWAP_FLAG_DISCARD\fP, то освобождаемые страницы подкачки будут исключены
+(discard) до того как они задействуются повторно (если устройство подкачки
+поддерживает операцию исключения или обрезки). Это может улучшить
+производительность на некоторых твердотельных накопителях, но, чаще всего,
+нет. Также смотрите ЗАМЕЧАНИЯ.
+.PP
+Эти функции могут использоваться только привилегированным процессом (имеющим
+мандат \fBCAP_SYS_ADMIN\fP).
+.SS Приоритет
+Каждое пространство подкачки имеет приоритет, высокий или низкий. По
+умолчанию задается низкий приоритет. Внутри пространств с низким
+приоритетом, новые пространства имеют ещё меньший приоритет, чем старые.
+.PP
+Все приоритеты, установленные с помощью \fIswapflags\fP, выше используемого по
+умолчанию. Приоритет может быть любым неотрицательным числом (определяется
+вызывающим). Большее значение соответствует большему приоритету.
+.PP
+Страницы подкачки располагаются в пространствах согласно убыванию их
+приоритета. Если приоритеты различаются, то сначала полностью заполняются
+пространства с большим приоритетом. Если два пространства имеют одинаковый
+приоритет, и это наибольший приоритет из свободных, страницы распределяются
+между ними по "карусельному" принципу.
+.PP
+В Linux 1.3.6 работа ядра обычно следует этим правилам, но существуют
+исключения.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBUSY\fP
+(для \fBswapon\fP()) Указанный \fIpath\fP уже используется в качестве пространства
+подкачки.
+.TP 
+\fBEINVAL\fP
+Файл \fIpath\fP существует, но не ссылается на обычный файл или блочное
+устройство;
+.TP 
+\fBEINVAL\fP
+(\fBswapon\fP()) Указанный путь не содержит правильной сигнатуры подкачки или
+располагается в файловой системе, работающей в памяти, например,
+\fBtmpfs\fP(5).
+.TP 
+\fBEINVAL\fP (начиная с Linux 3.4)
+(\fBswapon\fP()) В \fIflags\fP указано неверное значение флага.
+.TP 
+\fBEINVAL\fP
+(\fBswapoff\fP()) В настоящее время \fIpath\fP не является областью подкачки.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOENT\fP
+Файл \fIpath\fP не существует.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти ядра для запуска процесса подкачки.
+.TP 
+\fBEPERM\fP
+Вызывающий не имеет мандата \fBCAP_SYS_ADMIN\fP. Или превышен лимит количества
+используемых пространств подкачки; см. ЗАМЕЧАНИЯ далее.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции предназначены только для работы в Linux и не должны
+использоваться в переносимых программах. Второй параметр \fIswapflags\fP
+впервые появился в Linux 1.3.2.
+.SH ЗАМЕЧАНИЯ
+Раздел или путь должны быть подготовлены к подкачке при помощи \fBmkswap\fP(8).
+.PP
+Есть верхний предел на количество используемых файлов подкачки, он
+определяется константой ядра \fBMAX_SWAPFILES\fP. До ядра версии 2.4.10
+значение \fBMAX_SWAPFILES\fP было равно 8; начиная с ядра 2.4.10, значение
+стало 32.  Начиная с ядра 2.6.18, предел уменьшается на 2 (то есть стало
+30), если ядро собирается с параметром \fBCONFIG_MIGRATION\fP (который
+резервирует 2 элемента таблицы подкачки для возможности переноса страниц
+\fBmbind\fP(2) и \fBmigrate_pages\fP(2)). Начиная с ядра 2.6.32, предел ещё
+сокращается на 1, если ядро собирается с параметром
+\fBCONFIG_MEMORY_FAILURE\fP.
+.PP
+.\" To be precise: 2.6.35.5
+Исключение (discard) страниц подкачки появилось в ядре версии 2.6.29, флаг
+условия \fBSWAP_FLAG_DISCARD\fP появился в ядре версии 2.6.36, но пока при
+вызове \fBswapon\fP() исключается вся область подкачки, даже если этот флаг не
+задан.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmkswap\fP(8), \fBswapoff\fP(8), \fBswapon\fP(8)

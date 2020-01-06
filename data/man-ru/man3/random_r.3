@@ -1,0 +1,133 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2008 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RANDOM_R 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+random_r, srandom_r, initstate_r, setstate_r \- реентерабельный генератор
+случайных чисел
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint random_r(struct random_data *\fP\fIbuf\fP\fB, int32_t *\fP\fIresult\fP\fB);\fP
+.PP
+\fBint srandom_r(unsigned int \fP\fIseed\fP\fB, struct random_data *\fP\fIbuf\fP\fB);\fP
+.PP
+\fBint initstate_r(unsigned int \fP\fIseed\fP\fB, char *\fP\fIstatebuf\fP\fB,\fP
+\fB                size_t \fP\fIstatelen\fP\fB, struct random_data *\fP\fIbuf\fP\fB);\fP
+.PP
+\fBint setstate_r(char *\fP\fIstatebuf\fP\fB, struct random_data *\fP\fIbuf\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBrandom_r\fP(), \fBsrandom_r\fP(), \fBinitstate_r\fP(), \fBsetstate_r\fP():
+.RS 4
+/* в glibc начиная с 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Эти функции являются реентерабельными эквивалентами функций, которые описаны
+в \fBrandom\fP(3). Они подходят для использования в многонитевых программах,
+где каждой нити необходимо получить независимую, воспроизводимую
+последовательность случайных чисел.
+.PP
+Функция \fBrandom_r\fP() подобна \fBrandom\fP(3), но вместо использования
+информации о состоянии, хранящейся в глобальный переменной, в ней
+используется информация о состоянии в аргументе, указанном в \fIbuf\fP, который
+должен быть проинициализирован ранее с помощью
+\fBinitstate_r\fP(). Сгенерированное случайное число возвращается в аргументе
+\fIresult\fP.
+.PP
+Функция \fBsrandom_r\fP() подобна \fBsrandom\fP(3), но инициализирует семя для
+генератора случайных чисел, чьё состояние хранится в объекте, на который
+указывает \fIbuf\fP который должен быть проинициализирован ранее с помощью
+\fBinitstate_r\fP(), а не связывает семя с глобальной переменной состояния.
+.PP
+Функция \fBinitstate_r\fP() подобна \fBinitstate\fP(3), но инициализирует
+состояние в объекте, на который указывает \fIbuf\fP, а не в глобальной
+переменной состояния. Перед вызовом этой функции в поле \fIbuf.state\fP нужно
+записать NULL. Функция \fBinitstate_r\fP() сохраняет указатель на аргумент
+\fIstatebuf\fP внутри структуры, указанной в \fIbuf\fP. Таким образом, \fIstatebuf\fP
+не должна освобождаться пока используется \fIbuf\fP (и \fIstatebuf\fP обычно
+должна быть статической переменной или выделяться из кучи с помощью
+\fBmalloc\fP(3) и подобных ей).
+.PP
+Функция \fBsetstate_r\fP() подобна \fBsetstate\fP(3), но изменяет состояние в
+объекте, на который указывает \fIbuf\fP, а не в глобальной переменной
+состояния. Переменная \fIstate\fP сначала должна инициализироваться с помощью
+\fBinitstate_r\fP() или быть результатом предшествующего вызова
+\fBsetstate_r\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении все функции возвращают 0. В случае ошибки
+возвращается \-1, а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Функции \fBinitstate_r\fP() передан массив состояния меньше 8 байт.
+.TP 
+\fBEINVAL\fP
+Аргумент \fIstatebuf\fP или \fIbuf\fP функции \fBsetstate_r\fP() равнялся NULL.
+.TP 
+\fBEINVAL\fP
+Аргумент \fIbuf\fP или \fIresult\fP функции \fBrandom_r\fP() равнялся NULL.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBrandom_r\fP(),
+\fBsrandom_r\fP(),
+.br
+\fBinitstate_r\fP(),
+\fBsetstate_r\fP()
+T}	Безвредность в нитях	MT\-Safe race:buf
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" These functions appear to be on Tru64, but don't seem to be on
+.\" Solaris, HP-UX, or FreeBSD.
+Это функции являются расширениями glibc.
+.SH ДЕФЕКТЫ
+.\" FIXME . https://sourceware.org/bugzilla/show_bug.cgi?id=3662
+Интерфейс \fBinitstate_r\fP() запутывает. Он появился для того, чтобы сделать
+тип \fIrandom_data\fP скрытым, но реализация требует от пользователя перед
+вызовом, или инициализировать поле \fIbuf.state\fP значением NULL, или обнулить
+всю структуру.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdrand48\fP(3), \fBrand\fP(3), \fBrandom\fP(3)

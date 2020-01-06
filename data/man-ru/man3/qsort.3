@@ -1,0 +1,146 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\"
+.\" Modified 1993-03-29, David Metcalfe
+.\" Modified 1993-07-24, Rik Faith (faith@cs.unc.edu)
+.\" 2006-01-15, mtk, Added example program.
+.\" Modified 2012-03-08, Mark R. Bannister <cambridge@users.sourceforge.net>
+.\"                  and Ben Bacarisse <software@bsb.me.uk>
+.\"     Document qsort_r()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH QSORT 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+qsort, qsort_r \- сортировка массива
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBvoid qsort(void *\fP\fIbase\fP\fB, size_t \fP\fInmemb\fP\fB, size_t \fP\fIsize\fP\fB,\fP
+\fB           int (*\fP\fIcompar\fP\fB)(const void *, const void *));\fP
+.PP
+\fBvoid qsort_r(void *\fP\fIbase\fP\fB, size_t \fP\fInmemb\fP\fB, size_t \fP\fIsize\fP\fB,\fP
+\fB           int (*\fP\fIcompar\fP\fB)(const void *, const void *, void *),\fP
+\fB           void *\fP\fIarg\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBqsort_r\fP(): _GNU_SOURCE
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBqsort\fP() сортирует массив из \fInmemb\fP размером \fIsize\fP. Аргумент
+\fIbase\fP указывает на начало массива.
+.PP
+Содержимое массива сортируется в соответствии с функцией сравнения, на
+которую ссылается \fIcompar\fP, вызываемой вместе с двумя аргументами, которые
+ссылаются на сравниваемые объекты.
+.PP
+Функция сравнения должна вернуть целое, меньшее, равное и большее нуля для
+случаев, когда первый аргумент меньше, равен или больше второго
+соответственно. Если оба элемента сравнения равны, порядок их сортировки в
+массиве не будет определен.
+.PP
+Функция \fBqsort_r\fP() идентична \fBqsort\fP(), за исключением того, что в
+функцию сравнения \fIcompar\fP добавлен третий аргумент. Указатель передаётся в
+функцию сравнения через аргумент \fIarg\fP. Таким образом, функции сравнения не
+требуется глобальные переменные для передачи произвольных аргументов, и
+поэтому она реентерабельна и её можно безопасно использовать в нитях.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBqsort\fP() и \fBqsort_r\fP() ничего не возвращают.
+.SH ВЕРСИИ
+Функция \fBqsort_r\fP() впервые появилась в glibc 2.8.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw18 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBqsort\fP(),
+\fBqsort_r\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBqsort\fP(): POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Для сравнения C\-строк в качестве функции сравнения можно использовать
+\fBstrcmp\fP(3), как это указано ниже.
+.SH ПРИМЕР
+Для примера использования смотрите пример, указанный в \fBbsearch\fP(3).
+.PP
+Еще один пример программы, сортирующей строки, переданные в качестве
+аргументов через командную строку:
+.PP
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+static int
+cmpstringp(const void *p1, const void *p2)
+{
+    /* Аргументами данной функции являются "pointers to
+       pointers to char", однако аргументами strcmp(3)
+       являются "pointers to char", так что здесь происходит
+       преобразование и разыменовывание ссылок */
+
+    return strcmp(* (char * const *) p1, * (char * const *) p2);
+}
+
+int
+main(int argc, char *argv[])
+{
+    int j;
+
+    if (argc < 2) {
+        fprintf(stderr, "Использование: %s <string>...\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    qsort(&argv[1], argc \- 1, sizeof(char *), cmpstringp);
+
+    for (j = 1; j < argc; j++)
+        puts(argv[j]);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsort\fP(1), \fBalphasort\fP(3), \fBstrcmp\fP(3), \fBversionsort\fP(3)

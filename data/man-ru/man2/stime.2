@@ -1,0 +1,73 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 2001-03-16 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 2004-05-27 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STIME 2 2016\-03\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+stime \- устанавливает системное время
+.SH ОБЗОР
+\fB#include <time.h>\fP
+.PP
+\fBint stime(const time_t *\fP\fIt\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBstime\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    glibc 2.19 и старее:
+        _SVID_SOURCE
+.SH ОПИСАНИЕ
+Вызов \fBstime\fP() устанавливает системное (не аппаратное) время и дату
+машины. Время, заданное в \fIt\fP, измеряется в секундах с начала Эпохи, с
+00:00:00 1 января 1970 года (UTC). Функцию \fBstime\fP() может вызывать только
+суперпользователь.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Ошибка при получении информации из пространства пользователя.
+.TP 
+\fBEPERM\fP
+Вызвавшему процессу не хватает прав. В Linux для этого требуется мандат
+\fBCAP_SYS_TIME\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdate\fP(1), \fBsettimeofday\fP(2), \fBcapabilities\fP(7)

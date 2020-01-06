@@ -1,0 +1,77 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification
+.\"      http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\" Modified Tue Oct 16 23:18:40 BST 2001 by John Levon <moz@compsoc.man.ac.uk>
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FGETWC 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+fgetwc, getwc \- считывает широкий символ из потока FILE
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+\fB#include <wchar.h>\fP
+.PP
+\fBwint_t fgetwc(FILE *\fP\fIstream\fP\fB);\fP
+\fBwint_t getwc(FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBfgetwc\fP() — это эквивалент функции \fBfgetc\fP(3), но для широких
+символов. Она читает широкий символ из \fIstream\fP и возвращает его. Если
+достигнут конец потока или значение \fIferror(stream)\fP истинно, то функция
+возвращает \fBWEOF\fP. Если при преобразовании в широкий символ возникает
+ошибка, то значение переменной \fIerrno\fP устанавливается равным \fBEILSEQ\fP и
+возвращается \fBWEOF\fP.
+.PP
+Функция \fBgetwc\fP() — это функция, или макрос, идентичный \fBfgetwc\fP(). Она
+может быть реализована в виде макроса, и может вычислять свой аргумент более
+одного раза. Вообще нет смысла использовать эту функцию.
+.PP
+Неблокирующие аналоги смотрите в \fBunlocked_stdio\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBfgetwc\fP() возвращает следующий широкий символ из потока или
+\fBWEOF\fP. При ошибке в \fIerrno\fP записывается соответствующее значение.
+.SH ОШИБКИ
+Кроме обычных могут возникать:
+.TP 
+\fBEILSEQ\fP
+Данные, полученные из входного потока, не содержат корректного символа.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw17 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfgetwc\fP(),
+\fBgetwc\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBfgetwc\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.PP
+Из\-за отсутствия дополнительной информации, передаваемой в \fBfopen\fP(3),
+закономерно ожидать, что \fBfgetwc\fP() на самом деле читает многобайтовую
+последовательность из потока, а затем преобразует её в широкий символ.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfgetws\fP(3), \fBfputwc\fP(3), \fBungetwc\fP(3), \fBunlocked_stdio\fP(3)

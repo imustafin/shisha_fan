@@ -1,0 +1,96 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\" and Copyright (C) 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TOWLOWER 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+towlower, towlower_l \- преобразует широкий символ к нижнему регистру
+.SH ОБЗОР
+.nf
+\fB#include <wctype.h>\fP
+.PP
+\fBwint_t towlower(wint_t \fP\fIwc\fP\fB);\fP
+.PP
+\fBwint_t towlower_l(wint_t \fP\fIwc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBtowlower_l\fP():
+.PD 0
+.RS 4
+.TP 
+Начиная с glibc 2.10:
+_XOPEN_SOURCE\ >=\ 700
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.PD
+.SH ОПИСАНИЕ
+Функция \fBtowlower\fP() является широкосимвольным аналогом функции
+\fBtolower\fP(3). Если \fIwc\fP является широким символом в верхнем регистре и в
+текущей локали существует эквивалент в нижнем регистре, то возвращается
+эквивалент \fIwc\fP в нижнем регистре. Во всех остальных случаях \fIwc\fP
+возвращается неизменным.
+.PP
+Функция \fBtowupper_l\fP() производит то же действие, но выполняет
+преобразование на основе информации о типе символа в локали, указанной в
+\fIlocale\fP. Поведение \fBtowupper_l\fP() не определёно, если значение \fIlocale\fP
+равно специальному объекту локали \fBLC_GLOBAL_LOCALE\fP (смотрите
+\fBduplocale\fP(3)) или некорректному описателю объекта локали.
+.PP
+Аргумент \fIwc\fP должен быть представим типом \fIwchar_t\fP и быть корректным
+символом в локали или равняться значению \fBWEOF\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если \fIwc\fP был преобразован к нижнему регистру, то \fBtowlower\fP() возвращает
+его эквивалент в нижнем регистре; в противном случае возвращается \fIwc\fP.
+.SH ВЕРСИИ
+Функция \fBtowlower_l\fP() впервые появилась в glibc 2.3.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBtowlower\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+T{
+\fBtowlower_l\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBtowlower\fP(): C99, POSIX.1\-2001 (XSI); расширение XSI в POSIX.1\-2008, но
+помечена как устаревшая.
+.PP
+\fBtowlower_l\fP(): POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Поведение этих функций зависит от категории \fBLC_CTYPE\fP локали.
+.PP
+Эти функции не очень подходят для работы с символами Юникода, так как в
+Юникоде есть три типа регистра: верхний, нижний и заглавный.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBiswlower\fP(3), \fBtowctrans\fP(3), \fBtowupper\fP(3), \fBlocale\fP(7)

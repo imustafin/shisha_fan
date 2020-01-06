@@ -1,0 +1,173 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LOCALE 1 2019\-03\-06 Linux "Руководство пользователя Linux"
+.SH ИМЯ
+locale \- выдаёт информацию о локали
+.SH ОБЗОР
+.nf
+\fBlocale\fP [\fIпараметр\fP]
+\fBlocale\fP [\fIпараметр\fP] \fB\-a\fP
+\fBlocale\fP [\fIпараметр\fP] \fB\-m\fP
+\fBlocale\fP [\fIпараметр\fP] \fIимя\fP…
+.fi
+.SH ОПИСАНИЕ
+Команда \fBlocale\fP выдаёт в стандартный вывод информацию о текущей или всех
+локалях.
+.PP
+При запуске без аргументов \fBlocale\fP выводит настройки текущей локали по
+каждой категории локали (смотрите \fBlocale\fP(5)) в зависимости от настроек
+переменных окружения, которые управляют локалью (смотрите
+\fBlocale\fP(7)). Значения для переменных, установленных из окружения,
+печатаются без двойных кавычек; предполагается, что кавычки содержатся в
+самих значениях.
+.PP
+Если указан параметр \fB\-a\fP или \fB\-m\fP (или их длинные эквиваленты), то
+выполняется следующее:
+.TP 
+\fB\-a\fP, \fB\-\-all\-locales\fP
+Выдаётся список всех доступных локалей. С параметром \fB\-v\fP в вывод
+добавляются метаданные \fBLC_IDENTIFICATION\fP по каждой выводимой локали.
+.TP 
+\fB\-m\fP, \fB\-\-charmaps\fP
+Выдаются доступные кодировки (charmaps, файлы описаний наборов
+символов). Чтобы посмотреть текущую кодировку локали, используйте \fBlocale
+\-c charmap\fP.
+.PP
+Команде \fBlocale\fP также можно передать один или более аргументов: имена
+ключевых слов локали (например, \fIdate_fmt\fP, \fIctype\-class\-names\fP,
+\fIyesexpr\fP или \fIdecimal_point\fP) или категории локали (например, \fBLC_CTYPE\fP
+или \fBLC_TIME\fP). Для каждого аргумента отображается следующее:
+.IP * 3
+Для ключевого слова локали — значение этого ключевого слова.
+.IP *
+Для категории локали — значения всех ключевых слов в этой категории.
+.PP
+При указании аргументов доступны следующие параметры:
+.TP 
+\fB\-c\fP, \fB\-\-category\-name\fP
+Для аргумента имени категории, выводится имя категории локали в отдельной
+строке перед списком значений ключевых слов этой категории.
+.IP
+Для аргумента имени ключевого слова, выводится имя категории локали для
+этого ключевого слова в отдельной строке перед значением ключевого слова.
+.IP
+Этот параметр повышает читаемость при указании нескольких аргументов. Его
+можно указывать совместно с параметром \fB\-k\fP.
+.TP 
+\fB\-k\fP, \fB\-\-keyword\-name\fP
+Для каждого ключевого слова при отображении значений также выводится имя
+этого ключевого слова; формат вывода:
+.IP
+    \fIключевое слово\fP="\fIзначение\fP"
+.PP
+Команда \fBlocale\fP также имеет следующие параметры:
+.TP 
+\fB\-v\fP, \fB\-\-verbose\fP
+Отобразить дополнительную информацию при некоторых комбинациях параметров
+командной строки и аргументов.
+.TP 
+\fB\-?\fP, \fB\-\-help\fP
+Показать справку по параметрам командной строки и аргументам и завершить
+работу.
+.TP 
+\fB\-\-usage\fP
+Показать короткое сообщение об использовании и завершить работу.
+.TP 
+\fB\-V\fP, \fB\-\-version\fP
+Показать версию программы и выйти.
+.SH ФАЙЛЫ
+.TP 
+\fI/usr/lib/locale/locale\-archive\fP
+Обычный путь по умолчанию для расположения архива локалей.
+.TP 
+\fI/usr/share/i18n/locales\fP
+Обычный путь по умолчанию для файлов определений локалей.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ПРИМЕР
+.EX
+$ \fBlocale\fP
+LANG=en_US.UTF\-8
+LC_CTYPE="en_US.UTF\-8"
+LC_NUMERIC="en_US.UTF\-8"
+LC_TIME="en_US.UTF\-8"
+LC_COLLATE="en_US.UTF\-8"
+LC_MONETARY="en_US.UTF\-8"
+LC_MESSAGES="en_US.UTF\-8"
+LC_PAPER="en_US.UTF\-8"
+LC_NAME="en_US.UTF\-8"
+LC_ADDRESS="en_US.UTF\-8"
+LC_TELEPHONE="en_US.UTF\-8"
+LC_MEASUREMENT="en_US.UTF\-8"
+LC_IDENTIFICATION="en_US.UTF\-8"
+LC_ALL=
+
+$ \fBlocale date_fmt\fP
+%a %b %e %H:%M:%S %Z %Y
+
+$ \fBlocale \-k date_fmt\fP
+date_fmt="%a %b %e %H:%M:%S %Z %Y"
+
+$ \fBlocale \-ck date_fmt\fP
+LC_TIME
+date_fmt="%a %b %e %H:%M:%S %Z %Y"
+
+$ \fBlocale LC_TELEPHONE\fP
++%c (%a) %l
+(%a) %l
+11
+1
+UTF\-8
+
+$ \fBlocale \-k LC_TELEPHONE\fP
+tel_int_fmt="+%c (%a) %l"
+tel_dom_fmt="(%a) %l"
+int_select="11"
+int_prefix="1"
+telephone\-codeset="UTF\-8"
+.EE
+.PP
+В следующем примере компилируется специализированная локаль из каталога
+\&\fI./wrk\fP с помощью утилиты \fBlocaledef\fP(1) в каталоге \fI$HOME/.locale\fP,
+затем тестируется результат командой \fBdate\fP(1), а потом устанавливается
+переменные окружения \fBLOCPATH\fP и \fBLANG\fP в файле оболочки профиля для того,
+чтобы специализированная локаль была задействована в последующих сеансах
+пользователя:
+.PP
+.EX
+$ \fBmkdir \-p $HOME/.locale\fP
+$ \fBI18NPATH=./wrk/ localedef \-f UTF\-8 \-i fi_SE $HOME/.locale/fi_SE.UTF\-8\fP
+$ \fBLOCPATH=$HOME/.locale LC_ALL=fi_SE.UTF\-8 date\fP
+$ \fBecho "export LOCPATH=\e$HOME/.locale" >> $HOME/.bashrc\fP
+$ \fBecho "export LANG=fi_SE.UTF\-8" >> $HOME/.bashrc\fP
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlocaledef\fP(1), \fBcharmap\fP(5), \fBlocale\fP(5), \fBlocale\fP(7)

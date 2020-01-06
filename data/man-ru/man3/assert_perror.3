@@ -1,0 +1,77 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2002 Andries Brouwer <aeb@cwi.nl>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" This replaces an earlier man page written by Walter Harms
+.\" <walter.harms@informatik.uni-oldenburg.de>.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ASSERT_PERROR 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+assert_perror \- проверяет errnum и прекращает выполнение программы
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* Смотрите feature_test_macros(7) */
+\fB#include <assert.h>\fP
+.PP
+\fBvoid assert_perror(int \fP\fIerrnum\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Если на момент последнего включения \fI<assert.h>\fP был определён
+макрос \fBNDEBUG\fP, то для макроса \fBassert_perror\fP() не создаётся никакого
+кода и, соответственно, он вообще ничего не делает. В противном случае,
+макрос \fBassert_perror\fP() выводит в стандартный поток ошибок сообщение об
+ошибке и прекращает работу программы вызовом \fBabort\fP(3), если значение
+\fIerrnum\fP не равно нулю. В сообщении содержится имя файла, имя функции и
+номер строки вызова макроса, а также результат вызова \fIstrerror(errnum)\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Ничего не возвращается.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBassert_perror\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Это расширение GNU.
+.SH ДЕФЕКТЫ
+Целью макроса assert является оказание помощи программистам в поиске ошибок
+в программах — таких сбоев, которые не могут случиться, если только не была
+допущена ошибка в коде программы. Однако, с системными или библиотечными
+вызовами ситуация немного отличается, и возврат ошибки может произойти и,
+собственно, произойдёт и должен может быть проверен, но не через assert, где
+проверка не получится, если определено \fBNDEBUG\fP, а правильным кодом
+обработки ошибок. Никогда не используйте этот макрос.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBabort\fP(3), \fBassert\fP(3), \fBexit\fP(3), \fBstrerror\fP(3)

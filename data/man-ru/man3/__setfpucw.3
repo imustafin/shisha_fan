@@ -1,0 +1,54 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Written Sat Mar  8 10:35:08 MEZ 1997 by
+.\" J. "MUFTI" Scheurich (mufti@csv.ica.uni-stuttgart.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" This page is licensed under the GNU General Public License
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH __SETFPUCW 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+__setfpucw \- устанавливает слово управления FPU для архитектуры i386
+(устарела)
+.SH ОБЗОР
+\fB#include <i386/fpu_control.h>\fP
+.PP
+\fBvoid __setfpucw(unsigned short \fP\fIcontrol_word\fP\fB);\fP
+.SH ОПИСАНИЕ
+В архитектуре i386 функция \fB__setfpucw\fP() пересылает \fIcontrol_word\fP в
+регистр FPU (модуль обработки операций с плавающей точкой). Используется для
+управления точностью, округлением и исключениями при операциях с плавающей
+точкой.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является нестандартным расширением GNU.
+.SH ЗАМЕЧАНИЯ
+Начиная с glibc 2.1 эта функция не существует. Для управления режимами
+округления FPU в ISO C99 введены новые функции (прототипы объявлены в
+\fI<fenv.h>\fP): \fBfegetround\fP(3), \fBfesetround\fP(3), окружением при
+работе с плавающей точкой: \fBfegetenv\fP(3), \fBfeholdexcept\fP(3),
+\fBfesetenv\fP(3), \fBfeupdateenv\fP(3) и для управления исключениями FPU:
+\fBfeclearexcept\fP(3), \fBfegetexceptflag\fP(3), \fBferaiseexcept\fP(3),
+\fBfesetexceptflag\fP(3) и \fBfetestexcept\fP(3).
+.PP
+Если по какой\-то причине необходим прямой доступ к слову управления FPU, то
+можно использовать макросы \fB_FPU_GETCW\fP и \fB_FPU_SETCW\fP из
+\fI<fpu_control.h>\fP.
+.SH ПРИМЕР
+\fB__setfpucw(0x1372)\fP
+.PP
+Устанавливает слово управления FPU на архитектуре i386:
+.br
+     \- включает расширенную точность
+.br
+     \- включает округление к ближайшему
+.br
+     \- включает исключение при переполнении, делении на ноль и NaN
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfeclearexcept\fP(3)
+.PP
+\fI<fpu_control.h>\fP

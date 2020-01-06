@@ -1,0 +1,84 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MBTOWC 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+mbtowc \- преобразовывает мультибайтовую последовательность в широкий символ
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint mbtowc(wchar_t *\fP\fIpwc\fP\fB, const char *\fP\fIs\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Обычно в эту функцию передают \fIs\fP и \fIpwc\fP не равные NULL. В этом случае
+функция \fBmbtowc\fP() просматривает не более \fIn\fP байт многобайтовой строки,
+начиная с \fIs\fP, извлекает следующий полный многобайтовый символ, преобразует
+его в широкий символ и сохраняет его в \fI*pwc\fP. Она обновляет внутренне
+состояние сдвига, доступное только функции \fBmbtowc\fP(). Если \fIs\fP не
+указывает на байт null (\(aq\e0\(aq), то она возвращает количество байт,
+которые были потрачены из \fIs\fP, в противном случае возвращается 0.
+.PP
+Если в \fIn\fP байтах, начиная с \fIs\fP, не содержится полного многобайтового
+символа или если в них содержится некорректный многобайтовый символ, то
+\fBmbtowc\fP() возвращает \-1. Это может произойти даже если \fIn\fP >=
+\fIMB_CUR_MAX\fP, если в многобайтовой строке содержится лишние сдвиговые
+последовательности.
+.PP
+Ещё случай, когда \fIs\fP не равно NULL, а \fIpwc\fP равно NULL. В этом случае
+функция \fBmbtowc\fP() действует как описано выше, но не сохраняет
+преобразованный широкий символ в памяти.
+.PP
+.\" The Dinkumware doc and the Single UNIX specification say this, but
+.\" glibc doesn't implement this.
+И третий вариант, когда \fIs\fP равно NULL. В этом случае \fIpwc\fP и \fIn\fP
+игнорируются. Функция \fBmbtowc\fP() сбрасывает состояние сдвига, известное
+только ей, в начальное состояние и возвращает не ноль, если кодировка имеет
+непростое состояние сдвига, или ноль, если кодировка не имеет состояний.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если \fIs\fP не равно NULL, то функция \fBmbtowc\fP() возвращает количество
+потраченных байт, начиная с \fIs\fP, или 0, если \fIs\fP указывает на байт null,
+или \-1 — при ошибке.
+.PP
+Если значение \fIs\fP равно NULL, то функция \fBmbtowc\fP() возвращает не ноль,
+если кодировка имеет необычное смещение, или ноль, если кодировка не имеет
+смещения.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmbtowc\fP()
+T}	Безвредность в нитях	MT\-Unsafe race
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBmbtowc\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.PP
+Данную функцию небезопасно использовать в нитях. Для этого лучше подходит
+функция \fBmbrtowc\fP(3) с тем же интерфейсом.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBMB_CUR_MAX\fP(3), \fBmblen\fP(3), \fBmbrtowc\fP(3), \fBmbstowcs\fP(3),
+\fBwcstombs\fP(3), \fBwctomb\fP(3)

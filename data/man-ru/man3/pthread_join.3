@@ -1,0 +1,116 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_JOIN 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_join \- присоединение к завершённой нити
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_join(pthread_t \fP\fIthread\fP\fB, void **\fP\fIretval\fP\fB);\fP
+.fi
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.SH ОПИСАНИЕ
+Функция \fBpthread_join\fP() ждёт завершения нити, указанной в \fIthread\fP. Если
+нить уже завершила работу, то \fBpthread_join\fP() завершается сразу. Нить,
+задаваемая в \fIthread\fP, должна позволять присоединение.
+.PP
+Если \fIretval\fP не равно NULL, то \fBpthread_join\fP() копирует код выхода нити
+назначения (т. е., значение, которое нить назначения передала через
+\fBpthread_exit\fP(3)) в расположение по указателю \fIretval\fP.  Если нить
+назначения была отменена, то в расположение по указателю \fIretval\fP
+помещается значение \fBPTHREAD_CANCELED\fP.
+.PP
+Если к одной нити одновременно пытаются присоединиться несколько нитей, то
+результат не определён. Если нити вызвавшая \fBpthread_join\fP(), отменяется,
+то нить назначения остаётся доступной для присоединения (т. е., не будет
+отсоединена).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBpthread_join\fP() возвращается 0; при ошибке
+возвращается номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEDEADLK\fP
+.\" The following verified by testing on glibc 2.8/NPTL:
+.\" The following verified by testing on glibc 2.8/NPTL:
+Обнаружена взаимная блокировка (например, когда две нити пытаются
+присоединиться друг к другу); или в \fIthread\fP указана вызывающая нить.
+.TP 
+\fBEINVAL\fP
+Нить \fIthread\fP не является присоединяемой.
+.TP 
+\fBEINVAL\fP
+.\" POSIX.1-2001 does not specify this error case.
+Другая нить уже ждёт присоединения к этой нити.
+.TP 
+\fBESRCH\fP
+Нить с идентификатором \fIthread\fP не найдена.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_join\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+После успешного выполнения \fBpthread_join\fP() вызывающему гарантируется, что
+целевая нить завершила работу. Вызывающий теперь может сделать нужные после
+завершения нити операции по очистке (например, освободить память или другие
+ресурсы, которые использовались целевой нитью).
+.PP
+Присоединение к нити, из которой уже был получен результат присоединения,
+приводит к непредсказуемым последствиям.
+.PP
+Ошибка присоединения к нити, доступной для присоединения (т. е., не
+отсоединённой), создаёт «нить\-зомби». Лучше их избегать, так как нить\-зомби
+потребляет некоторые системные ресурсы, и когда накапливается много
+нитей\-зомби становится невозможно создание новых нитей\ (или процессов).
+.PP
+Аналога \fIwaitpid(\-1,\ &status,\ 0)\fP в pthreads не существует, то есть
+присоединиться к любой завершившейся нити». Если вы уверены, что вам нужна
+такая возможность, то, вероятно, стоит пересмотреть проект приложения.
+.PP
+Все нити в процессе равноправны: любая нить может присоединиться к любой
+другой нити процесса.
+.SH ПРИМЕР
+Смотрите \fBpthread_create\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthread_cancel\fP(3), \fBpthread_create\fP(3), \fBpthread_detach\fP(3),
+\fBpthread_exit\fP(3), \fBpthread_tryjoin_np\fP(3), \fBpthreads\fP(7)

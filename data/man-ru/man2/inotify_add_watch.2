@@ -1,0 +1,110 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2005 Robert Love
+.\" and Copyright, 2006 Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 2005-07-19 Robert Love <rlove@rlove.org> - initial version
+.\" 2006-02-07 mtk, various changes
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INOTIFY_ADD_WATCH 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+inotify_add_watch \- добавляет сторожок к инициализированному экземпляру
+inotify
+.SH ОБЗОР
+\fB#include <sys/inotify.h>\fP
+.PP
+\fBint inotify_add_watch(int \fP\fIfd\fP\fB, const char *\fP\fIpathname\fP\fB, uint32_t
+\fP\fImask\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBinotify_add_watch\fP() добавляет новый сторожок (watch) или изменяет
+существующий, для файла, чьё расположение указано в \fIpathname\fP; вызывающий
+должен иметь право читать этот файл. Аргумент \fIfd\fP является файловым
+дескриптором, ссылающимся на экземпляр inotify, у которого изменяется список
+сторожков. Отслеживаемые с \fIpathname\fP события указываются маской битов в
+аргументе \fImask\fP. Описание битов \fImask\fP смотрите в \fBinotify\fP(7).
+.PP
+При успешном выполнении \fBinotify_add_watch\fP() возвращает уникальный
+дескриптор сторожка данного экземпляра inotify, для объекта файловой системы
+(иноды), связанной с \fIpathname\fP. Если ранее объект файловой системы не
+наблюдался данным экземпляром inotify, то создаётся новый дескриптор
+сторожка. Если объект файловой системы уже отслеживался (возможно, через
+другую ссылку на тот же объект), то возвращается дескриптор существующего
+сторожка.
+.PP
+Дескриптор сторожка возвращается при последующих операциях \fBread\fP(2) из
+файлового дескриптора inotify. При чтении извлекаются структуры
+\fIinotify_event\fP (см. \fBinotify\fP(7)), указывающие на события в файловой
+системе; дескриптор сторожка внутри этой структуры определяет объект, для
+которого произошло событие.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBinotify_add_watch\fP() возвращает неотрицательный
+дескриптор сторожка. При ошибке возвращается \-1, а значение \fIerrno\fP
+устанавливается соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Нет прав на чтение указанного файла.
+.TP 
+\fBEBADF\fP
+Указан неверный файловый дескриптор.
+.TP 
+\fBEEXIST\fP
+В \fImask\fP содержится \fBIN_MASK_CREATE\fP и \fIpathname\fP ссылается на файл,
+который уже отслеживается тем же \fIfd\fP.
+.TP 
+\fBEFAULT\fP
+\fIpathname\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+Указанная маска событий не содержит допустимых событий; \fImask\fP содержит
+\fBIN_MASK_ADD\fP и \fBIN_MASK_CREATE\fP одновременно; \fIfd\fP не является файловым
+дескриптором inotify.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fIpathname\fP.
+.TP 
+\fBENOENT\fP
+Один из каталогов в \fIpathname\fP не существует или является повисшей
+символьной ссылкой.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOSPC\fP
+Достигнуто максимальное количество сторожков inotify доступных пользователю
+или ядру не удалось выделить необходимые ресурсы.
+.TP 
+\fBENOTDIR\fP
+В значении \fImask\fP содержится \fBIN_ONLYDIR\fP и \fIpathname\fP не является
+каталогом.
+.SH ВЕРСИИ
+Inotify был добавлен в ядро Linux версии 2.6.13.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBinotify_init\fP(2), \fBinotify_rm_watch\fP(2), \fBinotify\fP(7)

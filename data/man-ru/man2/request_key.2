@@ -1,0 +1,417 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Red Hat, Inc. All Rights Reserved.
+.\"     Written by David Howells (dhowells@redhat.com)
+.\" and Copyright (C) 2016 Michael Kerrisk <mtk.man-pages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_ONEPARA)
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version
+.\" 2 of the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH REQUEST_KEY 2 2019\-03\-06 Linux "Вызовы системы управления ключами Linux"
+.SH ИМЯ
+request_key \- запрашивает ключ из системы управления ключами ядра
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <keyutils.h>\fP
+.PP
+\fBkey_serial_t request_key(const char *\fP\fItype\fP\fB, const char *\fP\fIdescription\fP\fB,\fP
+\fB                         const char *\fP\fIcallout_info\fP\fB,\fP
+\fB                         key_serial_t \fP\fIdest_keyring\fP\fB);\fP
+.fi
+.PP
+В glibc нет обёрточной функции для данного системного вызова; смотрите
+ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Системный вызов \fBrequest_key\fP() пытается найти ключ заданного \fItype\fP с
+описанием (именем), совпадающим с \fIdescription\fP. Если ключ найти
+невозможно, то ключ может быть создан. Если ключ найден или создан, то
+\fBrequest_key\fP() присоединяет его к связке ключей, чей идентификатор указан
+\fIkeyring\fP, и возвращает серийный номер ключа.
+.PP
+Сначала \fBrequest_key\fP() выполняет рекурсивный поиск совпадающего ключа во
+всех связках ключей, присоединённых к вызвавшему процессу. Связки ключей
+просматриваются в следующем порядке: связки каждой нити, связки вызвавшего
+процесса и связки ключей сеанса.
+.PP
+.\" David Howells: we can then have an arbitrarily long sequence
+.\" of "recursive" request-key upcalls. There is no limit, other
+.\" than number of PIDs, etc.
+Если \fBrequest_key\fP() вызван из программы, вызванной \fBrequest_key\fP() от
+имени какого\-то другого процесс для генерации ключа, то в дальнейшем будет
+осуществлён поиск по связкам ключей этого другого процесса, используя для
+определения доступа его идентификатор пользователя, группы и дополнительных
+групп и контекста безопасности.
+.PP
+Поиск в дереве связок ключей выполняется сначала в ширину: искомые ключи в
+каждой связке проверяются на совпадение до рекурсивного перехода в дочерние
+связки ключей. Найдены могут быть только те ключи, которые разрешены
+вызывающему для \fBпоиска\fP, и поиск может осуществляться только в разрешённых
+для \fBпоиска\fP связках ключей.
+.PP
+Если ключ не найден и \fIcallout\fP равно NULL, то вызов завершается ошибкой
+\fBENOKEY\fP.
+.PP
+Если ключ не найден и \fIcallout\fP не равно NULL, то ядро пытается вызвать
+пользовательскую программу для создания ключа. Подробности приведены ниже.
+.PP
+Серийный номер \fIdest_keyring\fP может задаваться серийным номером допустимой
+связки ключей, на которую у вызывающего есть права на \fIзапись\fP, или же это
+может быть один из следующих специальных идентификаторов связок ключей:
+.TP 
+\fBKEY_SPEC_THREAD_KEYRING\fP
+Связка ключей вызывающей нити (смотрите \fBthread\-keyring\fP(7)).
+.TP 
+\fBKEY_SPEC_PROCESS_KEYRING\fP
+Связка ключей вызывающего процесса (смотрите \fBprocess\-keyring\fP(7)).
+.TP 
+\fBKEY_SPEC_SESSION_KEYRING\fP
+Связка ключей сеанса вызывающего (смотрите \fBsession\-keyring\fP(7)).
+.TP 
+\fBKEY_SPEC_USER_KEYRING\fP
+Связка ключей по UID вызывающего (смотрите \fBuser\-keyring\fP(7)).
+.TP 
+\fBKEY_SPEC_USER_SESSION_KEYRING\fP
+Связка ключей по UID сеанса вызывающего (смотрите
+\fBuser\-session\-keyring\fP(7)).
+.PP
+Если \fIdest_keyring\fP равно 0 и создание ключа не выполнено, то
+дополнительных связей не появляется.
+.PP
+В противном случае, если \fIdest_keyring\fP равно 0 и создан новый ключ, то
+новый ключ будет прицеплен в связку ключей «по умолчанию». Более точно,
+когда ядро пытается определить в какую связку ключей должен быть прицеплен
+то только что созданный ключ, оно перебирает связки ключей начиная с со
+связки, установленной через \fBkeyctl\fP(2) с операцией
+\fBKEYCTL_SET_REQKEY_KEYRING\fP и продолжает в порядке, показанном далее, пока
+не найдёт существующую связку ключей:
+.IP \(bu 3
+.\" 8bbf4976b59fc9fc2861e79cab7beb3f6d647640
+.\" FIXME
+.\" Actually, is the preceding point correct?
+.\" If I understand correctly, we'll only get here if
+.\" 'dest_keyring' is zero, in which case KEY_REQKEY_DEFL_REQUESTOR_KEYRING
+.\" won't refer to a keyring. Have I misunderstood?
+Связка ключей запрашивающего (\fBKEY_REQKEY_DEFL_REQUESTOR_KEYRING\fP, начиная
+с Linux 2.6.29).
+.IP \(bu
+Связка ключей нити (\fBKEY_REQKEY_DEFL_THREAD_KEYRING\fP; смотрите
+\fBthread\-keyring\fP(7)).
+.IP \(bu
+Связка ключей процесса (\fBKEY_REQKEY_DEFL_PROCESS_KEYRING\fP; смотрите
+\fBprocess\-keyring\fP(7)).
+.IP \(bu
+Связка ключей сеанса (\fBKEY_REQKEY_DEFL_SESSION_KEYRING\fP; смотрите
+\fBsession\-keyring\fP(7)).
+.IP \(bu
+Связка ключей сеанса для идентификатора пользователя процесса
+(\fBKEY_REQKEY_DEFL_USER_SESSION_KEYRING\fP; смотрите
+\fBuser\-session\-keyring\fP(7)). Ожидается, что эта связка ключей всегда
+существует.
+.IP \(bu
+.\" mtk: Are there circumstances where the user sessions and UID-specific
+.\" keyrings do not exist?
+.\"
+.\" David Howells:
+.\"     The uid keyrings don't exist until someone tries to access them -
+.\"     at which point they're both created.  When you log in, pam_keyinit
+.\"     creates a link to your user keyring in the session keyring it just
+.\"     created, thereby creating the user and user-session keyrings.
+.\"
+.\" and David elaborated that "access" means:
+.\"
+.\"     It means lookup_user_key() was passed KEY_LOOKUP_CREATE.  So:
+.\"
+.\"         add_key() - destination keyring
+.\"         request_key() - destination keyring
+.\"         KEYCTL_GET_KEYRING_ID - if create arg is true
+.\"         KEYCTL_CLEAR
+.\"         KEYCTL_LINK - both args
+.\"         KEYCTL_SEARCH - destination keyring
+.\"         KEYCTL_CHOWN
+.\"         KEYCTL_SETPERM
+.\"         KEYCTL_SET_TIMEOUT
+.\"         KEYCTL_INSTANTIATE - destination keyring
+.\"         KEYCTL_INSTANTIATE_IOV - destination keyring
+.\"         KEYCTL_NEGATE - destination keyring
+.\"         KEYCTL_REJECT - destination keyring
+.\"         KEYCTL_GET_PERSISTENT - destination keyring
+.\"
+.\"     will all create a keyring under some circumstances.  Whereas the rest,
+.\"     such as KEYCTL_GET_SECURITY, KEYCTL_READ and KEYCTL_REVOKE, won't.
+Связка ключей для идентификатора пользователя процесса
+(\fBKEY_REQKEY_DEFL_USER_KEYRING\fP; смотрите \fBuser\-keyring\fP(7)). Ожидается,
+что эта связка ключей также всегда существует.
+.PP
+.\"
+Если вызов \fBkeyctl\fP(2) с операцией \fBKEYCTL_SET_REQKEY_KEYRING\fP установил
+\fBKEY_REQKEY_DEFL_DEFAULT\fP (или операция \fBKEYCTL_SET_REQKEY_KEYRING\fP не
+выполнялась), то ядро ищет связку ключей начиная с начала списка.
+.SS "Запрос на создание ключа из пользовательского пространства"
+Если ядро не может найти ключ с соответствующим \fItype\fP и \fIdescription\fP, и
+\fIcallout\fP не равно NULL, то ядро пытается вызвать программу из
+пользовательского пространства для создания ключа с заданными \fItype\fP и
+\fIdescription\fP. В этом случае выполняются следующие шаги:
+.IP а) 4
+Ядро создаёт неинициализированный ключ U с запрошенными \fItype\fP и
+\fIdescription\fP.
+.IP б)
+.\" struct request_key_auth, defined in security/keys/internal.h
+Ядро создаёт ключ авторизации V, который ссылается на ключ U и сохраняются
+данные вызывающего \fBrequest_key\fP():
+.RS
+.IP (1) 4
+контекст, в котором ключ U должен быть создан и защищён и
+.IP (2)
+контекст, из которого запросы связанного ключа могут быть проведены.
+.RE
+.IP
+Ключ авторизации создаётся со следующими свойствами:
+.RS
+.IP * 3
+Тип ключа — \fI".request_key_auth"\fP.
+.IP *
+UID и GID ключа совпадают с ID в файловой системе для запрашивающего
+процесса.
+.IP *
+Ключ даёт права на \fIпросмотр\fP, \fIчтение\fP и \fIпоиск\fP на ключ\-владелец, а
+также право \fIпросмотра\fP для ключа пользователя.
+.IP *
+Описание (имя) ключа представляет собой Шестнадцатеричную строку
+идентификатора ключа, который будет создан в запрашивающей программе.
+.IP *
+Полезные данные ключа берутся из данных \fIcallout_info\fP.
+.IP *
+Внутри ядра также сохраняется PID процесса, который был вызван
+\fBrequest_key\fP().
+.RE
+.IP в)
+.\" The request-key(8) program can be invoked in circumstances *other* than
+.\" when triggered by request_key(2). For example, upcalls from places such
+.\" as the DNS resolver.
+Ядро создаёт процесс, который запускает службу пользовательского
+пространства, такую как \fBrequest\-key\fP(8), с новой связкой ключей сеанса с
+прицепленным ключом авторизации V.
+.IP
+Данной программе передаются следующие аргументы командной строки:
+.RS
+.IP [0] 4
+Строка \fI"/sbin/request\-key"\fP.
+.IP [1]
+Строка \fI"create"\fP (показывающая, что ключ будет создан).
+.IP [2]
+Идентификатор ключа, который будет создан.
+.IP [3]
+UID (в файловой системе) вызывающего \fBrequest_key\fP().
+.IP [4]
+GID (в файловой системе) вызывающего \fBrequest_key\fP().
+.IP [5]
+Идентификатор связки ключей нити вызывающего \fBrequest_key\fP(). Может быть
+ноль, если связка ключей не создана.
+.IP [6]
+Идентификатор связки ключей процесса вызывающего \fBrequest_key\fP(). Может
+быть ноль, если связка ключей не создана.
+.IP [7]
+Идентификатор связки ключей сеанса вызывающего \fBrequest_key\fP().
+.RE
+.IP
+\fIЗамечание\fP: каждый аргумент командной строки, обозначающий идентификатор
+ключа, кодируется \fIдесятичным\fP числом (в отличие от идентификаторов ключе,
+показанных в \fI/proc/keys\fP, которые выдаются в виде шестнадцатеричных
+значений).
+.IP г)
+Программа, порождённая на предыдущем шаге:
+.RS
+.IP * 3
+Принимает полномочия на создание ключа U с помощью \fBkeyctl\fP(2) с операцией
+\fBKEYCTL_ASSUME_AUTHORITY\fP (обычно, с помощью функции
+\fBkeyctl_assume_authority\fP(3)).
+.IP *
+Получает исходящие данные (callout data) из полезной нагрузки ключа
+авторизации V (с помощью \fBkeyctl\fP(2) с операцией \fBKEYCTL_READ\fP (или, чаще
+всего, с помощью функции \fBkeyctl_read\fP(3)) с значением идентификатора ключа
+\fBKEY_SPEC_REQKEY_AUTH_KEY\fP.
+.IP *
+.\" Should an instantiating program be using KEY_SPEC_REQUESTOR_KEYRING?
+.\" I couldn't find a use in the keyutils git repo.
+.\" According to David Howells:
+.\" * This feature is provided, but not used at the moment.
+.\" * A key added to that ring is then owned by the requester
+Создаёт ключ (или выполняет другую программу, которая делает эту работу), с
+заданной полезной нагрузкой и связкой ключей назначения (связка ключей
+назначения та, которую запрашивающий указал при вызове \fBrequest_key\fP(), и
+которая быть доступна через специальный идентификатор ключа
+\fBKEY_SPEC_REQUESTOR_KEYRING\fP). Создание выполняется с помощью \fBkeyctl\fP() с
+операцией \fBKEYCTL_INSTANTIATE\fP (или, чаще всего, с помощью функции
+\fBkeyctl_instantiate\fP(3)). На этот момент вызов \fBrequest_key\fP() завершается
+и запрашивающая программа может продолжать выполнение.
+.RE
+.PP
+Если какой\-то из этих шагов завершается ошибкой, то вызвавшему
+\fBrequest_key\fP() возвращается \fBENOKEY\fP и временно в связку ключей
+\fIdest_keyring\fP будет установлен отрицательно инициализированный ключ. Он
+устареет через несколько секунд, но пока этого не произойдёт все последующие
+вызовы \fBrequest_key\fP() будут завершаться ошибкой. Целью данного
+отрицательно инициализированного ключа является предотвращение повторяющихся
+запросов (возможно разными) процессами (они требуют затратных восходящих
+вызовов \fBrequest\-key\fP(8)) для ключа, который невозможно (в данный момент)
+положительно инициализировать.
+.PP
+После инициализации ключа, ключ авторизации (\fBKEY_SPEC_REQKEY_AUTH_KEY\fP)
+отзывается и связка ключей назначения (\fBKEY_SPEC_REQUESTOR_KEYRING\fP)
+становится недоступной программе \fBrequest\-key\fP(8).
+.PP
+Если ключ создан, то независимо от какой он — корректный или отрицательно
+инициализированный — вытеснит любой другой ключ с тем же типом и описанием
+из связки ключей \fIdest_keyring\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBrequest_key\fP() возвращается серийный номер
+найденного или созданного ключа. При ошибке возвращается \-1, а в \fIerrno\fP
+содержится код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Изменение связки ключей пользователю недоступно.
+.TP 
+\fBEDQUOT\fP
+Квота на ключи для данного пользователя была бы превышена, если бы этот ключ
+создался или был бы прицеплен в связку ключей.
+.TP 
+\fBEFAULT\fP
+Значение \fItype\fP, \fIdescription\fP или \fIcallout_info\fP указывают вне
+доступного адресного пространства процесса.
+.TP 
+\fBEINTR\fP
+Запрос был прерван сигналом; смотрите \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Размер строки (включая конечный байт null), заданной в \fItype\fP или
+\fIdescription\fP, превышает ограничение (32 байта и 4096 байт,
+соответственно).
+.TP 
+\fBEINVAL\fP
+Размер строки (включая конечный байт null), заданной в \fIcallout_info\fP,
+превышает размер системной страницы.
+.TP 
+\fBEKEYEXPIRED\fP
+Найден просроченный ключ, и замена не может быть получена.
+.TP 
+\fBEKEYREJECTED\fP
+Попытка генерации нового ключа была отвергнута.
+.TP 
+\fBEKEYREVOKED\fP
+Найден отозванный ключ, и замена не может быть получена.
+.TP 
+\fBENOKEY\fP
+Искомый ключ не найден.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для создания ключа.
+.TP 
+\fBEPERM\fP
+Аргумент \fItype\fP начинается с точки (\(aq.\(aq).
+.SH ВЕРСИИ
+.\" commit 3e30148c3d524a9c1c63ca28261bc24c457eb07a
+Данный системный вызов впервые появился в Linux 2.6.10. Возможность
+инициализации ключей по запросу была добавлена в Linux 2.6.13.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Этот системный вызов является нестандартным расширением Linux.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёрточной функции для этого системного вызова. Такая функция
+предоставляется пакетом \fIlibkeyutils\fP. Для работы с функцией подключите
+библиотеку с помощью \fI\-lkeyutils\fP.
+.SH ПРИМЕР
+В программе, представленной ниже, показано использование
+\fBrequest_key\fP(). Аргументы \fItype\fP, \fIdescription\fP и \fIcallout_info\fP для
+системного вызова берутся из значений, переданных в аргументах командной
+строки. В качестве связки ключей назначения вызов использует связку ключей
+сеанса.
+.PP
+Чтобы показать работу программы сначала нужно создать подходящую запись в
+файле \fI/etc/request\-key.conf\fP.
+.PP
+.in +4n
+.EX
+$ sudo sh
+# \fBecho 'create user mtk:* *   /bin/keyctl instantiate %k %c %S' \e\fP
+          \fB> /etc/request\-key.conf\fP
+# \fBexit\fP
+.EE
+.in
+.PP
+Эта запись говорит о том, что когда должен быть создан новый ключ «user» с
+префиксом «mtk:», задача должна выполняться посредством команды \fBkeyctl\fP(1)
+с операцией \fBinstantiate\fP. Аргументы, передаваемые операции \fBinstantiate\fP:
+идентификатор неинициализированного ключа (\fI%k\fP); исходящие данные,
+переданные в вызов \fBrequest_key\fP() (\fI%c\fP); связка ключей сеанса (\fI%S\fP)
+запрашивающего (т. е., вызывающий \fBrequest_key\fP()). Описание значений \fI%\fP
+смотрите в \fBrequest\-key.conf\fP(5).
+.PP
+Теперь запускаем программу и проверяем содержимое \fI/proc/keys\fP, чтобы
+удостовериться, что запрашиваемый ключ создан:
+.PP
+.in +4n
+.EX
+$ \fB./t_request_key user mtk:key1 "Payload data"\fP
+$ \fBgrep \(aq2dddaf50\(aq /proc/keys\fP
+2dddaf50 I\-\-Q\-\-\-  1 perm 3f010000  1000  1000 user  mtk:key1: 12
+.EE
+.in
+.PP
+Другой пример смотрите использования этой программы смотрите в \fBkeyctl\fP(2).
+.SS "Исходный код программы"
+\&
+.EX
+/* t_request_key.c */
+
+#include <sys/types.h>
+#include <keyutils.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int
+main(int argc, char *argv[])
+{
+    key_serial_t key;
+
+    if (argc != 4) {
+        fprintf(stderr, "Использование: %s тип описание callout\-data\en",
+                argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    key = request_key(argv[1], argv[2], argv[3],
+                      KEY_SPEC_SESSION_KEYRING);
+    if (key == \-1) {
+        perror("request_key");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("ID ключа = %lx\en", (long) key);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBkeyctl\fP(1), \fBadd_key\fP(2), \fBkeyctl\fP(2), \fBkeyctl\fP(3), \fBcapabilities\fP(7),
+\fBkeyrings\fP(7), \fBkeyutils\fP(7), \fBpersistent\-keyring\fP(7),
+\fBprocess\-keyring\fP(7), \fBsession\-keyring\fP(7), \fBthread\-keyring\fP(7),
+\fBuser\-keyring\fP(7), \fBuser\-session\-keyring\fP(7), \fBrequest\-key\fP(8)
+.PP
+.\" commit b68101a1e8f0263dbc7b8375d2a7c57c6216fb76
+.\" commit 3db38ed76890565772fcca3279cc8d454ea6176b
+Файлы исходного кода ядра \fIDocumentation/security/keys/core.rst\fP и
+\fIDocumentation/keys/request\-key.rst\fP (или, до Linux 4.13, файлы
+\fIDocumentation/security/keys.txt\fP и
+\fIDocumentation/security/keys\-request\-key.txt\fP).

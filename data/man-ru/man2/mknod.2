@@ -1,0 +1,202 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Michael Haardt
+.\"             and Copyright (C) 1993,1994 Ian Jackson
+.\"		and Copyright (C) 2006, 2014, Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" You may distribute it under the terms of the GNU General
+.\" Public License. It comes with NO WARRANTY.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1996-08-18 by urs
+.\" Modified 2003-04-23 by Michael Kerrisk
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MKNOD 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+mknod, mknodat \- создаёт специальный или обычный файл
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/stat.h>\fP
+\fB#include <fcntl.h>\fP
+\fB#include <unistd.h>\fP
+.PP
+\fBint mknod(const char *\fP\fIpathname\fP\fB, mode_t \fP\fImode\fP\fB, dev_t \fP\fIdev\fP\fB);\fP
+
+\fB#include <fcntl.h>           \fP/* определения констант AT_* */
+\fB#include <sys/stat.h>\fP
+.PP
+\fBint mknodat(int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB, mode_t \fP\fImode\fP\fB, dev_t \fP\fIdev\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc (смотрите
+\fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBmknod\fP():
+.ad l
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* Since glibc 2.19: */ _DEFAULT_SOURCE
+    || /* Glibc versions <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Системный вызов \fBmknod\fP() создаёт запись (node) в файловой системе (обычный
+файл, файл устройства или именованный канал) с именем \fIpathname\fP и
+атрибутами, заданными в \fImode\fP и \fIdev\fP.
+.PP
+В аргументе \fImode\fP указывается используемый режим файла и тип создаваемого
+узла. В этом параметре должна быть битовая комбинация (используя побитовое
+логическое сложение ИЛИ) нуля или более режимов файла, перечисленных в
+\fBinode\fP(7).
+.PP
+Режим файла изменяется согласно значению \fIumask\fP процесса: при отсутствии
+списка контроля доступа по умолчанию права на создаваемый узел становятся
+равны (\fImode\fP & ~\fIumask\fP).
+.PP
+.\" (S_IFSOCK since Linux 1.2.4)
+Для указания обычного файла, специального символьного файла, специального
+блочного файла, FIFO (именованного канала) или доменного сокета UNIX типом
+должен быть один из \fBS_IFREG\fP, \fBS_IFCHR\fP, \fBS_IFBLK\fP, \fBS_IFIFO\fP или
+\fBS_IFSOCK\fP, соответственно (нулевой тип файла эквивалентен типу
+\fBS_IFREG\fP).
+.PP
+Если тип файла равен \fBS_IFCHR\fP или \fBS_IFBLK\fP, то в \fIdev\fP задаётся
+основной и вспомогательный номера создаваемого специального файла устройства
+(\fBmakedev\fP(3) может оказаться полезной при создании значения для \fIdev\fP); в
+остальных случаях аргумент игнорируется.
+.PP
+Если \fIpathname\fP уже существует, или является символьной ссылкой, то вызов
+завершается с ошибкой \fBEEXIST\fP.
+.PP
+.\"
+.\"
+Созданный файл будет принадлежать ID эффективного владельца процесса. Если в
+правах доступа к каталогу, в котором находится файл, установлен бит
+set\-group\-ID, или если файловая система смонтирована с семантикой групп BSD,
+то новый файл унаследует группу\-владельца от своего родительского каталога;
+в противном случае группой\-владельцем станет ID эффективной группы процесса.
+.SS mknodat()
+Системный вызов \fBmknodat\fP() работает также как системный вызов \fBmknod\fP(),
+за исключением случаев, описанных здесь.
+.PP
+Если в \fIpathname\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBmknod\fP()).
+.PP
+Если в \fIpathname\fP задан относительный путь и \fIdirfd\fP равно специальному
+значению \fBAT_FDCWD\fP, то \fIpathname\fP рассматривается относительно текущего
+рабочего каталога вызывающего процесса (как \fBmknod\fP()).
+.PP
+Если в \fIpathname\fP задан абсолютный путь, то \fIdirfd\fP игнорируется.
+.PP
+Смотрите в \fBopenat\fP(2) объяснение необходимости \fBmknodat\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении вызовов \fBmknod\fP() и \fBmknodat\fP() возвращается 0. В
+случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в соответствующее
+значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+У процесса нет прав на запись в родительский каталог, или в одном из
+каталогов в \fIpathname\fP не разрешён поиск (смотрите также
+\fBpath_resolution\fP(7)).
+.TP 
+\fBEDQUOT\fP
+Исчерпана пользовательская квота на дисковые блоки или иноды файловой
+системы.
+.TP 
+\fBEEXIST\fP
+\fIpathname\fP уже существует. В этом случае \fIpathname\fP может быть символьной
+ссылкой, повисшей или нет.
+.TP 
+\fBEFAULT\fP
+Аргумент \fIpathname\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+В аргументе \fImode\fP указано значение, отличное от значения для обычного
+файла, специального файла устройства, FIFO или сокета.
+.TP 
+\fBELOOP\fP
+Во время определения \fIpathname\fP встретилось слишком много символьных
+ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+\fIpathname\fP слишком длинен.
+.TP 
+\fBENOENT\fP
+Один из каталогов в \fIpathname\fP не существует или является повисшей
+символьной ссылкой.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOSPC\fP
+На устройстве, содержащем \fIpathname\fP, нет места для создания нового
+элемента.
+.TP 
+\fBENOTDIR\fP
+Компонент пути, использованный как каталог в \fIpathname\fP, в действительности
+таковым не является.
+.TP 
+\fBEPERM\fP
+.\" For UNIX domain sockets and regular files, EPERM is returned only in
+.\" Linux 2.2 and earlier; in Linux 2.4 and later, unprivileged can
+.\" use mknod() to make these files.
+В аргументе \fImode\fP запрошено создание чего\-то, отличного от обычного файла,
+специального файла устройства, FIFO (именованного канала) или доменного
+сокета UNIX, и у вызвавшего процесса нет прав (Linux: не имеет мандата
+\fBCAP_MKNOD\fP); также завершается, если файловая система, содержащая
+\fIpathname\fP, не поддерживает тип запрашиваемой ноды.
+.TP 
+\fBEROFS\fP
+\fIpathname\fP указывает на файл в файловой системе, доступной только для
+чтения.
+.PP
+В \fBmknodat\fP() дополнительно могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+\fIdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBENOTDIR\fP
+Значение \fIpathname\fP содержит относительный путь и \fIdirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог.
+.SH ВЕРСИИ
+Вызов \fBmknodat\fP() был добавлен в ядро Linux версии 2.6.16; поддержка в
+glibc доступна с версии 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" The Linux version differs from the SVr4 version in that it
+.\" does not require root permission to create pipes, also in that no
+.\" EMULTIHOP, ENOLINK, or EINTR error is documented.
+\fBmknod\fP(): SVr4, 4.4BSD, POSIX.1\-2001 (но смотрите ниже), POSIX.1\-2008.
+.PP
+\fBmknodat\fP(): POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В POSIX.1\-2001 сказано: «Единственный способ, которым можно использовать
+\fBmknod\fP() в переносимых программах это создание специального файла
+FIFO. Если значение \fImode\fP не равно \fBS_IFIFO\fP или \fIdev\fP не равно 0, то
+поведение \fBmknod\fP() не определено.» Однако, в настоящее время никогда не
+используйте \fBmknod\fP() для этой цели; вместо этого используйте функцию
+\fBmkfifo\fP(3), которая создана специально для этого.
+.PP
+.\" and one should make UNIX domain sockets with socket(2) and bind(2).
+В Linux вызов \fBmknod\fP() не может использоваться для создания каталогов. Для
+этого есть системный вызов \fBmkdir\fP(2).
+.PP
+В протоколе, на котором работает NFS, есть множество недоработок. Некоторые
+из них влияют на \fBmknod\fP() и \fBmknodat\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmknod\fP(1), \fBchmod\fP(2), \fBchown\fP(2), \fBfcntl\fP(2), \fBmkdir\fP(2),
+\fBmount\fP(2), \fBsocket\fP(2), \fBstat\fP(2), \fBumask\fP(2), \fBunlink\fP(2),
+\fBmakedev\fP(3), \fBmkfifo\fP(3), \fBacl\fP(5)  \fBpath_resolution\fP(7)

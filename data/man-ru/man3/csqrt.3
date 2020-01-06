@@ -1,0 +1,50 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CSQRT 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+csqrt, csqrtf, csqrtl \- вычисление квадратного корня комплексного числа
+.SH ОБЗОР
+\fB#include <complex.h>\fP
+.PP
+\fBdouble complex csqrt(double complex \fP\fIz\fP\fB);\fP
+.br
+\fBfloat complex csqrtf(float complex \fP\fIz\fP\fB);\fP
+.br
+\fBlong double complex csqrtl(long double complex \fP\fIz\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.SH ОПИСАНИЕ
+Эти функции вычисляют квадратный корень комплексного числа \fIz\fP, лежащей на
+положительной половине абсциссы (то есть \fIcsqrt(\-1+eps*I)\fP будет стремиться
+к I, а \fIcsqrt(\-1\-eps*I)\fP будет стремиться к \-I, если \fIeps\fP является
+маленьким положительным вещественным числом).
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBcsqrt\fP(),
+\fBcsqrtf\fP(),
+\fBcsqrtl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcabs\fP(3), \fBcexp\fP(3), \fBcomplex\fP(7)

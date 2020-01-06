@@ -1,0 +1,185 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1980, 1991 Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" This code is derived from software contributed to Berkeley by
+.\" the American National Standards Committee X3, on Information
+.\" Processing Systems.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)setbuf.3	6.10 (Berkeley) 6/29/91
+.\"
+.\" Converted for Linux, Mon Nov 29 14:55:24 1993, faith@cs.unc.edu
+.\" Added section to BUGS, Sun Mar 12 22:28:33 MET 1995,
+.\"                   Thomas.Koenig@ciw.uni-karlsruhe.de
+.\" Correction,  Sun, 11 Apr 1999 15:55:18,
+.\"     Martin Vicente <martin@netadmin.dgac.fr>
+.\" Correction,  2000-03-03, Andreas Jaeger <aj@suse.de>
+.\" Added return value for setvbuf, aeb,
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETBUF 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+setbuf, setbuffer, setlinebuf, setvbuf \- операции с буферизацией потока
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+.PP
+\fBvoid setbuf(FILE *\fP\fIstream\fP\fB, char *\fP\fIbuf\fP\fB);\fP
+.PP
+\fBvoid setbuffer(FILE *\fP\fIstream\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fIsize\fP\fB);\fP
+.PP
+\fBvoid setlinebuf(FILE *\fP\fIstream\fP\fB);\fP
+.PP
+\fBint setvbuf(FILE *\fP\fIstream\fP\fB, char *\fP\fIbuf\fP\fB, int \fP\fImode\fP\fB, size_t \fP\fIsize\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsetbuffer\fP(),
+\fBsetlinebuf\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    glibc 2.19 и старее:
+        _BSD_SOURCE
+.SH ОПИСАНИЕ
+Существует три типа буферизации: отсутствие буферизации, блочная буферизация
+и строковая буферизация. Когда выходной поток не буферизируется, то
+информация незамедлительно оказывается на терминале или в файле назначения;
+при блочной буферизации сначала сохраняется большое количество символов, а
+затем они записываются за один раз; при строковой буферизации все символы
+сохраняются в буфере до появления символа перевода строки при выводе или при
+вводе из любого потока, подключённого к устройству терминала (обычно,
+\fIstdin\fP). Функцию \fBfflush\fP(3) можно использовать для досрочного окончания
+блочной буферизации (смотрите \fBfclose\fP(3)).
+.PP
+Обычно, для файлов включена блочная буферизация. Если поток ссылается на
+терминал (обычно для \fIstdout\fP), то он буферизируется построчно. Стандартный
+поток ошибок \fIstderr\fP по умолчанию никогда не буферизируется.
+.PP
+Функция \fBsetvbuf\fP() может быть использована для изменения типа буферизации
+любого открытого потока. Параметр \fImode\fP должен быть одним из трёх
+следующих макросов:
+.RS
+.TP 
+\fB_IONBF\fP
+отключить буферизацию
+.TP 
+\fB_IOLBF\fP
+строковая буферизация
+.TP 
+\fB_IOFBF\fP
+полная буферизация
+.RE
+.PP
+За исключением небуферизованных файлов аргумент \fIbuf\fP должен указывать на
+буфер размером, как минимум, \fIsize\fP байт; этот буфер будет использоваться
+вместо текущего. Если аргумент \fIbuf\fP равен NULL, то это отразится только на
+типе буферизации; при следующей операции чтения или записи будет создан
+новый буфер. Функция \fBsetvbuf\fP() может быть использована только после
+открытия потока и до выполнения над ним любых операций.
+.PP
+Остальные три вызова, фактически, являются псевдонимами вызова
+\fBsetvbuf\fP(). Функция \fBsetbuf\fP() в точности соответствует вызову
+.PP
+.in +4n
+setvbuf(stream, buf, buf ? _IOFBF : _IONBF, BUFSIZ);
+.in
+.PP
+Функция \fBsetbuffer\fP() также аналогична ей, но размер буфера в данном случае
+определяется вызывающим, а не размером по умолчанию \fBBUFSIZ\fP. Функция
+\fBsetlinebuf\fP() полностью идентична вызову
+.PP
+.in +4n
+setvbuf(stream, NULL, _IOLBF, 0);
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBsetvbuf\fP() возвращает 0 при нормальном завершении работы. При
+ошибках она возвращает ненулевое значение (некорректное значение \fImode\fP или
+запрос невозможно выполнить). При ошибках может быть соответственно изменено
+значение \fIerrno\fP.
+.PP
+Другие функции не возвращают никаких значений.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw23 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsetbuf\fP(),
+\fBsetbuffer\fP(),
+.br
+\fBsetlinebuf\fP(),
+\fBsetvbuf\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функции \fBsetbuf\fP() и \fBsetvbuf\fP() соответствуют стандарту C89 и C99.
+.SH ДЕФЕКТЫ
+.\" The
+.\" .BR setbuffer ()
+.\" and
+.\" .BR setlinebuf ()
+.\" functions are not portable to versions of BSD before 4.2BSD, and
+.\" are available under Linux since libc 4.5.21.
+.\" On 4.2BSD and 4.3BSD systems,
+.\" .BR setbuf ()
+.\" always uses a suboptimal buffer size and should be avoided.
+.PP
+Вы должны удостовериться, что пространство, на которое указывает \fIbuf\fP, всё
+ещё существует, в то время как \fIstream\fP закрыт, что обычно случается при
+закрытии программы. Например, следующее будет неправильным:
+.PP
+.EX
+#include <stdio.h>
+
+int
+main(void)
+{
+    char buf[BUFSIZ];
+    setbuf(stdin, buf);
+    printf("Hello, world!\en");
+    return 0;
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBstdbuf\fP(1), \fBfclose\fP(3), \fBfflush\fP(3), \fBfopen\fP(3), \fBfread\fP(3),
+\fBmalloc\fP(3), \fBprintf\fP(3), \fBputs\fP(3)

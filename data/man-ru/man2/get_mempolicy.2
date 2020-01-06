@@ -1,0 +1,130 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2003,2004 Andi Kleen, SuSE Labs.
+.\" and Copyright 2007 Lee Schermerhorn, Hewlett Packard
+.\"
+.\" %%%LICENSE_START(VERBATIM_PROF)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2006-02-03, mtk, substantial wording changes and other improvements
+.\" 2007-08-27, Lee Schermerhorn <Lee.Schermerhorn@hp.com>
+.\"     more precise specification of behavior.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GET_MEMPOLICY 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+get_mempolicy \- возвращает политику работы с памятью NUMA для нити
+.SH ОБЗОР
+\fB#include <numaif.h>\fP
+.nf
+.PP
+\fBlong get_mempolicy(int *\fP\fImode\fP\fB, unsigned long *\fP\fInodemask\fP\fB,\fP
+\fB                  unsigned long \fP\fImaxnode\fP\fB, void *\fP\fIaddr\fP\fB,\fP
+\fB                  unsigned long \fP\fIflags\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lnuma\fP.
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBget_mempolicy\fP() возвращает политику NUMA вызывающей нити или адреса
+памяти (в зависимости от значения \fIflags\fP).
+.PP
+Машина с NUMA имеет различные контроллеры памяти с различными расстояниями
+до определённых ЦП. Политикой памяти задаётся узел, на котором выделяется
+память для нити.
+.PP
+Если значение \fIflags\fP равно 0, то в буферы, указанные в \fImode\fP и
+\fInodemask\fP, возвращается информация о политике по умолчанию для вызывающей
+нити (которая была задана с помощью \fBset_mempolicy\fP(2)). Полученное
+значение может использоваться для восстановления политики нити в её
+состояние на время вызова \fBget_mempolicy\fP() с помощью
+\fBset_mempolicy\fP(2). Если значение \fIflags\fP равно 0, то значение \fIaddr\fP
+должно быть равно NULL.
+.PP
+Если \fIflags\fP равно \fBMPOL_F_MEMS_ALLOWED\fP (доступно, начиная с Linux
+2.6.24), то аргумент \fImode\fP игнорируется и набор узлов (их памяти), которые
+разрешено указывать нити в последующих вызовах \fBmbind\fP(2) или
+\fBset_mempolicy\fP(2) (в отсутствии любых значений \fIфлагов режима\fP),
+возвращается в \fInodemask\fP. Не разрешено объединять \fBMPOL_F_MEMS_ALLOWED\fP с
+\fBMPOL_F_ADDR\fP или \fBMPOL_F_NODE\fP.
+.PP
+Если \fIflags\fP равно \fBMPOL_F_ADDR\fP, то возвращается информация об
+управляющей политике адреса памяти, указанного в \fIaddr\fP. Эта политика может
+отличаться от политики нити по умолчанию, если \fBmbind\fP(2) или одна из
+вспомогательных функций, описанных в \fBnuma\fP(3), были использованы при
+установлении политики для диапазона памяти, содержащего \fIaddr\fP.
+.PP
+Если аргумент \fImode\fP не равен NULL, то \fBget_mempolicy\fP() сохранит режим
+политики и все необязательные \fIфлаги режима\fP запрашиваемой политики NUMA в
+место, указанное этим аргументом. Если \fInodemask\fP не равно NULL, то
+значение nodemask, связанной с политикой, будет сохранено в место, указанное
+этим аргументом. В \fImaxnode\fP задаётся количество идентификаторов узлов,
+которые могут быть сохранены в \fInodemask\fP \(em то есть, максимальный
+идентификатор узла плюс один. Значение, указанное в \fImaxnode\fP, всегда
+округляется до кратного \fIsizeof(unsigned\ long)*8\fP.
+.PP
+Если в \fIflags\fP указано \fBMPOL_F_NODE\fP и \fBMPOL_F_ADDR\fP, то
+\fBget_mempolicy\fP() вернёт идентификатор узла, на котором расположен адрес
+\fIaddr\fP в расположение, заданное \fImode\fP. Если для указанного адреса
+страница ещё не выделена, то \fBget_mempolicy\fP() выделит страницу, как если
+бы нить выполнила чтение (загрузку) по этому адресу, и вернёт идентификатор
+узла, на котором была размещена страница.
+.PP
+.\" Note:  code returns next interleave node via 'mode' argument -Lee Schermerhorn
+Если \fIflags\fP содержит \fBMPOL_F_NODE\fP, но не \fBMPOL_F_ADDR\fP, и значение
+текущей политики нити равно \fBMPOL_INTERLEAVE\fP, то \fBget_mempolicy\fP() вернёт
+в расположение, указанное в аргументе \fImode\fP (не равно NULL), идентификатор
+узла следующего узла, который будет использован при чередовании внутренних
+страниц ядра, выделяемых для нити. Эти выделения содержат страницы памяти
+отображённых файлов в диапазоне памяти процесса, отображённых с помощью
+вызова \fBmmap\fP(2) с флагом \fBMAP_PRIVATE\fP для чтения, и в диапазонах памяти,
+отображённых с флагом \fBMAP_SHARED\fP, для всех операций.
+.PP
+Другие значения флагов зарезервированы.
+.PP
+Обзор возможных политик смотрите в \fBset_mempolicy\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBget_mempolicy\fP() возвращает 0; при ошибке \(em \-1,
+а в \fIerrno\fP задаётся причина ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Часть всего диапазона памяти, заданная в \fInodemask\fP и \fImaxnode\fP, указывает
+за пределы доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+Значение, указанное в \fImaxnode\fP, меньше количества идентификаторов узлов,
+поддерживаемых системой. Или в \fIflags\fP указаны значения, отличные от
+\fBMPOL_F_NODE\fP или \fBMPOL_F_ADDR\fP; или в \fIflags\fP указано \fBMPOL_F_ADDR\fP и
+\fIaddr\fP равно NULL, или в \fIflags\fP не указано \fBMPOL_F_ADDR\fP и \fIaddr\fP не
+равно NULL. Или в \fIflags\fP указано \fBMPOL_F_NODE\fP, но не \fBMPOL_F_ADDR\fP и
+значение текущей политики нити не равно \fBMPOL_INTERLEAVE\fP. Или в \fIflags\fP
+указано \fBMPOL_F_MEMS_ALLOWED\fP вместе с \fBMPOL_F_ADDR\fP или \fBMPOL_F_NODE\fP (и
+есть другие случаи возврата \fBEINVAL\fP).
+.SH ВЕРСИИ
+Системный вызов \fBget_mempolicy\fP() был добавлен в ядро Linux версии 2.6.7.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Информация о библиотеке доступна в \fBnuma\fP(7).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetcpu\fP(2), \fBmbind\fP(2), \fBmmap\fP(2), \fBset_mempolicy\fP(2), \fBnuma\fP(3),
+\fBnuma\fP(7), \fBnumactl\fP(8)

@@ -1,0 +1,135 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_ATTR_SETGUARDSIZE 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_attr_setguardsize, pthread_attr_getguardsize \- изменяет/возвращает
+атрибут размера защиты у объекта атрибутов нити
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_attr_setguardsize(pthread_attr_t *\fP\fIattr\fP\fB, size_t \fP\fIguardsize\fP\fB);\fP
+\fBint pthread_attr_getguardsize(const pthread_attr_t *\fP\fIattr\fP\fB, size_t *\fP\fIguardsize\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_attr_setguardsize\fP() изменяет атрибут размера защиты у
+объекта атрибутов нити, на который указывает \fIattr\fP, в значение
+\fIguardsize\fP.
+.PP
+Если \fIguardsize\fP больше 0, то для каждой новой нити, созданной с
+использованием атрибута \fIattr\fP, система выделяет дополнительную область не
+менее \fIguardsize\fP байт в конце стека нити, которая служит как защитная
+область стека (но смотрите ДЕФЕКТЫ).
+.PP
+Если \fIguardsize\fP равно 0, то новые нити, создаваемые с использованием
+\fIattr\fP, не будут иметь защитной области.
+.PP
+Размер защиты по умолчанию совпадает с размером системной страницы.
+.PP
+Если в \fIattr\fP установлен атрибут адреса стека (с помощью
+\fBpthread_attr_setstack\fP(3) или \fBpthread_attr_setstackaddr\fP(3)),
+означающий, что вызывающий выделяет стек для нити, то атрибут размера защиты
+игнорируется (т. е., система не создаёт защитную область): само приложение
+должно обрабатывать переполнение стека (возможно, с помощью \fBmprotect\fP(2),
+для задания защитной области в конце выделенного стека).
+.PP
+Функция \fBpthread_attr_getguardsize\fP() возвращает атрибут размера защиты у
+объекта атрибутов нити, на который указывает \fIattr\fP, в буфер на который
+указывает \fIguardsize\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+В POSIX.1 описана ошибка \fBEINVAL\fP при некорректном значении \fIattr\fP или
+\fIguardsize\fP. В Linux эти функции всегда выполняются успешно (тем не менее,
+в переносимых приложениях нужно учитывать возможность возврата ошибки).
+.SH ВЕРСИИ
+Эти функции доступны в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw28 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_attr_setguardsize\fP(),
+\fBpthread_attr_getguardsize\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Защитная область состоит из страниц виртуальной памяти, которые защищены от
+чтения и записи. Если нить переполнит свой стек и попадёт в защитную
+область, то на большинстве аппаратных архитектур она получит сигнал
+\fBSIGSEGV\fP и таким образом узнает о переполнении. Защитные области
+начинаются на границах страниц, а размер защиты внутри округляется до
+размера системной страницы при создании нити (тем не менее, функция
+\fBpthread_attr_getguardsize\fP() возвращает размер защиты, установленный
+\fBpthread_attr_setguardsize\fP()).
+.PP
+Установка размера защиты в нулевое значение полезно для экономии памяти в
+приложениях, которые создают много нитей и знают, что переполнение стека
+никогда не произойдёт.
+.PP
+Указание размера защиты больше чем размер по умолчанию может потребоваться
+для обнаружения переполнений стека при выделении в нити больших структур
+данных в стеке.
+.SH ДЕФЕКТЫ
+В glibc 2.8 реализация нитей NPTL добавляет защитную область к размеру
+выделяемого стека, а не выделяет дополнительное пространство в конце стека
+как требуется POSIX.1 (это может приводить к ошибке \fBEINVAL\fP в
+\fBpthread_create\fP(3), если значение размера защиты слишком большое и не
+оставляет место именно под стек).
+.PP
+.\" glibc includes the guardsize within the allocated stack size,
+.\" which looks pretty clearly to be in violation of POSIX.
+.\"
+.\" Filed bug, 22 Oct 2008:
+.\" http://sources.redhat.com/bugzilla/show_bug.cgi?id=6973
+.\"
+.\" Older reports:
+.\" https//bugzilla.redhat.com/show_bug.cgi?id=435337
+.\" Reportedly, LinuxThreads did the right thing, allocating
+.\" extra space at the end of the stack:
+.\" http://sourceware.org/ml/libc-alpha/2008-05/msg00086.html
+Устаревшая реализация LinuxThreads делает это правильно, выделяя
+дополнительное пространство в конце стека под защитную область.
+.SH ПРИМЕР
+См. \fBpthread_getattr_np\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmmap\fP(2), \fBmprotect\fP(2), \fBpthread_attr_init\fP(3),
+\fBpthread_attr_setstack\fP(3), \fBpthread_attr_setstacksize\fP(3),
+\fBpthread_create\fP(3), \fBpthreads\fP(7)

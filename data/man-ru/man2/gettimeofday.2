@@ -1,0 +1,202 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt (michael@moria.de)
+.\" Modified 1993-07-23 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 1994-08-21 by Michael Chastain (mec@shell.portal.com):
+.\"   Fixed necessary '#include' lines.
+.\" Modified 1995-04-15 by Michael Chastain (mec@shell.portal.com):
+.\"   Added reference to adjtimex.
+.\" Removed some nonsense lines pointed out by Urs Thuermann,
+.\"   (urs@isnogud.escape.de), aeb, 950722.
+.\" Modified 1997-01-14 by Austin Donnelly (and1000@debian.org):
+.\"   Added return values section, and bit on EFAULT
+.\" Added clarification on timezone, aeb, 971210.
+.\" Removed "#include <unistd.h>", aeb, 010316.
+.\" Modified, 2004-05-27 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"   Added notes on capability requirement.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETTIMEOFDAY 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+gettimeofday, settimeofday \- получает/устанавливает время
+.SH ОБЗОР
+.nf
+\fB#include <sys/time.h>\fP
+.PP
+\fBint gettimeofday(struct timeval *\fP\fItv\fP\fB, struct timezone *\fP\fItz\fP\fB);\fP
+.PP
+\fBint settimeofday(const struct timeval *\fP\fItv\fP\fB, const struct timezone *\fP\fItz\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsettimeofday\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBgettimeofday\fP() и \fBsettimeofday\fP() позволяют получить и задать
+время, а также часовой пояс. Аргумент \fItv\fP имеет тип \fIstruct timeval\fP
+(определён в \fI<sys/time.h>\fP):
+.PP
+.in +4n
+.EX
+struct timeval {
+    time_t      tv_sec;     /* секунды */
+    suseconds_t tv_usec;    /* микросекунды */
+};
+.EE
+.in
+.PP
+и задаёт количество секунд и микросекунд, прошедших с начала эпохи
+(см. \fBtime\fP(2)). Аргумент \fItz\fP имеет тип \fIstruct timezone\fP:
+.PP
+.in +4n
+.EX
+struct timezone {
+    int tz_minuteswest;     /* количество минут западнее Гринвича */
+    int tz_dsttime;         /* тип корректировки DST */
+};
+.EE
+.in
+.PP
+.\" FIXME . The compilation warning looks to be going away in 2.17
+.\" see glibc commit 4b7634a5e03b0da6f8875de9d3f74c1cf6f2a6e8
+.\" The following is covered under EPERM below:
+.\" .PP
+.\" Only the superuser may use
+.\" .BR settimeofday ().
+Если \fItv\fP или \fItz\fP имеют значение NULL, то соответствующая структура не
+задана и не будет возвращена (однако при компиляции будут выдаваться
+предупреждения, если \fItv\fP равно NULL).
+.PP
+Пользоваться структурой \fItimezone\fP не рекомендуется; значением аргумента
+\fItz\fP в большинстве случаев должен быть NULL (см. ЗАМЕЧАНИЯ далее).
+.PP
+В Linux существует специфическое понятие «временной сдвиг» (warp clock),
+связанное с системным вызовом \fBsettimeofday\fP(), который образуется при
+самом первом вызове (после загрузки), если аргумент \fItz\fP не равен NULL,
+аргумент \fItv\fP равен NULL и поле \fItz_minuteswest\fP не равно нулю (в этом
+случае значение поля \fItz_dsttime\fP должно быть равно нулю). В этом случае
+предполагается, что время аппаратных часов (CMOS clock) местное и к нему
+должен быть добавлен этот параметр для того, чтобы получилось время UTC. Но,
+как мы и говорили, использовать этот метод не рекомендуется.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBgettimeofday\fP() и \fBsettimeofday\fP() возвращают 0,
+или \-1 в случае ошибки (\fIerrno\fP устанавливается в соответствующее
+значение).
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Одно из значений в \fItv\fP или \fItz\fP находится вне доступного адресного
+пространства.
+.TP 
+\fBEINVAL\fP
+(\fBsettimeofday\fP()): неверное значение \fItimezone\fP.
+.TP 
+\fBEINVAL\fP
+(\fBsettimeofday\fP()): \fItv.tv_sec\fP отрицательно или \fItv.tv_usec\fP вне
+диапазона [0..999,999].
+.TP 
+\fBEINVAL\fP (начиная с Linux 4.3)
+.\" commit e1d7ba8735551ed79c7a0463a042353574b96da3
+(\fBsettimeofday\fP()): выполнялась попытка установки времени в значение меньше
+текущего значения часов \fBCLOCK_MONOTONIC\fP (смотрите \fBclock_gettime\fP(2)).
+.TP 
+\fBEPERM\fP
+У вызывающего процесса недостаточно прав для вызова \fBsettimeofday\fP(); в
+Linux для этого требуется мандат \fBCAP_SYS_TIME\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4, 4.3BSD. В POSIX.1\-2001 описан \fBgettimeofday\fP(), но нет
+\fBsettimeofday\fP(). В POSIX.1\-2008 вызов \fBgettimeofday\fP() помечен как
+устаревший, вместо него рекомендуется использовать \fBclock_gettime\fP(2).
+.SH ЗАМЕЧАНИЯ
+На время, возвращаемое \fBgettimeofday\fP(), \fIвлияют\fP скачки в системном
+времени (например, если системный администратор вручную изменил системное
+время). Если вам требуются однообразно увеличивающееся время, смотрите
+\fBclock_gettime\fP(2).
+.PP
+Для работы со структурой \fItimeval\fP существуют макросы, описанные в
+\fBtimeradd\fP(3).
+.PP
+.\"
+Обычно, поля \fIstruct timeval\fP имеют тип \fIlong\fP.
+.SS "Отличия между библиотекой C и ядром"
+.\"
+На некоторых архитектурах реализация \fBgettimeofday\fP() находится в
+\fBvdso\fP(7).
+.SS "Поле tz_dsttime"
+.\" it has not
+.\" been and will not be supported by libc or glibc.
+.\" Each and every occurrence of this field in the kernel source
+.\" (other than the declaration) is a bug.
+В системах с не ядрами Linux, но с glibc, полю \fItz_dsttime\fP из \fIstruct
+timezone\fP вызов \fBgettimeofday\fP() присвоит ненулевое значение, если в
+текущем часовом поясе уже применялось или будет применяться правило перехода
+на летнее время. В этом смысле это зеркально отражает назначение
+\fBdaylight\fP(3) для текущего пояса. В Linux с glibc значение поля
+\fItz_dsttime\fP из \fIstruct timezone\fP никогда не используется в
+\fBsettimeofday\fP() или \fBgettimeofday\fP(). Таким образом, следующий абзац
+представляет только исторический интерес.
+.PP
+В старых системах поле \fItz_dsttime\fP содержит символьную константу (значения
+приведены ниже), которая включает в себя информацию о сезонной коррекции
+времени (Daylight Saving Time) (замечание: эта величина постоянна и
+указывает лишь на алгоритм коррекции). Существующие алгоритмы сезонной
+коррекции:
+.PP
+.in +4n
+.EX
+\fBDST_NONE\fP     /* нет DST */
+\fBDST_USA\fP      /* американский DST */
+\fBDST_AUST\fP     /* австралийский DST */
+\fBDST_WET\fP      /* западноевропейский DST */
+\fBDST_MET\fP      /* средневосточный DST */
+\fBDST_EET\fP      /* восточноевропейский DST */
+\fBDST_CAN\fP      /* Канада */
+\fBDST_GB\fP       /* Великобритания и Ирландия */
+\fBDST_RUM\fP      /* Румыния */
+\fBDST_TUR\fP      /* Турция */
+\fBDST_AUSTALT\fP  /* австралийский со сдвигом на 1986 год */
+.EE
+.in
+.PP
+Разумеется, коррекцию для каждой страны нельзя описать простым алгоритмом,
+так как этот фактор может зависеть даже от непредсказуемых политических
+решений. Поэтому этот метод представления часовых поясов больше не
+используется.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdate\fP(1), \fBadjtimex\fP(2), \fBclock_gettime\fP(2), \fBtime\fP(2), \fBctime\fP(3),
+\fBftime\fP(3), \fBtimeradd\fP(3), \fBcapabilities\fP(7), \fBtime\fP(7), \fBvdso\fP(7),
+\fBhwclock\fP(8)

@@ -1,0 +1,265 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\"     libc.info (from glibc distribution)
+.\" Modified Sat Jul 24 19:12:00 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sun Sep  3 20:29:36 1995 by Jim Van Zandt <jrv@vanzandt.mv.com>
+.\" Changed network into host byte order (for inet_network),
+.\"     Andreas Jaeger <aj@arthur.rhein-neckar.de>, 980130.
+.\" 2008-06-19, mtk
+.\"     Describe the various address forms supported by inet_aton().
+.\"     Clarify discussion of inet_lnaof(), inet_netof(), and inet_makeaddr().
+.\"     Add discussion of Classful Addressing, noting that it is obsolete.
+.\"     Added an EXAMPLE program.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INET 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+inet_aton, inet_addr, inet_network, inet_ntoa, inet_makeaddr, inet_lnaof,
+inet_netof \- функции для работы с адресами Интернет
+.SH ОБЗОР
+.nf
+\fB#include <sys/socket.h>\fP
+\fB#include <netinet/in.h>\fP
+\fB#include <arpa/inet.h>\fP
+.PP
+\fBint inet_aton(const char *\fP\fIcp\fP\fB, struct in_addr *\fP\fIinp\fP\fB);\fP
+.PP
+\fBin_addr_t inet_addr(const char *\fP\fIcp\fP\fB);\fP
+.PP
+\fBin_addr_t inet_network(const char *\fP\fIcp\fP\fB);\fP
+.PP
+\fBchar *inet_ntoa(struct in_addr \fP\fIin\fP\fB);\fP
+.PP
+\fBstruct in_addr inet_makeaddr(in_addr_t \fP\fInet\fP\fB, in_addr_t \fP\fIhost\fP\fB);\fP
+.PP
+\fBin_addr_t inet_lnaof(struct in_addr \fP\fIin\fP\fB);\fP
+.PP
+\fBin_addr_t inet_netof(struct in_addr \fP\fIin\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBinet_aton\fP(), \fBinet_ntoa\fP():
+.nf
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc до версии 2.19 включительно:
+        _BSD_SOURCE || _BSD_SOURCE
+.fi
+.SH ОПИСАНИЕ
+\fBinet_aton\fP() преобразует адрес Интернет\-узла \fIcp\fP из числовой формы
+записи IPv4 с точками (IPv4 numbers\-and\-dots) в двоичную форму (с сетевым
+порядком байт) и сохраняет её в структуре, на которую ссылается
+\fIinp\fP. \fBinet_aton\fP() возвращает ненулевое значение, если адрес правильный,
+и ноль, если нет. Адрес, указанный в \fIcp\fP, может принимать одну из
+следующих форм:
+.TP  10
+\fIa.b.c.d\fP
+Каждая из четырёх групп чисел представляет байт адреса; байты назначаются
+слева направо.
+.TP 
+\fIa.b.c\fP
+Части \fIa\fP и \fIb\fP задают первые два байта двоичного адреса. Часть \fIc\fP
+расценивается как 16\-разрядное значение, определяющее два самых правых байта
+двоичного адреса. Такая запись совместима c сетевыми адресами (устаревшими)
+класса B.
+.TP 
+\fIa.b\fP
+Часть \fIa\fP определяет первый байт двоичного адреса. Часть \fIb\fP расценивается
+как 24\-разрядное значение, определяющее три самых правых байта двоичного
+адреса. Данная форма записи совместима с сетевыми адресами (устаревшими)
+класса A.
+.TP 
+\fIa\fP
+Значение \fIa\fP расценивается как 32\-разрядное значение, которое хранится в
+двоичном формате без какой либо перегруппировки байтов.
+.PP
+Во всех вышеперечисленные формах записи адресов числа могут быть указаны в
+десятичной, восьмеричной (с префиксом \fI0\fP) или шестнадцатеричной (с
+префиксом \fI0X\fP) системе счисления. Адреса, записанные в любой из этих форм,
+называются \fIчисловой формой записи IPv4 с точками\fP. Форма записи, в которой
+используются только четыре десятичных числа, называется \fIдесятично\-точечной
+записью IPv4\fP (\fIIPv4 dotted\-decimal notation\fP) или иногда \fIIPv4
+dotted\-quad notation\fP.
+.PP
+Функция \fBinet_aton\fP() возвращает 1, если переданная строка была обработана
+успешно, или 0, если строка имеет некорректные данные (в \fBerrno\fP ошибка
+\fIне\fP записывается).
+.PP
+Функция \fBinet_addr\fP() преобразует адрес Интернет\-узла \fIcp\fP из числовой
+формы записи IPv4 с точками в двоичную форму с сетевым порядком байт. Если
+адрес, подаваемый на вход, неверный, функция возвращает \fBINADDR_NONE\fP
+(обычно \-1). Использование этой функции проблематично, т.к. значение \-1
+эквивалентно корректному адресу (255.255.255.255). Избегайте использования
+этой функции, вместо нее используйте \fBinet_aton\fP(), \fBinet_pton\fP(3) или
+\fBgetaddrinfo\fP(3), которые предоставляют более правильный способ указания на
+ошибку.
+.PP
+Функция \fBinet_network\fP() преобразует строку \fIcp\fP, записанную в числовой
+форме записи IPv4 с точками, в число (порядок байт узла), пригодное для
+использования в качестве сетевого адреса интернета. В случае успешного
+выполнения возвращается преобразованный адрес. В случае указания
+некорректной строки, возвращается \-1.
+.PP
+Функция \fBinet_ntoa\fP() преобразует адрес Интернет\-узла \fIin\fP, заданного в
+сетевом порядке байтов, в строку в числовой форме записи IPv4 с
+точками. Строка возвращается в статически выделяемом буфере, который
+перезаписывается при последующих вызовах.
+.PP
+Функция \fBinet_lnaof\fP() возвращает номер узла из интернет\-адреса
+\fIin\fP. Возвращаемое значение имеет порядок байт узла.
+.PP
+Функция \fBinet_netof\fP() возвращает номер сети из интернет\-адреса
+\fIin\fP. Возвращаемое значение имеет порядок байт узла.
+.PP
+Функция \fBinet_makeaddr\fP() противоположна \fBinet_netof\fP() и
+\fBinet_lnaof\fP(). Она возвращает адрес Интернет\-узла в сетевом порядке байт,
+создавая его путём объединения номера сети \fInet\fP с номером узла \fIhost\fP
+(оба задаются в порядке байт узла).
+.PP
+Структура \fIin_addr\fP, используемая в \fBinet_ntoa\fP(), \fBinet_makeaddr\fP(),
+\fBinet_lnaof\fP() и \fBinet_netof\fP(), определена в \fI<netinet/in.h>\fP:
+.PP
+.in +4n
+.EX
+typedef uint32_t in_addr_t;
+
+struct in_addr {
+    in_addr_t s_addr;
+};
+.EE
+.in
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw30 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBinet_aton\fP(),
+\fBinet_addr\fP(),
+.br
+\fBinet_network\fP(),
+\fBinet_ntoa\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+T{
+\fBinet_makeaddr\fP(),
+\fBinet_lnaof\fP(),
+.br
+\fBinet_netof\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBinet_addr\fP(), \fBinet_ntoa\fP(): POSIX.1\-2001, POSIX.1\-2008, 4.3BSD.
+.PP
+Функция \fBinet_aton\fP() не определена в POSIX.1, однако доступна в
+большинстве систем.
+.SH ЗАМЕЧАНИЯ
+В архитектурах x86 порядок байтов узла таков, что младший байт является
+первым (little endian = от младшего к старшему), а в сетевом порядке байт,
+который используется в интернет, старший байт является первым (big endian =
+от старшего к младшему).
+.PP
+\fBinet_lnaof\fP(), \fBinet_netof\fP() и \fBinet_makeaddr\fP() является устаревшими
+функциями, которые предполагают, что используется \fIклассовая сетевая
+адресация\fP. При классовой адресации сетевой адрес IPv4 разделяется на
+узловой и сетевой компоненты по байтовой границе следующим образом:
+.TP  10
+Класс A
+На данный тип адреса указывает 0 на месте старшего бита (сетевой порядок
+байтов) адреса. Сетевой адрес содержится в самом старшем байте, а адреса
+узлов занимают оставшиеся три байта.
+.TP 
+Класс B
+На данный тип адреса указывает двоичное значение 10 на месте двух самых
+старших битов (сетевой порядок байтов) адреса. Сетевой адрес содержится в
+двух старших байтах, а адреса узлов занимают оставшиеся два байта.
+.TP 
+Класс C
+На данный тип адреса указывает двоичное значение 110 на месте самых трех
+старших битов (сетевой порядок байтов) адреса. Сетевой адрес содержится в
+первых трёх старших байтах, а адреса узлов занимают оставшийся байт.
+.PP
+Классовая адресация в настоящее время устарела и была заменена на
+бесклассовую адресацию (CIDR), при которой компоненты сети и узла в адресе
+могут занимать произвольное число битов (а не байтов).
+.SH ПРИМЕР
+Ниже приведён код примера использования \fBinet_aton\fP() и
+\fBinet_ntoa\fP(). Рассмотрим результат работы примера:
+.PP
+.in +4n
+.EX
+$\fB ./a.out 226.000.000.037\fP      # Последний байт в восьмеричной сс
+226.0.0.31
+$\fB ./a.out 0x7f.1         \fP      # Первый байт в шестнадцатеричной сс
+127.0.0.1
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _BSD_SOURCE
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int
+main(int argc, char *argv[])
+{
+    struct in_addr addr;
+
+    if (argc != 2) {
+        fprintf(stderr, "%s <dotted\-address>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    if (inet_aton(argv[1], &addr) == 0) {
+        fprintf(stderr, "Invalid address\en");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("%s\en", inet_ntoa(addr));
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbyteorder\fP(3), \fBgetaddrinfo\fP(3), \fBgethostbyname\fP(3), \fBgetnameinfo\fP(3),
+\fBgetnetent\fP(3), \fBinet_net_pton\fP(3), \fBinet_ntop\fP(3), \fBinet_pton\fP(3),
+\fBhosts\fP(5), \fBnetworks\fP(5)

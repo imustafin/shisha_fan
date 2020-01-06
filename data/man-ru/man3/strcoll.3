@@ -1,0 +1,75 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sun Jul 25 10:40:44 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STRCOLL 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+strcoll \- сравнение двух строк применяя правила текущей локали
+.SH ОБЗОР
+.nf
+\fB#include <string.h>\fP
+.PP
+\fBint strcoll(const char *\fP\fIs1\fP\fB, const char *\fP\fIs2\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBstrcoll\fP() сравнивает строки \fIs1\fP и \fIs2\fP. Она возвращает целое
+число, которое может быть меньше, равно или больше ноля, если выяснится, что
+\fIs1\fP меньше, равна или больше \fIs2\fP соответственно. Сравнение производится
+на основе правил текущей локали, указанной в категории \fBLC_COLLATE\fP
+(см. \fBsetlocale\fP(3)).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBstrcoll\fP() возвращает целое число меньше, равное или большее нуля,
+если выяснится, что \fIs1\fP меньше, равна или больше  \fIs2\fP
+соответственно. При этом сравнение строк производится по правилам текущей
+локали.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstrcoll\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Если локаль равна \fIPOSIX\fP или \fIC\fP, то работа функции \fBstrcoll\fP()
+эквивалентна \fBstrcmp\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbcmp\fP(3), \fBmemcmp\fP(3), \fBsetlocale\fP(3), \fBstrcasecmp\fP(3), \fBstrcmp\fP(3),
+\fBstring\fP(3), \fBstrxfrm\fP(3)

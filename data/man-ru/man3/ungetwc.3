@@ -1,0 +1,71 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UNGETWC 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+ungetwc \- отправка широкого символа обратно в поток FILE
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBwint_t ungetwc(wint_t \fP\fIwc\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBungetwc\fP() — это эквивалент функции \fBungetc\fP(3) для широких
+символов. Она отправляет широкий символ обратно в поток \fIstream\fP и
+возвращает его.
+.PP
+Если \fIwc\fP равно \fBWEOF\fP, то возвращается \fBWEOF\fP. Если \fIwc\fP — это
+некорректный широкий символ, то значение \fIerrno\fP устанавливается в
+\fBEILSEQ\fP и возвращается \fBWEOF\fP.
+.PP
+Если \fIwc\fP — это корректный широкий символ, то он отправляется обратно в
+поток и, таким образом, становится доступным для последующих операций чтения
+широких символов. Индикатор позиции в файле уменьшается на единицу или
+более. Индикатор конца файла очищается. Непосредственный носитель файла при
+этой операции не задействуется.
+.PP
+Замечание: \fIwc\fP не должен быть последним широким символом в потоке; он
+может быть любым другим корректным широким символом.
+.PP
+Если реализация поддерживает несколько последовательных операций возвращения
+подряд, то возвращённые широкие символы будут прочитаны в обратном порядке;
+однако гарантированно работает только однократный возврат.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBungetwc\fP возвращает \fIwc\fP или \fBWEOF\fP в
+случае ошибки.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBungetwc\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBungetwc\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfgetwc\fP(3)

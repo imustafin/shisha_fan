@@ -1,0 +1,86 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) IBM Corp. 2012
+.\" Author: Jan Glauber <jang@linux.vnet.ibm.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH S390_RUNTIME_INSTR 2 2019\-03\-06 "Руководство программиста Linux" 
+.SH ИМЯ
+s390_runtime_instr \- включает/выключает технические средства ЦП s390 времени
+выполнения
+.SH ОБЗОР
+.nf
+\fB#include <asm/runtime_instr.h>\fP
+.PP
+\fBint s390_runtime_instr(int \fP\fIcommand\fP\fB, int \fP\fIsignum\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBs390_runtime_instr\fP() запускает или останавливает
+технические средства ЦП времени выполнения для вызывающей нити.
+.PP
+В аргументе \fIcommand\fP указывается, что технические средства времени
+выполнения нужно запустить (\fBS390_RUNTIME_INSTR_START\fP, 1) или остановить
+(\fBS390_RUNTIME_INSTR_STOP\fP, 2) для вызывающей нити.
+.PP
+В аргументе \fIsignum\fP задаётся номер сигнала реального времени. Сигнал
+реального времени посылается нити, если буфер технических средств времени
+выполнения заполнился или произошло прерывание
+run\-time\-instrumentation\-halted.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBs390_runtime_instr\fP() возвращает 0 и включает в
+нити технические средства времени выполнения, назначая нити блок управления
+техническими средствами времени выполнения. После этого вызывающий может
+читать и изменять блок управления и запускать технические средства времени
+выполнения. При ошибке возвращается \-1 и в \fIerrno\fP записывается один из
+кодов ошибки, показанных далее.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Значение \fIcommand\fP не является допустимой командой, или значение \fIsignum\fP
+не является номером сигнала реального времени.
+.TP 
+\fBENOMEM\fP
+Не удалось выделить память под блок управления техническими средствами
+времени выполнения.
+.TP 
+\fBEOPNOTSUPP\fP
+Технические средства времени выполнения недоступны.
+.SH ВЕРСИИ
+Данный системный вызов появился в Linux 3.7.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный системный вызов есть только в Linux и только на архитектуре
+s390. Технические средства времени выполнения доступны начиная с System z
+EC12.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данного системного вызова; запускайте его с помощью
+\fBsyscall\fP(2).
+.PP
+.\" commit df2f815a7df7edb5335a3bdeee6a8f9f6f9c35c4
+Заголовочный файл \fIasm/runtime_instr.h\fP доступен в Linux начиная с версии
+4.16.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsyscall\fP(2), \fBsignal\fP(7)

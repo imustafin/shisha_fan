@@ -1,0 +1,80 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" Based on glibc infopages
+.\"
+.\" Corrections by aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NAN 3 2016\-03\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+nan, nanf, nanl \- возвращает «Not a Number» (не является числом)
+.SH ОБЗОР
+\fB#include <math.h>\fP
+.PP
+\fBdouble nan(const char *\fP\fItagp\fP\fB);\fP
+.br
+\fBfloat nanf(const char *\fP\fItagp\fP\fB);\fP
+.br
+\fBlong double nanl(const char *\fP\fItagp\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBnan\fP(), \fBnanf\fP(), \fBnanl\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Данные функции возвращают представление (определённое в \fItagp\fP) тихого
+NaN. Если реализация не поддерживает тихие (quiet) NaN, данные функции
+возвращают ноль.
+.PP
+Вызов \fInan("символьная последовательность")\fP равнозначен следующему:
+.PP
+.in +4n
+.EX
+strtod("NAN(символьная последовательность)", NULL);
+.EE
+.in
+.PP
+Вызовы \fBnanf\fP() и \fBnanl\fP() эквивалентны аналогичным вызовам \fBstrtof\fP(3) и
+\fBstrtold\fP(3).
+.PP
+Использование аргумента \fItagp\fP не регламентировано. В системах, совместимых
+с IEEE 754, существует несколько реализаций NaN, и \fItagp\fP используется в
+одной из них. В других системах он может ничего не делать.
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBnan\fP(),
+\fBnanf\fP(),
+\fBnanl\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008. См. также IEC 559 и приложение с
+рекомендуемыми функциями в IEEE 754/IEEE 854.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBisnan\fP(3), \fBstrtod\fP(3), \fBmath_error\fP(7)

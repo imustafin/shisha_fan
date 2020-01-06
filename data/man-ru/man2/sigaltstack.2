@@ -1,0 +1,289 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) 2001, 2017 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" aeb, various minor fixes
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGALTSTACK 2 2017\-11\-08 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sigaltstack \- считывает или устанавливает расположение стека сигналов
+.SH ОБЗОР
+\fB#include <signal.h>\fP
+.PP
+\fBint sigaltstack(const stack_t *\fP\fIss\fP\fB, stack_t *\fP\fIold_ss\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsigaltstack\fP():
+.ad l
+.RS 4
+.PD 0
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+    || /* в версии glibc <= 2.19: */ _BSD_SOURCE
+.PD
+.RE
+.ad
+.SH ОПИСАНИЕ
+Вызов \fBsigaltstack\fP() позволяет процессу определить новый альтернативный
+стек сигналов и/или получить состояние уже имеющегося альтернативного стека
+сигналов. Альтернативный стек сигналов используется при выполнении
+обработчика сигналов, если он был запрошен при установлении обработчика
+(см. \fBsigaction\fP(2)).
+.PP
+Обычный порядок действий для использования альтернативного стека сигналов:
+.TP  3
+1.
+Выделить область памяти, которая будет использована под альтернативный стек
+сигналов.
+.TP 
+2.
+Вызвать \fBsigaltstack\fP() для информирования системы о существовании и
+расположении альтернативного стека сигналов.
+.TP 
+3.
+При установке обработчика сигналов с помощью \fBsigaction\fP(2) (флагом
+\fBSA_ONSTACK\fP) сообщить системе, что обработчик сигналов должен выполняться
+с альтернативным стеком сигналов.
+.PP
+Аргумент \fIss\fP используется для указания нового альтернативного стека
+сигналов, а аргумент \fIold_ss\fP используется для получения информации об
+установленном в данный момент стеке сигналов. Если интересует какая\-то одна
+из этих задач, то другой аргумент указывается как NULL.
+.PP
+Тип \fIstack_t\fP, используемый для аргументов этой функции, определён
+следующим образом:
+.PP
+.in +4n
+.EX
+typedef struct {
+    void  *ss_sp;     /* базовый адрес стека */
+    int    ss_flags;  /* флаги */
+    size_t ss_size;   /* количество байт в стеке */
+} stack_t;
+.EE
+.in
+.PP
+Для организации нового альтернативного стека сигналов поля этой структуры
+должны быть заполнены следующим образом:
+.TP 
+\fIss.ss_flags\fP
+В этом поле содержится 0 или следующий флаг:
+.RS
+.TP 
+\fBSS_AUTODISARM\fP (начиная с Linux 4.7)
+.\" commit 2a74213838104a41588d86fd5e8d344972891ace
+.\" See tools/testing/selftests/sigaltstack/sas.c in kernel sources
+Очистить настройки альтернативного стека сигналов в записи обработчика
+сигналов. Когда происходит возврат из обработчика сигналов,
+восстанавливаются предыдущие настройки альтернативного стека сигналов.
+.IP
+Этот флаг был добавлен для безопасного переключения из обработчика сигналов
+с помощью \fBswapcontext\fP(3). Без этого флага следующий обрабатываемый сигнал
+повредит состояние обработчика сигналов, в который выполняется переключение
+(switched\-away). В ядрах без поддержки этого флага вызов \fBsigaltstack\fP()
+завершается ошибкой \fBEINVAL\fP, если этот флаг указан.
+.RE
+.TP 
+\fIss.ss_sp\fP
+Это поле задаёт начальный адрес стека. При вызове обработчика сигнала с
+альтернативным стеком ядро автоматически выравнивает адрес, указанный в
+\fIss.ss_sp\fP, по границе адреса, подходящей для используемой аппаратной
+платформы.
+.TP 
+\fIss.ss_size\fP
+В этом поле задаётся размер стека. Для определения альтернативного стека
+сигналов достаточного размера можно использовать константу \fBSIGSTKSZ\fP, а
+для выделения стека минимального размера можно указать константу
+\fBMINSIGSTKSZ\fP.
+.PP
+Для отключения существующего стека, укажите в \fIss.ss_flags\fP значение
+\fBSS_DISABLE\fP. В этом случае ядро игнорирует все флаги в \fIss.ss_flags\fP и
+остальные поля в \fIss\fP.
+.PP
+Если \fIold_ss\fP не равно NULL, то в нём возвращается информация об
+альтернативном стеке сигналов, который использовался до этого вызова
+\fBsigaltstack\fP(). В полях \fIold_ss.ss_sp\fP и \fIold_ss.ss_size\fP возвращаются
+начальный адрес и размер стека. В \fIold_ss.ss_flags\fP может быть возвращено
+одно из следующих значений:
+.TP 
+\fBSS_ONSTACK\fP
+В данный момент альтернативный стек сигналов используется процессом
+(заметим, что в этот момент невозможно изменить альтернативный стек
+сигналов).
+.TP 
+\fBSS_DISABLE\fP
+В данный момент альтернативный стек сигналов выключен.
+.IP
+.\" FIXME Was it intended that one can set up a different alternative
+.\" signal stack in this scenario? (In passing, if one does this, the
+.\" sigaltstack(NULL, &old_ss) now returns old_ss.ss_flags==SS_AUTODISARM
+.\" rather than old_ss.ss_flags==SS_DISABLE. The API design here seems
+.\" confusing...
+Также это значение возвращается, если процесс уже выполняется с
+альтернативным стеком сигналов, установленным с помощью флага
+\fBSS_AUTODISARM\fP. В этом случае с помощью \fBswapcontext\fP(3) можно безопасно
+переключаться в другой обработчик сигналов. Также возможно установить другой
+альтернативный стек сигналов с помощью последующего вызова \fBsigaltstack\fP().
+.TP 
+\fBSS_AUTODISARM\fP
+Альтернативный стек сигналов был помечен к автоматической очистке
+(autodisarmed), как описывалось ранее.
+.PP
+Если присвоить \fIss\fP значение NULL,а \fIold_ss\fP — не NULL, то можно получить
+текущие настройки альтернативного стека сигналов без его изменения.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsigaltstack\fP() возвращается 0. В случае ошибки
+возвращается \-1, а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Значение \fIss\fP или \fIold_ss\fP не равно NULL и указывает за пределы адресного
+пространства процесса.
+.TP 
+\fBEINVAL\fP
+Значение \fIss\fP не равно NULL и в поле \fIss_flags\fP содержится некорректный
+флаг.
+.TP 
+\fBENOMEM\fP
+Указанный размер нового альтернативного стека сигналов \fIss.ss_size\fP меньше
+\fBMINSIGSTKSZ\fP.
+.TP 
+\fBEPERM\fP
+Была попытка изменить альтернативный стек сигналов при его активности
+(т. е. текущий альтернативный стек сигналов уже задействован при выполнении
+процесса).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsigaltstack\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SUSv2, SVr4.
+.PP
+Флаг \fBSS_AUTODISARM\fP является расширением Linux.
+.SH ЗАМЕЧАНИЯ
+В основном, альтернативный стек сигналов используется при обработке сигнала
+\fBSIGSEGV\fP, который возникает при нехватке свободного места в обычном стеке
+процесса: в этом случае обработчик сигнала \fBSIGSEGV\fP не может использовать
+стек процесса; если требуется обработка данного сигнала, нужно использовать
+альтернативный стек сигналов.
+.PP
+Назначение альтернативного стека сигналов полезно, если ожидается, что
+процесс может задействовать весь свой обычный стек. Это может случиться,
+например, когда стек становится настолько большим, что он встречается с
+растущей в вверх «кучей», или достигает ограничения, заданного вызовом
+\fBsetrlimit(RLIMIT_STACK, &rlim)\fP. Если стандартный стек закончился, то ядро
+посылает процессу сигнал \fBSIGSEGV\fP. В этих условиях единственным способом
+поймать сигнал будет задействование альтернативного стека сигналов.
+.PP
+На большинстве аппаратных архитектур, поддерживаемых Linux, стеки растут
+сверху вниз. Вызов \fBsigaltstack\fP() автоматически учтёт направление роста
+стека.
+.PP
+Функции, вызываемые из обработчика сигналов исполняемого с использованием
+альтернативного стека сигналов, также будут использовать альтернативный стек
+сигналов (это также применимо к любым обработчикам, вызванным по другим
+сигналам в то время как процесс выполняется с альтернативным стеком
+сигналов). В отличие от стандартного стека система автоматически не
+расширяет альтернативный стек сигналов. Превышение выделенного размера
+альтернативного стека сигналов приведёт к непредсказуемым результатам.
+.PP
+При успешном выполнении вызова \fBexecve\fP(2) любой существующий
+альтернативный стек сигналов удаляется. Дочерний процесс, созданный с
+помощью \fBfork\fP(2), наследует копию настроек альтернативного стека сигналов
+своего родителя.
+.PP
+Вызов \fBsigaltstack\fP() заменяет устаревший вызов \fBsigstack\fP(). Для обратной
+совместимости в glibc также есть функция \fBsigstack\fP(). Во всех новых
+приложениях нужно использовать \fBsigaltstack\fP().
+.SS История
+Системный вызов \fBsigstack\fP() появился в 4.2BSD. В нём использовалась слегка
+другая структура, и его главным недостатком было то, что вызывающий должен
+был учитывать направления роста стека.
+.SH ПРИМЕР
+В следующем сегменте кода показано использование \fBsigaltstack\fP() (и
+\fBsigaction\fP(2)) для установки альтернативного стека сигналов, который
+используется обработчиком для сигнала \fBSIGSEGV\fP:
+.PP
+.in +4n
+.EX
+stack_t ss;
+
+ss.ss_sp = malloc(SIGSTKSZ);
+if (ss.ss_sp == NULL) {
+    perror("malloc");
+    exit(EXIT_FAILURE);
+}
+
+ss.ss_size = SIGSTKSZ;
+ss.ss_flags = 0;
+if (sigaltstack(&ss, NULL) == \-1) {
+    perror("sigaltstack");
+    exit(EXIT_FAILURE);
+}
+
+sa.sa_flags = SA_ONSTACK;
+sa.sa_handler = handler();      /* адрес обработчика сигналов */
+sigemptyset(&sa.sa_mask);
+if (sigaction(SIGSEGV, &sa, NULL) == \-1) {
+    perror("sigaction");
+    exit(EXIT_FAILURE);
+}
+.EE
+.in
+.SH ДЕФЕКТЫ
+.\" Linux 2.3.40
+.\" After quite a bit of web and mail archive searching,
+.\" I could not find the patch on any mailing list, and I
+.\" could find no place where the rationale for this change
+.\" explained -- mtk
+.\" See the source code of Illumos and FreeBSD, for example.
+В Linux 2.2 и старее в \fIss.sa_flags\fP можно указывать только флаг
+\fBSS_DISABLE\fP. В версиях до ядра Linux 2.4 разрешалось \fBsigaltstack\fP()
+допускать \fIss.ss_flags==SS_ONSTACK\fP с тем же смыслом как \fIss.ss_flags==0\fP
+(т. е., при включении \fBSS_ONSTACK\fP в \fIss.ss_flags\fP ни к чему не
+приводило). В других реализациях и согласно POSIX.1 флаг \fBSS_ONSTACK\fP
+появляется в \fIold_ss.ss_flags\fP только как флаг результата. В Linux его не
+нужно даже указывать в \fIss.ss_flags\fP, иначе это снизит переносимость, так
+как некоторые системы выдают ошибку, если в \fIss.ss_flags\fP указан
+\fBSS_ONSTACK\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBexecve\fP(2), \fBsetrlimit\fP(2), \fBsigaction\fP(2), \fBsiglongjmp\fP(3),
+\fBsigsetjmp\fP(3), \fBsignal\fP(7)

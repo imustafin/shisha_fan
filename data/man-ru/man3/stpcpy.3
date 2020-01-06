@@ -1,0 +1,108 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1995 James R. Van Zandt <jrv@vanzandt.mv.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STPCPY 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+stpcpy \- копирование строки с возвращением указателя на её конец
+.SH ОБЗОР
+.nf
+\fB#include <string.h>\fP
+.PP
+\fBchar *stpcpy(char *\fP\fIdest\fP\fB, const char *\fP\fIsrc\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBstpcpy\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+Функция \fBstrcpy\fP() копирует строку, указанную в \fIsrc\fP, включая завершающий
+байт null (\(aq\e0\(aq), в массив, указанный в \fIdest\fP. Строки не могут
+перекрываться, а строка назначения \fIdest\fP должна быть достаточно велика,
+чтобы хранить копию.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBstpcpy\fP() возвращает указатель на \fBконец\fP строки \fIdest\fP (то есть
+адрес конечного байта null), а не на её начало.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstpcpy\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция была добавлена в POSIX.1\-2008. До этого, она не была частью
+стандарта C или POSIX.1, или обычной для систем UNIX. Впервые она появилась
+не раньше 1986 года в компиляторе Lattice C AmigaDOS, затем в GNU fileutils
+и GNU textutils в 1989 году, и в библиотеке GNU C в 1992 году. Также она
+есть в разных BSD.
+.SH ДЕФЕКТЫ
+Эта функция может переполнить буфер \fIdest\fP.
+.SH ПРИМЕР
+Данная программа использует \fBstpcpy\fP() для объединения \fBfoo\fP и \fBbar\fP,
+чтобы получить строку \fBfoobar\fP, которая затем выводится.
+.PP
+.EX
+#define _GNU_SOURCE
+#include <string.h>
+#include <stdio.h>
+
+int
+main(void)
+{
+    char buffer[20];
+    char *to = buffer;
+
+    to = stpcpy(to, "foo");
+    to = stpcpy(to, "bar");
+    printf("%s\en", buffer);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbcopy\fP(3), \fBmemccpy\fP(3), \fBmemcpy\fP(3), \fBmemmove\fP(3), \fBstpncpy\fP(3),
+\fBstrcpy\fP(3), \fBstring\fP(3), \fBwcpcpy\fP(3)

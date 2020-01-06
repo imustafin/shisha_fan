@@ -1,0 +1,187 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Red Hat, Inc. All Rights Reserved.
+.\" and Copyright (C) 2013 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Written by Ivana Varekova <varekova@redhat.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PERFMONCTL 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+perfmonctl \- интерфейс к блоку слежения за производительностью IA\-64
+.SH ОБЗОР
+.nf
+\fB#include <syscall.h>\fP
+\fB#include <perfmon.h>\fP
+.PP
+\fBlong perfmonctl(int \fP\fIfd\fP\fB, int \fP\fIcmd\fP\fB, void *\fP\fIarg\fP\fB, int \fP\fInarg\fP\fB);\fP
+.fi
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Специальный системный вызов \fBperfmonctl\fP() для IA\-64 предоставляет
+интерфейс к PMU (блок слежения за производительностью, perfomance monitoring
+unit). PMU содержит регистры PMD (данные производительности, performance
+monitoring data) и PMC (управление слежением за производительностью,
+performance monitoring control), в которых собирается статистика по
+аппаратному обеспечению.
+.PP
+Вызов \fBperfmonctl\fP() выполняет операцию \fIcmd\fP над входными аргументами,
+указанными в \fIarg\fP. Количество аргументов указывается в \fInarg\fP. В
+аргументе \fIfd\fP задаётся контекст perfmon для операции.
+.PP
+Поддерживаемые значения \fIcmd\fP:
+.TP 
+\fBPFM_CREATE_CONTEXT\fP
+.nf
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_CREATE_CONTEXT, pfarg_context_t *\fP\fIctxt\fP\fB, 1);\fP
+.fi
+Создаёт контекст.
+.IP
+Параметр \fIfd\fP игнорируется. Создаётся новый контекст perfmon согласно
+\fIctxt\fP и его файловый дескриптор возвращается в \fIctxt\->ctx_fd\fP.
+.IP
+Файловый дескриптор можно использовать в последующих вызовах
+\fBperfmonctl\fP(), а также для чтения уведомлений о событиях (тип
+\fIpfm_msg_t\fP) с помощью \fBread\fP(2). Файловый дескриптор можно опрашивать с
+помощью \fBselect\fP(2), \fBpoll\fP(2) и \fBepoll\fP(7).
+.IP
+Контекст можно уничтожить вызвав \fBclose\fP(2), указав файловый дескриптор.
+.TP 
+\fBPFM_WRITE_PMCS\fP
+.\" pfm_write_pmcs()
+.nf
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_WRITE_PMCS, pfarg_reg_t *\fP\fIpmcs\fP\fB, n);\fP
+.fi
+Назначает значения регистрам PMC.
+.TP 
+\fBPFM_WRITE_PMDS\fP
+.nf
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_WRITE_PMDS, pfarg_reg_t *\fP\fIpmds\fP\fB, n);\fP
+.fi
+.\" pfm_write_pmds()
+Назначает значения регистрам PMD.
+.TP 
+\fBPFM_READ_PMDS\fP
+.\" pfm_read_pmds()
+.nf
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_READ_PMDS, pfarg_reg_t *\fP\fIpmds\fP\fB, n);\fP
+.fi
+Читает регистры PMD.
+.TP 
+\fBPFM_START\fP
+.\" pfm_start()
+.nf
+.\" .BI  "perfmonctl(int " fd ", PFM_START, arg, 1);
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_START, NULL, 0);\fP
+.fi
+Запускает слежение.
+.TP 
+\fBPFM_STOP\fP
+.\" pfm_stop()
+.nf
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_STOP, NULL, 0);\fP
+.fi
+Останавливает слежение.
+.TP 
+\fBPFM_LOAD_CONTEXT\fP
+.\" pfm_context_load()
+.nf
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_LOAD_CONTEXT, pfarg_load_t *\fP\fIlargs\fP\fB, 1);\fP
+.fi
+Присоединяет контекст к нити.
+.TP 
+\fBPFM_UNLOAD_CONTEXT\fP
+.\" pfm_context_unload()
+.nf
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_UNLOAD_CONTEXT, NULL, 0);\fP
+.fi
+Отсоединяет контекст от нити.
+.TP 
+\fBPFM_RESTART\fP
+.\" pfm_restart()
+.nf
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_RESTART, NULL, 0);\fP
+.fi
+Перезапускает слежение после приёма уведомления о переполнении.
+.TP 
+\fBPFM_GET_FEATURES\fP
+.\" pfm_get_features()
+.nf
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_GET_FEATURES, pfarg_features_t *\fP\fIarg\fP\fB, 1);\fP
+.fi
+.TP 
+\fBPFM_DEBUG\fP
+.\" pfm_debug()
+.nf
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_DEBUG, \fP\fIval\fP\fB, 0);\fP
+.fi
+Если \fIval\fP не равно нулю, то включает режим отладки, в противном случае
+выключает.
+.TP 
+\fBPFM_GET_PMC_RESET_VAL\fP
+.\" pfm_get_pmc_reset()
+.nf
+\fBperfmonctl(int \fP\fIfd\fP\fB, PFM_GET_PMC_RESET_VAL, pfarg_reg_t *\fP\fIreq\fP\fB, n);\fP
+.fi
+.\"
+.\"
+.\" .TP
+.\" .B PFM_CREATE_EVTSETS
+.\"
+.\" create or modify event sets
+.\" .nf
+.\" .BI  "perfmonctl(int " fd ", PFM_CREATE_EVTSETS, pfarg_setdesc_t *desc , n);
+.\" .fi
+.\" .TP
+.\" .B PFM_DELETE_EVTSETS
+.\" delete event sets
+.\" .nf
+.\" .BI  "perfmonctl(int " fd ", PFM_DELETE_EVTSET, pfarg_setdesc_t *desc , n);
+.\" .fi
+.\" .TP
+.\" .B PFM_GETINFO_EVTSETS
+.\" get information about event sets
+.\" .nf
+.\" .BI  "perfmonctl(int " fd ", PFM_GETINFO_EVTSETS, pfarg_setinfo_t *info, n);
+.\" .fi
+Сбрасывает регистры PMC в их значения по умолчанию.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении операции \fBperfmonctl\fP() возвращает ноль. При ошибке
+возвращается \-1, а в \fIerrno\fP записывается причина ошибки.
+.SH ВЕРСИИ
+\fBperfmonctl\fP() доступна в Linux начиная с 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBperfmonctl\fP() есть только в Linux и доступен только для архитектуры
+IA\-64.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данного системного вызова; запускайте его с помощью
+\fBsyscall\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgprof\fP(1)
+.PP
+Спецификация интерфейса perfmon2

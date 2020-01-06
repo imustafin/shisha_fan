@@ -1,0 +1,64 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\" Portions extracted from linux/mm/swap.c:
+.\"                Copyright (C) 1991, 1992  Linus Torvalds
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 21 Aug 1994 by Michael Chastain <mec@shell.portal.com>:
+.\"   Added text about calling restriction (new in kernel 1.1.20 I believe).
+.\"   N.B. calling "idle" from user process used to hang process!
+.\" Modified Thu Oct 31 14:41:15 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" "
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IDLE 2 2012\-12\-31 Linux "Руководство программиста Linux"
+.SH ИМЯ
+idle \- переводит процесс 0 в режим бездействия
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint idle(void);\fP
+.SH ОПИСАНИЕ
+\fBidle\fP() \(em это внутренний системный вызов, используемый во время
+начальной загрузки. Он помечает страницы процесса как выгружаемые в
+пространство подкачки, снижает его приоритет и входит в основной цикл
+планирования. \fBidle\fP() никогда не возвращает управление.
+.PP
+Только процесс 0 может вызывать \fBidle\fP(). Все пользовательские процессы,
+даже процессы с правами суперпользователя, будут получать \fBEPERM\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+\fBidle\fP() никогда не возвращается в процесс 0 и всегда возвращает \-1 для
+пользовательских процессов.
+.SH ОШИБКИ
+.TP 
+\fBEPERM\fP
+Всегда для пользовательского процесса.
+.SH ВЕРСИИ
+Начиная с Linux 2.3.13 этот системный вызов больше не существует.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данная функция есть только в Linux и не должна использоваться в программах,
+которые задуманы как переносимые.

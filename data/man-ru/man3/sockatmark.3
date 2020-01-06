@@ -1,0 +1,130 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2006, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SOCKATMARK 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sockatmark \- определяет, есть ли в сокете отметка о внеполосных данных
+.SH ОБЗОР
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint sockatmark(int \fP\fIsockfd\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBsockatmark\fP(): _POSIX_C_SOURCE\ >=\ 200112L
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBsockatmark\fP() возвращает значение, показывающее присутствует ли в
+сокете, на который ссылается файловый дескриптор \fIsockfd\fP, отметка о
+внеполосных данных (out\-of\-band mark). Если сокет имеет отметку, то
+возвращается 1; если сокет не имеет отметки, то возвращается 0. Эта функция
+не удаляет отметку о внеполосных данных.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsockatmark\fP() возвращает 1, если сокет имеет
+отметку о внеполосных данных, и 0, если нет. При ошибке возвращается \-1, и в
+\fIerrno\fP записывается номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fIsockfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+.\" POSIX.1 says ENOTTY for this case
+Значение \fIsockfd\fP является файловым дескриптором, к которому не применима
+функция \fBsockatmark\fP().
+.SH ВЕРСИИ
+Функция \fBsockatmark\fP() впервые появилась в glibc 2.2.4.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsockatmark\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Если \fBsockatmark\fP() возвращает 1, то внеполосные данные можно прочитать
+используя флаг \fBMSG_OOB\fP в \fBrecv\fP(2).
+.PP
+Внеполосные данные поддерживаются только для некоторых потоковых сокетных
+протоколов.
+.PP
+Функцию \fBsockatmark\fP() можно безопасно вызывать из обработчика сигнала
+\fBSIGURG\fP.
+.PP
+Функция \fBsockatmark\fP() реализована с помощью \fBioctl\fP(2) с операцией
+\fBSIOCATMARK\fP.
+.SH ДЕФЕКТЫ
+До glibc 2.4, \fBsockatmark\fP() не работала.
+.SH ПРИМЕР
+Следующий код можно использовать после получения сигнала \fBSIGURG\fP для
+чтения (и удаления) всех данных до отметки, и затем для чтения байта данных
+отметки:
+.PP
+.EX
+    char buf[BUF_LEN];
+    char oobdata;
+    int atmark, s;
+
+    for (;;) {
+        atmark = sockatmark(sockfd);
+        if (atmark == \-1) {
+            perror("sockatmark");
+            break;
+        }
+
+        if (atmark)
+            break;
+
+        s = read(sockfd, buf, BUF_LEN);
+        if (s == \-1)
+            perror("read");
+        if (s <= 0)
+            break;
+    }
+
+    if (atmark == 1) {
+        if (recv(sockfd, &oobdata, 1, MSG_OOB) == \-1) {
+            perror("recv");
+            ...
+        }
+    }
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfcntl\fP(2), \fBrecv\fP(2), \fBsend\fP(2), \fBtcp\fP(7)

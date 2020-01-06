@@ -1,0 +1,110 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Michael Haardt, Ian Jackson.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1997-01-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RMDIR 2 2015\-08\-08 Linux "Руководство программиста Linux"
+.SH ИМЯ
+rmdir \- удалить каталог
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint rmdir(const char *\fP\fIpathname\fP\fB);\fP
+.SH ОПИСАНИЕ
+\fBrmdir\fP() удаляет каталог, который должен быть пуст.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Нет прав на запись в каталог, содержащийся в \fIpathname\fP, или в одном из
+каталогов в \fIpathname\fP не разрешён поиск (см. также \fBpath_resolution\fP(7)).
+.TP 
+\fBEBUSY\fP
+В данный момент \fIpathname\fP используется системой или одним из процессов,
+что предотвращает удаление. В Linux это означает, что \fIpathname\fP
+используется в качестве точки монтирования или является корневым каталогом
+вызвавшего процесса.
+.TP 
+\fBEFAULT\fP
+Аргумент \fIpathname\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+\fIpathname\fP содержит \fI.\fP в качестве последнего компонента.
+.TP 
+\fBELOOP\fP
+Во время определения \fIpathname\fP встретилось слишком много символьных
+ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+\fIpathname\fP слишком длинен.
+.TP 
+\fBENOENT\fP
+Один из каталогов в \fIpathname\fP не существует или является повисшей
+символьной ссылкой.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOTDIR\fP
+\fIpathname\fP, или его компонент, используемый в качестве каталога в
+\fIpathname\fP, фактически, не является каталогом.
+.TP 
+\fBENOTEMPTY\fP
+.\" POSIX.1-2001, POSIX.1-2008
+\fIpathname\fP содержит элементы, отличные от \fI.\fP и \fI..\fP ; или последним
+компонентом \fIpathname\fP является \fI..\fP. POSIX.1 также позволяет возвращать
+\fBEEXIST\fP в такой ситуации.
+.TP 
+\fBEPERM\fP
+На каталоге, содержащемся в \fIpathname\fP, установлен закрепляющий (sticky)
+бит (\fBS_ISVTX\fP) и эффективный идентификатор пользователя не совпадает с
+пользовательским ID файла или каталога, его содержащего, что требуется для
+удаления, и процесс не имеет прав (Linux: не имеет мандата \fBCAP_FOWNER\fP).
+.TP 
+\fBEPERM\fP
+Файловая система, содержащая \fIpathname\fP, не поддерживает удаление
+каталогов.
+.TP 
+\fBEROFS\fP
+\fIpathname\fP указывает на файл в файловой системе, доступной только для
+чтения.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH ДЕФЕКТЫ
+Неточности в протоколе NFS могут приводить к неожиданному исчезновению
+каталогов, которые всё ещё используются.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBrm\fP(1), \fBrmdir\fP(1), \fBchdir\fP(2), \fBchmod\fP(2), \fBmkdir\fP(2), \fBrename\fP(2),
+\fBunlink\fP(2), \fBunlinkat\fP(2)

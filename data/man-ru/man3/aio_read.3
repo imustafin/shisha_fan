@@ -1,0 +1,124 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2003 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH AIO_READ 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+aio_read \- асинхронное чтение
+.SH ОБЗОР
+\fB#include <aio.h>\fP
+.PP
+\fBint aio_read(struct aiocb *\fP\fIaiocbp\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.SH ОПИСАНИЕ
+Функция \fBaio_read\fP() ставит в очередь запрос ввода\-вывода, описанный в
+буфере, на который указывает \fIaiocbp\fP. Эта функция является асинхронным
+аналогом вызова \fBread\fP(2). Аргументы функции
+.PP
+    read(fd, buf, count)
+.PP
+соответствуют (в указанном порядке) полям \fIaio_fildes\fP, \fIaio_buf\fP и
+\fIaio_nbytes\fP структуры, на которую указывает \fIaiocbp\fP (описание структуры
+\fIaiocb\fP смотрите в \fBaio\fP(7)).
+.PP
+Чтение данных выполняется начиная с абсолютного положения в файле
+\fIaiocbp\->aio_offset\fP, независимо от смещения в файле. После вызова
+значение смещения в файле не определено.
+.PP
+Прилагательное «асинхронный» означает, что вызов возвращает управление сразу
+после установки запроса в очередь; при завершении вызова чтение может уже
+выполнится, а может и нет. Для проверки выполнения чтения используйте
+\fBaio_error\fP(3). Состояние возврата завершённой операции ввода\-вывода можно
+получить с помощью \fBaio_return\fP(3). Асинхронное уведомление о выполнении
+ввода\-вывода можно получить, установив \fIaiocbp\->aio_sigevent\fP
+соответствующим образом; подробней смотрите в \fBsigevent\fP(7).
+.PP
+Если определён макрос \fB_POSIX_PRIORITIZED_IO\fP и данный файл его
+поддерживает, асинхронная операция устанавливается в очередь с приоритетом
+вызывающего процесса минус \fIaiocbp\->aio_reqprio\fP.
+.PP
+Поле \fIaiocbp\->aio_lio_opcode\fP игнорируется.
+.PP
+Данные не читаются из обычного файла, если смещение превышает максимум.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. При ошибке запрос не устанавливается
+в очередь, возвращается \-1, \fIerrno\fP присваивается соответствующее
+значение. Если ошибка обнаруживается не сразу, то о ней будет сообщено
+посредством \fBaio_return\fP(3) (возвращается состояние \-1) и \fBaio_error\fP(3)
+(состояние ошибки — всё, что было бы в \fIerrno\fP, например \fBEBADF\fP).
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Не хватает ресурсов.
+.TP 
+\fBEBADF\fP
+Значение \fIaio_fildes\fP не является допустимым файловым дескриптором для
+открытия на чтение.
+.TP 
+\fBEINVAL\fP
+Одно или несколько значений у \fIaio_offset\fP, \fIaio_reqprio\fP или
+\fIaio_nbytes\fP неверны.
+.TP 
+\fBENOSYS\fP
+Функция \fBaio_read\fP() не реализована.
+.TP 
+\fBEOVERFLOW\fP
+Файл является обычным файлом, мы начинаем читать его до конца файла и хотим
+получить не менее одного байта, но начальная позиция находится за
+максимальным значением смещения этого файла.
+.SH ВЕРСИИ
+Функция \fBaio_read\fP() доступна в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBaio_read\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.\" or the control block of the operation
+Желательно обнулять буфер блока управления перед использованием. Блок
+управления не должен изменяться во время выполнения операции чтения. Область
+буфера, в которую выполняется чтение, должна быть недоступна во время
+операции, иначе поведение непредсказуемо. Области памяти, с которыми
+производится работа, должны оставаться доступными.
+.PP
+Одновременное выполнение операций ввода\-вывода через совместно используемую
+структуру \fIaiocb\fP приводит к непредсказуемым результатам.
+.SH ПРИМЕР
+Смотрите \fBaio\fP(7).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaio_cancel\fP(3), \fBaio_error\fP(3), \fBaio_fsync\fP(3), \fBaio_return\fP(3),
+\fBaio_suspend\fP(3), \fBaio_write\fP(3), \fBlio_listio\fP(3), \fBaio\fP(7)

@@ -1,0 +1,102 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2003 Free Software Foundation, Inc.
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" This file is distributed according to the GNU General Public License.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IO_GETEVENTS 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+io_getevents \- считывает асинхронные события ввода/вывода из очереди
+выполнения
+.SH ОБЗОР
+.nf
+\fB#include <linux/aio_abi.h>\fP       /* определяет необходимые типы */
+\fB#include <linux/time.h>\fP          /* определяет «struct timespec» */
+.PP
+\fBint io_getevents(aio_context_t \fP\fIctx_id\fP\fB, long \fP\fImin_nr\fP\fB, long \fP\fInr\fP\fB,\fP
+\fB                 struct io_event *\fP\fIevents\fP\fB, struct timespec *\fP\fItimeout\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+.PP
+Системный вызов \fBio_getevents\fP() пытается считать, по меньшей мере, от
+\fImin_nr\fP до \fInr\fP событий из очереди выполнения контекста AIO, указанном в
+\fIctx_id\fP.
+.PP
+В аргументе \fItimeout\fP задаётся время (относительное значение) ожидания
+событий в виде структуры:
+.PP
+.in +4n
+.EX
+struct timespec {
+    time_t tv_sec;      /* секунды */
+    long   tv_nsec;     /* наносекунды [0 .. 999999999] */
+};
+.EE
+.in
+.PP
+Указанное время округляется до точности системных часов и гарантируется, что
+он не будет просрочено/сработает раньше.
+.PP
+Указание в \fItimeout\fP значения NULL приводит к бесконечной блокировке — до
+получения не менее \fImin_nr\fP событий.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBio_getevents\fP() возвращается количество
+прочитанных событий. Оно может быть 0 или меньше \fImin_nr\fP, если \fItimeout\fP
+просрочен. Также может возвращаться ненулевое значение меньше \fImin_nr\fP,
+если вызов был прерван обработчиком сигнала.
+.PP
+Значения при ошибках смотрите в разделе ЗАМЕЧАНИЯ.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Задан неправильный указатель в \fIevents\fP или \fItimeout\fP.
+.TP 
+\fBEINTR\fP
+Прерван обработчиком сигнала; смотрите \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Неверное значение \fIctx_id\fP. Значение \fImin_nr\fP или \fInr\fP лежит за пределами
+диапазона.
+.TP 
+\fBENOSYS\fP
+Вызов \fBio_getevents\fP() не реализован для данной архитектуры.
+.SH ВЕРСИИ
+.PP
+Асинхронные системные вызовы ввода\-вывода впервые появились в Linux 2.5.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.PP
+Вызов \fBio_getevents\fP() есть только в Linux, и он не должен использоваться в
+переносимых программах.
+.SH ЗАМЕЧАНИЯ
+.\" http://git.fedorahosted.org/git/?p=libaio.git
+В glibc нет обёрточной функции для данного системного вызова. Вы можете
+вызвать его с помощью \fBsyscall\fP(2). Но лучше воспользоваться обёрточной
+функцией \fBio_getevents\fP() из библиотеки \fIlibaio\fP.
+.PP
+.\" But glibc is confused, since <libaio.h> uses 'io_context_t' to declare
+.\" the system call.
+Заметим, что в обёрточной функции \fIlibaio\fP используется другой тип
+(\fIio_context_t\fP) аргумента \fIctx_id\fP. Также заметим, что \fIlibaio\fP не
+следует соглашениям обычной библиотеки C для возврата ошибок: при ошибке она
+возвращает отрицательный номер ошибки (из списка в разделе ОШИБКИ). Если
+системный вызов вызывается с помощью \fBsyscall\fP(2), то возвращаемое значение
+следует обычным соглашениям для указания на ошибку: возвращается \-1 и в
+\fIerrno\fP записывается (положительное) значение возникшей ошибки.
+.SH ДЕФЕКТЫ
+Некорректное значение \fIctx_id\fP может привести к ошибке сегментирования, а
+не генерации ошибки \fBEINVAL\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+.PP
+\fBio_cancel\fP(2), \fBio_destroy\fP(2), \fBio_setup\fP(2), \fBio_submit\fP(2),
+\fBaio\fP(7), \fBtime\fP(7)
+.\" .SH AUTHOR
+.\" Kent Yoder.

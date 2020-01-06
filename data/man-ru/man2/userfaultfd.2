@@ -1,0 +1,612 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2016, IBM Corporation.
+.\" Written by Mike Rapoport <rppt@linux.vnet.ibm.com>
+.\" and Copyright (C) 2017 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH USERFAULTFD 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+userfaultfd \- создаёт файловый дескриптор для обработки страничных ошибок в
+пользовательском пространстве
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <linux/userfaultfd.h>\fP
+.PP
+\fBint userfaultfd(int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Вызов \fBuserfaultfd\fP() создаёт новый объект userfaultfd, который можно
+использовать для передачи обработки страничных ошибок приложению
+пользовательского пространства, и возвращает файловый дескриптор,
+ссылающийся на новый объект. Новый объект userfaultfd настраивается с
+помощью \fBioctl\fP(2).
+.PP
+После настройки объекта userfaultfd приложение может использовать вызов
+\fBread\fP(2) для получения уведомлений userfaultfd. Чтение из userfaultfd
+может быть блокирующим и не блокирующим, в зависимости от использованного
+при создании userfaultfd значения \fIflags\fP или последующих вызовов
+\fBfcntl\fP(2).
+.PP
+Для изменения поведения \fBuserfaultfd\fP() можно использовать следующие
+значения \fIflags\fP (через OR):
+.TP 
+\fBO_CLOEXEC\fP
+Включить флаг close\-on\-exec для нового открытого файлового дескриптора
+userfaultfd. Смотрите описание флага \fBO_CLOEXEC\fP в \fBopen\fP(2).
+.TP 
+\fBO_NONBLOCK\fP
+Включить не блокирующую работу с объектом userfaultfd. Смотрите описание
+флага \fBO_NONBLOCK\fP в \fBopen\fP(2).
+.PP
+.\"
+Когда закрывается последний ссылающийся на объект userfaultfd файловый
+дескриптор, для всех диапазонов памяти, зарегистрированных в этом объекте,
+снимается регистрация, а все непрочитанные события очищаются.
+.SS Использование
+Механизм userfaultfd разработан для того, чтобы позволить нити в
+многонитевой программе выполнять деление на страницы пользовательского
+пространства других нитей процесса. При возникновении страничной ошибки в
+одной из зарегистрированных в объекте userfaultfd областей нить с ошибкой
+засыпает и генерируется событие, которое можно прочитать через файловый
+дескриптор userfaultfd. Нить обработки страничных ошибок читает сообщения из
+этого файлового дескриптора и обслуживает из с помощью операций, описанных в
+\fBioctl_userfaultfd\fP(2). В время этого нить обработки страничных ошибок
+может привести в действие механизм пробуждения спящей нити.
+.PP
+Нити с ошибкой и нити обработки страничных ошибок могут быть запущены в
+контексте различных процессов. В этом случае данные нити могут принадлежать
+разным программам, а программам, выполняющим нити с ошибкой, не обязательно
+взаимодействовать с программой, обрабатывающей страничные ошибки. В таком
+разобщённом режиме процессу, следящему за userfaultfd и обрабатывающему
+страничные ошибки, необходимо знать об изменениях в раскладке виртуальной
+памяти процесса с ошибкой, чтобы не допустить повреждение памяти.
+.PP
+Начиная с Linux 4.11, userfaultfd также уведомляет нити обработки страничных
+ошибок об изменениях в раскладке виртуальной памяти процесса с
+ошибкой. Также, если процесс с ошибкой вызывает \fBfork\fP(2), то для объекта
+userfaultfd, связанного с родителем, в дочернем процессе может быть создать
+дубликат, и отслеживающий userfaultfd также будет уведомлён (смотрите
+описание \fBUFFD_EVENT_FORK\fP ниже) о файловом дескрипторе, связанном с
+объектом userfault, который был создан для дочернего процесса, что позволяет
+отслеживающему userfaultfd выполнять деление на страницы пользовательское
+пространство дочернего процесса. В отличие от страничных ошибок, которые
+происходят синхронно и требуют явного или неявного пробуждения, все
+остальные события доставляются асинхронно и не взаимодействующий процесс
+возобновляет выполнение сразу же после того как отслеживающий userfaultfd
+выполняет \fBread\fP(2). Отслеживающий userfaultfd должен корректно
+синхронизировать вызовы \fBUFFDIO_COPY\fP при обработке событий.
+.PP
+.\" Regarding the preceding sentence, Mike Rapoport says:
+.\"     The major point here is that current events delivery model could be
+.\"     problematic for multi-threaded monitor. I even suspect that it would be
+.\"     impossible to ensure synchronization between page faults and non-page
+.\"     fault events in multi-threaded monitor.
+Имеющаяся асинхронная модель доставки событий оптимальна для реализации
+однонитевой не взаимодействующей отслеживающей userfaultfd программы.
+.PP
+.\" FIXME elaborate about non-cooperating mode, describe its limitations
+.\" for kernels before 4.11, features added in 4.11
+.\" and limitations remaining in 4.11
+.\" Maybe it's worth adding a dedicated sub-section...
+.\"
+.SS "Работа с userfaultfd"
+После создания объекта userfaultfd с помощью \fBuserfaultfd\fP() приложение
+должно включить его с помощью операции \fBUFFDIO_API\fP вызова
+\fBioctl\fP(2). Данная операция позволяет согласовать между ядром и
+пользовательским пространством версию программного интерфейса поддерживаемых
+свойств. Эта операция должна быть выполнено самой первой среди других
+операций \fBioctl\fP(2), описываемых ниже (в противном случае эти операции
+завершаются ошибкой \fBEINVAL\fP).
+.PP
+После успешного выполнения \fBUFFDIO_API\fP приложение должно зарегистрировать
+диапазоны адресов памяти с помощью операции \fBUFFDIO_REGISTER\fP вызова
+\fBioctl\fP(2). После успешного выполнения \fBUFFDIO_REGISTER\fP страничная
+ошибка, возникающая в запрошенном диапазоне и удовлетворяющая режиму,
+определённому в момент регистрации, будет переслана ядром приложению в
+пользовательском пространстве. Для решения страничной ошибки приложение
+может использовать операцию \fBUFFDIO_COPY\fP или \fBUFFDIO_ZEROPAGE\fP вызова
+\fBioctl\fP(2).
+.PP
+Начиная с Linux 4.14, если приложение устанавливает бит свойства
+\fBUFFD_FEATURE_SIGBUS\fP с помощью \fBUFFDIO_API\fP \fBioctl\fP(2), то уведомления о
+страничных ошибках не пересылаются в пользовательское пространство. Вместо
+этого в ошибшийся процесс посылается сигнал \fBSIGBUS\fP. С данным свойством
+userfaultfd можно использовать в целях надёжности, просто ловя все попытки
+доступа к областях внутри зарегистрированного адресного диапазона, в котором
+нет выделенных страниц, не слушая при этом события userfaultfd. При таком
+доступе к памяти не потребуется процесс слежения за userfaultfd. Например,
+данное свойство может оказаться полезным приложениям, которые хотят не
+давать ядру выполнять автоматическое выделение страниц и заполнение дыр в
+разреженных файлах при обращении к дыре через отображение в памяти.
+.PP
+Свойство \fBUFFD_FEATURE_SIGBUS\fP неявно наследуется при \fBfork\fP(2), если
+используется вместе с \fBUFFD_FEATURE_FORK\fP.
+.PP
+Подробности о различных операциях \fBioctl\fP(2) можно найти в
+\fBioctl_userfaultfd\fP(2).
+.PP
+Начиная с Linux 4.11 при операции \fBUFFDIO_API\fP можно включить не только
+события страничной ошибки.
+.PP
+До Linux 4.11 объект userfaultfd мог быть использован только с анонимными
+частными отображениями памяти. Начиная с Linux 4.11 объект userfaultfd может
+также использоваться с отображениями общей памяти и hugetlbfs.
+.PP
+.\"
+.SS "Чтение из структуры userfaultfd"
+Каждый вызов \fBread\fP(2) из файлового дескриптора userfaultfd возвращает одну
+или более структур \fIuffd_msg\fP, каждая из которых описывает событие
+страничной ошибки или событие, требуемое для использования userfaultfd в
+разобщённом режиме:
+.PP
+.in +4n
+.EX
+struct uffd_msg {
+    __u8  event;            /* тип события */
+    ...
+    union {
+        struct {
+            __u64 flags;    /* флаги, описывающие ошибку */
+            __u64 address;  /* ошибочный адрес */
+        } pagefault;
+
+        struct {            /* начиная с Linux 4.11 */
+            __u32 ufd;      /* файловый дескриптор userfault
+                               дочернего процесса */
+        } fork;
+
+        struct {            /* начиная с Linux 4.11 */
+            __u64 from;     /* старый адрес переотображаемой области */
+            __u64 to;       /* новый адрес переотображаемой области */
+            __u64 len;      /* начальный размер отображения */
+        } remap;
+
+        struct {            /* начиная с Linux 4.11 */
+            __u64 start;    /* начальный адрес удаляемой области */
+            __u64 end;      /* конечный адрес удаляемой области */
+        } remove;
+        ...
+    } arg;
+
+    /* поля\-заполнители не показаны */
+} __packed;
+.EE
+.in
+.PP
+Если доступно несколько событий и переданный буфер достаточного размера, то
+\fBread\fP(2) возвращает столько событий сколько влезает в буфер. Если буфер,
+указанный \fBread\fP(2), меньше размера структуры \fIuffd_msg\fP, то \fBread\fP(2)
+завершается ошибкой \fBEINVAL\fP.
+.PP
+Поля структуры \fIuffd_msg\fP:
+.TP 
+\fIevent\fP
+Тип события. Тип события влияет на заполняемые поля объединения \fIarg\fP,
+представляющего детали, требуемые для обработки события. События, не
+относящиеся к страничным ошибкам, генерируются только когда включено
+соответствующее свойство при согласовании программного интерфейса с помощью
+операции \fBUFFDIO_API\fP вызова \fBioctl\fP(2).
+.IP
+В поле \fIevent\fP могут появляться следующие значения:
+.RS
+.TP 
+\fBUFFD_EVENT_PAGEFAULT\fP (начиная с Linux 4.3)
+Событие страничной ошибки. Детали ошибки доступны в поле \fIpagefault\fP.
+.TP 
+\fBUFFD_EVENT_FORK\fP (начиная с Linux 4.11)
+.\" FIXME describe duplication of userfault file descriptor during fork
+Генерируется, когда процесс с ошибкой вызывает \fBfork\fP(2) (или \fBclone\fP(2)
+без флага \fBCLONE_VM\fP). Детали ошибки доступны в поле \fIfork\fP.
+.TP 
+\fBUFFD_EVENT_REMAP\fP (начиная с Linux 4.11)
+Генерируется, когда процесс с ошибкой вызывает \fBmremap\fP(2). Детали ошибки
+доступны в поле \fIremap\fP.
+.TP 
+\fBUFFD_EVENT_REMOVE\fP (начиная с Linux 4.11)
+Генерируется, когда процесс с ошибкой вызывает \fBmadvise\fP(2) с советом
+\fBMADV_DONTNEED\fP или \fBMADV_REMOVE\fP. Детали ошибки доступны в поле
+\fIremove\fP.
+.TP 
+\fBUFFD_EVENT_UNMAP\fP (начиная с Linux 4.11)
+Генерируется, когда процесс с ошибкой отменяет проецирование диапазона
+памяти явным образом с помощью \fBmunmap\fP(2) или неявно при вызове \fBmmap\fP(2)
+или \fBmremap\fP(2). Детали ошибки доступны в поле \fIremove\fP.
+.RE
+.TP 
+\fIpagefault.address\fP
+Адрес, из\-за которого возникла страничная ошибка.
+.TP 
+\fIpagefault.flags\fP
+Битовая маска флагов, описывающих событие. Для \fBUFFD_EVENT_PAGEFAULT\fP может
+появляться следующий флаг:
+.RS
+.TP 
+\fBUFFD_PAGEFAULT_FLAG_WRITE\fP
+.\"
+.\" UFFD_PAGEFAULT_FLAG_WP is not yet supported.
+Если адрес в диапазоне, который был зарегистрирован с флагом
+\fBUFFDIO_REGISTER_MODE_MISSING\fP (смотрите \fBioctl_userfaultfd\fP(2)) и этот
+флаг установлен, то это ошибка записи; в противном случае это ошибка чтения.
+.RE
+.TP 
+\fIfork.ufd\fP
+С помощью \fBfork\fP(2) был создан потомок, для которого был создан файловый
+дескриптор, связанный с объектом userfault.
+.TP 
+\fIremap.from\fP
+Первоначальный адрес диапазона памяти, который был переотображён с помощью
+\fBmremap\fP(2).
+.TP 
+\fIremap.to\fP
+Новый адрес диапазона памяти, который был переотображён с помощью
+\fBmremap\fP(2).
+.TP 
+\fIremap.len\fP
+Первоначальный размер диапазона памяти, который был переотображён с помощью
+\fBmremap\fP(2).
+.TP 
+\fIremove.start\fP
+Начальный адрес диапазона памяти, который был освобождён с помощью
+\fBmadvise\fP(2) или было отменено проецирование.
+.TP 
+\fIremove.end\fP
+Конечный адрес диапазона памяти, который был освобождён с помощью
+\fBmadvise\fP(2) или было отменено проецирование.
+.PP
+Вызов \fBread\fP(2) с файловым дескриптором userfaultfd может завершиться
+следующими ошибками:
+.TP 
+\fBEINVAL\fP
+Объект userfaultfd не был включён с помощью операции \fBUFFDIO_API\fP вызова
+\fBioctl\fP(2).
+.PP
+.\" FIXME What is the reason for this seemingly odd behavior with respect
+.\" to the O_NONBLOCK flag? (see userfaultfd_poll() in fs/userfaultfd.c).
+.\" Something needs to be said about this.
+Если в связанном открытом файловом описании указан флаг \fBO_NONBLOCK\fP, то
+файловый дескриптор userfaultfd можно отслеживать с помощью \fBpoll\fP(2),
+\fBselect\fP(2) и \fBepoll\fP(7). При возникновении событий, файловый дескриптор
+помечается как доступный на чтение. Если флаг \fBO_NONBLOCK\fP не задан, то
+\fBpoll\fP(2) (всегда) показывает, что файл находится в состоянии \fBPOLLERR\fP, а
+\fBselect\fP(2) показывает, что файловый дескриптор доступен на чтение и
+запись.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBuserfaultfd\fP() возвращает новый файловый
+дескриптор, который ссылается на объект userfaultfd. При ошибке возвращается
+\-1, и \fIerrno\fP изменяется соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указано неподдерживаемое значение.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.SH ВЕРСИИ
+Системный вызов \fBuserfaultfd\fP() впервые появился в Linux 4.3.
+.PP
+Поддержка hugetlbfs и общих областей памяти, а также событий, не относящихся
+к страничным ошибкам, была добавлена в Linux 4.11.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBuserfaultfd\fP() есть только в Linux и поэтому не должен
+использоваться в программах, предназначенных для переноса на другие
+платформы.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данного системного вызова; запускайте его с помощью
+\fBsyscall\fP(2).
+.PP
+Механизм userfaultfd может быть использован как альтернатива обычному
+страничному делению пользовательского пространства на основе использования
+сигнала \fBSIGSEGV\fP и \fBmmap\fP(2). Также он может быть использован для
+реализации отложенного (lazy) восстановления checkpoint/restore mechanisms,
+as well as post\-copy migration to allow (почти) не прерываемого выполнения
+при переносе виртуальных машин и контейнеров Linux с одного узла на другой.
+.SH ДЕФЕКТЫ
+Если указано \fBUFFD_FEATURE_EVENT_FORK\fP и системный вызов из семейства
+\fBfork\fP(2) прерывается по сигналу или завершается ошибкой, то может быть
+создан повисший дескриптор userfaultfd. В этом случае программе слежения за
+userfaultfd может быть доставлен ложный \fBUFFD_EVENT_FORK\fP.
+.SH ПРИМЕР
+Программа, представленная далее, показывает использование механизма
+userfaultfd. Она создаёт две нити, одна служит обработчиком страничных
+ошибок процесса для страниц в режиме выделения при необходимости, созданных
+\fBmmap\fP(2).
+.PP
+Программа имеет один параметр командной строки, определяющий количество
+страниц, которые будут созданы в отображении, чьи страничные ошибки будут
+обработаны userfaultfd. После создания объекта userfaultfd программа создаёт
+анонимное частное отображение указанного размера и регистрирует адресный
+диапазон отображения с помощью операции \fBUFFDIO_REGISTER\fP вызовом
+\fBioctl\fP(2). После этого программа создаёт вторую нить, которая будет
+выполнять задачу по обработке страничных ошибок.
+.PP
+После этого главная нить обходит страницы отображения запрашивая байты
+следующей страницы. Так как к страницам ещё не обращались, первый доступ к
+байту в каждой странице будет вызывать событие страничной ошибки в файловом
+дескрипторе userfaultfd.
+.PP
+Каждое событие страничной ошибки обрабатывается второй нитью, которая
+выполняет цикл обработки ввода из файлового дескриптора userfaultfd. При
+каждом проходе цикла вторая нить сначала вызывает \fBpoll\fP(2) для проверки
+состояния файлового дескриптора, затем читает событие из файлового
+дескриптора. Все события должны быть \fBUFFD_EVENT_PAGEFAULT\fP, для их
+обработки нить копирует страницу данных в ошибочную область с помощью
+операции \fBUFFDIO_COPY\fP вызова \fBioctl\fP(2).
+.PP
+Результат работы программы:
+.PP
+.in +4n
+.EX
+$ \fB./userfaultfd_demo 3\fP
+Адрес, возвращённый mmap() = 0x7fd30106c000
+
+fault_handler_thread():
+    poll() вернул: nready = 1; POLLIN = 1; POLLERR = 0
+    событие UFFD_EVENT_PAGEFAULT: флаги = 0; адрес = 7fd30106c00f
+        (uffdio_copy.copy равно 4096)
+Чтение по адресу 0x7fd30106c00f в main(): A
+Чтение по адресу 0x7fd30106c40f в main(): A
+Чтение по адресу 0x7fd30106c80f в main(): A
+Чтение по адресу 0x7fd30106cc0f в main(): A
+
+fault_handler_thread():
+    poll() вернул: nready = 1; POLLIN = 1; POLLERR = 0
+    событие UFFD_EVENT_PAGEFAULT: флаги = 0; адрес = 7fd30106d00f
+        (uffdio_copy.copy равно 4096)
+Чтение по адресу 0x7fd30106d00f в main(): B
+Чтение по адресу 0x7fd30106d40f в main(): B
+Чтение по адресу 0x7fd30106d80f в main(): B
+Чтение по адресу 0x7fd30106dc0f в main(): B
+
+fault_handler_thread():
+    poll() вернул: nready = 1; POLLIN = 1; POLLERR = 0
+    событие UFFD_EVENT_PAGEFAULT: флаги = 0; адрес = 7fd30106e00f
+        (uffdio_copy.copy равно 4096)
+Чтение по адресу 0x7fd30106e00f в main(): C
+Чтение по адресу 0x7fd30106e40f в main(): C
+Чтение по адресу 0x7fd30106e80f в main(): C
+Чтение по адресу 0x7fd30106ec0f в main(): C
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+/* userfaultfd_demo.c
+
+   распространяется по лицензии GNU General Public License version 2 и новее.
+*/
+#define _GNU_SOURCE
+#include <sys/types.h>
+#include <stdio.h>
+#include <linux/userfaultfd.h>
+#include <pthread.h>
+#include <errno.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <poll.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/syscall.h>
+#include <sys/ioctl.h>
+#include <poll.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+static int page_size;
+
+static void *
+fault_handler_thread(void *arg)
+{
+    static struct uffd_msg msg;   /* данные, прочитанные из userfaultfd */
+    static int fault_cnt = 0;     /* количество обработанных ошибок */
+    long uffd;                    /* файловый дескриптор userfaultfd */
+    static char *page = NULL;
+    struct uffdio_copy uffdio_copy;
+    ssize_t nread;
+
+    uffd = (long) arg;
+
+    /* создаём страницу, которая будет копироваться в ошибочную область */
+
+    if (page == NULL) {
+        page = mmap(NULL, page_size, PROT_READ | PROT_WRITE,
+                    MAP_PRIVATE | MAP_ANONYMOUS, \-1, 0);
+        if (page == MAP_FAILED)
+            errExit("mmap");
+    }
+
+    /* циклически обрабатываем входные сообщения в
+       файловом дескрипторе userfaultfd */
+
+    for (;;) {
+
+        /* С помощью poll() проверяем userfaultfd */
+
+        struct pollfd pollfd;
+        int nready;
+        pollfd.fd = uffd;
+        pollfd.events = POLLIN;
+        nready = poll(&pollfd, 1, \-1);
+        if (nready == \-1)
+            errExit("poll");
+
+        printf("\enfault_handler_thread():\en");
+        printf("    poll() вернул: nready = %d; "
+                "POLLIN = %d; POLLERR = %d\en", nready,
+                (pollfd.revents & POLLIN) != 0,
+                (pollfd.revents & POLLERR) != 0);
+
+        /* читаем событие из userfaultfd */
+
+        nread = read(uffd, &msg, sizeof(msg));
+        if (nread == 0) {
+            printf("EOF в userfaultfd!\en");
+            exit(EXIT_FAILURE);
+        }
+
+        if (nread == \-1)
+            errExit("read");
+
+        /* ожидаем только один тип событий; проверяем, что это так */
+
+        if (msg.event != UFFD_EVENT_PAGEFAULT) {
+            fprintf(stderr, "Неожидаемый тип события в userfaultfd\en");
+            exit(EXIT_FAILURE);
+        }
+
+        /* показываем информацию о событии страничной ошибки */
+
+        printf("    событие UFFD_EVENT_PAGEFAULT: ");
+        printf("флаги = %llx; ", msg.arg.pagefault.flags);
+        printf("адрес = %llx\en", msg.arg.pagefault.address);
+
+        /* копируем страницу, на которую указывает \(aqpage\(aq, в ошибочную
+           область. Меняем содержимое, которое копируем для того, чтобы
+           было более очевидно, что каждая ошибка обрабатывается отдельно. */
+
+        memset(page, \(aqA\(aq + fault_cnt % 20, page_size);
+        fault_cnt++;
+
+        uffdio_copy.src = (unsigned long) page;
+
+        /* мы должны обрабатывать страничные ошибки в единицах страниц(!).
+           поэтому округляем адрес ошибки по нижней границы страницы */
+
+        uffdio_copy.dst = (unsigned long) msg.arg.pagefault.address &
+                                           ~(page_size \- 1);
+        uffdio_copy.len = page_size;
+        uffdio_copy.mode = 0;
+        uffdio_copy.copy = 0;
+        if (ioctl(uffd, UFFDIO_COPY, &uffdio_copy) == \-1)
+            errExit("ioctl\-UFFDIO_COPY");
+
+        printf("        (uffdio_copy.copy равно %lld)\en",
+                uffdio_copy.copy);
+    }
+}
+
+int
+main(int argc, char *argv[])
+{
+    long uffd;          /* файловый дескриптор userfaultfd */
+    char *addr;         /* Начало области, обрабатываемое userfaultfd */
+    unsigned long len;  /* Размер области, обрабатываемой userfaultfd */
+    pthread_t thr;      /* ID нити, обрабатывающей страничные ошибки */
+    struct uffdio_api uffdio_api;
+    struct uffdio_register uffdio_register;
+    int s;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s количество\-страниц\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    page_size = sysconf(_SC_PAGE_SIZE);
+    len = strtoul(argv[1], NULL, 0) * page_size;
+
+    /* создаём и включаем объект userfaultfd */
+
+    uffd = syscall(__NR_userfaultfd, O_CLOEXEC | O_NONBLOCK);
+    if (uffd == \-1)
+        errExit("userfaultfd");
+
+    uffdio_api.api = UFFD_API;
+    uffdio_api.features = 0;
+    if (ioctl(uffd, UFFDIO_API, &uffdio_api) == \-1)
+        errExit("ioctl\-UFFDIO_API");
+
+    /* Копируем частное анонимное отображение. Память будет
+       выделена по требованию, то есть реально не выделяется. Когда мы
+       обратимся к памяти, она будет выделена с помощью
+       userfaultfd. */
+
+    addr = mmap(NULL, len, PROT_READ | PROT_WRITE,
+                MAP_PRIVATE | MAP_ANONYMOUS, \-1, 0);
+    if (addr == MAP_FAILED)
+        errExit("mmap");
+
+    printf("Адрес, возвращённый mmap() = %p\en", addr);
+
+    /* Регистрируем в объекте userfaultfd область памяти отображения
+       которое мы только что создали. Запрашиваем режим слежения
+       за отсутствующими страницами (т. е., которые пока не
+       были заполнены). */
+
+    uffdio_register.range.start = (unsigned long) addr;
+    uffdio_register.range.len = len;
+    uffdio_register.mode = UFFDIO_REGISTER_MODE_MISSING;
+    if (ioctl(uffd, UFFDIO_REGISTER, &uffdio_register) == \-1)
+        errExit("ioctl\-UFFDIO_REGISTER");
+
+    /* Создаём нить, которая будет обрабатывать события  userfaultfd */
+
+    s = pthread_create(&thr, NULL, fault_handler_thread, (void *) uffd);
+    if (s != 0) {
+        errno = s;
+        errExit("pthread_create");
+    }
+
+    /* Теперь главная нить обращается к памяти в отображении c
+       интервалом в 1024 байта. Это создаст события в userfaultfd
+       для всех страниц в области. */
+
+    int l;
+    l = 0xf;    /* Гарантируем, что ошибочный адрес не на границе
+                   страницы, чтобы протестировать что, мы правильно
+                   обрабатываем этот случай в fault_handling_thread() */
+    while (l < len) {
+        char c = addr[l];
+        printf("Чтение по адресу %p в main(): ", addr + l);
+        printf("%c\en", c);
+        l += 1024;
+        usleep(100000);         /* замедлим программу */
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfcntl\fP(2), \fBioctl\fP(2), \fBioctl_userfaultfd\fP(2), \fBmadvise\fP(2), \fBmmap\fP(2)
+.PP
+Файл \fIDocumentation/admin\-guide/mm/userfaultfd.rst\fP из дерева исходного
+кода ядра Linux
+.PP

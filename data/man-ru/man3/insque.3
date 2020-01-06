@@ -1,0 +1,243 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" peter memishian -- meem@gnu.ai.mit.edu
+.\" $Id: insque.3,v 1.2 1996/10/30 21:03:39 meem Exp meem $
+.\" and Copyright (c) 2010, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   Linux libc source code (5.4.7)
+.\"   Solaris 2.x, OSF/1, and HP-UX manpages
+.\"   Curry's "UNIX Systems Programming for SVR4" (O'Reilly & Associates 1996)
+.\"
+.\" Changed to POSIX, 2003-08-11, aeb+wh
+.\" mtk, 2010-09-09: Noted glibc 2.4 bug, added info on circular
+.\"	lists, added example program
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INSQUE 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+insque, remque \- добавляет/удаляет элемент очереди
+.SH ОБЗОР
+.nf
+\fB#include <search.h>\fP
+.PP
+\fBvoid insque(void *\fP\fIelem\fP\fB, void *\fP\fIprev\fP\fB);\fP
+.PP
+\fBvoid remque(void *\fP\fIelem\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBinsque\fP(), \fBremque\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _SVID_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функции \fBinsque\fP() и \fBremque\fP() предназначены для управления
+двунаправленными списками (doubly\-linked list). Каждый элемент такого списка
+представляет собой структуру, у которой первые два элемента являются
+указателями на следующий и предыдущий элементы. Двунаправленный список может
+быть линейным (linear), т.е. у последнего элемента списка указатель на
+следующий элемент равен NULL, а у первого элемента списка указатель на
+предыдущий элемент равен NULL, или закольцованным (circular).
+.PP
+Функция \fBinsque\fP() вставляет элемент, на который указывает \fIelem\fP, сразу
+за элементом, на который указывает \fIprev\fP.
+.PP
+Если список линейный, то вызов \fIinsque(elem, NULL)\fP можно использовать для
+вставки первого элемента списка; в этом случае значение указателей \fIelem\fP
+на следующий и предыдущий элементы устанавливается в NULL.
+.PP
+Если список закольцованный, то вызывающий должен убедиться, что указатели на
+следующий и предыдущий элементы первого элемента указывают на сам элемент, и
+аргумент \fIprev\fP вызова \fBinsque\fP() также должен указывать на элемент.
+.PP
+Функция \fBremque\fP() удаляет элемент, на который указывает \fIelem\fP из
+двунаправленного списка.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBinsque\fP(),
+\fBremque\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.\" e.g., SunOS, Linux libc4 and libc5
+В старинных системах аргументы этих функций имеют тип \fIstruct qelem *\fP:
+.PP
+.in +4n
+.EX
+struct qelem {
+    struct qelem *q_forw;
+    struct qelem *q_back;
+    char          q_data[1];
+};
+.EE
+.in
+.PP
+Эта структура всё ещё доступна, если определить \fB_GNU_SOURCE\fP перед
+включением \fI<search.h>\fP.
+.PP
+.\" Linux libc4 and libc 5 placed them
+.\" in \fI<stdlib.h>\fP.
+Расположение прототипов этих функций отличается в разных версиях
+UNIX. Показанное выше — вариант POSIX. В некоторых системах они расположены
+в \fI<string.h>\fP.
+.SH ДЕФЕКТЫ
+В glibc 2.4 и старее нельзя было указать \fIprev\fP равным NULL. В результате,
+чтобы создать линейный список, вызывающий должен был указывать в первом
+вызове первые два элемента списка, в которых указатели на следующий и
+предыдущий элементы были заполнены правильным образом.
+.SH ПРИМЕР
+Представленная ниже программа показывает использование \fBinsque\fP(). Пример
+работы программы:
+.PP
+.in +4n
+.EX
+$ \fB./a.out \-c a b c\fP
+Обходим весь список:
+    a
+    b
+    c
+Это закольцованный список
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <search.h>
+
+struct element {
+    struct element *forward;
+    struct element *backward;
+    char *name;
+};
+
+static struct element *
+new_element(void)
+{
+    struct element *e;
+
+    e = malloc(sizeof(struct element));
+    if (e == NULL) {
+        fprintf(stderr, "ошибка malloc()\en");
+        exit(EXIT_FAILURE);
+    }
+
+    return e;
+}
+
+int
+main(int argc, char *argv[])
+{
+    struct element *first, *elem, *prev;
+    int circular, opt, errfnd;
+
+    /* Параметр командной строки «\-c» используется для указания,
+       что это закольцованный список */
+
+    errfnd = 0;
+    circular = 0;
+    while ((opt = getopt(argc, argv, "c")) != \-1) {
+        switch (opt) {
+        case 'c':
+            circular = 1;
+            break;
+        default:
+            errfnd = 1;
+            break;
+        }
+    }
+
+    if (errfnd || optind >= argc) {
+        fprintf(stderr,  "Использование: %s [\-c] строка…\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /* Создаём первый элемент и помещаем его в связный список */
+
+    elem = new_element();
+    first = elem;
+
+    elem\->name = argv[optind];
+
+    if (circular) {
+        elem\->forward = elem;
+        elem\->backward = elem;
+        insque(elem, elem);
+    } else {
+        insque(elem, NULL);
+    }
+
+    /* Добавляем оставшиеся аргументы командной строки как
+       элементы списка */
+
+    while (++optind < argc) {
+        prev = elem;
+
+        elem = new_element();
+        elem\->name = argv[optind];
+        insque(elem, prev);
+    }
+
+    /* Обходим список с начала, выводя имена элементов */
+
+    printf("Обходим весь список:\en");
+    elem = first;
+    do {
+        printf("    %s\en", elem\->name);
+        elem = elem\->forward;
+    } while (elem != NULL && elem != first);
+
+    if (elem == first)
+        printf("Это закольцованный список\en");
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBqueue\fP(3)

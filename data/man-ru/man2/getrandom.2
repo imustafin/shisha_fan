@@ -1,0 +1,175 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2014, Theodore Ts'o <tytso@mit.edu>
+.\" Copyright (C) 2014,2015 Heinrich Schuchardt <xypron.glpk@gmx.de>
+.\" Copyright (C) 2015, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume.
+.\" no responsibility for errors or omissions, or for damages resulting.
+.\" from the use of the information contained herein.  The author(s) may.
+.\" not have taken the same level of care in the production of this.
+.\" manual, which is licensed free of charge, as they might when working.
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETRANDOM 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getrandom \- возвращает серию произвольных байт
+.SH ОБЗОР
+\fB#include <sys/random.h>\fP
+.PP
+\fBssize_t getrandom(void *\fP\fIbuf\fP\fB, size_t \fP\fIbuflen\fP\fB, unsigned int
+\fP\fIflags\fP\fB);\fP
+.SH ОПИСАНИЕ
+Системный вызов \fBgetrandom\fP() заполняет буфер, указанный в \fIbuf\fP,
+произвольными байтами в количестве до \fIbuflen\fP. Эти байты можно
+использовать как начальные значения в генераторах произвольных чисел
+пространства пользователя или с целями шифрования.
+.PP
+По умолчанию, \fBgetrandom\fP() забирает энтропию из источника \fIurandom\fP
+(т. е., того же источника что и устройство \fI/dev/urandom\fP). Это поведение
+можно изменить через параметр \fIflags\fP.
+.PP
+Если источник \fIurandom\fP инициализирован, то из него можно прочитать не
+более 256 байт, но всегда возвращается столько байт, сколько запрошено и это
+не будет прерываться сигналами. Для буферов большего размера это не
+гарантируется. Например, если вызов прерывается обработчиком сигнала, то он
+может вернуть частично заполненный буфер или завершиться с ошибкой \fBEINTR\fP.
+.PP
+Если источник \fIurandom\fP ещё не инициализирован, то вызов \fBgetrandom\fP()
+блокируется, если в \fIflags\fP не указано значение \fBGRND_NONBLOCK\fP.
+.PP
+Аргумент \fIflags\fP является битовой маской, которая может содержать ноль или
+более следующих флагов:
+.TP 
+\fBGRND_RANDOM\fP
+Если этот бит установлен, то произвольные байты берутся из источника
+\fIrandom\fP (т. е., того же источника что и устройство \fI/dev/urandom\fP), а не
+из источника \fIurandom\fP. Ограничение источника \fIrandom\fP следует из
+энтропии, которую можно получить из окружающего шума. Если количество
+доступных байт в \fIrandom\fP меньше запрашиваемых в \fIbuflen\fP, то вызов
+завершается сразу после выдачи всех доступных произвольных байт. Если
+произвольных байт нет, то поведение зависит от наличия флага
+\fBGRND_NONBLOCK\fP в параметре \fIflags\fP.
+.TP 
+\fBGRND_NONBLOCK\fP
+По умолчанию, при чтении из источника \fIrandom\fP вызов \fBgetrandom\fP()
+блокируется, если произвольные байты недоступны, и а при чтении из источника
+\fIurandom\fP блокируется, если ещё не инициализирован пул энтропии. Если
+указан флаг \fBGRND_NONBLOCK\fP, то в этих случаях \fBgetrandom\fP() не
+блокируется, а сразу возвращает \-1 и присваивает \fIerrno\fP значение
+\fBEAGAIN\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBgetrandom\fP() возвращает количество скопированных в
+буфер \fIbuf\fP байт. Это значение может быть меньше, чем количество
+запрашиваемых в \fIbuflen\fP байт, если в \fIflags\fP был указан \fBGRND_RANDOM\fP и
+нет достаточного  количества энтропии в источнике \fIrandom\fP, или если
+системный вызов был прерван сигналом.
+.PP
+В случае ошибки возвращается \-1 и значение \fIerrno\fP устанавливается
+соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Запрошенное количество энтропии недоступно, и \fBgetrandom\fP() заблокировался
+бы, если бы отсутствовал флаг \fBGRND_NONBLOCK\fP.
+.TP 
+\fBEFAULT\fP
+Адрес, указанный в \fIbuf\fP, лежит вне доступного адресного пространства.
+.TP 
+\fBEINTR\fP
+Вызов был прерван обработчиком сигнала; смотрите описание о прерывании
+вызовов \fBread\fP(2) при работе с «медленными» устройствами и при отсутствии
+флага \fBSA_RESTART\fP в справочной странице \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указан неверный флаг.
+.TP 
+\fBENOSYS\fP
+Обёрточная функция в glibc для \fBgetrandom\fP() определила, что используемое
+ядро не поддерживает данный системный вызов.
+.SH ВЕРСИИ
+Вызов \fBgetrandom\fP() появился в версии ядра Linux 3.17. Поддержка в glibc
+добавлена в версии 2.5.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Обзор и сравнение возможных интерфейсов, через которые можно получать
+случайные данные, смотрите в \fBrandom\fP(7).
+.PP
+.\"
+В отличие от \fI/dev/random\fP и \fI/dev/urandom\fP, в вызове \fBgetrandom\fP() не
+используются пути или файловые дескрипторы. Таким образом, \fBgetrandom\fP()
+полезен в случаях, когда \fBchroot\fP(2) делает пути \fI/dev\fP невидимыми и
+приложение (например, служба во время загрузки) закрывает файловый
+дескриптор одного из этих файлов, которые были открыты библиотекой.
+.SS "Возвращается максимальное количество байтов"
+На момент Linux 3.19 существуют следующие ограничения:
+.IP * 3
+При чтении из источника \fIurandom\fP в системах, где размер \fIint\fP равен 32
+битам, один вызов \fBgetrandom\fP() возвращает максимум 33554431 байт.
+.IP *
+При чтении из источника \fIrandom\fP возвращается максимум 512 байт.
+.SS "Прерывание обработчиком сигнала"
+При чтении из источника \fIurandom\fP (\fBGRND_RANDOM\fP не указан),
+\fBgetrandom\fP() блокируется до тех пор, пока не специализируется пул энтропии
+(если не указан флаг \fBGRND_NONBLOCK\fP). Если запрос требует большого
+количества байт (больше 256), \fBgetrandom\fP() будет заблокирован до тех пор,
+пока байты не будут сгенерированы и переданы из памяти ядра в \fIbuf\fP. При
+чтении из \fIrandom\fP (указан \fBGRND_RANDOM\fP), \fBgetrandom\fP() будет
+заблокирован до тех пор, пока какое\-то количество произвольных байт не
+станет доступно (если не указан флаг \fBGRND_NONBLOCK\fP).
+.PP
+Поведение при прерывании обработчиком сигнала вызова \fBgetrandom\fP(),
+заблокированного чтением источника \fIurandom\fP, зависит от состояния
+инициализации буфера энтропии и от запрашиваемого объёма \fIbuflen\fP. Если
+энтропия ещё не инициализирована, то вызов завершается ошибкой
+\fBEINTR\fP. Если пул энтропии инициализирован и запрашиваемый объём большой
+(\fIbuflen\fP\ >\ 256), то вызов или завершится успешно, вернув частично
+заполненный буфер, или завершится с ошибкой \fBEINTR\fP. Если пул энтропии
+инициализирован и запрашиваемый объём мал (\fIbuflen\fP\ <=\ 256), то
+\fBgetrandom\fP() завершится без ошибки \fBEINTR\fP. Вместо этого, он вернёт все
+запрашиваемый байты.
+.PP
+При чтении из источника \fIrandom\fP блокирующие запросы на любой объём могут
+быть прерваны обработчиком сигналом (вызов завершается с ошибкой \fBEINTR\fP).
+.PP
+Использование \fBgetrandom\fP() для чтения маленьких буферов (<=\ 256 байт)
+из источника \fIurandom\fP — предпочтительный способ использования.
+.PP
+Специальный режим для маленького объёма \fIbuflen\fP был разработан для
+совместимости с системным вызовом \fBgetentropy\fP(3) из OpenBSD, который
+теперь поддерживается glibc.
+.PP
+Пользователь \fBgetrandom\fP() всегда \fIдолжен\fP проверять возвращаемое
+значение, чтобы определить что возникла ошибка или возвращено меньшее
+количество запрошенных байт. В случае когда флаг \fBGRND_RANDOM\fP не указан и
+значение \fIbuflen\fP меньше или равно 256, возврат меньшего количества байт
+чем запрошено никогда не происходит, но осторожный программист всегда
+проверяет значение!
+.SH ДЕФЕКТЫ
+.\" FIXME patch proposed https://lkml.org/lkml/2014/11/29/16
+В Linux 3.19 существуют следующие дефекты:
+.IP * 3
+В зависимости от загруженности ЦП, \fBgetrandom\fP() не реагирует на
+прерывания, пока не прочитает все запрашиваемые байты.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetentropy\fP(3), \fBrandom\fP(4), \fBurandom\fP(4), \fBrandom\fP(7), \fBsignal\fP(7)

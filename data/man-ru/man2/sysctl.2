@@ -1,0 +1,157 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1996 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Written 11 April 1996 by Andries Brouwer <aeb@cwi.nl>
+.\" 960412: Added comments from Stephen Tweedie
+.\" Modified Tue Oct 22 22:28:41 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Mon Jan  5 20:31:04 1998 by aeb.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSCTL 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sysctl \- читает/записывает параметры системы
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+\fB#include <linux/sysctl.h>\fP
+.PP
+\fBint _sysctl(struct __sysctl_args *\fP\fIargs\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+\fBНе используйте этот системный вызов!\fP Смотрите ЗАМЕЧАНИЯ.
+.PP
+Системный вызов \fB_sysctl\fP считывает и/или изменяет параметры ядра. К ним
+относятся, например, имя машины или максимальное количество открытых
+файлов. Параметр имеет следующую структуру:
+.PP
+.in +4n
+.EX
+struct __sysctl_args {
+    int    *name;    /* целочисленный вектор, описывающий
+                        переменную */
+    int     nlen;    /* длина этого вектора */
+    void   *oldval;  /* 0 или адрес старого значения */
+    size_t *oldlenp; /* размер старого значения, заменяется
+                        реальным размером старого значения */
+    void   *newval;  /* 0 или адрес нового значения */
+    size_t  newlen;  /* размер нового значения */
+};
+.EE
+.in
+.PP
+Этот вызов производит поиск в древовидной структуре, возможно, похожей на
+структуру каталогов \fI/proc/sys\fP, и, если запрашиваемый элемент найден,
+вызывает соответствующую процедуру, читающую или изменяющую значение.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fB_sysctl\fP() возвращает 0. При ошибке возвращается
+\-1, а переменной \fIerrno\fP присваивается номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP, \fBEPERM\fP
+Нет прав на поиск в одном из встретившихся «каталогов» или нет прав на
+чтение, если \fIoldval\fP не равно нулю; или нет прав на запись, если \fInewval\fP
+не равно нулю.
+.TP 
+\fBEFAULT\fP
+Был сделан запрос предыдущего значения путём установки не\-NULL значения
+\fIoldval\fP, но размер места под него в \fIoldlenp\fP равен нулю.
+.TP 
+\fBENOTDIR\fP
+\fIname\fP не найден.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Этот вызов есть только в Linux и не должен использоваться в переносимых
+программах. Вызов \fBsysctl\fP() впервые появился в Linux 1.3.57. Впервые он
+появился в 4.4BSD. Только в Linux существует зеркало \fI/proc/sys\fP, и схемы
+именования объектов в Linux и 4.4BSD различаются, но объявление функции
+\fBsysctl\fP() одинаково в обеих системах.
+.SH ЗАМЕЧАНИЯ
+.\" See http://lwn.net/Articles/247243/
+.\" Though comments in suggest that it is needed by old glibc binaries,
+.\" so maybe it's not going away.
+В glibc отсутствует обёрточная функция для этого системного вызова;
+вызывайте его через \fBsyscall\fP(2).  Или лучше \fIсовсем\fP не используйте:
+использование данного системного вызова уже давно не рекомендуется и он так
+всем не нравится, что, \fBвероятно, исчезнет в новой версии ядра\fP. Начиная с
+Linux 2.6.24, при использовании данного системного вызова записывается
+предупреждение в журнал ядра. Удалите вызов из своих программ прямо сейчас;
+вместо него используйте интерфейс \fI/proc/sys\fP.
+.PP
+Данный системный вызов доступен только, если ядро было собрано с параметром
+\fBCONFIG_SYSCTL_SYSCALL\fP.
+.SH ДЕФЕКТЫ
+Названия объектов различаются в разных версиях ядра, что делает данный вызов
+в приложениях бесполезным.
+.PP
+Не все существующие объекты описаны соответствующим образом.
+.PP
+В настоящее время невозможно изменить тип операционной системы путём записи
+в файл \fI/proc/sys/kernel/ostype\fP.
+.SH ПРИМЕР
+.EX
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <linux/sysctl.h>
+
+int _sysctl(struct __sysctl_args *args );
+
+#define OSNAMESZ 100
+
+int
+main(void)
+{
+    struct __sysctl_args args;
+    char osname[OSNAMESZ];
+    size_t osnamelth;
+    int name[] = { CTL_KERN, KERN_OSTYPE };
+
+    memset(&args, 0, sizeof(struct __sysctl_args));
+    args.name = name;
+    args.nlen = sizeof(name)/sizeof(name[0]);
+    args.oldval = osname;
+    args.oldlenp = &osnamelth;
+
+    osnamelth = sizeof(osname);
+
+    if (syscall(SYS__sysctl, &args) == \-1) {
+        perror("_sysctl");
+        exit(EXIT_FAILURE);
+    }
+    printf("Эта машина работает в %*s\en", osnamelth, osname);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBproc\fP(5)

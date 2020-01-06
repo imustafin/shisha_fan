@@ -1,0 +1,131 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1991, 1993
+.\"     The Regents of the University of California.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"     This product includes software developed by the University of
+.\"     California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)rexec.3     8.1 (Berkeley) 6/4/93
+.\" $FreeBSD: src/lib/libcompat/4.3/rexec.3,v 1.12 2004/07/02 23:52:14 ru Exp $
+.\"
+.\" Taken from FreeBSD 5.4; not checked against Linux reality (mtk)
+.\"
+.\" 2013-06-21, mtk, Converted from mdoc to man macros
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH REXEC 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+rexec, rexec_af \- возвращает поток удалённой команде
+.SH ОБЗОР
+.nf
+\fB#include <netdb.h>\fP
+.PP
+\fBint rexec(char **\fP\fIahost\fP\fB, int \fP\fIinport\fP\fB, const char *\fP\fIuser\fP\fB, \fP
+\fB          const char *\fP\fIpasswd\fP\fB, const char *\fP\fIcmd\fP\fB, int *\fP\fIfd2p\fP\fB);\fP
+.PP
+\fBint rexec_af(char **\fP\fIahost\fP\fB, int \fP\fIinport\fP\fB, const char *\fP\fIuser\fP\fB, \fP
+\fB             const char *\fP\fIpasswd\fP\fB, const char *\fP\fIcmd\fP\fB, int *\fP\fIfd2p\fP\fB,\fP
+\fB             sa_family_t \fP\fIaf\fP\fB);\fP
+.fi
+.PP
+\fBrexec\fP(), \fBrexec_af\fP():
+.nf
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc до версии 2.19 включительно:
+        _BSD_SOURCE
+.fi
+.SH ОПИСАНИЕ
+Этот интерфейс устарел, используйте \fBrcmd\fP(3).
+.PP
+Функция \fBrexec\fP() ищет узел \fI*ahost\fP, используя \fBgethostbyname\fP(3), и
+возвращает \-1, если узел не существует. В противном случае, \fI*ahost\fP
+присваивается стандартное имя узла. Если указаны имя пользователя и пароль,
+то они используются для аутентификации на другом узле; иначе происходит
+поиск соответствующей информации в окружении и затем в файле \fI.netrc\fP,
+находящемся в домашнем каталоге пользователя. Если всё это заканчивается с
+ошибкой, пользователь извещается об этом.
+.PP
+В \fIinport\fP указывается, какой хорошо известный (well\-known) порт DARPA
+Internet нужно использовать для подключения; вызов \fIgetservbyname("exec",
+"tcp")\fP (смотрите \fBgetservent\fP(3)) вернёт указатель на структуру, которая
+содержит необходимый порт. Протокол подключения подробно описан в
+\fBrexecd\fP(8).
+.PP
+Если соединение успешно установлено, то вызывающему возвращается сокет в
+Интернет\-домене типа \fBSOCK_STREAM\fP, который для удалённой команды считается
+\fIstdin\fP и \fIstdout\fP. Если \fIfd2p\fP не равно нулю, то устанавливается
+вспомогательный канал до управляющего процесса, а его файловый дескриптор
+будет помещён в \fI*fd2p\fP. Управляющий процесс возвращает диагностический
+вывод из команды (устройства 2) в этот канал, а также принимает байты из
+этого канала, считая их номерами сигналов UNIX, для их пересылки группе
+процессов команды. Возвращаемая диагностическая информация не содержит
+ошибки удалённой авторизации, так как второе подключение устанавливается
+после прохождения авторизации. Если \fIfd2p\fP равно 0, то \fIstderr\fP
+(устройство 2 удалённой команды) будет работать аналогично \fIstdout\fP и для
+отправки произвольных сигналов в удалённый процесс ничего не будет сделано,
+хотя вы сможете привлечь к себе внимание, используя внеполосную передачу
+данных.
+.SS rexec_af()
+Функция \fBrexec\fP() работает по протоколу IPv4 (\fBAF_INET\fP). В отличие от
+неё, \fBrexec_af\fP() предоставляет ещё один аргумент, \fIaf\fP, который позволяет
+вызывающему выбрать протокол. В этом аргументе можно указать значения
+\fBAF_INET\fP, \fBAF_INET6\fP или \fBAF_UNSPEC\fP (чтобы позволить реализации
+выбирать протокол).
+.SH ВЕРСИИ
+Функция \fBrexec_af\fP() впервые появилась в glibc 2.2.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw19 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBrexec\fP(),
+\fBrexec_af\fP()
+T}	Безвредность в нитях	MT\-Unsafe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции отсутствуют в POSIX.1. Функция \fBrexec\fP() впервые появилась в
+4.2BSD, и есть в разных BSD, Solaris и других системах. Функция
+\fBrexec_af\fP() более новая и распространена гораздо меньше.
+.SH ДЕФЕКТЫ
+Функция \fBrexec\fP() посылает пароль через сеть в нешифрованном виде.
+.PP
+Считается, что лежащая в основе служба является большой дырой в
+безопасности, и поэтому не включена на большинстве сайтов; смотрите
+объяснение в \fBrexecd\fP(8).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBrcmd\fP(3), \fBrexecd\fP(8)

@@ -1,0 +1,132 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1980, 1991 Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)alloca.3	5.1 (Berkeley) 5/2/91
+.\"
+.\" Converted Mon Nov 29 11:05:55 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Oct 22 23:41:56 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2002-07-17, aeb
+.\" 2008-01-24, mtk:
+.\"     Various rewrites and additions (notes on longjmp() and SIGSEGV).
+.\"     Weaken warning against use of alloca() (as per Debian bug 461100).
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ALLOCA 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+alloca \- выделяет память, которая будет высвобождена автоматически
+.SH ОБЗОР
+\fB#include <alloca.h>\fP
+.PP
+\fBvoid *alloca(size_t \fP\fIsize\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функция \fBalloca\fP() выделяет \fIsize\fP байтов памяти в стековом кадре
+вызывающего. Это временное хранилище данных автоматически освобождается
+после возврата из функции, вызвавшей \fBalloca\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBalloca\fP() возвращает указатель на начало выделенной памяти. Если
+выделение памяти привело к переполнению стека, то дальнейшее поведение
+программы не определено.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBalloca\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данная функция отсутствует в POSIX.1.
+.PP
+Очевидно, что данная функция \fBalloca\fP() существует в 32V, PWB, PWB.2, 3BSD
+и 4BSD. Это можно понять по наличию соответствующей справочной страницы в
+4.3BSD. В Linux используется версия GNU.
+.SH ЗАМЕЧАНИЯ
+Работа функции \fBalloca\fP() зависит от машины и компилятора. В некоторых
+приложениях её использование может повысить эффективность (если сравнивать с
+\fBmalloc\fP(3) плюс \fBfree\fP(3)). В определённых случаях она также может
+упростить высвобождение памяти в приложениях, использующих \fBlongjmp\fP(3) или
+\fBsiglongjmp\fP(3). Но лучше её не использовать.
+.PP
+Так как пространство, выделяемое \fBalloca\fP(), берётся из стекового кадра, то
+оно автоматически освобождается, когда возврат из функции производится
+вызовом \fBlongjmp\fP(3) или \fBsiglongjmp\fP(3).
+.PP
+Пространство, распределённое \fBalloca\fP(), автоматически \fIне\fP освобождается,
+если указатель, который на него ссылается, просто выходит из обращения.
+.PP
+Не пытайтесь освободить место, выделенное \fBalloca\fP(), с помощью \fBfree\fP(3)!
+.SS "Замечания для версии GNU"
+Обычно, \fBgcc\fP(1) встраивает код \fBalloca\fP() в место вызова. Это не
+делается, если был указан параметр \fI\-ansi\fP, \fI\-std=c89\fP, \fI\-std=c99\fP или
+\fI\-std=c11\fP \fBи\fP заголовочный файл \fI<alloca.h>\fP не включается. В
+противном случае (без параметра \-ansi или \-std=c*) версия glibc файла
+\fI<stdlib.h>\fP включает \fI<alloca.h>\fP, который содержит
+строки:
+.PP
+.in +4n
+.EX
+#ifdef  __GNUC__
+#define alloca(size)   __builtin_alloca (size)
+#endif
+.EE
+.in
+.PP
+что приводит к множеству неприятных последствий, если у кого\-то есть своя
+версия этой функции.
+.PP
+Тот факт, что код встраивается, означает, что будет невозможно получить
+адрес этой функции или изменить её поведение посредством компоновки с другой
+библиотекой.
+.PP
+Встраиваемый код часто представляет собой одну инструкцию, корректирующую
+указатель стека и не отслеживающую переполнение стека. Поэтому при ошибке
+невозможно получить NULL.
+.SH ДЕФЕКТЫ
+Если стековый кадр не может быть расширен, то никакой ошибки также не
+возвращается (однако, после неудачного выделения программа, вероятно,
+получит сигнал \fBSIGSEGV\fP при попытке доступа к не выделенному
+пространству).
+.PP
+Во многих системах \fBalloca\fP() не может быть использована в списке
+аргументов вызова функции, так как пространство под стек, зарезервированное
+\fBalloca\fP(), возникло бы между аргументами функции.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbrk\fP(2), \fBlongjmp\fP(3), \fBmalloc\fP(3)

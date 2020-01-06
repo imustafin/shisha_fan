@@ -1,0 +1,82 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Written by Ralf Baechle (ralf@waldorf-gmbh.de),
+.\" Copyright (c) 1994, 1995 Waldorf GMBH
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CACHEFLUSH 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+cacheflush \- выталкивает содержимое кэша инструкций и/или данных
+.SH ОБЗОР
+.nf
+\fB#include <asm/cachectl.h>\fP
+.PP
+\fBint cacheflush(char *\fP\fIaddr\fP\fB, int \fP\fInbytes\fP\fB, int \fP\fIcache\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fBcacheflush\fP() выталкивает содержимое указанного кэша(ей) обратно в
+пользовательское адресное пространство в диапазоне с \fIaddr\fP по
+\fI(addr+nbytes\-1)\fP. Параметр \fIcache\fP может принимать одно из значений:
+.TP 
+\fBICACHE\fP
+Выталкивает кэш инструкций.
+.TP 
+\fBDCACHE\fP
+Записать обратно в память и объявить недействительными задетые достоверные
+строки кэша.
+.TP 
+\fBBCACHE\fP
+Тоже что и \fB(ICACHE|DCACHE)\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном завершении \fBcacheflush\fP() возвращает 0 или \-1 при ошибке. Если
+обнаружены ошибки, то \fIerrno\fP будет содержать номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Некоторая часть или весь диапазон адресов с \fIaddr\fP по \fI(addr+nbytes\-1)\fP
+недоступен.
+.TP 
+\fBEINVAL\fP
+Значение \fIcache\fP не равно \fBICACHE\fP, \fBDCACHE\fP или \fBBCACHE\fP (но смотрите
+ДЕФЕКТЫ).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+В прошлом, данный системный вызов был доступен во всех вариантах UNIX на
+MIPS включая RISC/os, IRIX, Ultrix, NetBSD, OpenBSD и FreeBSD (и также в
+некоторых ОС не\-UNIX MIPS), поэтому существование этого вызова в ОС на MIPS
+является стандартом де\-факто.
+.SS Предостережение
+Вызов \fBcacheflush\fP() не должен использоваться в переносимых программах. В
+Linux, этот вызов сперва появился на архитектуре MIPS, но в настоящее время
+Linux предоставляет системный вызов \fBcacheflush\fP() и на других
+архитектурах, но с другими аргументами.
+.SH ДЕФЕКТЫ
+Ядра Linux до версии 2.6.11 игнорируют аргументы \fIaddr\fP и \fInbytes\fP, что
+делает этот вызов относительно дорогим — всегда очищается весь кэш.
+.PP
+Данный вызов всегда поступает так, как если бы в аргументе \fIcache\fP
+передавалось значение \fBBCACHE\fP, и не выполняет проверку ошибочности
+значения \fIcache\fP.

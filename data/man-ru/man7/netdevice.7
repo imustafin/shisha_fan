@@ -1,0 +1,295 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" This man page is Copyright (C) 1999 Andi Kleen <ak@muc.de>.
+.\"
+.\" %%%LICENSE_START(VERBATIM_ONE_PARA)
+.\" Permission is granted to distribute possibly modified copies
+.\" of this page provided the header is included verbatim,
+.\" and in case of nontrivial modification author and date
+.\" of the modification is added to the header.
+.\" %%%LICENSE_END
+.\"
+.\" $Id: netdevice.7,v 1.10 2000/08/17 10:09:54 ak Exp $
+.\"
+.\" Modified, 2004-11-25, mtk, formatting and a few wording fixes
+.\"
+.\" Modified, 2011-11-02, <bidulock@openss7.org>, added many basic
+.\"  but missing ioctls, such as SIOCGIFADDR.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NETDEVICE 7 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+netdevice \- низкоуровневый доступ к сетевым устройствам Linux
+.SH ОБЗОР
+\fB#include <sys/ioctl.h>\fP
+.br
+\fB#include <net/if.h>\fP
+.SH ОПИСАНИЕ
+В этой справочной странице описан интерфейс сокетов, используемый для
+настройки сетевых устройств.
+.PP
+Linux поддерживает несколько стандартных вызовов ioctl для настройки сетевых
+устройств. Они могут применяться для любого файлового дескриптора сокета
+независимо от семейства или типа сокета. В качестве параметра большинство из
+них передаёт структуру \fIifreq\fP:
+.PP
+.in +4n
+.EX
+struct ifreq {
+    char ifr_name[IFNAMSIZ]; /* имя интерфейса */
+    union {
+        struct sockaddr ifr_addr;
+        struct sockaddr ifr_dstaddr;
+        struct sockaddr ifr_broadaddr;
+        struct sockaddr ifr_netmask;
+        struct sockaddr ifr_hwaddr;
+        short           ifr_flags;
+        int             ifr_ifindex;
+        int             ifr_metric;
+        int             ifr_mtu;
+        struct ifmap    ifr_map;
+        char            ifr_slave[IFNAMSIZ];
+        char            ifr_newname[IFNAMSIZ];
+        char           *ifr_data;
+    };
+};
+.EE
+.in
+.PP
+Обычно, пользователь указывает имя нужного устройства в \fIifr_name\fP. Все
+остальные поля структуры могут занимать единое пространство в памяти.
+.SS "Вызовы ioctl"
+Если указано, вызов ioctl считается привилегированным, то для его
+использования необходимо иметь эффективный идентификатор пользователя 0 или
+мандат \fBCAP_NET_ADMIN\fP. В противном случае будет возвращено значение
+\fBEPERM\fP.
+.TP 
+\fBSIOCGIFNAME\fP
+Возвращает в \fIifr_name\fP имя интерфейса для заданного индекса
+\fIifr_ifindex\fP. Это единственный вызов ioctl, возвращающий результат в
+\fIifr_name\fP.
+.TP 
+\fBSIOCGIFINDEX\fP
+Возвращает индекс интерфейса в \fIifr_ifindex\fP.
+.TP 
+\fBSIOCGIFFLAGS\fP, \fBSIOCSIFFLAGS\fP
+.\" Do not right adjust text blocks in tables
+Считывает или устанавливает слово флагов устройства. В \fIifr_flags\fP
+содержится битовая маска из следующих значений:
+.na
+.TS
+tab(:);
+c s
+l l.
+Флаги устройства
+IFF_UP:Интерфейс активен.
+IFF_BROADCAST:Установлен правильный широковещательный адрес.
+IFF_DEBUG:Флаг внутренней отладки.
+IFF_LOOPBACK:Интерфейс является устройством обратной петли.
+IFF_POINTOPOINT:Интерфейс является соединением точка\-точка.
+IFF_RUNNING:Ресурсы выделены.
+IFF_NOARP:T{
+Нет протокола arp, адрес назначения 2\-ого уровня (L2) не установлен.
+T}
+IFF_PROMISC:Интерфейс в режиме прослушки (promiscuous).
+IFF_NOTRAILERS:Избегать использования концевиков (trailers).
+IFF_ALLMULTI:Принимать все многоадресные пакеты.
+IFF_MASTER:Мастер в связке балансирования нагрузки.
+IFF_SLAVE:Подчинённый в связке балансирования нагрузки.
+IFF_MULTICAST:Поддержка многоадресной передачи.
+IFF_PORTSEL:Может выбирать тип среды с помощью ifmap.
+IFF_AUTOMEDIA:Запущен автоматический выбор среды.
+IFF_DYNAMIC:T{
+Адреса теряются, если интерфейс становится неактивным.
+T}
+IFF_LOWER_UP:Сигналы драйвера L1 указывают на включение интерфейса (начиная с Linux 2.6.17).
+IFF_DORMANT:Сигналы драйвера указывают на неактивность интерфейса (начиная с Linux 2.6.17).
+IFF_ECHO:Посылать пакеты echo (начиная с Linux 2.6.25).
+.TE
+.ad
+.PP
+Установка флага в слове флагов является привилегированной операцией, но
+считывать его может любой процесс.
+.TP 
+\fBSIOCGIFPFLAGS\fP, \fBSIOCSIFPFLAGS\fP
+Считает или устанавливает (индивидуальные) флаги устройства. Значение
+\fIifr_flags\fP представляет собой битовую маску следующих значений:
+.TS
+tab(:);
+c s
+l l.
+Индивидуальные флаги
+IFF_802_1Q_VLAN:Интерфейс является устройством 802.1Q VLAN.
+IFF_EBRIDGE:Интерфейс является устройством моста Ethernet.
+IFF_SLAVE_INACTIVE:Интерфейс является неактивным подчинённым в связке балансирования нагрузки.
+IFF_MASTER_8023AD:Интерфейс является мастером в связке балансирования нагрузки 802.3ad.
+IFF_MASTER_ALB:Интерфейс является мастером связки балансирования нагрузки в режиме balanced\-alb.
+IFF_BONDING:Интерфейс является мастером или подчинённым в связке балансирования нагрузки.
+IFF_SLAVE_NEEDARP:Интерфейсу требуется ARP для проверки.
+IFF_ISATAP:Интерфейс является интерфейсом RFC4214 ISATAP.
+.TE
+.PP
+Установка расширенных (индивидуальных) флагов интерфейса является
+привилегированной операцией.
+.TP 
+\fBSIOCGIFADDR\fP, \fBSIOCSIFADDR\fP
+Назначает или получает адрес устройства с помощью \fIifr_addr\fP. Назначение
+адреса интерфейса является привилегированной операцией. Для совместимости,
+принимаются или возвращаются только адреса семейства \fBAF_INET\fP.
+.TP 
+\fBSIOCGIFDSTADDR\fP, \fBSIOCSIFDSTADDR\fP
+Назначает или получает адрес назначения устройства точка\-точка с помощью
+\fIifr_dstaddr\fP. Для совместимости, принимаются или возвращаются только
+адреса семейства \fBAF_INET\fP. Присвоение адреса назначения является
+привилегированной операцией.
+.TP 
+\fBSIOCGIFBRDADDR\fP, \fBSIOCSIFBRDADDR\fP
+Назначает или получает широковещательный адрес устройства с помощью
+\fIifr_brdaddr\fP. Для совместимости, принимаются или возвращаются только
+адреса семейства \fBAF_INET\fP. Присвоение широковещательного адреса является
+привилегированной операцией.
+.TP 
+\fBSIOCGIFNETMASK\fP, \fBSIOCSIFNETMASK\fP
+Назначает или получает маску сети устройства с помощью \fIifr_netmask\fP. Для
+совместимости, принимаются или возвращаются только адреса семейства
+\fBAF_INET\fP. Назначение маски сети адреса является привилегированной
+операцией.
+.TP 
+\fBSIOCGIFMETRIC\fP, \fBSIOCSIFMETRIC\fP
+Считывает или устанавливает метрику устройства с помощью \fIifr_metric\fP. В
+данный момент возможность не реализована; при считывании \fIifr_metric\fP
+присваивается значение, равное нулю, а при попытке установки возвращается
+значение \fBEOPNOTSUPP\fP.
+.TP 
+\fBSIOCGIFMTU\fP, \fBSIOCSIFMTU\fP
+Считывает или устанавливает MTU (Maximum Transfer Unit — максимальную порцию
+данных) с помощью \fIifr_mtu\fP. Установка MTU является привилегированной
+операцией. Установка слишком маленьких значений может привести к авариям в
+ядре.
+.TP 
+\fBSIOCGIFHWADDR\fP, \fBSIOCSIFHWADDR\fP
+Считывает или устанавливает аппаратный адрес устройства с помощью
+\fIifr_hwaddr\fP. Аппаратный адрес задаётся в структуре \fIsockaddr\fP. В
+\fIsa_family\fP содержится тип устройства ARPHRD_*, в \fIsa_data\fP содержится
+аппаратный адрес L2, начиная с байта 0. Установка аппаратного адреса
+является привилегированной операцией.
+.TP 
+\fBSIOCSIFHWBROADCAST\fP
+Устанавливает аппаратный широковещательный адрес устройства с помощью
+\fIifr_hwaddr\fP. Это привилегированная операция.
+.TP 
+\fBSIOCGIFMAP\fP, \fBSIOCSIFMAP\fP
+Считывает или устанавливает аппаратные параметры интерфейса с помощью
+\fIifr_map\fP. Установка параметров является привилегированной операцией.
+.IP
+.in +4n
+.EX
+struct ifmap {
+    unsigned long   mem_start;
+    unsigned long   mem_end;
+    unsigned short  base_addr;
+    unsigned char   irq;
+    unsigned char   dma;
+    unsigned char   port;
+};
+.EE
+.in
+.IP
+Назначение структуры ifmap зависит от драйвера устройства и архитектуры
+системы.
+.TP 
+\fBSIOCADDMULTI\fP, \fBSIOCDELMULTI\fP
+Добавляет или удаляет адрес из фильтров многоадресной передачи уровня связи
+устройства с помощью \fIifr_hwaddr\fP. Это привилегированная
+операция. Альтернативный способ приведен в \fBpacket\fP(7).
+.TP 
+\fBSIOCGIFTXQLEN\fP, \fBSIOCSIFTXQLEN\fP
+Считывает или устанавливает размер очереди передачи устройства с помощью
+\fIifr_qlen\fP. Установка размера очереди передачи является привилегированной
+операцией.
+.TP 
+\fBSIOCSIFNAME\fP
+Изменяет имя интерфейса, указанное в \fIifr_name\fP, на \fIifr_newname\fP. Это
+привилегированная операция. Она разрешена только тогда, когда интерфейс не
+активен.
+.TP 
+\fBSIOCGIFCONF\fP
+Возвращает список адресов (транспортного уровня) интерфейсов. В настоящее
+время, сюда входят только адреса семейства \fBAF_INET\fP (IPv4), для
+совместимости. В отличии от других, данный ioctl передаёт структуру
+\fIifconf\fP:
+.IP
+.in +4n
+.EX
+struct ifconf {
+    int                 ifc_len; /* размер буфера */
+    union {
+        char           *ifc_buf; /* адрес буфера */
+        struct ifreq   *ifc_req; /* массив структур */
+    };
+};
+.EE
+.in
+.IP
+Если \fIifc_req\fP равно NULL, то \fBSIOCGIFCONF\fP возвращает необходимый размер
+буфера в байтах для приёма всех доступных адресов в \fIifc_len\fP. В противном
+случае \fIifc_req\fP содержит указатель на массив структур \fIifreq\fP, который
+будет заполнен адресами всех активных интерфейсов L3. В \fIifc_len\fP
+содержится размер массива в байтах. Внутри каждой структуры \fIifreq\fP в
+\fIifr_name\fP будет записано имя интерфейса, а в \fIifr_addr\fP — адрес. Реальное
+количество переданных байт возвращается в \fIifc_len\fP.
+.IP
+Если размера, указанного в \fIifc_len\fP, недостаточно для сохранения всех
+адресов, то ядро не запишет не поместившиеся и сообщит об успешном
+выполнении. Не существует надёжного способа обнаружения возникновения такой
+ситуации. Поэтому рекомендуется или сначала определить необходимый размер
+буфера вызовом \fBSIOCGIFCONF\fP с значением \fIifc_req\fP равным NULL, или
+повторить вызов с большим буфером и проверить не отличается ли \fIifc_len\fP на
+менее чем \fIsizeof(struct ifreq)\fP от первого значения.
+.IP
+.\" Slaving isn't supported in 2.2
+.\" .
+.\" .TP
+.\" .BR SIOCGIFSLAVE ", " SIOCSIFSLAVE
+.\" Get or set the slave device using
+.\" .IR ifr_slave .
+.\" Setting the slave device is a privileged operation.
+.\" .PP
+.\" FIXME . add amateur radio stuff.
+Если произошла ошибка доступа к структуре \fIifconf\fP или \fIifreq\fP, то
+возвращается \fBEFAULT\fP.
+.PP
+Большинство протоколов поддерживают свои собственные вызовы ioctl для
+настройки предназначенных только для протокола параметров
+интерфейса. Подробности приведены в справочных страницах
+протоколов. Настройка адресов IP описывается в \fBip\fP(7).
+.PP
+В дополнение ко всему, некоторые устройства поддерживают индивидуальные
+(private) вызовы ioctl. Здесь они не описаны.
+.SH ЗАМЕЧАНИЯ
+Строго говоря, \fBSIOCGIFCONF\fP и другие вызовы ioctl, которые принимают или
+возвращают только адреса сокетов \fBAF_INET\fP, работают только с IP и
+принадлежат \fBip\fP(7).
+.PP
+Имена интерфейсов, не имеющих адресов или установленного флага
+\fBIFF_RUNNING\fP, можно определить с помощью \fI/proc/net/dev\fP.
+.PP
+Локальные IP\-адреса IPv6 можно найти в /proc/net или по \fBrtnetlink\fP(7).
+.SH ДЕФЕКТЫ
+В glibc 2.1 отсутствует макрос \fIifr_newname\fP в файле
+\fI<net/if.h>\fP. Добавьте следующие строки в вашу программу (чтобы
+обойти это):
+.PP
+.in +4n
+.EX
+#ifndef ifr_newname
+#define ifr_newname     ifr_ifru.ifru_slave
+#endif
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBproc\fP(5), \fBcapabilities\fP(7), \fBip\fP(7), \fBrtnetlink\fP(7)

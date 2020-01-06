@@ -1,0 +1,149 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2009 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TIMER_SETTIME 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+timer_settime, timer_gettime \- запускает/останавливает и возвращает
+состояние таймера POSIX некоторого процесса
+.SH ОБЗОР
+.nf
+\fB#include <time.h>\fP
+.PP
+\fBint timer_settime(timer_t \fP\fItimerid\fP\fB, int \fP\fIflags\fP\fB,\fP
+\fB                  const struct itimerspec *\fP\fInew_value\fP\fB,\fP
+\fB                  struct itimerspec *\fP\fIold_value\fP\fB);\fP
+\fBint timer_gettime(timer_t \fP\fItimerid\fP\fB, struct itimerspec *\fP\fIcurr_value\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBtimer_settime\fP(), \fBtimer_gettime\fP(): _POSIX_C_SOURCE\ >=\ 199309L
+.SH ОПИСАНИЕ
+Вызов \fBtimer_settime\fP() запускает или останавливает таймер, указанный в
+\fItimerid\fP. Аргумент \fInew_value\fP — это указатель на структуру
+\fIitimerspec\fP, которая определяет новое начальное значение и новый интервал
+таймера. Структура \fIitimerspec\fP определена следующим образом:
+.PP
+.in +4n
+.EX
+struct timespec {
+    time_t tv_sec;                /* секунды */
+    long   tv_nsec;               /* наносекунды */
+};
+
+struct itimerspec {
+    struct timespec it_interval;  /* интервал таймера */
+    struct timespec it_value;     /* первое срабатывание */
+};
+.EE
+.in
+.PP
+Каждая подструктура структуры \fIitimerspec\fP представляет собой структуру
+\fItimespec\fP, которая позволяет задавать значение времени в секундах и
+наносекундах. Эти значения времени отсчитываются по часам, которые были
+указаны при создании таймера с помощью \fBtimer_create\fP(2).
+.PP
+Если \fInew_value\->it_value\fP равно ненулевому значению (т. е., любое из
+подполей не равно нулю), то \fBtimer_settime\fP() запускает таймер,
+устанавливая ему первое время срабатывания (если таймер уже запущен, то
+предыдущие параметры перезаписываются). Если \fInew_value\->it_value\fP
+равно нулю (т. е., оба подполя равны нулю), то таймер выключается.
+.PP
+В поле \fInew_value\->it_interval\fP указывается период таймера в секундах и
+наносекундах. Если это поле равно нулю, то каждый раз, когда таймер
+срабатывает, он перезапускается со значением, указанным в
+\fInew_value\->it_interval\fP. Если \fInew_value\->it_interval\fP равно
+нулю, то таймер срабатывает только один раз, согласно заданному в
+\fIit_value\fP времени.
+.PP
+.\" By experiment: the overrun count is set correctly, for CLOCK_REALTIME.
+По умолчанию, начальное время срабатывания, указанное в
+\fInew_value\->it_value\fP, считается относительно текущего времени на часах
+таймера на момент вызова. Это можно изменить, указав \fBTIMER_ABSTIME\fP в
+\fIflags\fP; в этом случае \fInew_value\->it_value\fP рассматривается как
+абсолютное значение по часам таймера; то есть таймер сработает, когда
+значение часов достигнет значения, указанного в
+\fInew_value\->it_value\fP. Если указанное абсолютное время уже прошло, то
+таймер срабатывает немедленно и счётчик переполнения изменяется
+соответствующим образом (смотрите \fBtimer_getoverrun\fP(2)).
+.PP
+.\" Similar remarks might apply with respect to process and thread CPU time
+.\" clocks, but these clocks are not currently (2.6.28) settable on Linux.
+Если значение часов \fBCLOCK_REALTIME\fP корректируется (adjusted) и указано
+абсолютное значение у включённого таймера с этими часами, то срабатывание
+таймера будет скорректировано соответствующим образом. Корректировка часов
+\fBCLOCK_REALTIME\fP не влияет на относительные таймеры, использующие эти часы.
+.PP
+Если значение \fIold_value\fP не равно NULL, то оно указывает на буфер, который
+используется для возврата предыдущего интервала таймера (в
+\fIold_value\->it_interval\fP) и количества времени, которое осталось
+таймеру до срабатывания (в \fIold_value\->it_value\fP).
+.PP
+Вызов \fBtimer_gettime\fP() возвращает время до следующего срабатывания таймера
+\fItimerid\fP и интервал в буфер \fIcurr_value\fP. Оставшееся время до следующего
+срабатывания возвращается в \fIcurr_value\->it_value\fP; это всегда
+относительное значение, независимо от того, указывался ли флаг
+\fBTIMER_ABSTIME\fP при включении таймера. Если значение
+\fIcurr_value\->it_value\fP равно нулю, то таймер в данный момент
+выключен. Интервал таймера возвращается в
+\fIcurr_value\->it_interval\fP. Если значение \fIcurr_value\->it_interval\fP
+равно нулю, то это «одноразовый» таймер.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBtimer_settime\fP() и \fBtimer_gettime\fP() возвращается
+0. При ошибке возвращается \-1, а в \fIerrno\fP содержится код ошибки.
+.SH ОШИБКИ
+Эти функции могут завершиться со следующими ошибками:
+.TP 
+\fBEFAULT\fP
+Некорректный указатель \fInew_value\fP, \fIold_value\fP или \fIcurr_value\fP.
+.TP 
+\fBEINVAL\fP
+.\" FIXME . eventually: invalid value in flags
+Неверное значение \fItimerid\fP.
+.PP
+\fBtimer_settime\fP() может завершиться со следующими ошибками:
+.TP 
+\fBEINVAL\fP
+Значение \fInew_value.it_value\fP отрицательно; или
+\fInew_value.it_value.tv_nsec\fP отрицательно или больше 999999999.
+.SH ВЕРСИИ
+Данные системные вызовы появились в Linux 2.6.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ПРИМЕР
+Смотрите \fBtimer_create\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBtimer_create\fP(2), \fBtimer_getoverrun\fP(2), \fBtime\fP(7)

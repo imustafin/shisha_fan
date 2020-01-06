@@ -1,0 +1,115 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2007 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2007-07-31, mtk, Created
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TIMERADD 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+timeradd, timersub, timercmp, timerclear, timerisset \- операции со
+структурой timeval
+.SH ОБЗОР
+.nf
+\fB#include <sys/time.h>\fP
+.PP
+\fBvoid timeradd(struct timeval *\fP\fIa\fP\fB, struct timeval *\fP\fIb\fP\fB,\fP
+\fB              struct timeval *\fP\fIres\fP\fB);\fP
+.PP
+\fBvoid timersub(struct timeval *\fP\fIa\fP\fB, struct timeval *\fP\fIb\fP\fB,\fP
+\fB              struct timeval *\fP\fIres\fP\fB);\fP
+.PP
+\fBvoid timerclear(struct timeval *\fP\fItvp\fP\fB);\fP
+.PP
+\fBint timerisset(struct timeval *\fP\fItvp\fP\fB);\fP
+.PP
+\fBint timercmp(struct timeval *\fP\fIa\fP\fB, struct timeval *\fP\fIb\fP\fB, \fP\fICMP\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+Все вышеперечисленные функции:
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    glibc 2.19 и старее:
+        _BSD_SOURCE
+.SH ОПИСАНИЕ
+Макросы предназначены для работы со структурой \fItimeval\fP, которая
+определена в \fI<sys/time.h>\fP следующим образом:
+.PP
+.in +4n
+.EX
+struct timeval {
+    time_t      tv_sec;     /* секунды */
+    suseconds_t tv_usec;    /* микросекунды */
+};
+.EE
+.in
+.PP
+Макрос \fBtimeradd\fP() складывает значения времени \fIa\fP и \fIb\fP, и помещает
+сумму в \fItimeval\fP, на которую указывает \fIres\fP. Результат нормализуется
+так, что значение \fIres\->tv_usec\fP лежит в диапазоне от 0 до 999999.
+.PP
+Макрос \fBtimersub\fP() вычитает значение времени \fIb\fP из \fIa\fP, и помещает
+результат в \fItimeval\fP, на которую указывает \fIres\fP. Результат нормализуется
+так, что значение \fIres\->tv_usec\fP лежит в диапазоне от 0 до 999999.
+.PP
+Макрос \fBtimerclear\fP() обнуляет структуру \fItimeval\fP, на которую указывает
+\fItvp\fP; полученное значение соответствует представлению эпохи: 1970\-01\-01
+00:00:00 +0000 (UTC).
+.PP
+Макрос \fBtimerisset\fP() возвращает истину (не ноль), если любое из полей
+структуры \fItimeval\fP, на которую указывает \fItvp\fP, содержит ненулевое
+значение.
+.PP
+.\" HP-UX, Tru64, Irix have a definition like:
+.\"#define timercmp(tvp, uvp, cmp) \
+.\"    ((tvp)->tv_sec cmp (uvp)->tv_sec || \
+.\"    (tvp)->tv_sec == (uvp)->tv_sec && (tvp)->tv_usec cmp (uvp)->tv_usec)
+Макрос \fBtimercmp\fP() сравнивает значения таймера \fIa\fP и \fIb\fP с помощью
+оператора сравнения \fICMP\fP, и возвращает истину (не ноль) или ложь (0), в
+зависимости от результата сравнения. Некоторые системы (но не Linux/glibc)
+содержат некорректную реализацию \fBtimercmp\fP(), в которой \fICMP\fP для
+\fI>=\fP, \fI<=\fP и \fI==\fP не работает; переносимые приложения могут
+использовать вместо неё
+.PP
+    !timercmp(..., <)
+    !timercmp(..., >)
+    !timercmp(..., !=)
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Макросы \fBtimerisset\fP() и \fBtimercmp\fP() возвращают истину (не ноль) или ложь
+(0).
+.SH ОШИБКИ
+Ошибок не предполагается.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Не являются частью POSIX.1. Присутствует в вариациях BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgettimeofday\fP(2), \fBtime\fP(7)

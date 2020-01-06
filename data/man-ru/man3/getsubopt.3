@@ -1,0 +1,209 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2007 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" and Copyright (C) 2007 Justin Pryzby <pryzbyj@justinpryzby.com>
+.\"
+.\" %%%LICENSE_START(PERMISSIVE_MISC)
+.\" Permission is hereby granted, free of charge, to any person obtaining
+.\" a copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\"
+.\" The above copyright notice and this permission notice shall be
+.\" included in all copies or substantial portions of the Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+.\" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+.\" CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+.\" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+.\" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETSUBOPT 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getsubopt \- анализирует подпараметры аргументов строки
+.SH ОБЗОР
+\fB#include <stdlib.h>\fP
+.PP
+\fBint getsubopt(char **\fP\fIoptionp\fP\fB, char * const *\fP\fItokens\fP\fB, char
+**\fP\fIvaluep\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgetsubopt\fP():
+.ad l
+.RS 4
+.PD 0
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >= 500
+.br
+    || /* начиная с glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+.PD
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBgetsubopt\fP() анализирует список подпараметров, указываемых через
+запятую, заданный в \fIoptionp\fP (такой список подпараметров, обычно,
+создаётся при использовании \fBgetopt\fP(3) для разбора командной строки;
+например, смотрите параметр  \fI\-o\fP в \fBmount\fP(8)). Каждый подпараметр может
+содержать связанное с ним значение, которое отделяется от имени подпараметра
+знаком равно. Вот пример строки, которую можно передать в \fIoptionp\fP:
+.PP
+.in +4n
+.EX
+\fBro,name=xyz\fP
+.EE
+.in
+.PP
+Аргумент \fItokens\fP — указатель на массив (завершается NULL) указателей на
+токены, которые \fBgetsubopt\fP() будет просматривать при поиске в
+\fIoptionp\fP. Токены должны быть различающимися строками (завершающимися
+null), содержащими, как минимум, один символ и не содержащих знаков равно
+или запятых.
+.PP
+При каждом вызове \fBgetsubopt\fP() возвращается информация о следующем
+необработанном подпараметре в \fIoptionp\fP. Первый знак равно в подпараметре
+(если есть) считается разделителем имени и значения в этом
+подпараметре. Значение длится до последующей запятой или (для последнего
+подпараметра) до конца строки. Если имя подпараметра совпадает с известным
+именем из \fItokens\fP, и найдено строка\-значение, то \fBgetsubopt\fP() записывает
+в \fI*valuep\fP адрес этой строки. Первая запятая в \fIoptionp\fP перезаписывается
+байтом null, поэтому \fI*valuep\fP — точное «строка\-значение» этого
+подпараметра.
+.PP
+Если подпараметр распознан, но значение строки не найдено, то \fI*valuep\fP
+присваивается NULL.
+.PP
+При завершении работы \fBgetsubopt\fP() значение \fIoptionp\fP указывает на
+следующий подпараметр или на байт null (\(aq\e0\(aq) в конце строки (в
+случае, если последний подпараметр был только что обработан).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если в \fIoptionp\fP распознан первый подпараметр, то \fBgetsubopt\fP() возвращает
+индекс элемента в \fItokens\fP найденного подпараметра. В противном случае
+возвращается \-1 и значение \fI*valuep\fP указывает на целую строку
+\fIname\fP\fB[=\fP\fIvalue\fP\fB]\fP.
+.PP
+Так как \fI*optionp\fP изменяется, первый подпараметр перед вызовом
+\fBgetsubopt\fP() не (не всегда) тот же самый, что и первый подпараметр после
+\fBgetsubopt\fP().
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetsubopt\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.PP
+Так как \fBgetsubopt\fP() заменяет запятые, найденные в строке \fI*optionp\fP, то
+строка должна быть доступна на запись; она не может быть строковой
+константой.
+.SH ПРИМЕР
+Следующая программа ожидает подпараметры после параметра «\-o».
+.PP
+.EX
+#define _XOPEN_SOURCE 500
+#include <stdlib.h>
+#include <assert.h>
+#include <stdio.h>
+
+int
+main(int argc, char **argv)
+{
+    enum {
+        RO_OPT = 0,
+        RW_OPT,
+        NAME_OPT
+    };
+    char *const token[] = {
+        [RO_OPT]   = "ro",
+        [RW_OPT]   = "rw",
+        [NAME_OPT] = "name",
+        NULL
+    };
+    char *subopts;
+    char *value;
+    int opt;
+
+    int readonly = 0;
+    int readwrite = 0;
+    char *name = NULL;
+    int errfnd = 0;
+
+    while ((opt = getopt(argc, argv, "o:")) != \-1) {
+        switch (opt) {
+        case \(aqo\(aq:
+            subopts = optarg;
+            while (*subopts != \(aq\e0\(aq && !errfnd) {
+
+            switch (getsubopt(&subopts, token, &value)) {
+            case RO_OPT:
+                readonly = 1;
+                break;
+
+            case RW_OPT:
+                readwrite = 1;
+                break;
+
+            case NAME_OPT:
+                if (value == NULL) {
+                    fprintf(stderr, "Отсутствует значение для "
+                            "подпараметра \(aq%s\(aq\en", token[NAME_OPT]);
+                    errfnd = 1;
+                    continue;
+                }
+
+                name = value;
+                break;
+
+            default:
+                fprintf(stderr, "Совпадения не найдены "
+                        "для токена: /%s/\en", value);
+                errfnd = 1;
+                break;
+            }
+        }
+        if (readwrite && readonly) {
+            fprintf(stderr, "Может указываться только одно из \(aq%s\(aq "
+                    "и \(aq%s\(aq\en", token[RO_OPT], token[RW_OPT]);
+            errfnd = 1;
+        }
+        break;
+
+        default:
+            errfnd = 1;
+        }
+    }
+
+    if (errfnd || argc == 1) {
+        fprintf(stderr, "\enИспользование: %s \-o <подпараметр>\en", argv[0]);
+        fprintf(stderr, "возможны подпараметры: \(aqro\(aq, \(aqrw\(aq, "
+                "и \(aqname=<значение>\(aq\en");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Остальная часть программы… */
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetopt\fP(3)

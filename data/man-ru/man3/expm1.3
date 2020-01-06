@@ -1,0 +1,148 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1995 Jim Van Zandt <jrv@vanzandt.mv.com>
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2002-07-27 Walter Harms
+.\" 	(walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH EXPM1 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+expm1, expm1f, expm1l \- экспоненциальный минус 1
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble expm1(double \fP\fIx\fP\fB);\fP
+\fBfloat expm1f(float \fP\fIx\fP\fB);\fP
+\fBlong double expm1l(long double \fP\fIx\fP\fB);\fP
+.PP
+.fi
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBexpm1\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || _XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.br
+\fBexpm1f\fP(), \fBexpm1l\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Данные функции возвращают значение эквивалентное
+.PP
+.nf
+    exp(x) \- 1
+.fi
+.PP
+Результат вычисляется методом, выдающим точные значения, даже если значение
+\fIx\fP близко к нулю — случай, где \fIexp(x) \- 1\fP было бы неточно из\-за
+вычитания практически одинаковых чисел.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные функции возвращают \fIexp(x)\ \-\ 1\fP.
+.PP
+Если \fIx\fP имеет значение NaN, будет возвращено NaN.
+.PP
+Если \fIx\fP равно +0 (\-0), будет возвращено +0 (\-0).
+.PP
+Если \fIx\fP стремится к плюс бесконечности, то будет возвращена плюс
+бесконечность.
+.PP
+Если \fIx\fP равно минус бесконечности, возвращается \-1.
+.PP
+Если в результате превышена разрядность, то возникает ошибка диапазона и
+функции возвращают \-\fBHUGE_VAL\fP, \-\fBHUGE_VALF\fP или \-\fBHUGE_VALL\fP,
+соответственно.
+.SH ОШИБКИ
+Смотрите \fBmath_error\fP(7), чтобы определить, какие ошибки могут возникать
+при вызове этих функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка диапазона, переполнение
+.\"
+.\" POSIX.1 specifies an optional range error (underflow) if
+.\" x is subnormal.  Glibc does not implement this.
+Значение \fIerrno\fP устанавливается в \fBERANGE\fP (но см. ДЕФЕКТЫ). Возникает
+исключение переполнения плавающей точки (\fBFE_OVERFLOW\fP).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBexpm1\fP(),
+\fBexpm1f\fP(),
+\fBexpm1l\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" BSD.
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.SH ДЕФЕКТЫ
+.\" FIXME .
+.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6778
+Для некоторых огромных отрицательных значений \fIx\fP (где возвращаемое
+значение функции близко к \-1), \fBexpm1\fP() приводит к некорректному
+исключению исчерпания чисел с плавающей запятой.
+.PP
+.\" FIXME .
+.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6814
+.\" e.g., expm1(1e5) through expm1(1.00199970127e5),
+.\" but not expm1(1.00199970128e5) and beyond.
+Для некоторых огромных положительных значений \fIx\fP кроме ожидаемого
+исключения переполнения возникает некорректное исключение плавающей точки и
+возвращается NaN вместо плюс бесконечности.
+.PP
+.\" It looks like the fix was in 2.11, or possibly 2.12.
+.\" I have no test system for 2.11, but 2.12 passes.
+.\" From the source (sysdeps/i386/fpu/s_expm1.S) it looks
+.\" like the changes were in 2.11.
+.\" http://sources.redhat.com/bugzilla/show_bug.cgi?id=6788
+До версии 2.11 в реализации glibc при возникновении ошибки диапазона
+\fIerrno\fP не устанавливалось в значение \fBERANGE\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBexp\fP(3), \fBlog\fP(3), \fBlog1p\fP(3)

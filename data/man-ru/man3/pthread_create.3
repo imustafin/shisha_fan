@@ -1,0 +1,343 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_CREATE 3 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_create \- создаёт новую нить
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_create(pthread_t *\fP\fIthread\fP\fB, const pthread_attr_t *\fP\fIattr\fP\fB,\fP
+\fB                   void *(*\fP\fIstart_routine\fP\fB) (void *), void *\fP\fIarg\fP\fB);\fP
+.fi
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.SH ОПИСАНИЕ
+Функция \fBpthread_create\fP() запускает новую нить в вызвавшем процессе. Новая
+нить начинает выполнение вызовом \fIstart_routine\fP(); значение \fIarg\fP
+является единственным аргументом \fIstart_routine\fP().
+.PP
+Новая нить завершает работу в одном из следующих случаев:
+.IP * 2
+Она вызывает \fBpthread_exit\fP(3), указывая код выхода, доступное другой нити
+в том же процессе, вызвавшей \fBpthread_join\fP(3).
+.IP *
+При возврате из \fIstart_routine\fP(). Это эквивалентно вызову
+\fBpthread_exit\fP(3) со значением, переданным в операторе \fIreturn\fP.
+.IP *
+При её отмене (смотрите \fBpthread_cancel\fP(3)).
+.IP *
+При вызове из любой нити процесса функции \fBexit\fP(3), или если главная нить
+выполняет возврат из \fImain\fP(). Это вызывает завершение всех нитей процесса.
+.PP
+Аргумент \fIattr\fP указывает на структуру \fIpthread_attr_t\fP, чьё содержимое
+используется при создании нити для определения атрибутов новой нити; эта
+структура инициализируется с помощью \fBpthread_attr_init\fP(3) и подобными
+функциями. Если значение \fIattr\fP равно NULL, то нити создаётся с атрибутами
+по умолчанию.
+.PP
+Перед возвратом успешный вызов \fBpthread_create\fP() сохраняет ID новой нити в
+буфер, на который указывает \fIthread\fP; этот идентификатор используется для
+ссылки на нить в последующих вызовах других функций pthreads.
+.PP
+Новая нить наследует копию сигнальной маски создавшей нити
+(\fBpthread_sigmask\fP(3)). Набор ожидающих сигналов новой нити пуст
+(\fBsigpending\fP(2)). Новая нить не наследует альтернативный стек сигналов
+создавшей нити (\fBsigaltstack\fP(2)).
+.PP
+Новая нить наследует окружение плавающей запятой вызвавшей нити
+(\fBfenv\fP(3)).
+.PP
+.\" CLOCK_THREAD_CPUTIME_ID in clock_gettime(2)
+Начальное значение часов ЦП новой нити равно 0 (смотрите
+\fBpthread_getcpuclockid\fP(3)).
+.SS "Информация, касающаяся только Linux"
+Новая нить наследует копию набора мандатов вызвавшей нити (смотрите
+\fBcapabilities\fP(7)) и маску увязывания ЦП (смотрите
+\fBsched_setaffinity\fP(2)).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBpthread_create\fP() возвращается 0; при ошибке
+возвращается номер ошибки, а содержимое \fI*thread\fP не определено.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Недостаточно ресурсов для создания другой нити.
+.TP 
+\fBEAGAIN\fP
+.\" NOTE! The following should match the description in fork(2)
+Возникло системного ограничение на количество нитей. Есть несколько
+ограничений, которые могут вызвать эту ошибку: был достигнут мягкий
+ограничитель \fBRLIMIT_NPROC\fP (задаётся с помощью \fBsetrlimit\fP(2)), который
+ограничивает количество процессов и ните для реального ID пользователя; был
+достигнут ядерный системный ограничитель на количество процессов и нитей,
+\fI/proc/sys/kernel/threads\-max\fP (смотрите \fBproc\fP(5)); был достигнуто
+максимальное количество PID, \fI/proc/sys/kernel/pid_max\fP (смотрите
+\fBproc\fP(5)).
+.TP 
+\fBEINVAL\fP
+Некорректные значения в \fIattr\fP.
+.TP 
+.\" FIXME . Test the following
+\fBEPERM\fP
+Нет прав на изменение алгоритма планирования и параметров, указанных в
+\fIattr\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_create\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Дополнительную информацию об идентификаторе нити, возвращаемом
+\fBpthread_create\fP() в \fI*thread\fP смотрите в \fBpthread_self\fP(3). Если не
+используются алгоритмы планирования реального времени после вызова
+\fBpthread_create\fP() невозможно сказать какая нить — создавшая или новая —
+будет выполняться далее первой.
+.PP
+Нить может быть \fIприсоединяема\fP (joinable) или \fIотключённой\fP
+(detached). Если нить присоединяема, то другая нить может вызвать
+\fBpthread_join\fP(3) для ожидания завершения нити и получения её кода
+выхода. Освобождение ресурсов обратно в систему у завершённой присоединяемой
+нити происходит только после её присоединения. При завершении отключённой
+нити, её ресурсы автоматически освобождаются обратно в систему: к ней
+невозможно присоединиться для получения её кода выхода. Создание отключённых
+нитей полезно в некоторых типах служебных нитей, чей код выхода не нужен
+приложению. По умолчанию новая нить создаётся в присоединяемом состоянии,
+если в \fIattr\fP не указано создание нити в отключённом состоянии (с помощью
+\fBpthread_attr_setdetachstate\fP(3)).
+.PP
+В реализации нитей NPTL, если  мягкое  ограничение  ресурса \fBRLIMIT_STACK\fP
+\fIв момент запуска программы\fP не равно «unlimited», то им задаётся размер
+стека по умолчанию для новых нитей. Чтобы получить размер стека, отличный от
+умолчательного при создании новой нити, можно изменить атрибут размера стека
+в аргументе \fIattr\fP с помощью \fBpthread_attr_setstacksize\fP(3). Если ресурс
+\fBRLIMIT_STACK\fP равен «unlimited», то для размера используется значение,
+определённое для архитектуры. Вот значения для некоторых архитектур:
+.RS
+.TS
+allbox;
+lb lb
+l r.
+Архитектура	Размер стека умолчанию
+i386	2 МБ
+IA\-64	32 МБ
+PowerPC	4 МБ
+S/390	2 МБ
+Sparc\-32	2 МБ
+Sparc\-64	4 МБ
+x86_64	2 МБ
+.TE
+.RE
+.SH ДЕФЕКТЫ
+В устаревшей реализации LinuxThreads каждая нить процесса имеет свой
+неодинаковый ID процесса. Это нарушает спецификацию нитей POSIX и является
+источником многих других несоответствий стандарту; смотрите \fBpthreads\fP(7).
+.SH ПРИМЕР
+Представленная ниже программа показывает использование \fBpthread_create\fP(),
+а также других функций программного интерфейса pthreads.
+.PP
+В этом сеансе в системе с реализацией нитей NPTL размер стека по умолчанию
+берётся из значения ограничения ресурса на «размер стека»:
+.PP
+.in +4n
+.EX
+$\fB ulimit \-s\fP
+8192            # ограничение на размер стека 8 МБ (0x800000 байт)
+$\fB ./a.out hola salut servus\fP
+Нить 1: вершина стека около 0xb7dd03b8; argv_string=hola
+Нить 2: вершина стека около 0xb75cf3b8; argv_string=salut
+Нить 3: вершина стека около 0xb6dce3b8; argv_string=servus
+Присоединение нити 1; получено значение возврата HOLA
+Присоединение нити 2; получено значение возврата SALUT
+Присоединение нити 3; получено значение возврата SERVUS
+.EE
+.in
+.PP
+В этом сеансе программа явно устанавливает размер стека в 1\ МБ (с помощью
+\fBpthread_attr_setstacksize\fP(3)) для создаваемых нитей:
+.PP
+.in +4n
+.EX
+$\fB ./a.out \-s 0x100000 hola salut servus\fP
+Нить 1: вершина стека около 0xb7d723b8; argv_string=hola
+Нить 2: вершина стека около 0xb7c713b8; argv_string=salut
+Нить 3: вершина стека около 0xb7b703b8; argv_string=servus
+Присоединение нити 1; получено значение возврата HOLA
+Присоединение нити 2; получено значение возврата SALUT
+Присоединение нити 3; получено значение возврата SERVUS
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <pthread.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <ctype.h>
+
+#define handle_error_en(en, msg) \e
+        do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
+
+#define handle_error(msg) \e
+        do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+struct thread_info {    /* используется как аргумент thread_start() */
+    pthread_t thread_id;        /* ID, полученный от pthread_create() */
+    int       thread_num;       /* номер нити, определяемый
+                                   приложением */
+    char     *argv_string;      /* аргумент из командой строки */
+};
+
+/* Начальная функция нити: показывает адрес около вершины нашего стека,
+   и возвращает копию argv_string заглавными буквами */
+
+static void *
+thread_start(void *arg)
+{
+    struct thread_info *tinfo = arg;
+    char *uargv, *p;
+
+    printf("Нить %d: вершина стека около %p; argv_string=%s\en",
+            tinfo\->thread_num, &p, tinfo\->argv_string);
+
+    uargv = strdup(tinfo\->argv_string);
+    if (uargv == NULL)
+        handle_error("strdup");
+
+    for (p = uargv; *p != \(aq\e0\(aq; p++)
+        *p = toupper(*p);
+
+    return uargv;
+}
+
+int
+main(int argc, char *argv[])
+{
+    int s, tnum, opt, num_threads;
+    struct thread_info *tinfo;
+    pthread_attr_t attr;
+    int stack_size;
+    void *res;
+
+    /* Параметром «\-s» определяется размер стека в наших нитях */
+
+    stack_size = \-1;
+    while ((opt = getopt(argc, argv, "s:")) != \-1) {
+        switch (opt) {
+        case \(aqs\(aq:
+            stack_size = strtoul(optarg, NULL, 0);
+            break;
+
+        default:
+            fprintf(stderr, "Исп.: %s [\-s размер стека] арг...\en",
+                    argv[0]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    num_threads = argc \- optind;
+
+    /* инициализация атрибутов создания нити */
+
+    s = pthread_attr_init(&attr);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_init");
+
+    if (stack_size > 0) {
+        s = pthread_attr_setstacksize(&attr, stack_size);
+        if (s != 0)
+            handle_error_en(s, "pthread_attr_setstacksize");
+    }
+
+    /* выделение памяти для аргументов pthread_create() */
+
+    tinfo = calloc(num_threads, sizeof(struct thread_info));
+    if (tinfo == NULL)
+        handle_error("calloc");
+
+    /* создание по одной нити на каждый аргумент командной строки */
+
+    for (tnum = 0; tnum < num_threads; tnum++) {
+        tinfo[tnum].thread_num = tnum + 1;
+        tinfo[tnum].argv_string = argv[optind + tnum];
+
+        /* вызов pthread_create() сохраняет ID нити в
+           соответствующий элемент tinfo[] */
+
+        s = pthread_create(&tinfo[tnum].thread_id, &attr,
+                           &thread_start, &tinfo[tnum]);
+        if (s != 0)
+            handle_error_en(s, "pthread_create");
+    }
+
+    /* уничтожение объекта атрибутов нити, так как он
+       больше не нужен */
+
+    s = pthread_attr_destroy(&attr);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_destroy");
+
+    /* теперь присоединяем каждую нить и показываем значение,
+       возвращённое ею */
+
+    for (tnum = 0; tnum < num_threads; tnum++) {
+        s = pthread_join(tinfo[tnum].thread_id, &res);
+        if (s != 0)
+            handle_error_en(s, "pthread_join");
+
+        printf("Присоединение нити %d; получено значение возврата %s\en",
+                tinfo[tnum].thread_num, (char *) res);
+        free(res);      /* освобождаем память, выделенную нитью */
+    }
+
+    free(tinfo);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBgetrlimit\fP(2), \fBpthread_attr_init\fP(3), \fBpthread_cancel\fP(3),
+\fBpthread_detach\fP(3), \fBpthread_equal\fP(3), \fBpthread_exit\fP(3),
+\fBpthread_getattr_np\fP(3), \fBpthread_join\fP(3), \fBpthread_self\fP(3),
+\fBpthread_setattr_default_np\fP(3), \fBpthreads\fP(7)

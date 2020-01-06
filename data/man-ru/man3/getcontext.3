@@ -1,0 +1,135 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2001 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETCONTEXT 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getcontext, setcontext \- получить или установить пользовательский контекст
+.SH ОБЗОР
+\fB#include <ucontext.h>\fP
+.PP
+\fBint getcontext(ucontext_t *\fP\fIucp\fP\fB);\fP
+.br
+\fBint setcontext(const ucontext_t *\fP\fIucp\fP\fB);\fP
+.SH ОПИСАНИЕ
+В окружении, подобном SysV, существует два типа данных —\fImcontext_t\fP и
+\fIucontext_t\fP, которые определены в файле \fI<ucontext.h>\fP и четыре
+функции — \fBgetcontext\fP(), \fBsetcontext\fP(), \fBmakecontext\fP(3) и
+\fBswapcontext\fP(3), которые позволяют контексту пользовательского уровня
+переключаться между несколькими нитями внутри одного процесса.
+.PP
+Тип \fImcontext_t\fP является машинно\-зависимым и примитивным типом данных. Тип
+\fIucontext_t\fP является структурой, которая по крайней мере имеет следующие
+поля:
+.PP
+.in +4
+.EX
+typedef struct ucontext_t {
+    struct ucontext_t *uc_link;
+    sigset_t          uc_sigmask;
+    stack_t           uc_stack;
+    mcontext_t        uc_mcontext;
+    ...
+} ucontext_t;
+.EE
+.in
+.PP
+где \fIsigset_t\fP и \fIstack_t\fP определены в файле \fI<signal.h>\fP. В
+этой структуре \fIuc_link\fP указывает на контекст, к которому будет
+осуществлён переход, когда завершается текущий контекст (в случае, если
+текущий контекст был создан с помощью  \fBmakecontext\fP(3)), в \fIuc_sigmask\fP
+задаётся список сигналов, которые блокируются в этом контексте
+(см. \fBsigprocmask\fP(2)), \fIuc_stack\fP \(em это стек, который используется
+этим контекстом (см. \fBsigaltstack\fP(2)), а \fIuc_mcontext\fP является
+машинно\-зависимым представлением сохранённого контекста, который содержит
+регистры вызываемой нити.
+.PP
+Функция \fBgetcontext\fP() инициализирует вышеописанную структуру, указывая
+через \fIucp\fP на текущий активный контекст.
+.PP
+Функция \fBsetcontext\fP() восстанавливает пользовательский контекст, на
+который указывает \fIucp\fP. При успешном вызове управление не возвращается
+обратно. Контекст должен быть получен с помощью вызова \fBgetcontext\fP() или
+\fBmakecontext\fP(3) или передан как третий аргумент обработчика сигнала.
+.PP
+Если контекст был получен через вызов \fBgetcontext\fP(), то выполнение
+программы продолжается как если бы этот вызов завершился простым возвратом.
+.PP
+Если контекст был получен через вызов \fBmakecontext\fP(3), выполнение
+программы продолжается с помощью вызова функции \fIfunc\fP, которая задаётся
+как второй аргумент вызова \fBmakecontext\fP(3). Когда происходит возврат из
+функции \fIfunc\fP, выполнение продолжается с поля \fIuc_link\fP структуры \fIucp\fP,
+которая задаётся как первый аргумент вызова \fBmakecontext\fP(3). Если это поле
+равно NULL, осуществляется выход из нити.
+.PP
+Если контекст был получен с помощью вызова обработчика сигнала, то старый
+текст стандарта говорит, что "выполнение программы продолжается с инструкции
+программы, которая следует за инструкцией, прерванной сигналом". Однако,
+этот текст был удалён в SUSv2 с вердиктом "результат не определён".
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае успеха \fBgetcontext\fP() возвращает 0, а \fBsetcontext\fP() не
+возвращает ничего. В случае ошибки, возвращается \-1 и значение \fIerrno\fP
+устанавливается соответствующим образом.
+.SH ОШИБКИ
+Не определены.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw26 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetcontext\fP(),
+\fBsetcontext\fP()
+T}	Безвредность в нитях	MT\-Safe race:ucp
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SUSv2, POSIX.1\-2001. В POSIX.1\-2008 удалено определение \fBgetcontext\fP() со
+ссылкой на проблемы с переносимостью и рекомендацией переписать приложение с
+использование нитей POSIX.
+.SH ЗАМЕЧАНИЯ
+В ранних версиях этого механизма использовался механизм
+\fBsetjmp\fP(3)/\fBlongjmp\fP(3). Так как в нём нет обработки контекста сигнала,
+было решено использовать следующий вариант пары
+\fBsigsetjmp\fP(3)/\fBsiglongjmp\fP(3). Текущий механизм даёт много больше
+контроля. С другой стороны, не существует лёгкого способа определить какое
+из двух значений возвращает при первом запуске вызов \fBgetcontext\fP() или
+вызов \fBsetcontext\fP(). Пользователь должен придумать собственный способ и
+через регистровую переменную это сделать нельзя, так как значения регистров
+восстанавливаются.
+.PP
+Если возникнет сигнал, текущий пользовательский контекст сохраняется и для
+обработчика сигнала ядром создаётся новый контекст. Не выходите из этого
+обработчика, используя \fBlongjmp\fP(3) \(em неизвестно, что может случиться с
+контекстами. Вместо этого используйте вызовы \fBsiglongjmp\fP(3) или
+\fBsetcontext\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsigaction\fP(2), \fBsigaltstack\fP(2), \fBsigprocmask\fP(2), \fBlongjmp\fP(3),
+\fBmakecontext\fP(3), \fBsigsetjmp\fP(3)

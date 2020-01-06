@@ -1,0 +1,255 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 18:26:16 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Thu Apr 11 17:11:33 1996 by Andries Brouwer (aeb@cwi.nl):
+.\"     Corrected type of compar routines, as suggested by
+.\"     Miguel Barreiro (enano@avalon.yaix.es).  Added example.
+.\" Modified Sun Sep 24 20:15:46 2000 by aeb, following Petter Reinholdtsen.
+.\" Modified 2001-12-26 by aeb, following Joey. Added versionsort.
+.\"
+.\" The pieces on scandirat(3) were copyright and licensed as follows.
+.\"
+.\" Copyright (c) 2012, Mark R. Bannister <cambridge@users.sourceforge.net>
+.\"        based on text in mkfifoat.3 Copyright (c) 2006, Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SCANDIR 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+scandir, scandirat, alphasort, versionsort \- ищет записи в каталоге
+.SH ОБЗОР
+.nf
+\fB#include <dirent.h>\fP
+.PP
+\fBint scandir(const char *\fP\fIdirp\fP\fB, struct dirent ***\fP\fInamelist\fP\fB,\fP
+.RS
+\fBint (*\fP\fIfilter\fP\fB)(const struct dirent *),\fP
+\fBint (*\fP\fIcompar\fP\fB)(const struct dirent **, const struct dirent **));\fP
+.RE
+.PP
+\fBint alphasort(const struct dirent **\fP\fIa\fP\fB, const struct dirent **\fP\fIb\fP\fB);\fP
+.PP
+\fBint versionsort(const struct dirent **\fP\fIa\fP\fB, const struct dirent **\fP\fIb\fP\fB);\fP
+
+\fB#include <fcntl.h>\fP          /* определения констант AT_* */
+\fB#include <dirent.h>\fP
+.PP
+.fi
+\fBint scandirat(int \fP\fIdirfd\fP\fB, const char *\fP\fIdirp\fP\fB,\fP \fBstruct dirent
+***\fP\fInamelist\fP\fB,\fP
+.nf
+.RS
+\fBint (*\fP\fIfilter\fP\fB)(const struct dirent *),\fP
+\fBint (*\fP\fIcompar\fP\fB)(const struct dirent **, const struct dirent **));\fP
+.RE
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBscandir\fP(), \fBalphasort\fP():
+.br
+.RS 4
+.PD 0
+.ad b
+/* начиная с glibc 2.10: */ _POSIX_C_SOURCE\ >=\ 200809L
+    || /* в версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.PD
+.RE
+.PP
+\fBversionsort\fP(): _GNU_SOURCE
+.PP
+\fBscandirat\fP(): _GNU_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBscandir\fP() обходит каталог \fIdirp\fP, вызывая \fIfilter\fP() для каждой
+записи каталога. Записи, для которых \fIfilter\fP() возвращает не ноль,
+сохраняются в строках, выделяемых с помощью \fBmalloc\fP(3), сортируются
+\fBqsort\fP(3) с помощью функции сравнения \fIcompar\fP() и собираются в массиве
+\fInamelist\fP, который выделяется с помощью \fBmalloc\fP(3). Если \fIfilter\fP равно
+NULL, то выбираются все записи.
+.PP
+В качестве функции сравнения \fIcompar\fP() можно использовать \fBalphasort\fP() и
+\fBversionsort\fP(). Первая сортирует записи (строки \fI(*a)\->d_name\fP и
+\fI(*b)\->d_name\fP) каталога с помощью \fBstrcoll\fP(3), а последняя с помощью
+\fBstrverscmp\fP(3).
+.SS scandirat()
+Системный вызов \fBscandirat\fP() работает также как системный вызов
+\fBscandir\fP(), за исключением случаев, описанных здесь.
+.PP
+Если в \fIdirp\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBscandir\fP()).
+.PP
+Если в \fIdirp\fP задан относительный путь и значение \fIdirfd\fP равно
+\fBAT_FDCWD\fP, то \fIdirp\fP рассматривается относительно текущего рабочего
+каталога вызывающего процесса (как \fBscandir\fP()).
+.PP
+Если в \fIdirp\fP задан абсолютный путь, то \fIdirfd\fP игнорируется.
+.PP
+Смотрите в \fBopenat\fP(2) объяснение необходимости \fBscandirat\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBscandir\fP() возвращается количество выбранных
+записей каталога. При ошибке возвращается \-1, а в \fIerrno\fP содержится код
+ошибки.
+.PP
+Функции \fBalphasort\fP() и \fBversionsort\fP() возвращают целое, меньшее, равное
+или большее нуля, если первый аргумент считается меньшим, равным или большим
+чем второй, соответственно.
+.SH ОШИБКИ
+.TP 
+\fBENOENT\fP
+Путь в \fIdirp\fP не существует.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для завершения операции.
+.TP 
+\fBENOTDIR\fP
+Путь в \fIdirp\fP не является каталогом.
+.PP
+В \fBscandirat\fP() дополнительно могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+Значение \fIdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBENOTDIR\fP
+Значение \fIdirp\fP содержит относительный путь и \fIdirfd\fP содержит файловый
+дескриптор, указывающий на файл, а не на каталог.
+.SH ВЕРСИИ
+Функция \fBversionsort\fP() впервые появилась в glibc 2.1.
+.PP
+Функция \fBscandirat\fP() впервые появилась в glibc 2.15.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw26 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBscandir\fP(),
+\fBscandirat\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBalphasort\fP(),
+\fBversionsort\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBalphasort\fP(), \fBscandir\fP(): 4.3BSD, POSIX.1\-2008.
+.PP
+.\" .LP
+.\" The functions
+.\" .BR scandir ()
+.\" and
+.\" .BR alphasort ()
+.\" are from 4.3BSD, and have been available under Linux since libc4.
+.\" Libc4 and libc5 use the more precise prototype
+.\" .sp
+.\" .nf
+.\"    int alphasort(const struct dirent ** a,
+.\"                  const struct dirent **b);
+.\" .fi
+.\" .sp
+.\" but glibc 2.0 returns to the imprecise BSD prototype.
+Функции \fBversionsort\fP() и \fBscandirat\fP() являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+Начиная с glibc 2.1, \fBalphasort\fP() вызывает \fBstrcoll\fP(3); раньше в ней
+использовалась \fBstrcmp\fP(3).
+.PP
+До glibc 2.10, два аргумента \fBalphasort\fP() и \fBversionsort\fP() имели тип
+\fIconst void\ *\fP. После стандартизации \fBalphasort\fP() в  POSIX.1\-2008, тип
+аргумента argument стал типобезопасным \fIconst struct dirent\ **\fP, и в glibc
+2.10 функция \fBalphasort\fP() (и нестандартная \fBversionsort\fP()) была
+приведена в соответствие со стандартом.
+.SH ПРИМЕР
+.\"
+Программа, показанная ниже, печатает список файлов в текущем каталоге в
+обратном порядке.
+.SS "Исходный код программы"
+\&
+.EX
+#define _DEFAULT_SOURCE
+#include <dirent.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int
+main(void)
+{
+    struct dirent **namelist;
+    int n;
+
+    n = scandir(".", &namelist, NULL, alphasort);
+    if (n == \-1) {
+        perror("scandir");
+        exit(EXIT_FAILURE);
+    }
+
+    while (n\-\-) {
+        printf("%s\en", namelist[n]\->d_name);
+        free(namelist[n]);
+    }
+    free(namelist);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclosedir\fP(3), \fBfnmatch\fP(3), \fBopendir\fP(3), \fBreaddir\fP(3),
+\fBrewinddir\fP(3), \fBseekdir\fP(3), \fBstrcmp\fP(3), \fBstrcoll\fP(3),
+\fBstrverscmp\fP(3), \fBtelldir\fP(3)

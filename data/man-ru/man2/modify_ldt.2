@@ -1,0 +1,145 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1995 Michael Chastain (mec@duracef.shout.net), 22 July 1995.
+.\" Copyright (c) 2015 Andrew Lutomirski
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MODIFY_LDT 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+modify_ldt \- возвращает или изменяет запись LDT у процесса
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+.PP
+\fBint modify_ldt(int \fP\fIfunc\fP\fB, void *\fP\fIptr\fP\fB, unsigned long \fP\fIbytecount\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Вызов \fBmodify_ldt\fP() считывает или записывает таблицу локальных
+дескрипторов (LDT) процесса. LDT представляет собой массив дескрипторов
+сегментов, которые могут использоваться в пользовательском коде. В Linux
+процессам разрешено настраивать попроцессные (в действительности,
+пространство памяти) LDT. Дополнительную информацию о LDT, смотрите в Intel
+Software Developer's Manual или AMD Architecture Programming Manual.
+.PP
+Если \fIfunc\fP равно 0, то \fBmodify_ldt\fP() читает LDT в память, на которую
+указывает \fIptr\fP. Количество читаемых байт — меньшее из \fIbytecount\fP и
+реального размера LDT несмотря на то, что ядро может действовать как будто
+LDT заполняется дополнительными нулевыми байтами в конце. При успешном
+выполнении \fBmodify_ldt\fP() возвращает количество прочитанных байт.
+.PP
+Если значение \fIfunc\fP равно 1 или 0x11, то \fBmodify_ldt\fP() изменяет запись
+LDT, на которую указывает \fIptr\->entry_number\fP. Значение \fIptr\fP
+указывает на структуру \fIuser_desc\fP, а \fIbytecount\fP должно быть равно
+размеру этой структуры.
+.PP
+Структура \fIuser_desc\fP определена в \fI<asm/ldt.h>\fP следующим
+образом:
+.PP
+.in +4n
+.EX
+struct user_desc {
+    unsigned int  entry_number;
+    unsigned long base_addr;
+    unsigned int  limit;
+    unsigned int  seg_32bit:1;
+    unsigned int  contents:2;
+    unsigned int  read_exec_only:1;
+    unsigned int  limit_in_pages:1;
+    unsigned int  seg_not_present:1;
+    unsigned int  useable:1;
+};
+.EE
+.in
+.PP
+В Linux версии 2.4 и более ранних эта структура называлась
+\fImodify_ldt_ldt_s\fP.
+.PP
+В поле \fIcontents\fP определяется тип сегмента (данные, данные, расширяемые
+вниз (expand\-down data), не соответствующий код (non\-conforming code) или
+соответствующий код). Назначение других полей совпадает с их описанием в
+руководстве к процессору, несмотря на то, что \fBmodify_ldt\fP() не может
+изменить аппаратно\-определяемый бит «доступа», описанный в руководстве к ЦП.
+.PP
+A \fIuser_desc\fP считается «пустым», если \fIread_exec_only\fP и
+\fIseg_not_present\fP равны 1, а все остальные поля равны 0. Элемент LDT можно
+очистить, назначив ему «пустой» \fIuser_desc\fP или, если \fIfunc\fP равно 1,
+установив \fIbase\fP и \fIlimit\fP в 0.
+.PP
+Сегмент соответствующего кода (conforming code segment, т. е., с
+\fIcontents==3\fP) будет отклонён, если \fIfunc\fP равно 1 или если
+\fIseg_not_present\fP равно 0.
+.PP
+Если \fIfunc\fP равно 2, то \fBmodify_ldt\fP() прочитает нули. Это, кажется,
+пережиток из Linux 2.4.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBmodify_ldt\fP() возвращается реальное количество
+прочитанных байт (при чтении) или 0 (при записи). При ошибке \fBmodify_ldt\fP()
+возвращает \-1, а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Значение \fIptr\fP указывает за пределы адресного пространства.
+.TP 
+\fBEINVAL\fP
+Значение \fIptr\fP равно 0, или \fIfunc\fP равно 1, а \fIbytecount\fP не равно
+размеру структуры \fIuser_desc\fP, или \fIfunc\fP равно 1 или 0x11, а новый
+элемент LDT содержит неправильные значения.
+.TP 
+\fBENOSYS\fP
+Значение \fIfunc\fP не равно 0, 1, 2 или 0x11.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux и не должен использоваться в программах,
+которые должны быть переносимыми.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данного системного вызова; запускайте его с помощью
+\fBsyscall\fP(2).
+.PP
+Вызов \fBmodify_ldt\fP() не должен использоваться для локального хранилища
+нити, так как это замедляет переключение контекста и поддерживается только
+для ограниченного количества нитей. Вместо этого в библиотеках нитей должны
+использоваться \fBset_thread_area\fP(2) или \fBarch_prctl\fP(2), только если не
+нужна поддержка старых ядер, где нет этих вызовов.
+.PP
+Обычно, \fBmodify_ldt\fP() используют для запуска старого 16\-битного или
+сегментированного 32\-битного кода. Однако, не все ядра допускают установку
+16\-битных сегментов.
+.PP
+Даже в 64\-битных ядрах вызов \fBmodify_ldt\fP() нельзя использовать для
+создания сегмента кода в длинном режиме (т. е.,
+64\-битного). Недокументированное поле «lm» в \fIuser_desc\fP не помогает и,
+несмотря на имя, не образует сегмент в длинном режиме.
+.SH ДЕФЕКТЫ
+.\" commit e30ab185c490e9a9381385529e0fd32f0a399495
+В 64\-битных ядрах до Linux 3.19, установка бита «lm» в \fIuser_desc\fP
+приводила к тому, что дескриптор переставал считаться пустым. Учтите, что
+бит «lm» не существует в 32\-битных заголовках, но есть дефектные ядра,
+которые по\-прежнему сообщают о бите даже в 32\-битном процессе.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBarch_prctl\fP(2), \fBset_thread_area\fP(2), \fBvm86\fP(2)

@@ -1,0 +1,95 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 2004-10-10 by aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INITGROUPS 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+initgroups \- инициализирует вспомогательный групповой список доступа
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <grp.h>\fP
+.PP
+\fBint initgroups(const char *\fP\fIuser\fP\fB, gid_t \fP\fIgroup\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBinitgroups\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBinitgroups\fP() инициализирует групповой список доступа путём чтения
+базы данных групп \fI/etc/group\fP и использования всех групп, в которые входит
+\fIuser\fP. Также в список добавляется дополнительная группа \fIgroup\fP.
+.PP
+Аргумент \fIuser\fP должен быть не равен NULL.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBinitgroups\fP() возвращает 0. В случае
+ошибки возвращается \-1, и устанавливается соответствующее значение \fIerrno\fP.
+.SH ОШИБКИ
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для структуры с информацией о группе.
+.TP 
+\fBEPERM\fP
+Вызывающий процесс не имеет достаточно прав. Смотрите описание системного
+вызова \fBsetgroups\fP(2).
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/group\fP
+файл базы данных групп
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBinitgroups\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4, 4.3BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetgroups\fP(2), \fBsetgroups\fP(2), \fBcredentials\fP(7)

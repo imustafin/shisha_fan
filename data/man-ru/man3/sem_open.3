@@ -1,0 +1,124 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SEM_OPEN 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sem_open \- инициализирует и открывает именованный семафор
+.SH ОБЗОР
+.nf
+\fB#include <fcntl.h>\fP           /* константы O_* */
+\fB#include <sys/stat.h>\fP        /* константы для mode */
+\fB#include <semaphore.h>\fP
+.PP
+\fBsem_t *sem_open(const char *\fP\fIname\fP\fB, int \fP\fIoflag\fP\fB);\fP
+\fBsem_t *sem_open(const char *\fP\fIname\fP\fB, int \fP\fIoflag\fP\fB, \fP
+\fB                mode_t \fP\fImode\fP\fB, unsigned int \fP\fIvalue\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-pthread\fP.
+.SH ОПИСАНИЕ
+Функция \fBsem_open\fP() создаёт новый семафор POSIX или открывает существующий
+семафор. Семафору присваивается имя \fIname\fP. Подробней об устройстве \fIname\fP
+смотрите \fBsem_overview\fP(7).
+.PP
+.\" In reality the filesystem IDs are used on Linux.
+В аргументе \fIoflag\fP задаются флаги, которые управляют работой вызова
+(определения значений флагов можно получить включив
+\fI<fcntl.h>\fP). Если в \fIoflag\fP указано \fBO_CREAT\fP, то семафор
+создаётся, если ещё не существует. Владельцем (ID пользователя) семафора
+устанавливается эффективный ID пользователя вызывающего процесса. Владельцем
+группы (ID группы) устанавливается эффективный ID группы вызывающего
+процесса. Если в \fIoflag\fP указаны \fBO_CREAT\fP и \fBO_EXCL\fP одновременно и
+семафор с заданным \fIname\fP уже существует, то возвращается ошибка.
+.PP
+Если в \fIoflag\fP указано \fBO_CREAT\fP, то должны быть заданы ещё два
+аргумента. В аргументе \fImode\fP задаются права для нового семафора, подобно
+\fBopen\fP(2) (символические определения бит прав можно получить включив
+\fI<sys/stat.h>\fP). Настройки прав маскируются маской процесса. Права
+чтения и записи должны быть заданы для каждого класса пользователей, которым
+нужен доступ к семафору. В аргументе \fIvalue\fP задаётся начальное значение
+нового семафора. Если указан \fBO_CREAT\fP и семафор с заданным \fIname\fP
+существует, то \fImode\fP и \fIvalue\fP игнорируются.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsem_open\fP() возвращает адрес нового семафора; этот
+адрес используется при вызове других функций, работающих с семафорами. При
+ошибке \fBsem_open\fP() возвращает \fBSEM_FAILED\fP, а в \fIerrno\fP записывается
+номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Семафор существует, но вызывающий не имеет прав для его открытия.
+.TP 
+\fBEEXIST\fP
+В \fIoflag\fP указаны \fBO_CREAT\fP и \fBO_EXCL\fP, но семафор \fIname\fP уже
+существует.
+.TP 
+\fBEINVAL\fP
+Значение \fIvalue\fP было больше \fBSEM_VALUE_MAX\fP.
+.TP 
+\fBEINVAL\fP
+В \fIname\fP есть только «/», и нет других символов.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fIname\fP.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOENT\fP
+.\" this error can occur if we have a name of the (nonportable) form
+.\" /dir/name, and the directory /dev/shm/dir does not exist.
+В \fIoflag\fP не указан \fBO_CREAT\fP и семафор \fIname\fP не существует; или указан
+\fBO_CREAT\fP, но \fIname\fP указан в некорректной форме.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsem_open\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsem_close\fP(3), \fBsem_getvalue\fP(3), \fBsem_post\fP(3), \fBsem_unlink\fP(3),
+\fBsem_wait\fP(3), \fBsem_overview\fP(7)

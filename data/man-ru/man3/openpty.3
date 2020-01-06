@@ -1,0 +1,131 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) OpenBSD Group
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_3_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\" Converted into a manpage again by Martin Schulze <joey@infodrom.org>
+.\"
+.\" Added -lutil remark, 030718
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH OPENPTY 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+openpty, login_tty, forkpty \- функции для работы с терминалом
+.SH ОБЗОР
+.nf
+\fB#include <pty.h>\fP
+.PP
+\fBint openpty(int *\fP\fIamaster\fP\fB, int *\fP\fIaslave\fP\fB, char *\fP\fIname\fP\fB,\fP
+\fB            const struct termios *\fP\fItermp\fP\fB,\fP
+\fB            const struct winsize *\fP\fIwinp\fP\fB);\fP
+.PP
+\fBpid_t forkpty(int *\fP\fIamaster\fP\fB, char *\fP\fIname\fP\fB,\fP
+\fB              const struct termios *\fP\fItermp\fP\fB,\fP
+\fB              const struct winsize *\fP\fIwinp\fP\fB);\fP
+
+\fB#include <utmp.h>\fP
+.PP
+\fBint login_tty(int \fP\fIfd\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lutil\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBopenpty\fP() ищет доступный псевдотерминал и возвращает файловые
+дескрипторы для его основного и подчинённого устройств в \fIamaster\fP и
+\fIaslave\fP. Если \fIname\fP не равно NULL, то имя файла подчинённого устройства
+возвращается в \fIname\fP. Если \fItermp\fP не равно NULL, то параметры терминала
+подчинённого устройства будут установлены в значения, указанные в
+\fItermp\fP. Если \fIwinp\fP не равно NULL, то размер окна подчинённого устройства
+будет установлен согласно значениям, указанным в \fIwinp\fP.
+.PP
+Функция \fBlogin_tty\fP() подготавливает терминал \fIfd\fP (который может быть
+реальным устройством терминала или подчинённым псевдотерминала, возвращаемым
+\fBopenpty\fP()) таким образом, чтобы через него можно было войти в систему;
+для этого создаётся новый сеанс, \fIfd\fP делается управляющим терминалом для
+вызывающего процесса (при этом \fIfd\fP служит в качестве стандартных ввода,
+вывода и потока ошибок текущего процесса) и закрывает \fIfd\fP.
+.PP
+Функция \fBforkpty\fP() объединяет \fBopenpty\fP(), \fBfork\fP(2) и \fBlogin_tty\fP()
+для создания нового процесса, работающего в псевдотерминале. Файловый
+дескриптор основной стороны псевдотерминала возвращается в \fIamaster\fP. Если
+\fIname\fP не равно NULL, то указанный в нём буфер используется для возврата
+имени файла подчинённого устройства. Если аргументы \fItermp\fP и \fIwinp\fP не
+равны NULL, то в них задаются атрибуты терминала и размеры окна подчинённой
+стороны псевдотерминала.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если вызов \fBopenpty\fP(), \fBlogin_tty\fP() или \fBforkpty\fP() завершается с
+ошибкой, то возвращается \-1 и \fIerrno\fP указывает на тип ошибки. Иначе,
+\fBopenpty\fP(), \fBlogin_tty\fP() и дочерний процесс \fBforkpty\fP() возвращают 0, и
+родительский процесс \fBforkpty\fP() возвращает ID дочернего процесса.
+.SH ОШИБКИ
+Вызов \fBopenpty\fP() завершается ошибкой если:
+.TP 
+\fBENOENT\fP
+Нет доступных терминалов.
+.PP
+Завершается ошибкой функция \fBlogin_tty\fP(), если \fBioctl\fP(2) не может
+назначить \fIfd\fP управляющему терминалу вызываемого процесса.
+.PP
+Завершается ошибкой функция \fBforkpty\fP(), если не сработает хотя бы одна из
+функций \fBopenpty\fP() или \fBfork\fP(2).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw20 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBforkpty\fP(),
+\fBopenpty\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+T{
+\fBlogin_tty\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:ttyname
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции BSD есть в glibc. Они не стандартизированы в POSIX.
+.SH ЗАМЕЧАНИЯ
+Модификаторы \fBconst\fP были добавлены в аргументы указателей на структуры
+\fBopenpty\fP() и \fBforkpty\fP() в glibc 2.8.
+.PP
+В версиях glibc до 2.0.92, \fBopenpty\fP() возвращает файловые дескрипторы для
+псевдотерминальной пары BSD; начиная с glibc 2.0.92, сначала производится
+попытка открыть псевдотерминальную пару UNIX 98, а если это не удаётся, то
+происходит возвращение к открытию псевдотерминальной пары BSD.
+.SH ДЕФЕКТЫ
+Невозможно определить сколько места должно быть зарезервировано для
+\fIname\fP. Поэтому, вызов \fBopenpty\fP() или \fBforkpty\fP() со значением \fIname\fP
+не равным NULL может быть небезопасен.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfork\fP(2), \fBttyname\fP(3), \fBpty\fP(7)

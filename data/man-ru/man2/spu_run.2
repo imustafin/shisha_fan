@@ -1,0 +1,209 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) International Business Machines Corp., 2006
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_3_PARA)
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
+.\" the GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" HISTORY:
+.\" 2005-09-28, created by Arnd Bergmann <arndb@de.ibm.com>
+.\" 2006-06-16, revised by Eduardo M. Fleury <efleury@br.ibm.com>
+.\" 2007-07-10, some polishing by mtk
+.\" 2007-09-28, updates for newer kernels, added example
+.\"             by Jeremy Kerr <jk@ozlabs.org>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SPU_RUN 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+spu_run \- выполняет контекст SPU
+.SH ОБЗОР
+.nf
+\fB#include <sys/spu.h>\fP
+.PP
+\fBint spu_run(int \fP\fIfd\fP\fB, unsigned int *\fP\fInpc\fP\fB, unsigned int *\fP\fIevent\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Системный вызов \fBspu_run\fP() используется на машинах PowerPC с архитектурой
+Cell Broadband Engine для получения доступа к Synergistic Processor Unit
+(SPU). Аргумент \fIfd\fP представляет собой файловый дескриптор, возвращаемый
+вызовом \fBspu_create\fP(2) и указывающий на определённый контекст SPU. Когда
+контекст планируется на физическом SPU, он запускается на выполнение начиная
+с инструкции, на которую указывает значение \fInpc\fP.
+.PP
+Выполнение кода SPU происходит синхронно, то есть \fBspu_run\fP() блокируется
+на время работы SPU. Если требуется параллельное выполнение кода SPU и кода
+на основном процессоре или других SPU, то сначала нужно создать новую нить
+выполнения (например с помощью \fBpthread_create\fP(3)).
+.PP
+При завершении работы \fBspu_run\fP() текущее значение программного счётчика
+SPU записывается в \fInpc\fP, что позволяет использовать тот же указатель
+\fInpc\fP в последующих вызовах \fBspu_run\fP().
+.PP
+В аргументе \fIevent\fP указывается буфер для расширенного кода состояния. Если
+контекст SPU создан с флагом \fBSPU_CREATE_EVENTS_ENABLED\fP, то ядро Linux
+заполняет этот буфер перед возвратом из \fBspu_run\fP().
+.PP
+Код состояния может быть одной (или несколькими) из следующих констант:
+.TP 
+\fBSPE_EVENT_DMA_ALIGNMENT\fP
+Произошла ошибка выравнивания DMA.
+.TP 
+\fBSPE_EVENT_INVALID_DMA\fP
+Попытка выполнить неверную команду MFC DMA.
+.TP 
+\fBSPE_EVENT_SPE_DATA_STORAGE\fP
+Произошла ошибка хранилища DMA.
+.TP 
+\fBSPE_EVENT_SPE_ERROR\fP
+Выполнена недопустимая инструкция.
+.PP
+Для аргумента \fIevent\fP допускается значение NULL. В этом случае информация о
+событиях не будет поступать в вызывающий процесс.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBspu_run\fP() возвращается значение регистра
+\fIspu_status\fP. При ошибке возвращается \-1, а в \fIerrno\fP содержится один из
+кодов ошибки, описанных далее.
+.PP
+Значение регистра \fIspu_status\fP представляет собой битовую маску кодов
+состояния и необязательный 14\-битный код, возвращаемый при выполнении
+инструкции \fBstop\-and\-signal\fP SPU. Битовые маски кодов состояний:
+.TP 
+\fB0x02\fP
+SPU остановлен инструкцией \fBstop\-and\-signal\fP.
+.TP 
+\fB0x04\fP
+SPU остановлен инструкцией \fBhalt\fP.
+.TP 
+\fB0x08\fP
+SPU ожидает канала.
+.TP 
+\fB0x10\fP
+SPU в пошаговом режиме.
+.TP 
+\fB0x20\fP
+SPU пытался выполнить неверную инструкцию.
+.TP 
+\fB0x40\fP
+SPU пытался получить доступ к неверному каналу.
+.TP 
+\fB0x3fff0000\fP
+При наложении этой маски получается код, возвращаемый инструкцией
+\fBstop\-and\-signal\fP. Полученные биты корректны только, если установлен бит
+0x02.
+.PP
+Если \fBspu_run\fP() не вернул ошибку, то один или более младших восьми битов
+всегда установлены.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEFAULT\fP
+Задан неправильный указатель в \fInpc\fP или значение \fIevent\fP не равно NULL и
+является неправильным указателем.
+.TP 
+\fBEINTR\fP
+При выполнении \fBspu_run\fP() получен сигнал; см. \fBsignal\fP(7). При
+необходимости, значение \fInpc\fP обновляется до нового значения программного
+счётчика.
+.TP 
+\fBEINVAL\fP
+Значение \fIfd\fP не является правильным файловым дескриптором, возвращённым
+\fBspu_create\fP(2).
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для обработки страничного сбоя в результате прямого
+доступа Memory Flow Controller (MFC).
+.TP 
+\fBENOSYS\fP
+Возможность не предоставляется текущей системой, так как или аппаратура не
+предоставляет SPU, или не загружен модуль spufs.
+.SH ВЕРСИИ
+Системный вызов \fBspu_run\fP() был добавлен в ядро Linux версии 2.6.16.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов существует только в Linux и реализован только для архитектуры
+PowerPC. Программы, использующие данный вызов, не переносимы.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для этого системного вызова; запускайте его с помощью
+\fBsyscall\fP(2). Однако заметим, что \fBspu_run\fP() предназначен для работы в
+библиотеках, которые реализуют более абстрактный интерфейс к SPU и не должен
+вызываться из обычных приложений. Рекомендуемые библиотеки приведены на
+странице
+.UR http://www.bsc.es\:/projects\:/deepcomputing\:/linuxoncell/
+.UE .
+.SH ПРИМЕР
+В следующем примере реализована простая программа, состоящая из одной
+инструкции SPU и системного вызова \fBspu_run\fP().
+.PP
+.EX
+#include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <fcntl.h>
+
+#define handle_error(msg) \e
+    do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+int main(void)
+{
+    int context, fd, spu_status;
+    uint32_t instruction, npc;
+
+    context = spu_create("/spu/example\-context", 0, 0755);
+    if (context == \-1)
+        handle_error("spu_create");
+
+    /* записать инструкцию \(aqstop 0x1234\(aq в локальное хранилище
+       памяти SPU
+     */
+    instruction = 0x00001234;
+
+    fd = open("/spu/example\-context/mem", O_RDWR);
+    if (fd == \-1)
+        handle_error("open");
+    write(fd, &instruction, sizeof(instruction));
+
+    /* присвоить npc адрес начальной инструкции программы
+     * SPU. Так как мы записали инструкцию в начало
+     * файла mem, точка входа будет равна 0x0
+     */
+    npc = 0;
+
+    spu_status = spu_run(context, &npc, NULL);
+    if (spu_status == \-1)
+        handle_error("open");
+
+    /* мы должны получить код состояния 0x1234002:
+     *   0x00000002 (spu остановлен из\-за stop\-and\-signal)
+     * | 0x12340000 (код stop\-and\-signal)
+     */
+    printf("Состояние SPU: 0x%08x\en", spu_status);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.\" .SH AUTHORS
+.\" Arnd Bergmann <arndb@de.ibm.com>, Jeremy Kerr <jk@ozlabs.org>
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclose\fP(2), \fBspu_create\fP(2), \fBcapabilities\fP(7), \fBspufs\fP(7)

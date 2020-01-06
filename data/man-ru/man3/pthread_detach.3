@@ -1,0 +1,97 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_DETACH 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_detach \- отсоединяет нить
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_detach(pthread_t \fP\fIthread\fP\fB);\fP
+.fi
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.SH ОПИСАНИЕ
+Функция \fBpthread_detach\fP() помечает нить, указанную \fIthread\fP, как
+отсоединённую. Когда отсоединённая нить завершается, её ресурсы
+автоматически отдаются обратно системе и не нужно объединять другую нить с
+завершившей работу.
+.PP
+Попытка отсоединить уже отсоединённую нить приводит к непредсказуемым
+последствиям.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBpthread_detach\fP() возвращается 0; при ошибке
+возвращается номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Нить \fIthread\fP не является присоединяемой.
+.TP 
+\fBESRCH\fP
+Нить с идентификатором \fIthread\fP не найдена.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_detach\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+После отсоединения нить её нельзя обратно присоединить с помощью
+\fBpthread_join\fP(3) или снова сделать присоединяемой.
+.PP
+Новую нить можно создать в отсоединённом состоянии с помощью
+\fBpthread_attr_setdetachstate\fP(3), установив атрибут отсоединения у
+аргумента \fIattr\fP при \fBpthread_create\fP(3).
+.PP
+Атрибут отсоединения просто определяет поведение системы при завершении
+нити; он не препятствует завершению нити при завершении работы процесс с
+помощью \fBexit\fP(3) (или эквивалента, если завершается основная нить).
+.PP
+Функция \fBpthread_join\fP(3) или \fBpthread_detach\fP() должна вызываться для
+каждой нити, созданной приложением, для того, чтобы можно было освободить
+системные ресурсы нити (но, заметим, что ресурсы всех нитей, для которых
+выполняется одно из этих действий, освобождаются при завершении процесса).
+.SH ПРИМЕР
+Следующее выражение отсоединяет вызвавшую нить:
+.PP
+    pthread_detach(pthread_self());
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthread_attr_setdetachstate\fP(3), \fBpthread_cancel\fP(3),
+\fBpthread_create\fP(3), \fBpthread_exit\fP(3), \fBpthread_join\fP(3), \fBpthreads\fP(7)

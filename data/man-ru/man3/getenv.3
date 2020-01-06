@@ -1,0 +1,119 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright (C) 2007, 2012 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's "POSIX Programmer's Guide" (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 19:30:29 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Fri Feb 14 21:47:50 1997 by Andries Brouwer (aeb@cwi.nl)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETENV 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getenv, secure_getenv \- возвращают значения переменной окружения
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBchar *getenv(const char *\fP\fIname\fP\fB);\fP
+.PP
+\fBchar *secure_getenv(const char *\fP\fIname\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsecure_getenv\fP(): _GNU_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBgetenv\fP() ищет в списке окружения переменную окружения \fIname\fP и
+возвращает указатель на соответствующую строку \fIvalue\fP.
+.PP
+Специальная функция GNU \fBsecure_getenv\fP() работает также как \fBgetenv\fP(),
+но возвращает NULL, если требуется «безопасное выполнение». Безопасное
+выполнение требуется, если верно одно из следующих условий на момент
+загрузки программы вызывающего процесса:
+.IP * 3
+эффективный пользовательский ID процесса не совпадает с реальным
+пользовательским ID или эффективный групповой ID процесса не совпадает с
+реальным групповым ID (обычно в результате выполнения программы с
+установленным битом set\-user\-ID или set\-group\-ID);
+.IP *
+у исполняемого файла установлен эффективный мандатный бит; или
+.IP *
+у процесса имеется непустой ограничивающий набор мандатов.
+.PP
+Безопасное выполнение также может требоваться некоторыми модулями
+безопасности Linux.
+.PP
+Функция \fBsecure_getenv\fP() предназначена для библиотек общего назначения с
+целью недопущения уязвимостей, которые могли бы возникнуть, если программы с
+битом set\-user\-ID или set\-group\-ID ненамеренно доверяли бы окружению.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBgetenv\fP() возвращает указатель на значение в окружении или NULL,
+если ничего не найдено.
+.SH ВЕРСИИ
+Функция \fBsecure_getenv\fP() впервые появилась в glibc версии 2.17.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw25 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetenv\fP(),
+\fBsecure_getenv\fP()
+T}	Безвредность в нитях	MT\-Safe env
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBgetenv\fP(): POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4, 4.3BSD.
+.PP
+Функция \fBsecure_getenv\fP() является расширением GNU.
+.SH ЗАМЕЧАНИЯ
+Строки в списке окружения имеют вид \fIимя=значение\fP.
+.PP
+В типичной реализации \fBgetenv\fP() возвращает указатель на строку в списке
+окружения. Вызывающий не должен изменять эту строку, так как это изменить
+окружение процесса.
+.PP
+Реализации \fBgetenv\fP() не требуется быть реентерабельной. Строка, указанная
+в возвращаемом значение \fBgetenv\fP(), может быть выделена статически и может
+изменяться после вызова \fBgetenv\fP() с помощью \fBputenv\fP(3), \fBsetenv\fP(3) или
+\fBunsetenv\fP(3).
+.PP
+Режим «безопасного выполнения» в \fBsecure_getenv\fP() управляется флагом
+\fBAT_SECURE\fP вспомогательного вектора, передаваемого из ядра в
+пользовательское пространство.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclearenv\fP(3), \fBgetauxval\fP(3), \fBputenv\fP(3), \fBsetenv\fP(3), \fBunsetenv\fP(3),
+\fBcapabilities\fP(7), \fBenviron\fP(7)

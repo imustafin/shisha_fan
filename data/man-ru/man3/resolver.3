@@ -1,0 +1,378 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and (C) Copyright 2015 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified 1993-07-25 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 2004-10-31 by aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RESOLVER 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+res_ninit, res_nclose, res_nquery, res_nsearch, res_nquerydomain,
+res_nmkquery, res_nsend, res_init, res_query, res_search, res_querydomain,
+res_mkquery, res_send, dn_comp, dn_expand \- процедуры определителя имён
+.SH ОБЗОР
+.nf
+\fB#include <netinet/in.h>\fP
+\fB#include <arpa/nameser.h>\fP
+\fB#include <resolv.h>\fP
+.PP
+\fBstruct __res_state;\fP
+\fBtypedef struct __res_state *res_state;\fP
+.PP
+\fBint res_ninit(res_state \fP\fIstatep\fP\fB);\fP
+.PP
+\fBvoid res_nclose(res_state \fP\fIstatep\fP\fB);\fP
+.PP
+\fBint res_nquery(res_state \fP\fIstatep\fP\fB,\fP
+\fB           const char *\fP\fIdname\fP\fB, int \fP\fIclass\fP\fB, int \fP\fItype\fP\fB,\fP
+\fB           unsigned char *\fP\fIanswer\fP\fB, int \fP\fIanslen\fP\fB);\fP
+.PP
+\fBint res_nsearch(res_state \fP\fIstatep\fP\fB,\fP
+\fB           const char *\fP\fIdname\fP\fB, int \fP\fIclass\fP\fB, int \fP\fItype\fP\fB,\fP
+\fB           unsigned char *\fP\fIanswer\fP\fB, int \fP\fIanslen\fP\fB);\fP
+.PP
+\fBint res_nquerydomain(res_state \fP\fIstatep\fP\fB,\fP
+\fB           const char *\fP\fIname\fP\fB, const char *\fP\fIdomain\fP\fB,\fP
+\fB           int \fP\fIclass\fP\fB, int \fP\fItype\fP\fB, unsigned char *\fP\fIanswer\fP\fB,\fP
+\fB           int \fP\fIanslen\fP\fB);\fP
+.PP
+\fBint res_nmkquery(res_state \fP\fIstatep\fP\fB,\fP
+\fB           int \fP\fIop\fP\fB, const char *\fP\fIdname\fP\fB, int \fP\fIclass\fP\fB,\fP
+\fB           int \fP\fItype\fP\fB, const unsigned char *\fP\fIdata\fP\fB, int \fP\fIdatalen\fP\fB,\fP
+\fB           const unsigned char *\fP\fInewrr\fP\fB,\fP
+\fB           unsigned char *\fP\fIbuf\fP\fB, int \fP\fIbuflen\fP\fB);\fP
+.PP
+\fBint res_nsend(res_state \fP\fIstatep\fP\fB,\fP
+\fB           const unsigned char *\fP\fImsg\fP\fB, int \fP\fImsglen\fP\fB,\fP
+\fB           unsigned char *\fP\fIanswer\fP\fB, int \fP\fIanslen\fP\fB);\fP
+.PP
+\fBint dn_comp(const char *\fP\fIexp_dn\fP\fB, unsigned char *\fP\fIcomp_dn\fP\fB,\fP
+\fB           int \fP\fIlength\fP\fB, unsigned char **\fP\fIdnptrs\fP\fB,\fP
+\fB           unsigned char **\fP\fIlastdnptr\fP\fB);\fP
+.PP
+\fBint dn_expand(const unsigned char *\fP\fImsg\fP\fB,\fP
+\fB           const unsigned char *\fP\fIeomorig\fP\fB,\fP
+\fB           const unsigned char *\fP\fIcomp_dn\fP\fB, char *\fP\fIexp_dn\fP\fB,\fP
+\fB           int \fP\fIlength\fP\fB);\fP
+.fi
+.\"
+.SS Устаревшие
+.nf
+\fBextern struct __res_state _res;\fP
+.PP
+\fBint res_init(void);\fP
+.PP
+\fBint res_query(const char *\fP\fIdname\fP\fB, int \fP\fIclass\fP\fB, int \fP\fItype\fP\fB,\fP
+\fB           unsigned char *\fP\fIanswer\fP\fB, int \fP\fIanslen\fP\fB);\fP
+.PP
+\fBint res_search(const char *\fP\fIdname\fP\fB, int \fP\fIclass\fP\fB, int \fP\fItype\fP\fB,\fP
+\fB           unsigned char *\fP\fIanswer\fP\fB, int \fP\fIanslen\fP\fB);\fP
+.PP
+\fBint res_querydomain(const char *\fP\fIname\fP\fB, const char *\fP\fIdomain\fP\fB,\fP
+\fB           int \fP\fIclass\fP\fB, int \fP\fItype\fP\fB, unsigned char *\fP\fIanswer\fP\fB,\fP
+\fB           int \fP\fIanslen\fP\fB);\fP
+.PP
+\fBint res_mkquery(int \fP\fIop\fP\fB, const char *\fP\fIdname\fP\fB, int \fP\fIclass\fP\fB,\fP
+\fB           int \fP\fItype\fP\fB, const unsigned char *\fP\fIdata\fP\fB, int \fP\fIdatalen\fP\fB,\fP
+\fB           const unsigned char *\fP\fInewrr\fP\fB,\fP
+\fB           unsigned char *\fP\fIbuf\fP\fB, int \fP\fIbuflen\fP\fB);\fP
+.PP
+\fBint res_send(const unsigned char *\fP\fImsg\fP\fB, int \fP\fImsglen\fP\fB,\fP
+\fB           unsigned char *\fP\fIanswer\fP\fB, int \fP\fIanslen\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lresolv\fP.
+.SH ОПИСАНИЕ
+\fBЗамечание:\fP Данная страница не полна (не описаны различные функции
+определителя, предоставляемые glibc) и, вероятно, содержит устаревшую
+информацию.
+.PP
+Описываемые далее функции выполняют запросы и обрабатывают ответы,
+полученные от серверов доменных имён Интернет.
+.PP
+В программный интерфейс входят как современные, реентерабельные функции, так
+и устаревшие не реентерабельные. Функции \fBres_init\fP()  и \fBres_query\fP() из
+обычного интерфейса определителя использует статическое (глобальное)
+состояние, хранимое в структуре \fI_res\fP, что делает эти функции небезопасным
+при использовании в нитях. В BIND 8.2 появился набор новых интерфейсов
+\fBres_ninit\fP(), \fBres_nquery\fP() и т. п., в котором \fIres_state\fP указывается
+в третьем аргументе, что позволяет использовать отдельное состояние
+определителя в каждой нити.
+.PP
+Функции \fBres_ninit\fP() и \fBres_init\fP() читают файлы настройки (смотрите
+\fBresolv.conf\fP(5)) для получения имени домена по умолчанию и адреса(\-ов)
+сервера имён. Если серверы не заданы, то используется локальный узел. Если
+не задан домен, то используется домен локального узла. Это может быть
+изменено через переменную окружения \fBLOCALDOMAIN\fP. Обычно, функция
+\fBres_ninit\fP() или \fBres_init\fP() выполняется первой из других
+функций. Каждый вызов \fBres_nquery\fP() требует соответствующего вызова
+\fBres_nclose\fP() для освобождения памяти, выделенной \fBres_ninit\fP() и
+последующими вызовами \fBres_nquery\fP().
+.PP
+Функции \fBres_nquery\fP() и \fBres_query\fP() запрашивают у сервера имён полное
+доменное имя \fIname\fP заданного типа \fItype\fP и класса \fIclass\fP. Ответ
+помещается в буфер \fIanswer\fP длиной \fIanslen\fP, указанный вызывающим.
+.PP
+Функции \fBres_nsearch\fP() и \fBres_search\fP() отправляют запрос и ждут ответа,
+подобно \fBres_nquery\fP() и \fBres_query\fP(), но при этом ещё учитывают правила
+работы и поиска по умолчанию, настраиваемые через \fBRES_DEFNAMES\fP и
+\fBRES_DNSRCH\fP (смотрите ниже описание параметров \fI_res\fP).
+.PP
+Функции \fBres_nquerydomain\fP() и \fBres_querydomain\fP() отправляют запрос с
+помощью \fBres_nquery\fP()/\fBres_query\fP() с объединённым \fIname\fP и \fIdomain\fP.
+.PP
+Следующие функции являются процедурами низкого уровня, которые используются
+\fBres_nquery\fP()/\fBres_query\fP().
+.PP
+Функции \fBres_nmkquery\fP() и \fBres_mkquery\fP() создают сообщение\-запрос в
+\fIbuf\fP длиной \fIbuflen\fP для имени домена \fIdname\fP. Типом запроса \fIop\fP может
+быть:
+.TP 
+\fBQUERY\fP
+Стандартный запрос.
+.TP 
+\fBIQUERY\fP
+.\" commit e4e794841e3140875f2aa86b90e2ada3d61e1244
+Обратный запрос. Это значение было удалено в glibc 2.26, так как давно не
+поддерживалось серверами DNS.
+.TP 
+\fBNS_NOTIFY_OP\fP
+Уведомить об изменении SOA (Start of Authority) вторичный сервер.
+.PP
+Параметр \fInewrr\fP в настоящее время не используется.
+.PP
+Функции \fBres_nsend\fP() и \fBres_send\fP() посылают заранее созданный запрос,
+указанный в \fImsg\fP длиной \fImsglen\fP, и возвращают ответ в \fIanswer\fP длиной
+\fIanslen\fP. Вызывают функцию \fBres_ninit\fP()/\fBres_init\fP(), если этого ещё не
+было.
+.PP
+Функция \fBdn_comp\fP() сжимает имя домена \fIexp_dn\fP и сохраняет его в буфере
+\fIcomp_dn\fP длиной \fIlength\fP. Сжатие использует массив указателей \fIdnptrs\fP
+на предварительно сжатые имена в текущем сообщении. Первый указатель
+обозначает начало сообщения, а весь список оканчивается NULL. Предел массива
+определяется в \fIlastdnptr\fP. Если \fIdnptr\fP равно NULL, то имя домена не
+является сжатым. Если \fIlastdnptr\fP равно NULL, то список меток не
+обновляется.
+.PP
+Функция \fBdn_expand\fP() раскрывает сжатое имя домена \fIcomp_dn\fP до полного
+доменного имени, которое затем сохраняется в буфере \fIexp_dn\fP длиной
+\fIlength\fP. Сжатое имя содержится в запросе или ответном сообщении, а \fImsg\fP
+указывает на начало сообщения.
+.PP
+Процедуры определителя используют настройки и информацию о состоянии из
+структуры \fI__res_state\fP (переданной в аргументе \fIstatep\fP или в глобальной
+переменной \fI_res\fP, если используются старые не реентерабельные
+функции). Обычно, пользователь изменяет в этой структуре только поле
+\fIoptions\fP. Данное поле может содержать следующие значения, объединённые с
+помощью «OR»:
+.TP 
+\fBRES_INIT\fP
+Истинно, если уже вызывалась функция \fBres_ninit\fP() или \fBres_init\fP().
+.TP 
+\fBRES_DEBUG\fP
+.\" See resolv/README.
+.\" Support for RES_DEBUG was made conditional in glibc 2.2.
+Печатать отладочные сообщения. Этот параметр доступен только, если glibc
+собрана с включённой отладкой, которая по умолчанию выключена.
+.TP 
+\fBRES_AAONLY\fP (не реализован; устарел в glibc 2.25)
+Принимать только достоверные ответы. Функция \fBres_send\fP() продолжает
+работать, пока не найдёт достоверный ответ или возвращает ошибку. Данный
+параметр имелся, но не был реализован в glibc до версии 2.24; начиная с
+glibc 2.25 он устарел и его при его использовании выдаётся предупреждение.
+.TP 
+\fBRES_USEVC\fP
+использовать TCP\-соединение для запросов вместо датаграмм UDP.
+.TP 
+\fBRES_PRIMARY\fP (не реализован; устарел в glibc 2.25)
+Запрашивать только первичный сервер имён. Данный параметр имелся, но не был
+реализован в glibc до версии 2.24; начиная с glibc 2.25 он устарел и его при
+его использовании выдаётся предупреждение.
+.TP 
+\fBRES_IGNTC\fP
+Игнорировать ошибки обрезания. Не пытаться повторить запрос с помощью TCP.
+.TP 
+\fBRES_RECURSE\fP
+Установить в запросах бит рекурсии. Рекурсия выполняется сервером доменных
+имён, а не функцией \fBres_send\fP() (включено по умолчанию).
+.TP 
+\fBRES_DEFNAMES\fP
+Если указан, то \fBres_search\fP() будет добавлять имя домена по умолчанию к
+именам с одним компонентом в имени (не содержащим точек) (включено по
+умолчанию).
+.TP 
+\fBRES_STAYOPEN\fP
+Используется вместе с \fBRES_USEVC\fP для поддержания TCP\-соединения запросов
+между ответами.
+.TP 
+\fBRES_DNSRCH\fP
+Если указан, то \fBres_search\fP() будет искать имена узлов в текущем и
+родительском домене. Этот параметр используется \fBgethostbyname\fP(3)
+(включено по умолчанию).
+.TP 
+\fBRES_INSECURE1\fP
+Принимать ответ от ошибочного сервера. Может использоваться для обнаружения
+потенциальных угроза безопасности, но требует перекомпиляции glibc с
+включённой отладкой и параметром \fBRES_DEBUG\fP (только для отладки).
+.TP 
+\fBRES_INSECURE2\fP
+Принимать ответ, который содержит некорректный запрос. Может использоваться
+для обнаружения потенциальных угроза безопасности, но требует перекомпиляции
+glibc с включённой отладкой и параметром \fBRES_DEBUG\fP (только для отладки).
+.TP 
+\fBRES_NOALIASES\fP
+Отключить использование переменной окружения \fBHOSTALIASES\fP.
+.TP 
+\fBRES_USE_INET6\fP
+Пытаться выполнить запрос AAAA раньше запроса A внутри функции
+\fBgethostbyname\fP(3), и отображать ответы IPv4 в «туннелированной форме»
+IPv6, если записи AAAA не были обнаружены, но есть запись типа A. Начиная с
+glibc 2.25 этот параметр считается устаревшим и при его использовании
+выдаётся предупреждение; приложения должны использовать \fBgetaddrinfo\fP(3), а
+не \fBgethostbyname\fP(3).
+.TP 
+\fBRES_ROTATE\fP
+Включить циклический выбор среди имеющихся серверов имён. Это приводит к
+распределению нагрузки среди серверов и использование каждый раз только
+первого сервера всеми клиентами не происходит.
+.TP 
+\fBRES_NOCHECKNAME\fP (не реализован; устарел в glibc 2.25)
+Выключить в современном BIND проверку недопустимых символов в поступающих
+именах узлов и почтовых именах, таких как символы подчёркивания (_),
+не\-ASCII или управляющие символы. Данный параметр имелся в glibc до версии
+2.24; начиная с glibc 2.25 он устарел и его при его использовании выдаётся
+предупреждение.
+.TP 
+\fBRES_KEEPTSIG\fP (не реализован; устарел в glibc 2.25)
+Не обрезать записи TSIG. Данный параметр имелся, но не был реализован в
+glibc до версии 2.24; начиная с glibc 2.25 он устарел и его при его
+использовании выдаётся предупреждение.
+.TP 
+\fBRES_BLAST\fP  (не реализован; устарел в glibc 2.25)
+Посылать каждый запрос одновременно и рекурсивно всем серверам. Данный
+параметр имелся, но не был реализован в glibc до версии 2.24; начиная с
+glibc 2.25 он устарел и его при его использовании выдаётся предупреждение.
+.TP 
+\fBRES_USEBSTRING\fP (glibc 2.3.4 по 2.24)
+Выполнить поиск обратной записи IPv6 с помощью формата значимых битов,
+описанного в RFC\ 2673; если этот параметр не задан (по умолчанию), то
+используется полубайтовый формат. Данный параметр был удалён в glibc 2.25,
+так как он полагается на обратно несовместимое расширение DNS, которое
+никогда не разворачивалось в Интернете.
+.TP 
+\fBRES_NOIP6DOTINT\fP (glibc 2.24 и старее)
+Использовать зону \fIip6.arpa\fP при поиске обратной записи IPv6 вместо
+\fIip6.int\fP, которая устарела начиная с glibc 2.3.4. Данный параметр
+существует в glibc по версию  2.24 включительно (и включён по умолчанию). Из
+glibc 2.25 этот параметр был удалён.
+.TP 
+\fBRES_USE_EDNS0\fP (начиная с glibc 2.6)
+Включить поддержку расширений DNS (EDNS0), описанных в RFC\ 2671.
+.TP 
+\fBRES_SNGLKUP\fP (начиная с glibc 2.10)
+По умолчанию, glibc начиная с версии 2.9 выполняет поиск по IPv4 и IPv6
+параллельно. Некоторые приложения DNS\-серверов не могут обработать такие
+запросы должным образом и делают паузу между ответами на запрос. Этот
+параметр отключает данное поведение, что заставляет glibc делать запросы
+IPv6 и IPv4 последовательно (что замедляет процесс определения имени).
+.TP 
+\fBRES_SNGLKUPREOP\fP
+Открывать для каждого запроса новый сокет, если указано значение
+\fBRES_SNGLKUP\fP.
+.TP 
+\fBRES_USE_DNSSEC\fP
+Использовать DNSSEC с битом OK в записи OPT. Это значение подразумевает
+\fBRES_USE_EDNS0\fP.
+.TP 
+\fBRES_NOTLDQUERY\fP
+Не искать неполное имя как домен верхнего уровня (TLD).
+.TP 
+\fBRES_DEFAULT\fP
+.\"
+Значение по умолчанию подразумевает: \fBRES_RECURSE\fP, \fBRES_DEFNAMES\fP,
+\fBRES_DNSRCH\fP and \fBRES_NOIP6DOTINT\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функции \fBres_ninit\fP() и \fBres_init\fP() возвращают 0,
+и \-1 при ошибке.
+.PP
+Функции \fBres_nquery\fP(), \fBres_query\fP(), \fBres_nsearch\fP(), \fBres_search\fP(),
+\fBres_nquerydomain\fP(), \fBres_querydomain\fP(), \fBres_nmkquery\fP(),
+\fBres_mkquery\fP(), \fBres_nsend\fP() и \fBres_send\fP()  возвращают длину ответа
+или \-1 при ошибке.
+.PP
+Функции \fBdn_comp\fP() и \fBdn_expand\fP() возвращают длину сжатого имени, или \-1
+при ошибках.
+.PP
+В случае завершения \fBres_nquery\fP(), \fBres_query\fP(), \fBres_nsearch\fP(),
+\fBres_search\fP(), \fBres_nquerydomain\fP() или \fBres_querydomain\fP() с ошибкой,
+по глобальной переменной \fIh_errno\fP (смотрите \fBgethostbyname\fP(3)) можно
+определить причину.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/resolv.conf\fP
+файл с настройками резолвера
+.TP 
+\fI/etc/host.conf\fP
+файл с настройками резолвера
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw34 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBres_ninit\fP(),
+\fBres_nclose\fP(),
+\fBres_nquery\fP(),
+.br
+\fBres_nsearch\fP(),
+\fBres_nquerydomain\fP(),
+\fBres_nsend\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+T{
+\fBres_nmkquery\fP(),
+\fBdn_comp\fP(),
+.br
+\fBdn_expand\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.3BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgethostbyname\fP(3), \fBresolv.conf\fP(5), \fBresolver\fP(5), \fBhostname\fP(7),
+\fBnamed\fP(8)
+.PP
+Файл \fIresolv/README\fP из библиотеки GNU C.

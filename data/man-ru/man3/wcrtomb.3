@@ -1,0 +1,82 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCRTOMB 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wcrtomb \- преобразование широкого символа в многобайтовую последовательность
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBsize_t wcrtomb(char *\fP\fIs\fP\fB, wchar_t \fP\fIwc\fP\fB, mbstate_t *\fP\fIps\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+В основном, функция предназначена для работы, когда \fIs\fP не равно NULL и
+\fIwc\fP не равно широкому символу null (L\(aq\e0\(aq). В этом случае функция
+\fBwcrtomb\fP() преобразует широкий символ \fIwc\fP в его многобайтовое
+представление и заносит его в начало массива символов, на который указывает
+\fIs\fP. Функция обновляет состояние сдвига \fI*ps\fP и возвращает длину
+получившегося многобайтового представления, то есть количество байтов,
+записанных в \fIs\fP.
+.PP
+Также есть вариант, когда \fIs\fP не равно NULL, но \fIwc\fP равно широкому
+символу null (L\(aq\e0\(aq). В этом случае функция \fBwcrtomb\fP() заносит в
+массив символов, на который указывает \fIs\fP, последовательность сдвига,
+оканчивающуюся байтом \(aq\e0\(aq, необходимую для возврата \fI*ps\fP в
+начальное положение. Состояние сдвига \fI*ps\fP обновляется (переходит в
+исходное) и возвращается длина последовательности сдвига плюс один, то есть
+количество байт, записанных в \fIs\fP.
+.PP
+Третий\ случай — это когда \fIs\fP равно NULL. Тогда \fIwc\fP игнорируется, а
+функция возвращает
+.PP
+    wcrtomb(buf, L\(aq\e0\(aq, ps)
+.PP
+где \fIbuf\fP — внутренний анонимный буфер.
+.PP
+Во всех вышеперечисленных случаях, если \fIps\fP равно NULL, то используется
+статическое анонимное состояние, известное только функции \fBwcrtomb\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBwcrtomb\fP() возвращает количество байтов, которые уже записаны или
+должны быть записаны в массив, на который указывает \fIs\fP. Если значение
+\fIwc\fP не может быть представлено как многобайтовая последовательность (в
+соответствии с текущей локалью), то возвращается \fI(size_t)\ \-1\fP, а \fIerrno\fP
+присваивается значение \fBEILSEQ\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw26
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwcrtomb\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:wcrtomb/!ps
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBwcrtomb\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.PP
+Передавать NULL в качестве \fIps\fP небезопасно при работе с нитями.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmbsinit\fP(3), \fBwcsrtombs\fP(3)

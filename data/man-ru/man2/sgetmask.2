@@ -1,0 +1,77 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) 2007 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SGETMASK 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sgetmask, ssetmask \- работа с маской сигналов (устарел)
+.SH ОБЗОР
+\fBlong sgetmask(void);\fP
+.PP
+\fBlong ssetmask(long \fP\fInewmask\fP\fB);\fP
+.PP
+\fIЗамечание\fP: В glibc нет обёрточных функций для этих системных вызовов;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Данные системные вызовы устарели. Используйте вместо них \fBsigprocmask\fP(2).
+.PP
+Вызов \fBsgetmask\fP() возвращает маску сигналов вызывающего процесса.
+.PP
+Вызов \fBssetmask\fP() устанавливает маску сигналов вызывающего процесса равной
+значению, указанному в \fInewmask\fP. Возвращается предыдущее значение маски
+сигналов.
+.PP
+Маски сигналов обрабатываются этими системными вызовами как простые битовые
+маски (в отличие от \fIsigset_t\fP, который используется в \fBsigprocmask\fP(2));
+для создания и проверки масок используйте \fBsigmask\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Вызов \fBsgetmask\fP() всегда выполняется успешно и возвращает маску
+сигналов. Вызов \fBssetmask\fP() всегда выполняется успешно и возвращает
+предыдущее значение маски сигналов.
+.SH ОШИБКИ
+Данные системные вызовы всегда выполняются без ошибок.
+.SH ВЕРСИИ
+.\" f6187769dae48234f3877df3c4d99294cc2254fa
+Начиная с Linux 3.16 поддержка данных системных вызовов необязательна, она
+зависит от того, собрано ли ядро с параметром \fBCONFIG_SGETMASK_SYSCALL\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные системные вызовы есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёрток для этих устаревших системных вызовов; вызывайте их
+через \fBsyscall\fP(2).
+.PP
+Данные системные вызовы ничего не знают о номерах сигналов больше 31
+(т.е. сигналах реального времени).
+.PP
+Данные системные вызовы не существуют на x86\-64.
+.PP
+Они не могут заблокировать \fBSIGSTOP\fP или \fBSIGKILL\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsigprocmask\fP(2), \fBsignal\fP(7)

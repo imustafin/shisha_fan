@@ -1,0 +1,252 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2000 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 2000-08-14 added GNU additions from Andreas Jaeger
+.\" 2000-12-05 some changes inspired by acahalan's remarks
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FENV 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+feclearexcept, fegetexceptflag, feraiseexcept, fesetexceptflag,
+fetestexcept, fegetenv, fegetround, feholdexcept, fesetround, fesetenv,
+feupdateenv, feenableexcept, fedisableexcept, fegetexcept \- округление и
+обработка ошибок для чисел с плавающей запятой
+.SH ОБЗОР
+.nf
+\fB#include <fenv.h>\fP
+.PP
+\fBint feclearexcept(int \fP\fIexcepts\fP\fB);\fP
+\fBint fegetexceptflag(fexcept_t *\fP\fIflagp\fP\fB, int \fP\fIexcepts\fP\fB);\fP
+\fBint feraiseexcept(int \fP\fIexcepts\fP\fB);\fP
+\fBint fesetexceptflag(const fexcept_t *\fP\fIflagp\fP\fB, int \fP\fIexcepts\fP\fB);\fP
+\fBint fetestexcept(int \fP\fIexcepts\fP\fB);\fP
+.PP
+\fBint fegetround(void);\fP
+\fBint fesetround(int \fP\fIrounding_mode\fP\fB);\fP
+.PP
+\fBint fegetenv(fenv_t *\fP\fIenvp\fP\fB);\fP
+\fBint feholdexcept(fenv_t *\fP\fIenvp\fP\fB);\fP
+\fBint fesetenv(const fenv_t *\fP\fIenvp\fP\fB);\fP
+\fBint feupdateenv(const fenv_t *\fP\fIenvp\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.SH ОПИСАНИЕ
+Эти одиннадцать функций определены в C99, и описывают обработку округления и
+исключения (переполнение, деление на ноль и т. д.) при работе с числами с
+плавающей запятой.
+.SS Исключения
+Исключение \fIделение\-на\-ноль (divide\-by\-zero)\fP возникает, когда результатом
+операции над конечными числами является бесконечность.
+.PP
+Исключение \fIпереполнение (overflow)\fP возникает, когда результат возможно
+представить в виде числа с плавающей запятой, но он намного больше
+абсолютного значения самого большого (конечного) представимого числа с
+плавающей запятой.
+.PP
+Исключение \fIисчерпания(underflow)\fP возникает, когда результат можно
+представить в виде числа с плавающей запятой, но он меньше абсолютного
+значения самого малого положительного нормализованного числа с плавающей
+запятой (и возникает большая потеря точности, если представить его в виде
+денормализованного числа).
+.PP
+Исключение \fIinexact\fP возникает, когда округлённый результат операции не
+равен бесконечной точности результата. Оно может произойти при исключении
+\fIпереполнении\fP или \fIисчерпании\fP.
+.PP
+Исключение \fIinvalid\fP возникает, когда при операции получается плохо
+определённый результат (no well\-defined result), например, при 0/0 или
+бесконечность \- бесконечность или sqrt(\-1).
+.SS "Обработка исключений"
+Исключения представляются двумя способами: в виде одного бита
+(наличие/отсутствие исключения) и целого числа, где каждый бит соответствует
+исключению (определяется реализацией), а также структуры скрытого формата,
+которая может содержать дополнительную информацию об исключении (возможно,
+адрес в коде, где оно возникло).
+.PP
+Если реализацией поддерживается обработка определённого исключения, то
+определён соответствующий макрос: \fBFE_DIVBYZERO\fP, \fBFE_INEXACT\fP,
+\fBFE_INVALID\fP, \fBFE_OVERFLOW\fP, \fBFE_UNDERFLOW\fP. Если таким способом
+определить соответствующий бит(ы), например, с целочисленным аргументом
+\fBFE_OVERFLOW\fP|\fBFE_UNDERFLOW\fP, то могут вызываться функции обработки
+исключений. Могут поддерживаться и другие исключения. Макрос
+\fBFE_ALL_EXCEPT\fP — это побитовый OR всех бит, соответствующих поддерживаемым
+исключениям.
+.PP
+Функция \fBfeclearexcept\fP() очищает поддерживаемые исключения, указанные
+битами в аргументе.
+.PP
+Функция \fBfegetexceptflag\fP() сохраняет представление состояния флагов
+исключения, представленного аргументом \fIexcepts\fP в чёрном ящике \fI*flagp\fP.
+.PP
+Функция \fBferaiseexcept\fP() возбуждает поддерживаемые исключения, заданные
+битами в \fIexcepts\fP.
+.PP
+Функция \fBfesetexceptflag\fP() задаёт полное состояние для исключений,
+представленных в \fIexcepts\fP, в значение \fI*flagp\fP. Это значение должно быть
+получено с помощью вызова \fBfegetexceptflag\fP() с последним аргументом,
+значение которого содержит все биты в \fIexcepts\fP.
+.PP
+Функция \fBfetestexcept\fP() возвращает слово, в котором биты устанавливаются в
+соответствии с установленными битами в аргументе \fIexcepts\fP и для которых
+установлено соответствующее исключение.
+.SS "Режим округления"
+Режим округления определяет трактовку результата операций с плавающей
+запятой, если результат не может быть точно представлен в значащей части
+числа(significand). Могут быть доступны различные режимы округления:
+округление к ближайшему (по умолчанию), округление в сторону увеличения
+(round up, к положительной бесконечности), округление в сторону уменьшения
+(round down, к отрицательной бесконечности) и округление в сторону нуля.
+.PP
+Если в реализации поддерживается получение и установка направления
+округления, то для них определены соответствующие макросы: \fBFE_TONEAREST\fP,
+\fBFE_UPWARD\fP, \fBFE_DOWNWARD\fP и \fBFE_TOWARDZERO\fP.
+.PP
+Функция \fBfegetround\fP() возвращает макрос, соответствующий текущему режиму
+округления.
+.PP
+Функция \fBfesetround\fP() задаёт режим округления в соответствии со значением
+аргумента и возвращает ноль при успешном выполнении.
+.PP
+В C99 и POSIX.1\-2008 в файле \fI<float.h>\fP описан идентификатор
+\fBFLT_ROUNDS\fP, который определяет используемый реализацией режим поведения
+для сложения чисел с плавающей запятой. Значениями идентификатора могут
+быть:
+.IP \-1
+Режим округления не определён.
+.IP 0
+Округление к нулю.
+.IP 1
+Округление к ближайшему числу.
+.IP 2
+Округление в сторону положительной бесконечности.
+.IP 3
+Округление в сторону отрицательной бесконечности.
+.PP
+Существуют другие значения для нестандартных режимов округления, зависящие
+от архитектуры.
+.PP
+Значение \fBFLT_ROUNDS\fP должно отражать текущий режим округления, который
+задаётся с помощью \fBfesetround\fP() (но смотрите ДЕФЕКТЫ).
+.SS "Окружение плавающей запятой"
+С полным окружением плавающей запятой, включая режимы управления и флаги
+состояния, можно работать через скрытый объект с типом \fIfenv_t\fP. Окружение
+по умолчанию обозначается как \fBFE_DFL_ENV\fP (с типом \fIconst fenv_t\ *\fP). Это окружение задаётся при запуске программы и определено в ISO C; в
+нём включено округление к ближайшему числу, все исключения сброшены и задан
+безостановочный режим (продолжать при возникновении исключений).
+.PP
+Функция \fBfegetenv\fP() сохраняет текущее окружение плавающей запятой в объект
+\fI*envp\fP.
+.PP
+Функция \fBfeholdexcept\fP() делает то же самое, затем очищает все флаги
+исключений и включает безостановочный режим (продолжать при возникновении
+исключений), если он доступен. При успешном выполнении возвращается ноль.
+.PP
+Функция \fBfesetenv\fP() восстанавливает окружение плавающей запятой из объекта
+\fI*envp\fP. Данный объект должен быть корректен, например, должен быть получен
+из вызова \fBfegetenv\fP() или \fBfeholdexcept\fP() или равен
+\fBFE_DFL_ENV\fP. Данный вызов не возбуждает исключения.
+.PP
+Функция \fBfeupdateenv\fP() устанавливает окружение плавающей запятой,
+представленное объектом \fI*envp\fP, за исключением того, что уже возбуждённые
+исключения не очищаются. После вызова этой функции, возбуждённые исключения
+будут побитово сложены с установленными ранее в \fI*envp\fP. Как и для
+предыдущей функции, объект \fI*envp\fP должен быть корректен.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.\" Earlier seven of these functions were listed as returning void.
+.\" This was corrected in Corrigendum 1 (ISO/IEC 9899:1999/Cor.1:2001(E))
+.\" of the C99 Standard.
+При успешном выполнении эти функции возвращают ноль и не ноль при ошибке.
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.nh
+.ad l
+.TS
+allbox;
+lb lb lb
+lw35 l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfeclearexcept\fP(),
+\fBfegetexceptflag\fP(),
+\fBferaiseexcept\fP(),
+\fBfesetexceptflag\fP(),
+\fBfetestexcept\fP(),
+\fBfegetround\fP(),
+\fBfesetround\fP(),
+\fBfegetenv\fP(),
+\fBfeholdexcept\fP(),
+\fBfesetenv\fP(),
+\fBfeupdateenv\fP(),
+\fBfeenableexcept\fP(),
+\fBfedisableexcept\fP(),
+\fBfegetexcept\fP()
+T}	Безвредность в нитях	T{
+MT\-Safe
+T}
+.TE
+.ad
+.hy
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+IEC 60559 (IEC 559:1989), ANSI/IEEE 854, C99, POSIX.1\-2001.
+.SH ЗАМЕЧАНИЯ
+.SS "Замечания по glibc"
+Если возможно, библиотека GNU C определяет макрос \fBFE_NOMASK_ENV\fP,
+представляющий окружение, в котором при каждом возбуждении исключения
+срабатывает ловушка (trap). Вы можете проверить этот макрос с помощью
+\fB#ifdef\fP. Он определён, только при определении \fB_GNU_SOURCE\fP. В стандарте
+C99 нет способа установить отдельные биты в маске плавающей запятой,
+например, чтобы отловить определённые флаги. Начиная с версии 2.2, в glibc
+поддерживаются функции \fBfeenableexcept\fP() и \fBfedisableexcept\fP(), которые
+устанавливают отдельные ловушки плавающей запятой, и \fBfegetexcept\fP() для
+получения состояния.
+.PP
+.nf
+\fB#define _GNU_SOURCE\fP         /* смотрите feature_test_macros(7) */
+\fB#include <fenv.h>\fP
+.PP
+\fBint feenableexcept(int \fP\fIexcepts\fP\fB);\fP
+\fBint fedisableexcept(int \fP\fIexcepts\fP\fB);\fP
+\fBint fegetexcept(void);\fP
+.fi
+.PP
+Функции \fBfeenableexcept\fP() и \fBfedisableexcept\fP() включают (отключают)
+ловушки для каждого исключения, представленного в \fIexcepts\fP, и при успешном
+выполнении возвращают старый набор включённых исключений, и  \-1 в противном
+случае. Функция \fBfegetexcept\fP() возвращает набор всех включённых в данных
+момент исключений.
+.SH ДЕФЕКТЫ
+.\" Aug 08, glibc 2.8
+.\" See http://gcc.gnu.org/ml/gcc/2002-02/msg01535.html
+В C99 указано, что значение \fBFLT_ROUNDS\fP должно отражать изменения текущего
+режима округления, устанавливаемого с помощью \fBfesetround\fP(). В настоящее
+время это не выполняется: значение \fBFLT_ROUNDS\fP всегда равно 1.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmath_error\fP(7)

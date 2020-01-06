@@ -1,0 +1,291 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1995 Mark D. Roth (roth@uiuc.edu)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Solaris manpages
+.\"
+.\" Modified Thu Jul 25 14:43:46 MET DST 1996 by Michael Haardt
+.\"     <michael@cantor.informatik.rwth-aachen.de>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETUTENT 3 2019\-08\-02 "" "Руководство программиста Linux"
+.SH ИМЯ
+getutent, getutid, getutline, pututline, setutent, endutent, utmpname \-
+доступ к записям файла utmp
+.SH ОБЗОР
+\fB#include <utmp.h>\fP
+.PP
+\fBstruct utmp *getutent(void);\fP
+.br
+\fBstruct utmp *getutid(const struct utmp *\fP\fIut\fP\fB);\fP
+.br
+\fBstruct utmp *getutline(const struct utmp *\fP\fIut\fP\fB);\fP
+.PP
+\fBstruct utmp *pututline(const struct utmp *\fP\fIut\fP\fB);\fP
+.PP
+\fBvoid setutent(void);\fP
+.br
+\fBvoid endutent(void);\fP
+.PP
+\fBint utmpname(const char *\fP\fIfile\fP\fB);\fP
+.SH ОПИСАНИЕ
+В новых приложениях нужно использовать определённые в POSIX.1 «utmpx» версии
+этих функций; смотрите СООТВЕТСТВИЕ СТАНДАРТАМ.
+.PP
+Функция \fButmpname\fP() задаёт имя файла в формате utmp для других функций
+utmp. Если \fButmpname\fP() не используется для указания имени файла перед
+работой с другими функциями, то они будут использовать имя из \fB_PATH_UTMP\fP,
+определённое в \fI<paths.h>\fP.
+.PP
+Функция \fBsetutent\fP() переносит указатель начало файла utmp. Вообще,
+оптимальным вариантом считается вызывать эту функцию перед вызовом
+остальных.
+.PP
+Функция \fBendutent\fP() закрывает файл utmp. Она должна быть вызвана, когда
+будет завершена работа с файлом посредством других функций.
+.PP
+Функция \fBgetutent\fP() считывает строку, начиная с текущей позиции файла в
+файле utmp. Она возвращает указатель на структуру, содержащую поля этой
+строки. Определение структуры приведено в \fButmp\fP(5).
+.PP
+Функция \fBgetutid\fP() производит прямой поиск, начиная с текущей позиции
+файла в файле utmp, основываясь на данных \fIut\fP. Если значение
+\fIut\->ut_type\fP равно \fBRUN_LVL\fP, \fBBOOT_TIME\fP, \fBNEW_TIME\fP или
+\fBOLD_TIME\fP, то \fBgetutid\fP() найдёт первую запись, поле \fIut_type\fP которой
+совпадает с \fIut\->ut_type\fP. Если \fIut\->ut_type\fP равно
+\fBINIT_PROCESS\fP, \fBLOGIN_PROCESS\fP, \fBUSER_PROCESS\fP или \fBDEAD_PROCESS\fP, то
+\fBgetutid\fP() найдёт первую запись, поле \fIut_id\fP которой совпадает с
+\fIut\->ut_id\fP.
+.PP
+Функция \fBgetutline\fP() производит прямой поиск, начиная с текущей позиции
+файла в файле utmp. Она просматривает записи, у которых поле \fIut_type\fP
+совпадает с \fBUSER_PROCESS\fP или \fBLOGIN_PROCESS\fP, и возвращает первую
+запись, поле \fIut_line\fP которой совпадает с \fIut\->ut_line\fP.
+.PP
+Функция \fBpututline\fP() записывает структуру \fIutmp\fP \fIut\fP в файл utmp. Для
+поиска места в файле, необходимого для вставки новой записи, используется
+\fBgetutid\fP() . Если такое место не найдено, то \fBpututline\fP() добавит запись
+в конец файла.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функции \fBgetutent\fP(), \fBgetutid\fP() и \fBgetutline\fP()
+возвращают указатель на \fIstruct utmp\fP и NULL при ошибке (к ним относится и
+случай «запись не найдена»). Структура \fIstruct utmp\fP располагается в
+статическом хранилище и может быть изменена последующими вызовами.
+.PP
+При успешном выполнении \fBpututline\fP() возвращает \fIut\fP; при ошибке
+возвращается NULL.
+.PP
+При успешном назначении нового имени функция \fButmpname\fP() возвращает 0 и \-1
+при ошибке.
+.PP
+В случае ошибки эти функции изменяют значение \fIerrno\fP соответствующим
+образом.
+.SH ОШИБКИ
+.TP 
+\fBENOMEM\fP
+Не хватает памяти.
+.TP 
+\fBESRCH\fP
+Запись не найдена.
+.PP
+Функции \fBsetutent\fP(), \fBpututline\fP() и \fBgetut*\fP() также могут завершиться
+с ошибкой по причинам, описанным в \fBopen\fP(2).
+.SH ФАЙЛЫ
+.TP 
+\fI/var/run/utmp\fP
+база данных пользователей, находящихся в системе в данный момент
+.TP 
+\fI/var/log/wtmp\fP
+база данных предыдущих пользовательских входов в систему
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw28
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetutent\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe init race:utent
+.br
+race:utentbuf sig:ALRM timer
+T}
+T{
+\fBgetutid\fP(),
+.br
+\fBgetutline\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe init race:utent
+.br
+sig:ALRM timer
+T}
+T{
+\fBpututline\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:utent
+.br
+sig:ALRM timer
+T}
+T{
+\fBsetutent\fP(),
+.br
+\fBendutent\fP(),
+.br
+\fButmpname\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:utent
+.TE
+.sp 1
+В приведённой выше таблице \fIutent\fP в \fIrace:utent\fP означает, что если в
+нескольких нитях программы одновременно используются функции \fBsetutent\fP(),
+\fBgetutent\fP(), \fBgetutid\fP(), \fBgetutline\fP(), \fBpututline\fP(), \fButmpname\fP()
+или \fBendutent\fP(), то может возникнуть состязательность по данным.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+XPG2, SVr4.
+.PP
+Согласно XPG2 и SVID 2 функция \fBpututline\fP() возвращает тип void и такое
+поведение можно встретить во многих системах (AIX, HP\-UX). В HP\-UX
+представлена новая функция \fB_pututline\fP() с прототипом приведённым выше для
+\fBpututline\fP().
+.PP
+Эти функции являются устаревшими в не Linux системах. POSIX.1\-2001 и
+POSIX.1\-2008, следуя SUSv1, не содержит эти функции, вместо них используются
+.PP
+.in +4n
+.EX
+\fB#include <utmpx.h>\fP
+.PP
+\fBstruct utmpx *getutxent(void);\fP
+\fBstruct utmpx *getutxid(const struct utmpx *);\fP
+\fBstruct utmpx *getutxline(const struct utmpx *);\fP
+\fBstruct utmpx *pututxline(const struct utmpx *);\fP
+\fBvoid setutxent(void);\fP
+\fBvoid endutxent(void);\fP
+.EE
+.in
+.PP
+Эти функции предоставляются glibc и выполняют те же задачи что и их аналоги
+без «x»", но используют \fIstruct utmpx\fP, определённую в Linux подобно
+\fIstruct utmp\fP. Для завершённости, в glibc также есть \fButmpxname\fP(), хотя
+эта функция отсутствует в POSIX.1.
+.PP
+В некоторых других системах структура \fIutmpx\fP представляет собой \fIutmp\fP с
+дополнительными полями и увеличенными размерами одинаковых полей, а также
+параллельно обслуживаются обе версии файлов, часто \fI/var/*/utmpx\fP и
+\fI/var/*/wtmpx\fP.
+.PP
+С другой стороны, в Linux glibc не используется второй файл \fIutmpx\fP, так
+как её структура \fIutmp\fP имеет достаточный размер. Функции с «x»,
+перечисленные выше, являются просто псевдонимами их аналогов без «x»
+(например, \fBgetutxent\fP() псевдоним \fBgetutent\fP()).
+.SH ЗАМЕЧАНИЯ
+.SS "Замечания по glibc"
+Перечисленные выше функции нельзя использовать в нескольких нитях
+одновременно. В glibc добавлены реентерабельные версии.
+.PP
+.in +4n
+.EX
+\fB#include <utmp.h>\fP
+.PP
+\fBint getutent_r(struct utmp *\fP\fIubuf\fP\fB, struct utmp **\fP\fIubufp\fP\fB);\fP
+.PP
+\fBint getutid_r(struct utmp *\fP\fIut\fP\fB,\fP
+\fB              struct utmp *\fP\fIubuf\fP\fB, struct utmp **\fP\fIubufp\fP\fB);\fP
+.PP
+\fBint getutline_r(struct utmp *\fP\fIut\fP\fB,\fP
+\fB                struct utmp *\fP\fIubuf\fP\fB, struct utmp **\fP\fIubufp\fP\fB);\fP
+.EE
+.in
+.PP
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.PP
+\fBgetutent_r\fP(), \fBgetutid_r\fP(), \fBgetutline_r\fP():
+.nf
+    _GNU_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* glibc <= 2.19: */    _SVID_SOURCE || _BSD_SOURCE
+.fi
+.PP
+Эти функции являются расширениями GNU, они аналогичны функциям с тем же
+именем без суффикса _r. В аргумент \fIubuf\fP, передаваемый этим функциям,
+помещается результат. При успешном выполнении они возвращают 0 и указатель
+на результат записывается в \fI*ubufp\fP. При ошибке эти функции возвращают
+\-1. Среди этих функций отсутствует эквиваленты utmpx (в POSIX.1 такие
+функции отсутствуют).
+.SH ПРИМЕР
+Нижеследующий пример добавляет и удаляет запись utmp, предполагается, что
+программа запущена с псевдотерминала. Для использования в реальном
+приложении необходимо проверять значения, возвращаемые \fBgetpwuid\fP(3) и
+\fBttyname\fP(3).
+.PP
+.EX
+#include <string.h>
+#include <stdlib.h>
+#include <pwd.h>
+#include <unistd.h>
+#include <utmp.h>
+#include <time.h>
+
+int
+main(int argc, char *argv[])
+{
+    struct utmp entry;
+
+    system("echo перед добавлением записи:;who");
+
+    entry.ut_type = USER_PROCESS;
+    entry.ut_pid = getpid();
+    strcpy(entry.ut_line, ttyname(STDIN_FILENO) + strlen("/dev/"));
+    /* правильные имена ptys только /dev/tty[pqr][0\-9a\-z] */
+    strcpy(entry.ut_id, ttyname(STDIN_FILENO) + strlen("/dev/tty"));
+    time(&entry.ut_time);
+    strcpy(entry.ut_user, getpwuid(getuid())\->pw_name);
+    memset(entry.ut_host, 0, UT_HOSTSIZE);
+    entry.ut_addr = 0;
+    setutent();
+    pututline(&entry);
+
+    system("echo после добавления записи:;who");
+
+    entry.ut_type = DEAD_PROCESS;
+    memset(entry.ut_line, 0, UT_LINESIZE);
+    entry.ut_time = 0;
+    memset(entry.ut_user, 0, UT_NAMESIZE);
+    setutent();
+    pututline(&entry);
+
+    system("echo после удаления записи:;who");
+
+    endutent();
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetutmp\fP(3), \fButmp\fP(5)

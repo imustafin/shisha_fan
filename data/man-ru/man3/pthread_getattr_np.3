@@ -1,0 +1,352 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_GETATTR_NP 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_getattr_np \- возвращает атрибуты созданной нити
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_getattr_np(pthread_t \fP\fIthread\fP\fB, pthread_attr_t *\fP\fIattr\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_getattr_np\fP() инициализирует объект атрибутов нити, на
+который указывает \fIattr\fP, так, чтобы он содержал актуальные значения
+атрибутов выполняющейся нити \fIthread\fP.
+.PP
+Возвращаемые значения атрибутов могут отличаться от соответствующих значений
+атрибутов переданных в объекте \fIattr\fP, который использовался при создании
+нити с помощью  \fBpthread_create\fP(3). В частности, могут отличаться
+следующие атрибуты:
+.IP * 2
+состояние отсоединения, так как присоединяемая нить могла сама отсоединиться
+после создания;
+.IP *
+размер стека, так как реализация нитей могла выронить значение по уместной
+границе.
+.IP *
+размер защиты, так как реализация нитей могла округлить значение в большую
+сторону до кратного размера страницы, или проигнорировать (т. е., посчитать
+за 0), если приложение само выделяет себе стек.
+.PP
+Кроме этого, если атрибут адреса стека не был указан в объекте атрибутов
+нити при создании нити, то возвращаемый объект атрибутов нити будет
+содержать актуальный адрес стека, который был выбран реализацией для нити.
+.PP
+Когда объект атрибутов нити, возвращаемый \fBpthread_getattr_np\fP(), больше не
+требуется, то он должен быть удалён с помощью \fBpthread_attr_destroy\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция возвращает 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBENOMEM\fP
+.\" Can happen (but unlikely) while trying to allocate memory for cpuset
+Недостаточно памяти.
+.PP
+Также, если \fIthread\fP указывает на главную нить, то \fBpthread_getattr_np\fP()
+может завершиться с ошибкой из\-за ошибок различных используемых вызовов:
+\fBfopen\fP(3), если невозможно открыть \fI/proc/self/maps\fP; \fBgetrlimit\fP(2),
+если не поддерживается ограничение ресурса \fBRLIMIT_STACK\fP.
+.SH ВЕРСИИ
+Эта функция доступна в glibc начиная с версии 2.2.3.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw20 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_getattr_np\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является нестандартным расширением GNU, о чём свидетельствует
+наличие суффикса «_np» (nonportable).
+.SH ПРИМЕР
+В программе, показанной далее, демонстрируется использование
+\fBpthread_getattr_np\fP(). Программа создаёт нить, которая, затем, использует
+\fBpthread_getattr_np\fP() для получения и показа своих атрибутов размера
+защиты, адреса стека и размера стека. Аргументами командной строки можно
+изменить эти атрибуты. Работа программы показана далее.
+.PP
+В этом запуске на системе x86\-32 нить создаётся со значениями атрибутов по
+умолчанию:
+.PP
+.in +4n
+.EX
+$\fB ulimit \-s\fP      # Без ограничения стека ==>
+                 # размер стека по умолчанию 2 МБ
+unlimited
+$\fB ./a.out\fP
+Атрибуты созданной нити:
+        Размер защиты      = 4096 байт
+        Адрес стека        = 0x40196000 (EOS = 0x40397000)
+        Размер стека       = 0x201000 (2101248) байт
+.EE
+.in
+.PP
+В этом запуске мы видим, что при задании размера защиты его значение
+округляется до значение следующего кратного размера системной страницы (4096
+байт на x86\-32):
+.PP
+.in +4n
+.EX
+$\fB ./a.out \-g 4097\fP
+Объект атрибутов нити после инициализации:
+        Размер защиты      = 4097 байт
+        Адрес стека        = (nil)
+        Размер стека       = 0x0 (0) байт
+
+Атрибуты созданной нити:
+        Размер защиты      = 8192 байт
+        Адрес стека        = 0x40196000 (EOS = 0x40397000)
+        Размер стека       = 0x201000 (2101248) байт
+.EE
+.in
+.\".in +4n
+.\".nf
+.\"$ ./a.out \-s 0x8000
+.\"Thread attributes object after initializations:
+.\"        Guard size          = 4096 bytes
+.\"        Stack address       = 0xffff8000 (EOS = (nil))
+.\"        Stack size          = 0x8000 (32768) bytes
+.\"
+.\"Attributes of created thread:
+.\"        Guard size          = 4096 bytes
+.\"        Stack address       = 0x4001e000 (EOS = 0x40026000)
+.\"        Stack size          = 0x8000 (32768) bytes
+.\".fi
+.\".in
+.PP
+В этом запуске программа вручную выделяет стек для нити. В этом случае
+атрибут размера защиты игнорируется.
+.PP
+.in +4n
+.EX
+$\fB ./a.out \-g 4096 \-s 0x8000 \-a\fP
+Выделен стек нити по адресу 0x804d000
+
+Объект атрибутов нити после инициализации:
+        Размер защиты      = 4096 байт
+        Адрес стека        = 0x804d000 (EOS = 0x8055000)
+        Размер стека       = 0x8000 (32768) байт
+
+Атрибуты созданной нити:
+        Размер защиты      = 0 байт
+        Адрес стека        = 0x804d000 (EOS = 0x8055000)
+        Размер стека       = 0x8000 (32768) байт
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE     /* для объявления pthread_getattr_np() */
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+
+#define handle_error_en(en, msg) \e
+        do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
+
+static void
+display_stack_related_attributes(pthread_attr_t *attr, char *prefix)
+{
+    int s;
+    size_t stack_size, guard_size;
+    void *stack_addr;
+
+    s = pthread_attr_getguardsize(attr, &guard_size);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_getguardsize");
+    printf("%sРазмер защиты            = %d байт\en", prefix, guard_size);
+
+    s = pthread_attr_getstack(attr, &stack_addr, &stack_size);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_getstack");
+    printf("%sАдрес стека       = %p", prefix, stack_addr);
+    if (stack_size > 0)
+        printf(" (EOS = %p)", (char *) stack_addr + stack_size);
+    printf("\en");
+    printf("%sРазмер стека          = 0x%x (%d) байт\en",
+            prefix, stack_size, stack_size);
+}
+
+static void
+display_thread_attributes(pthread_t thread, char *prefix)
+{
+    int s;
+    pthread_attr_t attr;
+
+    s = pthread_getattr_np(thread, &attr);
+    if (s != 0)
+        handle_error_en(s, "pthread_getattr_np");
+
+    display_stack_related_attributes(&attr, prefix);
+
+    s = pthread_attr_destroy(&attr);
+    if (s != 0)
+        handle_error_en(s, "pthread_attr_destroy");
+}
+
+static void *           /* Начальная функция создаваемой нити */
+thread_start(void *arg)
+{
+    printf("Атрибуты созданной нити:\en");
+    display_thread_attributes(pthread_self(), "\et");
+
+    exit(EXIT_SUCCESS);         /* Завершить все нити */
+}
+
+static void
+usage(char *pname, char *msg)
+{
+    if (msg != NULL)
+        fputs(msg, stderr);
+    fprintf(stderr, "Использование: %s [\-s stack\-size [\-a]]"
+            " [\-g guard\-size]\en", pname);
+    fprintf(stderr, "\et\et\-a означает, что программа выделяет стек\en");
+    exit(EXIT_FAILURE);
+}
+
+static pthread_attr_t *   /* получить атрибуты нити из ком. строки */
+get_thread_attributes_from_cl(int argc, char *argv[],
+                              pthread_attr_t *attrp)
+{
+    int s, opt, allocate_stack;
+    long stack_size, guard_size;
+            void *stack_addr;
+    pthread_attr_t *ret_attrp = NULL;   /* задаёт attrp, если мы
+                                           инициализируем объект
+                                           атрибутов нити */
+    allocate_stack = 0;
+    stack_size = \-1;
+    guard_size = \-1;
+
+    while ((opt = getopt(argc, argv, "ag:s:")) != \-1) {
+        switch (opt) {
+        case \(aqa\(aq:   allocate_stack = 1;                     break;
+        case \(aqg\(aq:   guard_size = strtoul(optarg, NULL, 0);  break;
+        case \(aqs\(aq:   stack_size = strtoul(optarg, NULL, 0);  break;
+        default:    usage(argv[0], NULL);
+        }
+    }
+
+    if (allocate_stack && stack_size == \-1)
+        usage(argv[0], "Указывать \-a без \-s не имеет смысла\en");
+
+    if (argc > optind)
+        usage(argv[0], "Посторонние аргументы в командной строке\en");
+
+    if (stack_size >= 0 || guard_size > 0) {
+        ret_attrp = attrp;
+
+        s = pthread_attr_init(attrp);
+        if (s != 0)
+            handle_error_en(s, "pthread_attr_init");
+    }
+
+    if (stack_size >= 0) {
+        if (!allocate_stack) {
+            s = pthread_attr_setstacksize(attrp, stack_size);
+            if (s != 0)
+                handle_error_en(s, "pthread_attr_setstacksize");
+        } else {
+            s = posix_memalign(&stack_addr, sysconf(_SC_PAGESIZE),
+                               stack_size);
+            if (s != 0)
+                handle_error_en(s, "posix_memalign");
+            printf("Выделен стек нити по адресу %p\en\en", stack_addr);
+
+            s = pthread_attr_setstack(attrp, stack_addr, stack_size);
+            if (s != 0)
+                handle_error_en(s, "pthread_attr_setstacksize");
+        }
+    }
+
+    if (guard_size >= 0) {
+        s = pthread_attr_setguardsize(attrp, guard_size);
+        if (s != 0)
+            handle_error_en(s, "pthread_attr_setstacksize");
+    }
+
+    return ret_attrp;
+}
+
+int
+main(int argc, char *argv[])
+{
+    int s;
+    pthread_t thr;
+    pthread_attr_t attr;
+    pthread_attr_t *attrp = NULL;    /* задаёт &attr, если мы
+                                        инициализируем объект
+                                        атрибутов нити */
+
+    attrp = get_thread_attributes_from_cl(argc, argv, &attr);
+
+    if (attrp != NULL) {
+        printf("Объект атрибутов нити после инициализации:\en");
+        display_stack_related_attributes(attrp, "\et");
+        printf("\en");
+    }
+
+    s = pthread_create(&thr, attrp, &thread_start, NULL);
+    if (s != 0)
+        handle_error_en(s, "pthread_create");
+
+    if (attrp != NULL) {
+        s = pthread_attr_destroy(attrp);
+        if (s != 0)
+            handle_error_en(s, "pthread_attr_destroy");
+    }
+
+    pause();    /* Завершается, когда другая нить вызывает exit() */
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBpthread_attr_getaffinity_np\fP(3), \fBpthread_attr_getdetachstate\fP(3),
+\fBpthread_attr_getguardsize\fP(3), \fBpthread_attr_getinheritsched\fP(3),
+\fBpthread_attr_getschedparam\fP(3), \fBpthread_attr_getschedpolicy\fP(3),
+\fBpthread_attr_getscope\fP(3), \fBpthread_attr_getstack\fP(3),
+\fBpthread_attr_getstackaddr\fP(3), \fBpthread_attr_getstacksize\fP(3),
+\fBpthread_attr_init\fP(3), \fBpthread_create\fP(3), \fBpthreads\fP(7)

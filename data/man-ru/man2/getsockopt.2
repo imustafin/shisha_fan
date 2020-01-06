@@ -1,0 +1,146 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     $Id: getsockopt.2,v 1.1 1999/05/24 14:57:04 freitag Exp $
+.\"
+.\" Modified Sat Jul 24 16:19:32 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Mon Apr 22 02:29:06 1996 by Martin Schulze (joey@infodrom.north.de)
+.\" Modified Tue Aug 27 10:52:51 1996 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified Thu Jan 23 13:29:34 1997 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified Sun Mar 28 21:26:46 1999 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified 1999 by Andi Kleen <ak@muc.de>.
+.\"     Removed most stuff because it is in socket.7 now.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETSOCKOPT 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getsockopt, setsockopt \- получить или установить флаги сокета
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP          /* смотрите ЗАМЕЧАНИЯ */
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint getsockopt(int \fP\fIsockfd\fP\fB, int \fP\fIlevel\fP\fB, int \fP\fIoptname\fP\fB,\fP
+\fB               void *\fP\fIoptval\fP\fB, socklen_t *\fP\fIoptlen\fP\fB);\fP
+\fBint setsockopt(int \fP\fIsockfd\fP\fB, int \fP\fIlevel\fP\fB, int \fP\fIoptname\fP\fB,\fP
+\fB               const void *\fP\fIoptval\fP\fB, socklen_t \fP\fIoptlen\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fBgetsockopt\fP() и \fBsetsockopt\fP() управляют параметрами сокета, на который
+указывает файловый дескриптор \fIsockfd\fP. Параметры могут быть из различных
+уровней протоколов; они всегда присутствуют на самом верхнем уровне сокета.
+.PP
+При работе с параметрами сокета должен быть указан уровень, на котором
+находится этот параметр и его имя. Для работы с параметрами на уровне API
+сокета в \fIlevel\fP указывается значение \fBSOL_SOCKET\fP. Для работы с
+параметрами на любом другом уровне, этим вызовам передаётся номер
+соответствующего протокола, который они контролируют. Например, для
+указания, что параметр должен интерпретироваться протоколом \fBTCP\fP, в
+\fIlevel\fP нужно указать номер протокола \fBTCP\fP; смотрите \fBgetprotoent\fP(3).
+.PP
+Аргументы \fIoptval\fP и \fIoptlen\fP используются в \fBsetsockopt\fP() для доступа к
+значениям параметров. Для \fBgetsockopt\fP() они задают буфер, в который нужно
+поместить запрошенное значение параметра при возврате. У \fBgetsockopt\fP() в
+аргументе \fIoptlen\fP изначально содержится размер буфера, на который
+указывает \fIoptval\fP, а при завершении в нём содержится реальный размер
+возвращаемого значения. Если значение параметра не указывается или
+возвращается, то \fIoptval\fP может быть NULL.
+.PP
+Аргумент \fIoptname\fP и все указанные параметры без изменений передаются для
+интерпретации соответствующему модулю протоколов. Файл
+\fI<sys/socket.h>\fP содержит определения параметров уровня сокета; их
+описание дано ниже. Параметры на других уровнях протоколов различаются по
+формату и по имени. Обращайтесь к соответствующим файлам раздела 4
+справочных страниц.
+.PP
+Большинство параметров уровня сокета используют тип \fIint\fP для аргумента
+\fIoptval\fP. Чтобы установить параметр логического типа аргумент
+\fBsetsockopt\fP() должен быть ненулевым, и ноль, если нужно отключить этот
+параметр.
+.PP
+Описание доступных параметров сокетов находится в \fBsocket\fP(7) и
+соответствующих протоколам справочных страницах.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении при стандартных параметрах возвращается 0. В случае
+ошибки возвращается \-1, а \fIerrno\fP устанавливается в соответствующее
+значение.
+.PP
+Netfilter позволяет программисту определять собственные параметры сокетов со
+привязанными обработчиками; для таких параметров при успешном выполнении
+возвращается значение, полученное от обработчика.
+.SH ОШИБКИ
+.TP  10
+\fBEBADF\fP
+Аргумент \fIsockfd\fP не является допустимым файловым дескриптором.
+.TP 
+\fBEFAULT\fP
+Адрес, на который указывает \fIoptval\fP, не находится в разрешённой части
+адресного пространства процесса. Для \fBgetsockopt\fP() эта ошибка может также
+появиться, если \fIoptlen\fP выходит за пределы адресного пространства
+процесса.
+.TP 
+\fBEINVAL\fP
+Неправильное значение \fIoptlen\fP в \fBsetsockopt\fP(). В некоторых случаях эта
+ошибка может возникать из\-за неправильного значения в \fIoptval\fP (например,
+для параметра \fBIP_ADD_MEMBERSHIP\fP, описанного в \fBip\fP(7)).
+.TP 
+\fBENOPROTOOPT\fP
+Неизвестный параметр для указанного уровня.
+.TP 
+\fBENOTSOCK\fP
+Файловый дескриптор \fIsockfd\fP указывает не на каталог.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents additional ENOMEM and ENOSR error codes, but does
+.\" not document the
+.\" .BR SO_SNDLOWAT ", " SO_RCVLOWAT ", " SO_SNDTIMEO ", " SO_RCVTIMEO
+.\" options
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.4BSD (данные системные вызовы впервые
+появились в 4.2BSD).
+.SH ЗАМЕЧАНИЯ
+В POSIX.1 не требуется включение \fI<sys/types.h>\fP, и этот
+заголовочный файл не требуется в Linux. Однако, для некоторых старых
+реализаций (BSD) требует данный файл, и в переносимых приложениях для
+предосторожности, вероятно, лучше его указать.
+.PP
+Описание типа \fIsocklen_t\fP смотрите в \fBaccept\fP(2).
+.SH ДЕФЕКТЫ
+Некоторые параметры сокетов должны обрабатываться на более низких уровнях
+системы.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBioctl\fP(2), \fBsocket\fP(2), \fBgetprotoent\fP(3), \fBprotocols\fP(5), \fBip\fP(7),
+\fBpacket\fP(7), \fBsocket\fP(7), \fBtcp\fP(7), \fBudp\fP(7), \fBunix\fP(7)

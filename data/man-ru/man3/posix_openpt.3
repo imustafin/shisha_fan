@@ -1,0 +1,109 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2004 Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH POSIX_OPENPT 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+posix_openpt \- открывает псевдо\-терминальное устройство
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+\fB#include <fcntl.h>\fP
+.PP
+\fBint posix_openpt(int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBposix_openpt\fP(): _XOPEN_SOURCE\ >=\ 600
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBposix_openpt\fP() открывает неиспользуемое главное
+псевдо\-терминальное устройство, возвращая файловый дескриптор, который можно
+использовать для работы с устройством.
+.PP
+Аргумент \fIflags\fP представляет собой битовую маску из комбинации (OR) нуля
+или более следующих флагов:
+.TP 
+\fBO_RDWR\fP
+Открыть устройство для чтения и записи. Обычно, указывается этот флаг.
+.TP 
+\fBO_NOCTTY\fP
+Не делать данное устройство управляющим терминалом процесса.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBposix_openpt\fP() возвращает неотрицательный
+файловый дескриптор с наименьшим номером неиспользуемого файлового
+дескриптора. При ошибке возвращается \-1, и в \fIerrno\fP записывается номер
+ошибки.
+.SH ОШИБКИ
+Смотрите \fBopen\fP(2).
+.SH ВЕРСИИ
+Поддержка \fBposix_openpt\fP() в glibc появилась в версии 2.2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBposix_openpt\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.PP
+Функция \fBposix_openpt\fP() является частью поддержки псевдо\-терминалов UNIX
+98 (смотрите \fBpts\fP(4)).
+.SH ЗАМЕЧАНИЯ
+В некоторых старых реализациях UNIX, поддерживающих System V (также
+называемом UNIX 98), для псевдо\-терминалов нет этой функции, но её легко
+написать:
+.PP
+.in +4n
+.EX
+int
+posix_openpt(int flags)
+{
+    return open("/dev/ptmx", flags);
+}
+.EE
+.in
+.PP
+При вызове \fBposix_openpt\fP() создаётся путь для соответствующего
+подчинённого псевдо\-терминального устройства. Путь подчинённого устройства
+можно получить с помощью \fBptsname\fP(3). Путь подчинённого устройства
+существует только пока открыто главное устройство.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBopen\fP(2), \fBgetpt\fP(3), \fBgrantpt\fP(3), \fBptsname\fP(3), \fBunlockpt\fP(3),
+\fBpts\fP(4), \fBpty\fP(7)

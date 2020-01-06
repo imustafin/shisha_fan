@@ -1,0 +1,293 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1980, 1991, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)syscall.2	8.1 (Berkeley) 6/16/93
+.\"
+.\"
+.\" 2002-03-20  Christoph Hellwig <hch@infradead.org>
+.\"	- adopted for Linux
+.\" 2015-01-17, Kees Cook <keescook@chromium.org>
+.\"	Added mips and arm64.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSCALL 2 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+syscall \- непрямой системный вызов
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+\fB#include <unistd.h>\fP
+\fB#include <sys/syscall.h>   \fP/* для определений SYS_xxx */
+.PP
+\fBlong syscall(long \fP\fInumber\fP\fB, ...);\fP
+.fi
+.SH ОПИСАНИЕ
+\fBsyscall\fP() — это маленькая библиотечная функция, которая делает системный
+вызов, чей интерфейс ассемблерного языка  указывается в \fInumber\fP, с
+дополнительными аргументами. Выполнение \fBsyscall\fP() нужно, например, для
+запуска системного вызова, у которого нет обёрточной функции в библиотеке C.
+.PP
+При вызове \fBsyscall\fP() сохраняет регистры ЦП до выполнения системного
+вызова, восстанавливает регистры при возврате из системного вызова и если
+возникла ошибка, то сохраняет любой код, полученный от системного вызова, в
+\fBerrno\fP(3).
+.PP
+Символьные константы для системных вызовов можно найти в заголовочном файле
+\fI<sys/syscall.h>\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Возвращаемое значение определяется вызываемым системным вызовом. При
+успешном выполнении обычно возвращается 0. При ошибке возвращается \-1, при
+этом код ошибки сохраняется в \fIerrno\fP.
+.SH ЗАМЕЧАНИЯ
+Вызов \fBsyscall\fP() впервые появился в 4BSD.
+.SS "Требования, зависящие от архитектуры"
+Каждый ABI архитектуры имеет свои собственные требования по передаче
+аргументов системного вызова в ядро. Для системных вызовов, имеющих обёртку
+в glibc (большинство системных вызовов), копирование аргументов в правильные
+регистры с учётом архитектуры выполняется в самой glibc. Однако при
+выполнении системного вызова через \fBsyscall\fP(), вызывающий сам должен
+учитывать особенности архитектуры; чаще всего это относится к 32\-битным
+архитектурам.
+.PP
+Например, на архитектуре ARM Embedded ABI (EABI) 64\-битное значение (\fIlong
+long\fP) должно быть выровнено по чётной паре регистров. То есть, при
+использовании \fBsyscall\fP() вместо обёрточной функции glibc системный вызов
+\fBreadahead\fP() на ARM вызывался бы с учётом EABI (режим с обратным порядком
+байт) следующим образом:
+.PP
+.in +4n
+.EX
+syscall(SYS_readahead, fd, 0,
+        (unsigned int) (offset & 0xFFFFFFFF),
+        (unsigned int) (offset >> 32),
+        count);
+.EE
+.in
+.PP
+Так как смещение аргумента 64 бита, и первый аргумент (\fIfd\fP) передаётся в
+регистре \fIr0\fP, вызывающий должен разделить и выровнять 64\-битное значение
+так, чтобы оно передавалось в паре регистров \fIr2\fP/\fIr3\fP. Это выполняется
+вставкой пустого значения в \fIr1\fP (второго аргумент 0). Также нужно не
+забывать о преобразовании порядка байт (в соответствии с C ABI платформы).
+.PP
+.\" Mike Frysinger: this issue ends up forcing MIPS
+.\" O32 to take 7 arguments to syscall()
+Подобные сложности можно видеть на MIPS с O32 ABI, на PowerPC и parisc с
+32\-битным ABI и на Xtensa.
+.PP
+.\" See arch/parisc/kernel/sys_parisc.c.
+Заметим, что хотя в parisc C ABI также используется выравнивание пары
+регистров, в нём используется слой shim, который прячет проблему от
+пространства пользователя.
+.PP
+Это относится к системным вызовам \fBfadvise64_64\fP(2), \fBftruncate64\fP(2),
+\fBposix_fadvise\fP(2), \fBpread64\fP(2), \fBpwrite64\fP(2), \fBreadahead\fP(2),
+\fBsync_file_range\fP(2) и \fBtruncate64\fP(2).
+.PP
+.\" You need to look up the syscalls directly in the kernel source to see if
+.\" they should be in this list.  For example, look at fs/read_write.c and
+.\" the function signatures that do:
+.\" ..., unsigned long, pos_l, unsigned long, pos_h, ...
+.\" If they use off_t, then they most likely do not belong in this list.
+Это не влияет на syscall\-ы, который самостоятельно разделяют и собирают
+64\-битные значения, например \fB_llseek\fP(2), \fBpreadv\fP(2), \fBpreadv2\fP(2),
+\fBpwritev\fP(2) и \fBpwritev2\fP(2). Добро пожаловать в чудесную страну
+исторического наследия.
+.SS "Архитектурные соглашения по вызовам"
+В каждой архитектуре есть собственный способ передачи аргументов вызову
+ядра. Особенности различных архитектур перечислены в двух таблицах ниже.
+.PP
+Поля первой таблицы: инструкция для перехода в режим ядра (может быть не
+быстрым или лучшим способом перехода в ядро, лучше использовать \fBvdso\fP(7)),
+регистр для указания номера системного вызова, регистр(ы) возврата
+результата работы системного вызова и регистр сигнализации ошибки.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l2	l2	l2	l2	l1	l2	l.
+\f(CWАрх/ABI\fP	\f(CWИнструкция\fP	\f(CWСистема\fP	\f(CWRet\fP	\f(CWRet\fP	\f(CWОшибка\fP	\f(CWзамечания\fP
+		\f(CWcall #\fP	\f(CWзнач\fP	\f(CWзнач2\fP
+\f(CW_\fP
+\f(CWalpha\fP	\f(CWcallsys\fP	\f(CWv0\fP	\f(CWv0\fP	\f(CWa4\fP	\f(CWa3\fP	\f(CW1, 6\fP
+\f(CWarc\fP	\f(CWtrap0\fP	\f(CWr8\fP	\f(CWr0\fP	\f(CW\-\fP	\f(CW\-\fP
+\f(CWarm/OABI\fP	\f(CWswi NR\fP	\f(CW\-\fP	\f(CWa1\fP	\f(CW\-\fP	\f(CW\-\fP	\f(CW2\fP
+\f(CWarm/EABI\fP	\f(CWswi 0x0\fP	\f(CWr7\fP	\f(CWr0\fP	\f(CWr1\fP	\f(CW\-\fP
+\f(CWarm64\fP	\f(CWsvc #0\fP	\f(CWx8\fP	\f(CWx0\fP	\f(CWx1\fP	\f(CW\-\fP
+\f(CWblackfin\fP	\f(CWexcpt 0x0\fP	\f(CWP0\fP	\f(CWR0\fP	\f(CW\-\fP	\f(CW\-\fP
+\f(CWi386\fP	\f(CWint $0x80\fP	\f(CWeax\fP	\f(CWeax\fP	\f(CWedx\fP	\f(CW\-\fP
+\f(CWia64\fP	\f(CWbreak 0x100000\fP	\f(CWr15\fP	\f(CWr8\fP	\f(CWr9\fP	\f(CWr10\fP	\f(CW1, 6\fP
+\f(CWm68k\fP	\f(CWtrap #0\fP	\f(CWd0\fP	\f(CWd0\fP	\f(CW\-\fP	\f(CW\-\fP
+\f(CWmicroblaze\fP	\f(CWbrki r14,8\fP	\f(CWr12\fP	\f(CWr3\fP	\f(CW\-\fP	\f(CW\-\fP
+\f(CWmips\fP	\f(CWsyscall\fP	\f(CWv0\fP	\f(CWv0\fP	\f(CWv1\fP	\f(CWa3\fP	\f(CW1, 6\fP
+\f(CWnios2\fP	\f(CWtrap\fP	\f(CWr2\fP	\f(CWr2\fP	\f(CW\-\fP	\f(CWr7\fP
+\f(CWparisc\fP	\f(CWble 0x100(%sr2, %r0)\fP	\f(CWr20\fP	\f(CWr28\fP	\f(CW\-\fP	\f(CW\-\fP
+\f(CWpowerpc\fP	\f(CWsc\fP	\f(CWr0\fP	\f(CWr3\fP	\f(CW\-\fP	\f(CWr0\fP	\f(CW1\fP
+\f(CWpowerpc64\fP	\f(CWsc\fP	\f(CWr0\fP	\f(CWr3\fP	\f(CW\-\fP	\f(CWcr0.SO\fP	\f(CW1\fP
+\f(CWriscv\fP	\f(CWecall\fP	\f(CWa7\fP	\f(CWa0\fP	\f(CWa1\fP	\f(CW\-\fP
+\f(CWs390\fP	\f(CWsvc 0\fP	\f(CWr1\fP	\f(CWr2\fP	\f(CWr3\fP	\f(CW\-\fP	\f(CW3\fP
+\f(CWs390x\fP	\f(CWsvc 0\fP	\f(CWr1\fP	\f(CWr2\fP	\f(CWr3\fP	\f(CW\-\fP	\f(CW3\fP
+\f(CWsuperh\fP	\f(CWtrap #0x17\fP	\f(CWr3\fP	\f(CWr0\fP	\f(CWr1\fP	\f(CW\-\fP	\f(CW4, 6\fP
+\f(CWsparc/32\fP	\f(CWt 0x10\fP	\f(CWg1\fP	\f(CWo0\fP	\f(CWo1\fP	\f(CWpsr/csr\fP	\f(CW1, 6\fP
+\f(CWsparc/64\fP	\f(CWt 0x6d\fP	\f(CWg1\fP	\f(CWo0\fP	\f(CWo1\fP	\f(CWpsr/csr\fP	\f(CW1, 6\fP
+\f(CWtile\fP	\f(CWswint1\fP	\f(CWR10\fP	\f(CWR00\fP	\f(CW\-\fP	\f(CWR01\fP	\f(CW1\fP
+\f(CWx86\-64\fP	\f(CWsyscall\fP	\f(CWrax\fP	\f(CWrax\fP	\f(CWrdx\fP	\f(CW\-\fP	\f(CW5\fP
+\f(CWx32\fP	\f(CWsyscall\fP	\f(CWrax\fP	\f(CWrax\fP	\f(CWrdx\fP	\f(CW\-\fP	\f(CW5\fP
+\f(CWxtensa\fP	\f(CWsyscall\fP	\f(CWa2\fP	\f(CWa2\fP	\f(CW\-\fP	\f(CW\-\fP
+.TE
+.PP
+Замечания:
+.IP [1] 4
+На некоторых архитектурах для показа отказа системного вызова используется
+регистр с простым логическим значением (0 — нет ошибки, \-1 —
+ошибка). Настоящее значение ошибки всё равно содержится в регистре
+возврата. На sparc, вместо полного регистра используется бит переноса
+(\fIcsr\fP) в регистре состояния процессора (\fIpsr\fP). На powerpc64,
+используется бит общего переполнения (\fISO\fP) в поле 0 регистра условия
+(\fIcr0\fP).
+.IP [2]
+\fINR\fP — номер системного вызова.
+.IP [3]
+Для s390 и s390x \fINR\fP (номер системного вызова) может передаваться напрямую
+с помощью \fIsvc\ NR\fP, если он меньше 256.
+.IP [4]
+На SuperH, номер ловушки (trap number) контролирует максимальное количество
+передаваемых аргументов.\fItrap\ #0x10\fP можно использовать только с
+системными вызовами без аргументов, \fItrap\ #0x11\fP можно использовать только
+с системными вызовами без или с одним аргументом и так далее до \fItrap
+#0x17\fP (7 аргументов в системном вызове).
+.IP [5]
+Для x32 ABI используется общая с x86\-64 ABI таблица syscall, но есть
+несколько отличий:
+.RS
+.IP \(bu 3
+Чтобы показать, что системный вызов запрошен из x32 ABI,
+введёндополнительный бит \fI__X32_SYSCALL_BIT\fP, который побитно складывается
+с номером системного вызова. ABI, используемый процессом, частично влияет на
+поведение процесса, включая обработку сигналов или перезапуск или системного
+вызова.
+.IP \(bu
+Так как на x32 размеры типа \fIlong\fP и указателя различаются, то различны
+раскладки некоторых (но не всех; например, \fIstruct timeval\fP или \fIstruct
+rlimit\fP 64\-битные) структур. Для их обработки в таблицу системных вызовов
+добавлены дополнительные системные вызовы; они начинаются с номера 512 (без
+\fB__X32_SYSCALL_BIT\fP). Например, \fB__NR_readv\fP определён как 19 в x86\-64 ABI
+и как \fI__X32_SYSCALL_BIT\fP | \fB515\fP в x32 ABI. Большинство этих
+дополнительных системных вызовов на самом деле одинаковы с системными
+вызовами, используемыми для предоставления совместимости с i386. Однако есть
+исключения, например, \fBpreadv2\fP(2), который использует элементы \fIstruct
+iovec\fP с 4\-байтовыми указателями и размерами (в терминах ядра —
+«compat_iovec»), но передаёт 8\-байтовый аргумент \fIpos\fP в одном регистре, а
+не в двух, как это делается в других ABI.
+.RE
+.IP [6]
+Некоторые архитектуры (Alpha, IA\-64, MIPS, SuperH, sparc/32 sparc/64)
+используют дополнительный регистр ("Retval2" в таблице выше) для обратной
+передачи второго возвращаемого значения из системного вызова \fBpipe\fP(2); в
+Alpha это также используется в зависимых от архитектуры системных вызовах
+\fBgetxpid\fP(2), \fBgetxuid\fP(2) и \fBgetxgid\fP(2). На других архитектурах в
+интерфейсе системных вызовов второй регистр для возвращаемого значения не
+используется, даже если он определён в System V ABI.
+.if " t \{\"
+.in
+\}
+.PP
+Во второй таблице показаны регистры, которые используются для передачи
+аргументов в системный вызов.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l	l2	l2	l2	l2	l2	l2	l2	l.
+\f(CWАрх/ABI\fP	\f(CWарг1\fP	\f(CWарг2\fP	\f(CWарг3\fP	\f(CWарг4\fP	\f(CWарг5\fP	\f(CWарг6\fP	\f(CWарг7\fP	\f(CWзамечания\fP
+\f(CW_\fP
+\f(CWalpha\fP	\f(CWa0\fP	\f(CWa1\fP	\f(CWa2\fP	\f(CWa3\fP	\f(CWa4\fP	\f(CWa5\fP	\f(CW\-\fP
+\f(CWarc\fP	\f(CWr0\fP	\f(CWr1\fP	\f(CWr2\fP	\f(CWr3\fP	\f(CWr4\fP	\f(CWr5\fP	\f(CW\-\fP
+\f(CWarm/OABI\fP	\f(CWa1\fP	\f(CWa2\fP	\f(CWa3\fP	\f(CWa4\fP	\f(CWv1\fP	\f(CWv2\fP	\f(CWv3\fP
+\f(CWarm/EABI\fP	\f(CWr0\fP	\f(CWr1\fP	\f(CWr2\fP	\f(CWr3\fP	\f(CWr4\fP	\f(CWr5\fP	\f(CWr6\fP
+\f(CWarm64\fP	\f(CWx0\fP	\f(CWx1\fP	\f(CWx2\fP	\f(CWx3\fP	\f(CWx4\fP	\f(CWx5\fP	\f(CW\-\fP
+\f(CWblackfin\fP	\f(CWR0\fP	\f(CWR1\fP	\f(CWR2\fP	\f(CWR3\fP	\f(CWR4\fP	\f(CWR5\fP	\f(CW\-\fP
+\f(CWi386\fP	\f(CWebx\fP	\f(CWecx\fP	\f(CWedx\fP	\f(CWesi\fP	\f(CWedi\fP	\f(CWebp\fP	\f(CW\-\fP
+\f(CWia64\fP	\f(CWout0\fP	\f(CWout1\fP	\f(CWout2\fP	\f(CWout3\fP	\f(CWout4\fP	\f(CWout5\fP	\f(CW\-\fP
+\f(CWm68k\fP	\f(CWd1\fP	\f(CWd2\fP	\f(CWd3\fP	\f(CWd4\fP	\f(CWd5\fP	\f(CWa0\fP	\f(CW\-\fP
+\f(CWmicroblaze\fP	\f(CWr5\fP	\f(CWr6\fP	\f(CWr7\fP	\f(CWr8\fP	\f(CWr9\fP	\f(CWr10\fP	\f(CW\-\fP
+\f(CWmips/o32\fP	\f(CWa0\fP	\f(CWa1\fP	\f(CWa2\fP	\f(CWa3\fP	\f(CW\-\fP	\f(CW\-\fP	\f(CW\-\fP	\f(CW1\fP
+\f(CWmips/n32,64\fP	\f(CWa0\fP	\f(CWa1\fP	\f(CWa2\fP	\f(CWa3\fP	\f(CWa4\fP	\f(CWa5\fP	\f(CW\-\fP
+\f(CWnios2\fP	\f(CWr4\fP	\f(CWr5\fP	\f(CWr6\fP	\f(CWr7\fP	\f(CWr8\fP	\f(CWr9\fP	\f(CW\-\fP
+\f(CWparisc\fP	\f(CWr26\fP	\f(CWr25\fP	\f(CWr24\fP	\f(CWr23\fP	\f(CWr22\fP	\f(CWr21\fP	\f(CW\-\fP
+\f(CWpowerpc\fP	\f(CWr3\fP	\f(CWr4\fP	\f(CWr5\fP	\f(CWr6\fP	\f(CWr7\fP	\f(CWr8\fP	\f(CWr9\fP
+\f(CWpowerpc64\fP	\f(CWr3\fP	\f(CWr4\fP	\f(CWr5\fP	\f(CWr6\fP	\f(CWr7\fP	\f(CWr8\fP	\f(CW\-\fP
+\f(CWriscv\fP	\f(CWa0\fP	\f(CWa1\fP	\f(CWa2\fP	\f(CWa3\fP	\f(CWa4\fP	\f(CWa5\fP	\f(CW\-\fP
+\f(CWs390\fP	\f(CWr2\fP	\f(CWr3\fP	\f(CWr4\fP	\f(CWr5\fP	\f(CWr6\fP	\f(CWr7\fP	\f(CW\-\fP
+\f(CWs390x\fP	\f(CWr2\fP	\f(CWr3\fP	\f(CWr4\fP	\f(CWr5\fP	\f(CWr6\fP	\f(CWr7\fP	\f(CW\-\fP
+\f(CWsuperh\fP	\f(CWr4\fP	\f(CWr5\fP	\f(CWr6\fP	\f(CWr7\fP	\f(CWr0\fP	\f(CWr1\fP	\f(CWr2\fP
+\f(CWsparc/32\fP	\f(CWo0\fP	\f(CWo1\fP	\f(CWo2\fP	\f(CWo3\fP	\f(CWo4\fP	\f(CWo5\fP	\f(CW\-\fP
+\f(CWsparc/64\fP	\f(CWo0\fP	\f(CWo1\fP	\f(CWo2\fP	\f(CWo3\fP	\f(CWo4\fP	\f(CWo5\fP	\f(CW\-\fP
+\f(CWtile\fP	\f(CWR00\fP	\f(CWR01\fP	\f(CWR02\fP	\f(CWR03\fP	\f(CWR04\fP	\f(CWR05\fP	\f(CW\-\fP
+\f(CWx86\-64\fP	\f(CWrdi\fP	\f(CWrsi\fP	\f(CWrdx\fP	\f(CWr10\fP	\f(CWr8\fP	\f(CWr9\fP	\f(CW\-\fP
+\f(CWx32\fP	\f(CWrdi\fP	\f(CWrsi\fP	\f(CWrdx\fP	\f(CWr10\fP	\f(CWr8\fP	\f(CWr9\fP	\f(CW\-\fP
+\f(CWxtensa\fP	\f(CWa6\fP	\f(CWa3\fP	\f(CWa4\fP	\f(CWa5\fP	\f(CWa8\fP	\f(CWa9\fP	\f(CW\-\fP
+.TE
+.PP
+Замечания:
+.IP [1] 4
+По соглашению в mips/o32 аргументы системных вызовов с 5 по 8 передаются
+через пользовательский стек.
+.if " t \{\"
+.in
+\}
+.PP
+Заметим, что эти таблицы не описывают полное соглашение о вызове — некоторые
+архитектуры могут затирать другие регистры и это здесь не описано.
+.SH ПРИМЕР
+.EX
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <signal.h>
+
+int
+main(int argc, char *argv[])
+{
+    pid_t tid;
+
+    tid = syscall(SYS_gettid);
+    syscall(SYS_tgkill, getpid(), tid, SIGHUP);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fB_syscall\fP(2), \fBintro\fP(2), \fBsyscalls\fP(2), \fBerrno\fP(3), \fBvdso\fP(7)

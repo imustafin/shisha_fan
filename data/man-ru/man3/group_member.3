@@ -1,0 +1,54 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2014, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GROUP_MEMBER 3 2014\-03\-30 GNU "Руководство программиста Linux"
+.SH ИМЯ
+group_member \- проверяет присутствие процесса в группе
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint group_member(gid_t \fP\fIgid\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgroup_member\fP(): _GNU_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBgroup_member\fP() проверяет, совпадает ли какой\-либо ID
+дополнительных групп вызывающего (возвращаемые \fBgetgroups\fP(2)) с \fIgid\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBgroup_member\fP() возвращает не ноль, если какой\-либо ID
+дополнительных групп совпал с \fIgid\fP, и ноль в противном случае.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является нестандартным расширением GNU.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetgid\fP(2), \fBgetgroups\fP(2), \fBgetgrouplist\fP(3), \fBgroup\fP(5)

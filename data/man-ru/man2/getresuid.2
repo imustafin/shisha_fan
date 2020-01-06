@@ -1,0 +1,76 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1997 Andries Brouwer (aeb@cwi.nl)
+.\" and Copyright (c) 2007, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified, 2003-05-26, Michael Kerrisk, <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETRESUID 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getresuid, getresgid \- получение действительного, эффективного и
+сохранённого идентификатора пользователя или группы
+.SH ОБЗОР
+\fB#define _GNU_SOURCE\fP /* смотрите feature_test_macros(7) */
+.br
+\fB#include <unistd.h>\fP
+.PP
+\fBint getresuid(uid_t *\fP\fIruid\fP\fB, uid_t *\fP\fIeuid\fP\fB, uid_t *\fP\fIsuid\fP\fB);\fP
+.br
+\fBint getresgid(gid_t *\fP\fIrgid\fP\fB, gid_t *\fP\fIegid\fP\fB, gid_t *\fP\fIsgid\fP\fB);\fP
+.SH ОПИСАНИЕ
+\fBgetresuid\fP() возвращает действительный (real), эффективный (effective) и
+сохранённый (saved) set\-user\-ID идентификатор пользователя вызывающего
+процесса в аргументах \fIruid\fP, \fIeuid\fP и \fIsuid\fP,
+соответственно. \fBgetresgid\fP() выполняет аналогичную задачу для
+идентификаторов группы процесса.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+В одном из аргументов задан адрес вне области адресного пространства
+вызывающей программы.
+.SH ВЕРСИИ
+Данные системные вызовы появились в Linux, начиная с ядра версии 2.1.44.
+.PP
+В glibc прототипы появились в версии 2.3.2, они предоставляются при
+определении \fB_GNU_SOURCE\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Это нестандартные вызовы; также они есть в HP\-UX и некоторых BSD.
+.SH ЗАМЕЧАНИЯ
+Первоначальные версии системных вызовов \fBgetresuid\fP() и \fBgetresgid\fP() в
+Linux поддерживали только 16\-битные идентификаторы пользователей и
+групп. Позднее в Linux 2.4 были добавлены вызовы \fBgetresuid32\fP() и
+\fBgetresgid32\fP(), поддерживающие 32\-битные идентификаторы. В glibc
+обёрточные функции \fBgetresuid\fP() и \fBgetresgid\fP() работают одинаково вне
+зависимости от версий ядра.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetuid\fP(2), \fBsetresuid\fP(2), \fBsetreuid\fP(2), \fBsetuid\fP(2),
+\fBcredentials\fP(7)

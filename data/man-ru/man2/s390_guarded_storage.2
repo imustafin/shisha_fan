@@ -1,0 +1,150 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2018 Eugene Syromyatnikov <evgsyr@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH S390_GUARDED_STORAGE 2 2019\-03\-06 "Руководство программиста Linux" 
+.SH ИМЯ
+s390_guarded_storage \- операции со средством защищённого хранения
+z/Architecture
+.SH ОБЗОР
+.nf
+\fB#include <asm/guarded_storage.h>\fP
+.PP
+\fBint s390_guarded_storage(int \fP\fIcommand\fP\fB, struct gs_cb *\fP\fIgs_cb\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBs390_guarded_storage\fP() задействует средство защищённого
+хранения (Guarded Storage Facility, свойство z/Architecture) для процессов
+пользовательского пространства.
+.PP
+.\" The description is based on
+.\" http://www-05.ibm.com/de/linux-on-z-ws-us/agenda/pdfs/8_-_Linux_Whats_New_-_Stefan_Raspl.pdf
+.\" and "z/Architecture Principles of Operation" obtained from
+.\" http://publibfi.boulder.ibm.com/epubs/pdf/dz9zr011.pdf
+Средство защищённого хранения — это аппаратное свойство, позволяющее
+пометить до 64 областей памяти (в z14) для защиты; при чтении указателя
+новыми инструкциями «Load Guarded» (LGG) или «Load Logical and Shift
+Guarded» (LLGFSG) будет проверяться диапазон согласно загружаемому значению
+и вызываться (установленный ранее) обработчик пользовательского
+пространства, если затронута одна из защищённых областей.
+.PP
+.\" The command description is copied from v4.12-rc1~139^2~56^2 commit message
+В аргументе \fIcommand\fP задаётся выполняемая функция. Поддерживаются
+следующие команды:
+.TP 
+\fBGS_ENABLE\fP
+Включает средство защищённого хранения для вызывающей задачи. Первоначально,
+содержимое блока управления защищённым хранением будет заполнено
+нулями. После включения из кода пользовательского пространства можно вызвать
+инструкцию «Load Guarded Storage Controls» (LGSC) (или обёрточную функцию
+\fBload_gs_cb\fP(), предоставляемую заголовочным файлом
+\fIasm/guarded_storage.h\fP) для загрузки произвольного блока управления. Пока
+задача включена, ядро будет сохранять и восстанавливать вызывающее
+содержимое регистров защищённого хранения при переключении контекста.
+.TP 
+\fBGS_DISABLE\fP
+Выключает средство защищённого хранения для вызывающей задачи. Ядро
+перестанет сохранять и восстанавливать содержимое регистров защищённого
+хранения,  содержимое регистров этой задачи будет утрачено.
+.TP 
+\fBGS_SET_BC_CB\fP
+Устанавливает широковещательный блок управления защищённым хранением равным
+из предоставленного в аргументе \fIgs_cb\fP. Вызывается для нити и связывает
+заданный широковещательный блок управления защищённым хранением с вызывающей
+задачей. Данный блок управления будет использован в команде широковещания
+\fBGS_BROADCAST\fP.
+.TP 
+\fBGS_CLEAR_BC_CB\fP
+Стирает широковещательный блок управления защищённым хранением. Блок
+управления защищённым хранением больше не имеет связи, установленной с
+помощью команды \fBGS_SET_BC_CB\fP.
+.TP 
+\fBGS_BROADCAST\fP
+Посылает широковещание всем нитям, родственным вызывающей задаче. Каждый
+родственник с установленным широковещательным блоком управления защищённым
+хранением загрузит этот блок управления и включит защищённое
+хранение. Широковещательный блок управления защищённым хранением
+уничтожается; второе широковещание без обновления хранимого блока управления
+с помощью \fBGS_SET_BC_CB\fP ни сработает.
+.PP
+В аргументе \fIgs_cb\fP указывается адрес структуры блока управления защищённым
+хранением и пока используется только в команде \fBGS_SET_BC_CB\fP; все
+остальные упомянутые команды игнорируют этот аргумент.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBs390_guarded_storage\fP() возвращает значение 0.
+.PP
+В случае ошибки возвращается \-1 и значение \fIerrno\fP устанавливается
+соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Значение \fIcommand\fP равно \fBGS_SET_BC_CB\fP и копирование структуры блока
+управления защищённым хранением, указанное в аргументе \fIgs_cb\fP завершилось
+ошибкой.
+.TP 
+\fBEINVAL\fP
+Значение аргумента \fIcommand\fP некорректно.
+.TP 
+\fBENOMEM\fP
+Значение \fIcommand\fP равно \fBGS_ENABLE\fP или \fBGS_SET_BC_CB\fP и выделение места
+под новый блока управления защищённым хранением завершилось ошибкой.
+.TP 
+\fBEOPNOTSUPP\fP
+Средство защищённого хранения не поддерживается оборудованием.
+.SH ВЕРСИИ
+.\" 916cda1aa1b412d7cf2991c3af7479544942d121, v4.12-rc1~139^2~56^2
+Данный системный вызов появился в Linux 4.12.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный системный вызов есть только в Linux и доступен только на архитектуре
+s390.
+.PP
+Средство защищённого хранения доступно начиная с System z14.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данного системного вызова; запускайте его с помощью
+\fBsyscall\fP(2).
+.PP
+Описание средства защищённого хранения вместе с инструкциями, блоком
+управления защищённым хранением, структурой списка событий защищённого
+хранения доступно в «z/Architecture Principles of Operations» начиная с
+12\-го выпуска.
+.PP
+.\" .PP
+.\" For the example of using the guarded storage facility, see
+.\" .UR https://developer.ibm.com/javasdk/2017/09/25/concurrent-scavenge-using-guarded-storage-facility-works/
+.\" the article with the description of its usage in the Java Garbage Collection
+.\" .UE
+В структуре \fIgs_cb\fP есть поле \fIgsepla\fP (Guarded Storage Event Parameter
+List Address), которое является указателем пользовательского пространства на
+структуру Guarded Storage Event Parameter List (содержащей адрес
+вышеупомянутого обработчика событий в поле \fIgseha\fP), а её описание доступно
+как определение структурного типа \fBgs_epl\fP в заголовочном файле
+\fIasm/guarded_storage.h\fP.
+.PP
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsyscall\fP(2)

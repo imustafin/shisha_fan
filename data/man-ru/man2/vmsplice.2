@@ -1,0 +1,139 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 2006 Jens Axboe
+.\" and Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH VMSPLICE 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+vmsplice \- соединяет пользовательские страницы памяти с каналом
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+\fB#include <fcntl.h>\fP
+\fB#include <sys/uio.h>\fP
+.PP
+\fBssize_t vmsplice(int \fP\fIfd\fP\fB, const struct iovec *\fP\fIiov\fP\fB,\fP
+\fB                 unsigned long \fP\fInr_segs\fP\fB, unsigned int \fP\fIflags\fP\fB);\fP
+.fi
+.\" Return type was long before glibc 2.7
+.SH ОПИСАНИЕ
+.\" Linus: vmsplice() system call to basically do a "write to
+.\" the buffer", but using the reference counting and VM traversal
+.\" to actually fill the buffer. This means that the user needs to
+.\" be careful not to reuse the user-space buffer it spliced into
+.\" the kernel-space one (contrast this to "write()", which copies
+.\" the actual data, and you can thus reuse the buffer immediately
+.\" after a successful write), but that is often easy to do.
+.\" Since Linux 2.6.23
+.\" commit 6a14b90bb6bc7cd83e2a444bf457a2ea645cbfe7
+Если \fIfd\fP открыт для записи, то системный вызов \fBvmsplice\fP() отображает
+\fInr_segs\fP областей пользовательской памяти, описанных \fIiov\fP, в канал. Если
+\fIfd\fP открыт для чтения, то системный вызов \fBvmsplice\fP() заполняет
+\fInr_segs\fP областей пользовательской памяти, описанных \fIiov\fP, из
+канала. Файловый дескриптор \fIfd\fP должен указывать на канал.
+.PP
+Указатель \fIiov\fP указывает на массив структур \fIiovec\fP, определённых в
+\fI<sys/uio.h>\fP:
+.PP
+.in +4n
+.EX
+struct iovec {
+    void  *iov_base;        /* начальный адрес */
+    size_t iov_len;         /* количество байт */
+};
+.EE
+.in
+.PP
+Аргумент \fIflags\fP представляет собой битовую маску, которая составляется
+логическим сложением (OR) следующих значений:
+.TP 
+\fBSPLICE_F_MOVE\fP
+Не используется в \fBvmsplice\fP(); см. \fBsplice\fP(2).
+.TP 
+\fBSPLICE_F_NONBLOCK\fP
+.\" Not used for vmsplice
+.\" May be in the future -- therefore EAGAIN
+Не блокировать ввод\-вывод; подробности в \fBsplice\fP(2).
+.TP 
+\fBSPLICE_F_MORE\fP
+В данный момент никак не влияет при указании в \fBvmsplice\fP(), но это может
+измениться; см. \fBsplice\fP(2).
+.TP 
+\fBSPLICE_F_GIFT\fP
+.\" FIXME . Explain the following line in a little more detail:
+.\" FIXME
+.\" It looks like the page-alignment requirement went away with
+.\" commit bd1a68b59c8e3bce45fb76632c64e1e063c3962d
+.\"
+.\" .... if we expect to later SPLICE_F_MOVE to the cache.
+Предоставить ядру пользовательские страницы. Приложение, возможно, не
+изменяло эту память, иначе страничный кэш и данные на диске будут
+различны. Передача страниц ядру означает, что последующий вызов \fBsplice\fP(2)
+с флагом \fBSPLICE_F_MOVE\fP сможет переместить страницы; если этот флаг не
+указан, то последующий \fBsplice\fP(2) с флагом \fBSPLICE_F_MOVE\fP должен
+скопировать страницы. Также, данные должны быть выровнены по странице: по
+адресам памяти и размеру.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBvmsplice\fP() возвращается количество байт,
+переданных в канал. При ошибке \fBvmsplice\fP() возвращает \-1, а \fIerrno\fP
+устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+В указан \fIflags\fP \fBSPLICE_F_NONBLOCK\fP, и операция вызвала бы блокировку.
+.TP 
+\fBEBADF\fP
+Неправильное значение \fIfd\fP или оно не указывает на канал.
+.TP 
+\fBEINVAL\fP
+Значение \fInr_segs\fP больше \fBIOV_MAX\fP; или, если задан \fBSPLICE_F_GIFT\fP, не
+выровнена память.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти.
+.SH ВЕРСИИ
+Системный вызов \fBvmsplice\fP() впервые появился в Linux 2.6.17; поддержка в
+glibc добавлена в версии 2.5.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+.\" UIO_MAXIOV in kernel source
+Вызов \fBvmsplice\fP() следует другим функциям векторизованного чтения/записи
+при возникновении ограничений на количество передаваемых сегментов. Это
+ограничение равно \fBIOV_MAX\fP, определяемое в \fI<limits.h>\fP. Сейчас
+это значение равно 1024.
+.PP
+.\" commit 6a14b90bb6bc7cd83e2a444bf457a2ea645cbfe7
+Настоящую стыковку \fBvmsplice\fP() поддерживает только для отображения
+пользовательской памяти в канал. В обратном направлении, в действительности,
+он просто копирует данные в пользовательское пространство. Но это делает
+интерфейс приятным и симметричным, и позволяет людям строить на
+\fBvmsplice\fP() с пространством будущего улучшения производительности.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsplice\fP(2), \fBtee\fP(2), \fBpipe\fP(7)

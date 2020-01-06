@@ -1,0 +1,173 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\" and Copyright (c) 2014 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 17:51:15 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 11 May 1998 by Joseph S. Myers (jsm28@cam.ac.uk)
+.\" Modified 14 May 2001, 23 Sep 2001 by aeb
+.\" 2004-12-20, mtk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSTEM 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+system \- выполняет команду оболочки (shell)
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint system(const char *\fP\fIcommand\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+В библиотечной функции \fBsystem\fP() используется \fBfork\fP(2) для создания
+процесса\-потомка, в котором посредством \fBexecl\fP(3) запускается команда
+оболочки, указанная в \fIcommand\fP:
+.PP
+.in +4n
+.EX
+execl("/bin/sh", "sh", "\-c", command, (char *) NULL);
+.EE
+.in
+.PP
+Функция \fBsystem\fP() возвращает результат после завершения работы команды.
+.PP
+На время выполнения команды \fBSIGCHLD\fP блокируется, а \fBSIGINT\fP и \fBSIGQUIT\fP
+игнорируются в процессе, который вызвал \fBsystem\fP() (эти сигналы будут
+обработаны их действиями по умолчанию внутри процесса\-потомка, который
+выполняет \fIcommand\fP).
+.PP
+Если значение \fIcommand\fP равно NULL, то \fBsystem\fP() возвращает состояние,
+показывающее доступна ли оболочка в системе.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Возвращаемым значением \fBsystem\fP() может быть одно из:
+.IP * 3
+Если значение \fIcommand\fP равно NULL, то возвращается ненулевое значение,
+если оболочка присутствует в системе, или 0, если оболочка недоступна.
+.IP *
+Если процесс\-потомок не может быть создан или его состояние невозможно
+вернуть, то возвращается значение \-1, а \fIerrno\fP присваивается код ошибки.
+.IP *
+Если оболочка не может выполниться в процессе\-потомке, то возвращается
+значение будет таким же как если бы оболочка\-потомок завершилась вызовом
+\fB_exit\fP(2) с состоянием 127.
+.IP *
+Если все системные вызовы выполнены без ошибок, то возвращается значение
+состояния завершения процесса\-потомка, использовавшегося для выполнения
+\fIcommand\fP (состояние завершения оболочки — это состояние завершения
+последней выполнявшейся команды).
+.PP
+В последних двух случаях возвращаемое значение — это «состояние ожидания»,
+которое можно определить с помощью макроса описанного в \fBwaitpid\fP(2)
+(т. е., \fBWIFEXITED\fP(), \fBWEXITSTATUS\fP() и т. п.).
+.PP
+Функция \fBsystem\fP() не отражает состояние ожидание других потомков.
+.SH ОШИБКИ
+Функция \fBsystem\fP() может завершиться  с теми же ошибками что и \fBfork\fP(2).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsystem\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99.
+.SH ЗАМЕЧАНИЯ
+Функция \fBsystem\fP() проста и удобна: она позаботится обо всём для вызовов
+\fBfork\fP(2), \fBexecl\fP(3) и \fBwaitpid\fP(2), а также необходимых действиях с
+сигналами; также оболочка выполнит обычные подстановки и перенаправления
+ввода\-вывода \fIcommand\fP. Но \fBsystem\fP() не эффективна: для создания процесса
+требуются дополнительные системные вызовы, которые запускают оболочку и
+выполняют команду.
+.PP
+Если определён макрос тестирования свойств \fB_XOPEN_SOURCE\fP (до включения
+\fIвсех\fP заголовочных файлов), то при включении \fI<stdlib.h>\fP
+становятся доступны макросы, описанные в \fBwaitpid\fP(2) (\fBWEXITSTATUS\fP() и
+т. п.).
+.PP
+Как уже упоминалось,  функция \fBsystem\fP() игнорирует \fBSIGINT\fP и
+\fBSIGQUIT\fP. Это может привести к тому, что программы вызывающие её из цикла
+станут не прерываемыми, пока сами не проверят условия выхода для своих
+дочерних процессов. Пример:
+.PP
+.in +4n
+.EX
+while (something) {
+    int ret = system("foo");
+
+    if (WIFSIGNALED(ret) &&
+        (WTERMSIG(ret) == SIGINT || WTERMSIG(ret) == SIGQUIT))
+            break;
+}
+.EE
+.in
+.PP
+В POSIX.1 не определено, вызываются ли обработчики, зарегистрированные
+\fBpthread_atfork\fP(3), при выполнении \fBsystem\fP(). В реализации glibc такие
+обработчики не вызываются.
+.PP
+В версиях glibc до 2.1.3 проверка доступности \fI/bin/sh\fP в действительности
+не выполнялась, если значение \fIcommand\fP равно NULL; вместо этого всегда
+предполагалось наличие, и в этом случае \fBsystem\fP() всегда возвращала
+1. Начиная с glibc 2.1.3, эта проверка выполняется, так как несмотря на
+требование POSIX.1\-2001   a conforming implementation to provide a shell,
+that shell may not be available or executable if the calling program has
+previously called \fBchroot\fP(2)  (which is not specified by POSIX.1\-2001).
+.PP
+.\"
+Существует вероятность, что команда оболочки возвратит значение 127, которое
+также является и возвращаемым значением самой \fBsystem\fP(); в этом случае
+нельзя понять, что невозможно выполнить оболочку в процессе\-потомке.
+.SS Предостережения
+.PP
+Не используйте \fBsystem\fP() в привилегированных программах (программы с
+set\-user\-ID или set\-group\-ID, или программы с мандатами), так как могут
+использоваться странные значения некоторых переменных окружения для
+разрушения целостности системы. Например, \fBPATH\fP может быть изменена так,
+что произвольная программа выполняется с расширенными правами. Вместо этого
+используйте семейство функций \fBexec\fP(3), но не \fBexeclp\fP(3) или
+\fBexecvp\fP(3) (которые также используют переменную окружения \fBPATH\fP для
+поиска исполняемого файла).
+.PP
+Функция \fBsystem\fP(), фактически, работает неправильно для программ с
+привилегиями set\-user\-ID или set\-group\-ID в системах, где \fI/bin/sh\fP это
+bash версии 2: для безопасности bash 2 при запуске убирает привилегии (в
+Debian используется другая оболочка, \fBdash\fP(1), которая не делает этого,
+если вызывается как \fBsh\fP).
+.PP
+Любой введённые пользователем данные, выполняемые как часть \fIкоманды\fP,
+должны быть \fIвнимательно\fP отцензурированы так, чтобы не выполнились
+неожидаемые команды оболочки или параметры команды. Эти риски особенно
+серьезны при использовании \fBsystem\fP() из привилегированной программы.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsh\fP(1), \fBexecve\fP(2), \fBfork\fP(2), \fBsigaction\fP(2), \fBsigprocmask\fP(2),
+\fBwait\fP(2), \fBexec\fP(3), \fBsignal\fP(7)

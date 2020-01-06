@@ -1,0 +1,194 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\" and Copyright (C) 2017 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Wed Jul 28 11:12:26 1993 by Rik Faith (faith@cs.unc.edu)
+.\"
+.\" FIXME Probably all of the following should be documented:
+.\"     _PC_SYNC_IO,
+.\"     _PC_ASYNC_IO,
+.\"     _PC_PRIO_IO,
+.\"     _PC_SOCK_MAXBUF,
+.\"     _PC_FILESIZEBITS,
+.\"     _PC_REC_INCR_XFER_SIZE,
+.\"     _PC_REC_MAX_XFER_SIZE,
+.\"     _PC_REC_MIN_XFER_SIZE,
+.\"     _PC_REC_XFER_ALIGN,
+.\"     _PC_ALLOC_SIZE_MIN,
+.\"     _PC_SYMLINK_MAX,
+.\"     _PC_2_SYMLINKS
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FPATHCONF 3 2017\-07\-13 GNU "Руководство программиста Linux"
+.SH ИМЯ
+fpathconf, pathconf \- получают параметры настроек для файлов
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBlong fpathconf(int \fP\fIfd\fP\fB, int \fP\fIname\fP\fB);\fP
+\fBlong pathconf(const char *\fP\fIpath\fP\fB, int \fP\fIname\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fBfpathconf\fP() получает значение параметра настроек \fIname\fP для открытого
+дескриптора файла \fIfd\fP.
+.PP
+\fBpathconf\fP() получает значение параметра настроек \fIname\fP для файла с
+именем \fIpath\fP.
+.PP
+Соответствующие макросы, определённые в \fI<unistd.h>\fP, выдают
+минимальные значения; если приложение собирается использовать изменяющиеся
+значения, то необходимо вызывать функции \fBfpathconf\fP() или \fBpathconf\fP(),
+которые выдают более гибкий результат.
+.PP
+При установке значения \fIname\fP в следующие константы возвращаются
+соответствующие им параметры настройки:
+.TP 
+\fB_PC_LINK_MAX\fP
+Максимальное количество ссылок на файл. Если \fIfd\fP или \fIpath\fP указывают на
+каталог, то значение применяется ко всему каталогу. Соответствует макросу
+\fB_POSIX_LINK_MAX\fP.
+.TP 
+\fB_PC_MAX_CANON\fP
+Максимальная длина отформатированной строки ввода, причём, \fIfd\fP или \fIpath\fP
+должны указывать на терминал. Соответствует макросу \fB_POSIX_MAX_CANON\fP.
+.TP 
+\fB_PC_MAX_INPUT\fP
+Максимальная длина строки ввода, причём, \fIfd\fP или \fIpath\fP должны указывать
+на терминал. Соответствует макросу \fB_POSIX_MAX_INPUT\fP.
+.TP 
+\fB_PC_NAME_MAX\fP
+Максимальная длина имени файла в каталоге \fIpath\fP или \fIfd\fP, которую
+разрешено использовать процессу при создании файла. Соответствует макросу
+\fB_POSIX_NAME_MAX\fP.
+.TP 
+\fB_PC_PATH_MAX\fP
+Максимальная длина относительного имени файла, где \fIpath\fP или \fIfd\fP
+являются текущим рабочим каталогом. Соответствует макросу
+\fB_POSIX_PATH_MAX\fP.
+.TP 
+\fB_PC_PIPE_BUF\fP
+Максимальное количество байт, которое может быть атомарно записано в канал
+FIFO. Для \fBfpathconf\fP() значение \fIfd\fP должно указывать на канал или
+FIFO. Для \fBfpathconf\fP() значение \fIpath\fP должно указывать на FIFO или
+каталог; в последнем случае возвращаемое значение соответствует FIFO,
+созданному в этом каталоге. Соответствует макросу \fB_POSIX_PIPE_BUF\fP.
+.TP 
+\fB_PC_CHOWN_RESTRICTED\fP
+Возвращает положительное значение, если использование \fBchown\fP(2) и
+\fBfchown\fP(2) для изменения идентификатора пользователя файла ограничено для
+процесса с соответствующими правами и изменение идентификатора группы файла
+на значение, отличающееся от идентификатора эффективной группы процесса или
+его вспомогательных идентификаторов групп, ограничено для процесса с
+соответствующими правами. Согласно POSIX.1, эта переменная всегда должна
+быть определена со значением не равным \-1. Соответствует макросу
+\fB_POSIX_CHOWN_RESTRICTED\fP.
+.IP
+Если \fIfd\fP или \fIpath\fP указывают на каталог, то возвращаемое значение
+относится ко всем файлам в этом каталоге.
+.TP 
+\fB_PC_NO_TRUNC\fP
+Возвращает ненулевое значение, если при доступе к файловым именам длиннее,
+чем \fB_POSIX_NAME_MAX\fP, возникает ошибка. Соответствует макросу
+\fB_POSIX_NO_TRUNC\fP.
+.TP 
+\fB_PC_VDISABLE\fP
+Возвращает ненулевое значение, если обработка спецсимволов может быть
+отключена, при этом \fIfd\fP или \fIpath\fP должны указывать на терминал.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Возвращаемым значением этих функций может быть одно из:
+.IP * 3
+При ошибке возвращается \-1, а в \fIerrno\fP содержится код ошибки (например,
+\fBEINVAL\fP означает, что некорректно \fIname\fP).
+.IP *
+Если \fIname\fP соответствует максимальному или минимальному ограничителю и
+этот ограничитель не определён, то возвращается \-1 и \fIerrno\fP не изменяется
+(чтобы отличать  неопределённый ограничитель от ошибки, сбросьте \fIerrno\fP в
+ноль пере вызовом, а затем проверьте, что \fIerrno\fP не равно нулю, если
+возвращается \-1).
+.IP *
+Если \fIname\fP соответствует параметру, то возвращается положительное
+значение, если параметр поддерживается и \-1, если параметр не
+поддерживается.
+.IP *
+В противном случае возвращается текущее значение параметра или
+ограничителя. Это значение будет не более ограничивающем чем соответствующее
+значение, которое было показано приложению в \fI<unistd.h>\fP или
+\fI<limits.h>\fP при компиляции.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+(\fBpathconf\fP()) Запрещён поиск в одном из каталогов пути \fIpath\fP.
+.TP 
+\fBEBADF\fP
+(\fBfpathconf\fP()) Значение \fIfd\fP не является правильным файловым
+дескриптором.
+.TP 
+\fBEINVAL\fP
+Неверное значение \fIname\fP.
+.TP 
+\fBEINVAL\fP
+Реализация не поддерживает связь \fIname\fP с указанным файлом.
+.TP 
+\fBELOOP\fP
+(\fBpathconf\fP()) Во время определения \fIpath\fP встретилось слишком много
+символьных ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+(\fBpathconf\fP()) Слишком длинное значение аргумента \fIpath\fP.
+.TP 
+\fBENOENT\fP
+(\fBpathconf\fP()) Компонент пути \fIpath\fP не существует или в \fIpath\fP указана
+пустая строка.
+.TP 
+\fBENOTDIR\fP
+(\fBpathconf\fP()) Компонент пути, использованный как каталог в \fIpath\fP, в
+действительности таковым не является.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw23 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfpathconf\fP(),
+\fBpathconf\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Файлы, имена которых длиннее, чем значение, возвращаемое для \fIname\fP и равны
+\fB_PC_NAME_MAX\fP, могут существовать в заданном каталоге.
+.PP
+Некоторые возвращаемые значения могут быть огромны; соответствующие им
+объекты невозможно разместить в памяти.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetconf\fP(1), \fBopen\fP(2), \fBstatfs\fP(2), \fBconfstr\fP(3), \fBsysconf\fP(3)

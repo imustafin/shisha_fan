@@ -1,0 +1,116 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2015, 2016 IBM Corporation.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume.
+.\" no responsibility for errors or omissions, or for damages resulting.
+.\" from the use of the information contained herein.  The author(s) may.
+.\" not have taken the same level of care in the production of this.
+.\" manual, which is licensed free of charge, as they might when working.
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH __PPC_SET_PPR_MED 3 2017\-09\-15 "Библиотека GNU C" "Руководство пользователя Linux"
+.SH ИМЯ
+__ppc_set_ppr_med, __ppc_set_ppr_very_low, __ppc_set_ppr_low,
+__ppc_set_ppr_med_low, __ppc_set_ppr_med_high \- изменяет регистр приоритета
+программы
+.SH ОБЗОР
+\fB#include <sys/platform/ppc.h>\fP
+.PP
+\fBvoid __ppc_set_ppr_med(void);\fP
+.br
+\fBvoid __ppc_set_ppr_very_low(void);\fP
+.br
+\fBvoid __ppc_set_ppr_low(void);\fP
+.br
+\fBvoid __ppc_set_ppr_med_low(void);\fP
+.br
+\fBvoid __ppc_set_ppr_med_high(void);\fP
+.SH ОПИСАНИЕ
+Эти функции предоставляют доступ к \fIProgram Priority Register\fP (PPR,
+регистру приоритета программы) архитектуры Power.
+.PP
+PPR — это 64\-битный регистр, которой управляет приоритетом
+программы. Изменяя значение PPR, программист может улучшить системную
+производительность, сделав использование системных ресурсов более
+эффективным, особенно в ситуациях конкурентного доступа. Доступные
+непривилегированные состояния достигаются следующими функциями:
+.IP * 3
+Функция \fB__ppc_set_ppr_med\fP() устанавливает регистр приоритета программы
+равным \fIсреднему\fP значению (по умолчанию).
+.IP *
+Функция \fB__ppc_set_ppr_very_low\fP() устанавливает регистр приоритета
+программы равным \fIочень низкому\fP значению.
+.IP *
+Функция \fB__ppc_set_ppr_low\fP() устанавливает регистр приоритета программы
+равным \fIнизкому\fP значению.
+.IP *
+Функция \fB__ppc_set_ppr_med_low\fP() устанавливает регистр приоритета
+программы равным значению \fIниже среднего\fP.
+.PP
+Привилегированное состояние \fIвыше среднего\fP также может быть установлено на
+определённые временные интервалы (непривилегированными) программами в режиме
+задачи (problem\-state) следующей функцией:
+.IP * 3
+Функция \fB__ppc_set_ppr_med_high\fP() устанавливает регистр приоритета
+программы равным значению \fIвыше среднего\fP.
+.PP
+Если приоритет программы выше среднего и истёк временной интервал или если
+выполняется попытка назначить приоритет выше среднего в неразрешённый
+момент, то приоритет устанавливается в среднее значение.
+.SH ВЕРСИИ
+Функции \fB__ppc_set_ppr_med\fP(), \fB__ppc_set_ppr_low\fP() и
+\fB__ppc_set_ppr_med_low\fP() имеются в glibc начиная с версии 2.18. Функции
+\fB__ppc_set_ppr_very_low\fP() и \fB__ppc_set_ppr_med_high\fP() впервые появились
+в glibc в версии 2.23.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw26 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fB__ppc_set_ppr_med\fP(),
+.br
+\fB__ppc_set_ppr_very_low\fP(),
+.br
+\fB__ppc_set_ppr_low\fP(),
+.br
+\fB__ppc_set_ppr_med_low\fP(),
+.br
+\fB__ppc_set_ppr_med_high\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+Функции \fB__ppc_set_ppr_very_low\fP() и \fB__ppc_set_ppr_med_high\fP() будут
+определены из \fI<sys/platform/ppc.h>\fP, если определён
+\fB_ARCH_PWR8\fP. Доступность этих функций можно проверить с помощью \fB#ifdef
+_ARCH_PWR8\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fB__ppc_yield\fP(3)
+.PP
+\fIPower ISA, Book\ II \- Section\ 3.1 (Program Priority Registers)\fP

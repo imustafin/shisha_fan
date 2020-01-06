@@ -1,0 +1,219 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MQ_NOTIFY 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+mq_notify \- включает уведомление при поступлении сообщения
+.SH ОБЗОР
+.nf
+\fB#include <mqueue.h>\fP
+.PP
+\fBint mq_notify(mqd_t \fP\fImqdes\fP\fB, const struct sigevent *\fP\fIsevp\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.SH ОПИСАНИЕ
+Функция \fBmq_notify\fP() позволяет вызывающему процессу регистрироваться или
+отменять регистрацию доставки анонимных уведомлений при появлении нового
+сообщения в пустой очереди сообщений, на которую ссылается дескриптор
+очереди сообщений \fImqdes\fP.
+.PP
+Аргумент \fIsevp\fP является указателем на структуру \fIsigevent\fP. Определение и
+описание структуры смотрите в \fBsigevent\fP(7).
+.PP
+Если \fIsevp\fP не равен null, то \fBmq_notify\fP() регистрирует вызывающий
+процесс для получения уведомлений о сообщениях. В поле \fIsigev_notify\fP
+структуры \fIsigevent\fP, на которую указывает \fIsevp\fP, задаётся способ
+выполнения уведомления. Это поле может содержать одно из следующих значений:
+.TP 
+\fBSIGEV_NONE\fP
+.\" When is SIGEV_NONE useful?
+«Нулевое» уведомление: хотя вызывающий процесс и регистрируется как
+уведомляемый, при появлении сообщения уведомление не будет отправлено.
+.TP 
+\fBSIGEV_SIGNAL\fP
+.\" I don't know of other implementations that set
+.\" si_pid and si_uid -- MTK
+Уведомлять процесс посредством отправки сигнала, указанного в
+\fIsigev_signo\fP. Подробности смотрите в \fBsigevent\fP(7). Поле \fIsi_code\fP
+структуры \fIsiginfo_t\fP будет изменено на \fBSI_MESGQ\fP. Также, значение
+\fIsi_pid\fP будет изменено на PID процесса, который посылается сообщение, а
+значение  \fIsi_uid\fP будет изменено на реальный пользовательский ID
+посылающего процесса.
+.TP 
+\fBSIGEV_THREAD\fP
+При доставке сообщения вызвать \fIsigev_notify_function\fP, как если бы это
+была начальная функция новой нити. Подробности смотрите в \fBsigevent\fP(7).
+.PP
+Только один процесс может быть зарегистрирован, чтобы получить уведомление
+из очереди сообщений.
+.PP
+Если \fIsevp\fP равно NULL и вызывающий процесс уже зарегистрирован принимать
+сообщения для этой очереди сообщений, то регистрация удаляется; после этого
+другой процесс может зарегистрироваться для получения уведомлений о
+сообщениях в этой очереди.
+.PP
+Уведомление о сообщение возникает только при поступлении нового сообщения и
+если очередь до этого была пуста. Если очередь не пуста на момент вызова
+\fBmq_notify\fP(), то уведомление будет происходить только после опустошения
+очереди и поступлении нового сообщения.
+.PP
+Если другой процесс или нить ожидают чтения сообщения из пустой очереди с
+помощью \fBmq_receive\fP(3), то все регистрации по уведомлению игнорируются;
+сообщение доставляется процесс или нити вызвавшей \fBmq_receive\fP(3), и
+регистрация уведомления о сообщении остаётся как была.
+.PP
+Уведомление выполняется один раз: после доставки уведомления регистрация
+удаляется и другой процесс может зарегистрироваться для уведомления. Если
+уведомлённый процесс хочет получить следующее уведомление, то он может
+использовать \fBmq_notify\fP() для запроса уведомления в дальнейшем. Это должно
+быть сделано до исчезновения всех непрочитанных сообщений из очереди
+(переключение очереди в неблокирующий режим полезно для опустошения очереди
+сообщений без блокировки, если очередь пуста).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBmq_notify\fP() возвращает 0; при ошибке возвращает
+\-1, а в \fIerrno\fP помещается код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+В \fImqdes\fP размещён некорректный дескриптор очереди сообщений.
+.TP 
+\fBEBUSY\fP
+Другой процесс уже зарегистрировался, чтобы получать уведомление из этой
+очереди сообщений.
+.TP 
+\fBEINVAL\fP
+Значение \fIsevp\->sigev_notify\fP содержит недопустимое значение; или
+\fIsevp\->sigev_notify\fP равно \fBSIGEV_SIGNAL\fP и \fIsevp\->sigev_signo\fP
+не содержит корректного номера сигнала.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти.
+.PP
+.\" Linux does not do this
+В POSIX.1\-2008 сказано, что реализация \fIможет\fP генерировать ошибку
+\fBEINVAL\fP, если \fIsevp\fP равно NULL, и вызывающий ещё не зарегистрирован для
+получения уведомлений из очереди \fImqdes\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmq_notify\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001.
+.SH ЗАМЕЧАНИЯ
+.\"
+.SS "Отличия между библиотекой C и ядром"
+В glibc библиотечная функция \fBmq_notify\fP() реализована на основе системного
+вызова с тем же именем. Если \fIsevp\fP равно NULL или задаёт механизм
+уведомления не \fBSIGEV_THREAD\fP, то библиотечная функция напрямую вызывает
+системный вызов. Большая часть реализации \fBSIGEV_THREAD\fP располагается
+внутри библиотеки, а не в ядре (эта необходимость возникает из\-за того, что
+нить, вовлечённая в обработку уведомления, должна управляться в библиотечной
+реализации C нитей POSIX). В реализации задействуется неструктурированный
+сокет \fBnetlink\fP(7) и создаётся новая нить для каждого уведомления,
+доставляемого процессу.
+.SH ПРИМЕР
+В следующей программе показана регистрация запроса уведомления для очереди
+сообщений с именем, указанном в аргументе командной строки. Уведомление
+выполняется создаваемой нитью. Нить выполняет функцию, которая читает одно
+сообщение из очереди и завершает процесс.
+.SS "Исходный код программы"
+.EX
+#include <pthread.h>
+#include <mqueue.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define handle_error(msg) \e
+    do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+static void                     /* начальная функция нити */
+tfunc(union sigval sv)
+{
+    struct mq_attr attr;
+    ssize_t nr;
+    void *buf;
+    mqd_t mqdes = *((mqd_t *) sv.sival_ptr);
+
+/* Определяем максимальный размер сообщения; выделяем буфер для принимаемого сообщения */
+
+    if (mq_getattr(mqdes, &attr) == \-1)
+        handle_error("mq_getattr");
+    buf = malloc(attr.mq_msgsize);
+    if (buf == NULL)
+        handle_error("malloc");
+
+    nr = mq_receive(mqdes, buf, attr.mq_msgsize, NULL);
+    if (nr == \-1)
+        handle_error("mq_receive");
+
+    printf("Read %zd bytes from MQ\en", nr);
+    free(buf);
+    exit(EXIT_SUCCESS);         /* Завершение процесса */
+}
+
+int
+main(int argc, char *argv[])
+{
+    mqd_t mqdes;
+    struct sigevent sev;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s <mq\-name>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    mqdes = mq_open(argv[1], O_RDONLY);
+    if (mqdes == (mqd_t) \-1)
+        handle_error("mq_open");
+
+    sev.sigev_notify = SIGEV_THREAD;
+    sev.sigev_notify_function = tfunc;
+    sev.sigev_notify_attributes = NULL;
+    sev.sigev_value.sival_ptr = &mqdes;   /* аргументы функции нити */
+    if (mq_notify(mqdes, &sev) == \-1)
+        handle_error("mq_notify");
+
+    pause();    /* процесс будет завершён из функции нити */
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmq_close\fP(3), \fBmq_getattr\fP(3), \fBmq_open\fP(3), \fBmq_receive\fP(3),
+\fBmq_send\fP(3), \fBmq_unlink\fP(3), \fBmq_overview\fP(7), \fBsigevent\fP(7)

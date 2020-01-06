@@ -1,0 +1,114 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2009 Intel Corporation
+.\"                Author: Andi Kleen
+.\" Based on the move_pages manpage which was
+.\" This manpage is Copyright (C) 2006 Silicon Graphics, Inc.
+.\"                               Christoph Lameter
+.\"
+.\" %%%LICENSE_START(VERBATIM_TWO_PARA)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MIGRATE_PAGES 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+migrate_pages \- переносит все страницы процесса на другой набор узлов
+.SH ОБЗОР
+.nf
+\fB#include <numaif.h>\fP
+.PP
+\fBlong migrate_pages(int \fP\fIpid\fP\fB, unsigned long \fP\fImaxnode,\fP
+\fB                   const unsigned long *\fP\fIold_nodes,\fP
+\fB                   const unsigned long *\fP\fInew_nodes\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lnuma\fP.
+.SH ОПИСАНИЕ
+Вызов \fBmigrate_pages\fP() пытается перенести все страницы процесса с
+идентификатором \fIpid\fP, находящиеся в памяти узлов \fIold_nodes\fP, в память
+узлов \fInew_nodes\fP. Страницы, не расположенные в узлах \fIold_nodes\fP, не
+переносятся. При переносе на \fInew_nodes\fP ядро в максимально возможной
+степени поддерживает относительную топологию связи внутри \fIold_nodes\fP.
+.PP
+Аргументы \fIold_nodes\fP и \fInew_nodes\fP представляют собой указатели на маски
+битов номеров узлов, до \fImaxnode\fP в каждой маске. Эти маски обрабатываются
+как массивы беззнаковых целых \fIlong\fP (в последнем целом \fIlong\fP биты,
+лежащие за пределом \fImaxnode\fP, игнорируются). Аргумент \fImaxnode\fP
+представляет собой максимальный номер узла в битовой маске плюс 1 (также как
+в \fBmbind\fP(2), но отличается от \fBselect\fP(2)).
+.PP
+В аргументе \fIpid\fP задаётся идентификатор процесса, чьи страницы будут
+перемещаться. Чтобы перемещать страницы не своего процесса, вызывающий
+должен быть привилегированным (\fBCAP_SYS_NICE\fP) или реальный или эффективный
+ID пользователя вызывающего процесса должен совпадать с реальным или
+сохранённым ID пользователя процесса назначения. Если \fIpid\fP равен 0, то
+\fBmigrate_pages\fP() перемещает страницы вызвавшего процесса.
+.PP
+Совместно используемые с другими процессами страницы будут перемещаться
+только, если первоначальный процесс имеет мандат \fBCAP_SYS_NICE\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При нормальном завершении работы \fBmigrate_pages\fP() возвращает количество
+неперемещённых страниц (то есть, ноль означает, что все страницы успешно
+перемещены). В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Часть или весь диапазон памяти, заданный в \fIold_nodes\fP/\fInew_nodes\fP и
+\fImaxnode\fP, указывает за пределы доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+.\" As at 3.5, this limit is "a page worth of bits", e.g.,
+.\" 8 * 4096 bits, assuming a 4kB page size.
+Значение \fImaxnode\fP превышает введённое ядром ограничение. В \fIold_nodes\fP
+или \fInew_nodes\fP задан один или более ID узлов, превышающих поддерживаемый
+максимальный ID узла. Или ни один из ID узлов, указанных в \fInew_nodes\fP,
+включен и доступен из контекста текущего набора процессоров процесса, или ни
+один из узлов не содержит память.
+.TP 
+\fBEPERM\fP
+Недостаточно прав (\fBCAP_SYS_NICE\fP) для перемещения страниц процесса,
+заданного \fIpid\fP, или недостаточно прав (\fBCAP_SYS_NICE\fP) для доступа к
+указанным узлам назначения.
+.TP 
+\fBESRCH\fP
+.\" FIXME Document the other errors that can occur for migrate_pages()
+Не найден процесс с указанным \fIpid\fP.
+.SH ВЕРСИИ
+Вызов \fBmigrate_pages\fP() впервые появился в Linux в ядре версии 2.6.16.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Информация о библиотеке доступна в \fBnuma\fP(7).
+.PP
+Используйте \fBget_mempolicy\fP(2) с флагом \fBMPOL_F_MEMS_ALLOWED\fP для
+получения набора узлов, которые доступны в наборе ЦП вызывающему
+процессу. Заметим, что эта информация может измениться в любое время вручную
+или при автоматической перенастройке набора ЦП.
+.PP
+Использование \fBmigrate_pages\fP() может привести к тому, что расположение
+страниц (на узле) нарушит политику памяти, установленную для заданных
+адресов (см. \fBmbind\fP(2)) и/или заданного процесса
+(см. \fBset_mempolicy\fP(2)). То есть политика памяти не ограничивает узлы
+назначения, используемые \fBmigrate_pages\fP().
+.PP
+Заголовочный файл \fI<numaif.h>\fP не включён в glibc, его можно найти
+в пакете с именем \fIlibnuma\-devel\fP или подобным названием.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBget_mempolicy\fP(2), \fBmbind\fP(2), \fBset_mempolicy\fP(2), \fBnuma\fP(3),
+\fBnuma_maps\fP(5), \fBcpuset\fP(7), \fBnuma\fP(7), \fBmigratepages\fP(8),
+\fBnumastat\fP(8)
+.PP
+Файл \fIDocumentation/vm/page_migration.rst\fP в дереве исходного кода ядра
+Linux

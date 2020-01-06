@@ -1,0 +1,68 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_EQUAL 3 2015\-08\-08 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_equal \- сравнивает идентификаторы нитей
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_equal(pthread_t \fP\fIt1\fP\fB, pthread_t \fP\fIt2\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_equal\fP() два идентификатора нитей.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если два идентификатора нитей одинаковы, то \fBpthread_equal\fP() возвращает
+ненулевое значение; в противном случае возвращается 0.
+.SH ОШИБКИ
+Данная функция всегда завершается успешно.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_equal\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Функция \fBpthread_equal\fP() необходима, так как формат идентификаторов нитей
+следует считать «чёрным ящиком»: не существует переносимого способа
+сравнения двух непосредственно значений \fIpthread_t\fP из приложения.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthread_create\fP(3), \fBpthread_self\fP(3), \fBpthreads\fP(7)

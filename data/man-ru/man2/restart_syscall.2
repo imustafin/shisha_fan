@@ -1,0 +1,108 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2013 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" http://thread.gmane.org/gmane.linux.kernel/76552/focus=76803
+.\" From: Linus Torvalds <torvalds <at> transmeta.com>
+.\" Subject: Re: [PATCH] compatibility syscall layer (lets try again)
+.\" Newsgroups: gmane.linux.kernel
+.\" Date: 2002-12-05 02:51:12 GMT
+.\"
+.\" See also Section 11.3.3 of Understanding the Linux Kernel, 3rd edition
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RESTART_SYSCALL 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+restart_syscall \- перезапускает системный вызов после прерывания сигналом
+останова
+.SH ОБЗОР
+\fBint restart_syscall(void);\fP
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Системный вызов \fBrestart_syscall\fP() предназначен для перезапуска некоторых
+системных вызовов после того, как процесс, остановленный сигналом (например,
+\fBSIGSTOP\fP или \fBSIGTSTP\fP), продолжил выполнение после получения сигнала
+\fBSIGCONT\fP. Этот системный вызов создан только для внутреннего использования
+ядром.
+.PP
+.\" These system calls correspond to the special internal errno value
+.\" ERESTART_RESTARTBLOCK. Each of the system calls has a "restart"
+.\" helper function that is invoked by restart_syscall().
+.\" Notable (as at Linux 3.17) is that poll() has such a "restart"
+.\" function, but ppoll(), select(), and pselect() do not.
+.\" This means that the latter system calls do not take account of the
+.\" time spent in the stopped state when restarting.
+Вызов \fBrestart_syscall\fP() используется только для тех системных вызовов,
+которые при перезапуске должны обновить свои параметры, относящиеся к
+времени, а именно — \fBpoll\fP(2) (начиная с Linux 2.6.24), \fBnanosleep\fP(2)
+(начиная с Linux 2.6), \fBclock_nanosleep\fP(2) (начиная с Linux 2.6),
+\fBfutex\fP(2) при использовании с \fBFUTEX_WAIT\fP (начиная с Linux 2.6.22) и
+\fBFUTEX_WAIT_BITSET\fP (начиная с Linux 2.6.31). Вызов \fBrestart_syscall\fP()
+перезапускает прерванный системный вызов с аргументом времени, который
+позволят рассчитать прошедшее время (включая время, когда процесс был
+остановлен сигналом). Без механизма \fBrestart_syscall\fP() при перезапуске
+этих системных вызовов было бы невозможно вычесть правильное время,
+прошедшее на момент продолжения выполнение процесса.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Возвращаемым значением \fBrestart_syscall\fP() является возвращаемое значение
+перезапущенного системного вызова.
+.SH ОШИБКИ
+Значение \fIerrno\fP устанавливается в соответствии с ошибками системного
+вызова, перезапущенного \fBrestart_systemcall\fP().
+.SH ВЕРСИИ
+Системный вызов \fBrestart_systemcall\fP() появился в Linux 2.6.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Для этого системного вызова в glibc нет обёрточной функции, потому что он
+используется только ядром и не должен вызываться приложениями.
+.PP
+Ядро использует \fBrestart_syscall\fP() для гарантии того, что когда системный
+вызов перезапускается после остановки процесса по сигналу и затем
+возобновляется по \fBSIGCONT\fP, время, которое процесс пробыл в остановленном
+состоянии будет учтено в интервале ожидания, заданного в первоначальном
+системном вызове. У системных вызовов, у которых есть аргумент интервала
+ожидания и которые автоматически перезапускаются после сигнала останова плюс
+\fBSIGCONT\fP, но которые не имеют встроенного механизма \fBrestart_syscall\fP(2),
+после возобновления работы процесса время, которое процесс пробыл в
+остановленном состоянии, \fIне\fP учитывается в значении интервала
+ожидания. Весомыми примерам системных вызовов, которые подвержены этой
+проблеме, являются \fBppoll\fP(2), \fBselect\fP(2) и \fBpselect\fP(2).
+.PP
+Из пользовательского пространства работа \fBrestart_syscall\fP(), в большинстве
+случаев, невидима: процессу, выполняющему системный вызов, который
+перезапускался, кажется, что системный вызов выполнился как обычно.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsigaction\fP(2), \fBsigreturn\fP(2), \fBsignal\fP(7)
+.\" FIXME . ppoll(2), select(2), and pselect(2)
+.\"     should probably get the restart_syscall() treatment:
+.\"     If a select() call is suspended by stop-sig+SIGCONT, the time
+.\"     spent suspended is *not* deducted when the select() is restarted.
+.\" FIXME . check whether recvmmsg() handles stop-sig+SIGCONT properly.

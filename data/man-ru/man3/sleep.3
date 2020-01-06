@@ -1,0 +1,73 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 18:16:02 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SLEEP 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+sleep \- приостанавливает выполнение на заданное число секунд
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBunsigned int sleep(unsigned int \fP\fIseconds\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBsleep\fP() заставляет вызывающую нить заснуть пока не пройдёт число
+секунд реального времени \fIseconds\fP или пока не поступит сигнал, который
+невозможно проигнорировать.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Ноль, если запрошенное время истекло, или число секунд, оставшихся до
+пробуждения в случае, когда вызов был прерван обработчиком сигнала.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw27
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsleep\fP()
+T}	Безвредность в нитях	MT\-Unsafe sig:SIGCHLD/linux
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В Linux \fBsleep\fP() реализована через вызов \fBnanosleep\fP(2). Описание
+задействованных часов смотрите в справочной странице \fBnanosleep\fP(2).
+.SS "Замечания о переносимости"
+В некоторых системах функция \fBsleep\fP() может быть реализована с помощью
+\fBalarm\fP(2) или \fBSIGALRM\fP (POSIX.1 это допускает); лучше не смешивать
+вызовы \fBalarm\fP(2) и \fBsleep\fP().
+.PP
+Использование \fBlongjmp\fP(3) из обработчика сигнала или изменение обработки
+\fBSIGALRM\fP в момент сна может привести к непредсказуемым результатам.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsleep\fP(1), \fBalarm\fP(2), \fBnanosleep\fP(2), \fBsignal\fP(2), \fBsignal\fP(7)

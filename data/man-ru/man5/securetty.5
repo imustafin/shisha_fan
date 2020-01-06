@@ -1,0 +1,51 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt (michael@moria.de),
+.\"     Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sun Jul 25 11:06:27 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SECURETTY 5 2015\-03\-29 Linux "Руководство программиста Linux"
+.SH ИМЯ
+securetty \- файл со списком терминалов, с которых пользователь root может
+входить в систему
+.SH ОПИСАНИЕ
+Файл \fI/etc/securetty\fP содержит имена терминалов (по одному на строку, без
+начального \fI/dev/\fP), которые считаются безопасными для передачи некоторых
+токенов аутентификации.
+.PP
+Он используется \fBlogin\fP(1) (некоторыми версиями) для ограничения списка
+терминалов, с которых пользователю root разрешается вход в систему. Смотрите
+\fBlogin.defs\fP(5), если используется механизм теневых паролей.
+.PP
+В системах с включённым PAM он используется с той же целью из
+\fBpam_securetty\fP(8), для ограничения списка терминалов, для которых разрешён
+пустой пароль.
+.SH ФАЙЛЫ
+\fI/etc/securetty\fP
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlogin\fP(1), \fBlogin.defs\fP(5), \fBpam_securetty\fP(8)

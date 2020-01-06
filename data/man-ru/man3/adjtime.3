@@ -1,0 +1,125 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2006 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ADJTIME 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+adjtime \- корректировка времени для синхронизации с системными часами
+.SH ОБЗОР
+.nf
+\fB#include <sys/time.h>\fP
+.PP
+\fBint adjtime(const struct timeval *\fP\fIdelta\fP\fB, struct timeval *\fP\fIolddelta\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBadjtime\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBadjtime\fP() постепенно подстраивает системные часы (значение
+которых можно получить функцией \fBgettimeofday\fP(2)). Количество времени, на
+которое будут подстроены часы, указано в структуре, на которую указывает
+\fIdelta\fP. Данная структура имеет следующий формат:
+.PP
+.in +4n
+.EX
+struct timeval {
+    time_t      tv_sec;     /* секунды */
+    suseconds_t tv_usec;    /* микросекунды */
+};
+.EE
+.in
+.PP
+Если время подстройки в \fIdelta\fP положительно, то ход системных часов
+ускоряется на небольшой процент (то есть каждая секунда длится чуть дольше)
+до тех пор, пока подстройка не будет завершена. Если время подстройки в
+\fIdelta\fP отрицательно, то часы будут замедлены схожим способом.
+.PP
+Если подстройка системных часов по \fBadjtime\fP() уже производится во время
+второго вызова \fBadjtime\fP(), и \fIdelta\fP второго вызова не равна NULL, то
+более ранняя подстройка останавливается, однако уже завершённая часть
+подстройки не отменяется.
+.PP
+Если значение \fIolddelta\fP не равно NULL, то буфер, на который оно указывает,
+будет содержать количество оставшегося после предыдущей незавершенной
+подстройки времени.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBadjtime\fP() возвращает 0. При ошибке возвращается
+\-1, \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Подстройка в \fIdelta\fP находится вне разрешённого диапазона.
+.TP 
+\fBEPERM\fP
+Вызывающий не обладает нужными привилегиями для подстройки времени. В Linux
+для этого требуется мандат \fBCAP_SYS_TIME\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBadjtime\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.3BSD, System V.
+.SH ЗАМЕЧАНИЯ
+Подстройка \fBadjtime\fP() заставляет часы постоянно ускорять свой
+ход. Использование \fBadjtime\fP() для подстройки времени предотвращает
+проблемы, которые  могут возникнуть у некоторых программ (например,
+\fBmake\fP(1)), если происходят скачки времени вперед или назад.
+.PP
+Функция \fBadjtime\fP() предназначена для использования подстроек системных
+часов малыми значениями. В большинстве систем есть ограничение для времени
+подстройки, которое можно указывать в \fIdelta\fP. В реализации glibc значение
+\fIdelta\fP должно быть меньше либо равно (INT_MAX / 1000000 \- 2) и больше либо
+равно (INT_MIN / 1000000 + 2) (для i386 эти значения равны \-2145 и 2145
+секунд, соответственно).
+.SH ДЕФЕКТЫ
+.\" http://sourceware.org/bugzilla/show_bug?id=2449
+.\" http://bugzilla.kernel.org/show_bug.cgi?id=6761
+.\" Thanks to the new adjtimex() ADJ_OFFSET_SS_READ flag
+Была застарелая ошибка, при который если \fIdelta\fP была определена как NULL,
+то информация по предыдущей подстройке в \fIolddelta\fP не возвращалась (в
+данном случае \fBadjtime\fP() должна возвращать последнюю подстройку часов без
+изменений). Эта ошибка была исправлена в системах с glibc 2.8 и выше и ядром
+Linux 2.6.26 и выше.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBadjtimex\fP(2), \fBgettimeofday\fP(2), \fBtime\fP(7)

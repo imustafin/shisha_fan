@@ -1,0 +1,175 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2008, Linux Foundation, written by Michael Kerrisk
+.\" <mtk.manpages@gmail.com>
+.\"
+.\" A few pieces remain from an earlier version written in
+.\" 2002 by Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETGROUPLIST 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getgrouplist \- возвращает список групп, в которые входит пользователь
+.SH ОБЗОР
+\fB#include <grp.h>\fP
+.PP
+\fBint getgrouplist(const char *\fP\fIuser\fP\fB, gid_t \fP\fIgroup\fP\fB,\fP
+.br
+\fB gid_t *\fP\fIgroups\fP\fB, int *\fP\fIngroups\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgetgrouplist\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBgetgrouplist\fP() просматривает базу данных групп (смотрите
+\fBgroup\fP(5)) для составления списка групп, в которые входит пользователь
+\fIuser\fP. В возвращаемом массиве \fIgroups\fP может быть до \fI*ngroups\fP групп.
+.PP
+Если в базе данных групп отсутствуют группы, определённые для \fIuser\fP, то в
+список групп, возвращаемый \fBgetgrouplist\fP(), включается \fIgroup\fP; обычно,
+это аргумент задаётся в виде ID группы из записи пароля \fIuser\fP.
+.PP
+Аргумент \fIngroups\fP является аргументом\-результатом: при возврате в нём
+всегда содержится количество группы, найденных для \fIuser\fP включая \fIgroup\fP;
+данное значение может быть больше, чем количество групп, хранящихся в
+\fIgroups\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если количество групп, в которых \fIuser\fP является членом, меньше или равно
+\fI*ngroups\fP, то возвращается значение \fI*ngroups\fP.
+.PP
+Если пользователь является членом более чем \fI*ngroups\fP групп, то
+\fBgetgrouplist\fP() возвращает \-1. В этом случае значение, возвращаемое в
+\fI*ngroups\fP, можно использовать для подстройки размера буфера, передаваемого
+в последующий вызов \fBgetgrouplist\fP().
+.SH ВЕРСИИ
+Эта функция доступна в glibc с версии 2.2.4.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetgrouplist\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является нестандартной; она присутствует в большинстве BSD.
+.SH ДЕФЕКТЫ
+В glibc до версии 2.3.3 в реализации этой функции содержится ошибка
+переполнения буфера: она возвращает полный список групп для \fIuser\fP в
+массиве \fIgroups\fP даже когда количество групп превышает \fI*ngroups\fP.
+.SH ПРИМЕР
+.PP
+Программа, показанная далее, печатает список групп для пользователя из
+первого аргумента командной строки. Во втором аргументе задаётся значение
+\fIngroups\fP, передаваемое \fBgetgrouplist\fP(). Вот примеры работы этой
+программы:
+.PP
+.in +4n
+.EX
+$\fB ./a.out cecilia 0\fP
+getgrouplist() вернула \-1; ngroups = 3
+$\fB ./a.out cecilia 3\fP
+ngroups = 3
+16 (dialout)
+33 (video)
+100 (users)
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+#include <grp.h>
+#include <pwd.h>
+
+int
+main(int argc, char *argv[])
+{
+    int j, ngroups;
+    gid_t *groups;
+    struct passwd *pw;
+    struct group *gr;
+
+    if (argc != 3) {
+        fprintf(stderr, "Использование: %s <пользователь> <ngroups>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    ngroups = atoi(argv[2]);
+
+    groups = malloc(ngroups * sizeof (gid_t));
+    if (groups == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+
+    /* получаем структуру passwd (содержит ID первичной группы
+       пользователя) */
+
+    pw = getpwnam(argv[1]);
+    if (pw == NULL) {
+        perror("getpwnam");
+        exit(EXIT_SUCCESS);
+    }
+
+    /* получаем список групп */
+
+    if (getgrouplist(argv[1], pw\->pw_gid, groups, &ngroups) == \-1) {
+        fprintf(stderr, "getgrouplist() вернула \-1; ngroups = %d\en",
+                ngroups);
+        exit(EXIT_FAILURE);
+    }
+
+    /* печатаем список полученных групп вместе с именами групп */
+
+    fprintf(stderr, "ngroups = %d\en", ngroups);
+    for (j = 0; j < ngroups; j++) {
+        printf("%d", groups[j]);
+        gr = getgrgid(groups[j]);
+        if (gr != NULL)
+            printf(" (%s)", gr\->gr_name);
+        printf("\en");
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetgroups\fP(2), \fBsetgroups\fP(2), \fBgetgrent\fP(3), \fBgroup_member\fP(3),
+\fBgroup\fP(5), \fBpasswd\fP(5)

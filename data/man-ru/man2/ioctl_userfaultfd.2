@@ -1,0 +1,444 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2016, IBM Corporation.
+.\" Written by Mike Rapoport <rppt@linux.vnet.ibm.com>
+.\" and Copyright (C) 2016 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IOCTL_USERFAULTFD 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ioctl_userfaultfd \- создаёт файловый дескриптор для обработки страничных
+ошибок в пользовательском пространстве
+.SH ОБЗОР
+.nf
+\fB#include <sys/ioctl.h>\fP
+.PP
+\fBint ioctl(int \fP\fIfd\fP\fB, int \fP\fIcmd\fP\fB, ...);\fP
+.fi
+.SH ОПИСАНИЕ
+Над объектом userfaultfd (созданным вызовом \fBuserfaultfd\fP(2)) можно
+выполнять различные операции \fBioctl\fP(2) используя вызовы вида:
+.PP
+.in +4n
+.EX
+ioctl(fd, cmd, argp);
+.EE
+.in
+Здесь \fIfd\fP — файловый дескриптор, ссылающийся на объект userfaultfd, \fIcmd\fP
+— одна из команд, перечисленных ниже, а \fIargp\fP — указатель на структуру
+данных, используемую командой \fIcmd\fP.
+.PP
+.\"
+Операции \fBioctl\fP(2) описаны ниже. Операции \fBUFFDIO_API\fP,
+\fBUFFDIO_REGISTER\fP и \fBUFFDIO_UNREGISTER\fP используются для \fIнастройки\fP
+поведения userfaultfd. Они позволяют вызывающему выбрать какие свойства
+нужно включить и какие типы событий будут доставляться приложению. Остальные
+операции являются операциями над \fIдиапазоном\fP. Эти операции позволяют
+вызывающему приложению воспринимать события страничных ошибок.
+.SS UFFDIO_API
+(начиная с Linux 4.3) Включить работу с userfaultfd и выполнить согласование
+программного интерфейса.
+.PP
+В аргументе \fIargp\fP содержится указатель на структуру \fIuffdio_api\fP,
+определённую следующим образом:
+.PP
+.in +4n
+.EX
+struct uffdio_api {
+    __u64 api;        /* запрашиваемая версия API (входные данные) */
+    __u64 features;   /* запрашиваемые свойства (входные/выходные) */
+    __u64 ioctls;     /* доступные операции ioctl() (выходные данные) */
+};
+.EE
+.in
+.PP
+В поле \fIapi\fP задаётся версия программного интерфейса, запрашиваемого
+приложением.
+.PP
+Ядро проверяет, что поддерживает запрашиваемую версию программного
+интерфейса и изменять поля \fIfeatures\fP и \fIioctls\fP в битовой маске,
+представляющей все доступные свойства и общие операции \fBioctl\fP(2).
+.PP
+В ядрах Linux до версии 4.11 полю \fIfeatures\fP должен быть присвоен ноль
+перед вызовом \fIUFFDIO_API\fP, и при возврате из \fBioctl\fP(2) ядро помещает
+ноль (т. е., нет бит свойств) в поле \fIfeatures\fP.
+.PP
+Начиная с Linux 4.11 поле \fIfeatures\fP можно использовать для запроса
+поддержки определённых свойств и явно включить свойства userfaultfd, которые
+по умолчанию выключены. Ядро всегда сообщает о всех доступных свойствах
+через поле \fIfeatures\fP.
+.PP
+.\" FIXME add more details about feature negotiation and enablement
+Чтобы включить свойство userfaultfd приложение должно установить
+соответствующий бит в поле \fIfeatures\fP. Если ядро поддерживает все
+запрошенные свойств, то он включит их. В противном случае оно обнулит
+возвращаемую структуру \fIuffdio_api\fP и вернёт \fBEINVAL\fP.
+.PP
+Могут устанавливаться следующие биты свойств:
+.TP 
+\fBUFFD_FEATURE_EVENT_FORK\fP (начиная с Linux 4.11)
+Если это свойство включено, то объекты userfaultfd, связанные с родительским
+процессом, дублируются в дочернем процессе при вызове \fBfork\fP(2), а событие
+\fBUFFD_EVENT_FORK\fP доставляется отслеживающему userfaultfd.
+.TP 
+\fBUFFD_FEATURE_EVENT_REMAP\fP (начиная с Linux 4.11)
+Если это свойство включено, то при вызове \fBmremap\fP(2) процессом с ошибкой
+отслеживающий userfaultfd будет получать событие с типом
+\fBUFFD_EVENT_REMAP\fP.
+.TP 
+\fBUFFD_FEATURE_EVENT_REMOVE\fP (начиная с Linux 4.11)
+Если это свойство включено, то при вызове \fBmadvise\fP(2)со значением совета
+\fBMADV_DONTNEED\fP или \fBMADV_REMOVE\fP для освобождения области виртуальной
+памяти процессом с ошибкой отслеживающий userfaultfd будет получать событие
+с типом \fBUFFD_EVENT_REMOVE\fP.
+.TP 
+\fBUFFD_FEATURE_EVENT_UNMAP\fP (начиная с Linux 4.11)
+Если это свойство включено, то при явном вызове \fBmremap\fP(2) или неявном
+вызове \fBmmap\fP(2) или \fBmremap\fP(2) процессом с ошибкой отслеживающий
+userfaultfd будет получать событие с типом \fBUFFD_EVENT_UNMAP\fP.
+.TP 
+\fBUFFD_FEATURE_MISSING_HUGETLBFS\fP (начиная с Linux 4.11)
+Если этот бит установлен, то ядро включает поддержку регистрации диапазонов
+userfaultfd для областей виртуальной памяти hugetlbfs.
+.TP 
+\fBUFFD_FEATURE_MISSING_SHMEM\fP (начиная с Linux 4.11)
+Если этот бит установлен, то ядро включает поддержку регистрации диапазонов
+userfaultfd для общих областей виртуальной памяти. К ним относятся все
+программные интерфейсы общей памяти ядра: общая память System V,
+\fBtmpfs\fP(5), общие отображения \fI/dev/zero\fP, \fBmmap\fP(2) с флагом
+\fBMAP_SHARED\fP, \fBmemfd_create\fP(2) и т. д.
+.TP 
+\fBUFFD_FEATURE_SIGBUS\fP (начиная с Linux 4.14)
+.\" commit 2d6d6f5a09a96cc1fec7ed992b825e05f64cb50e
+Если этот бит установлен, то события о страничных ошибках
+(\fBUFFD_EVENT_PAGEFAULT\fP) не доставляются. Вместо них в ошибшийся процесс
+будет послан сигнал \fBSIGBUS\fP. Приложениям, использующим этой свойство, не
+потребуется использовать слежение за userfaultfd для обработки доступа к
+областям памяти, зарегистрированным в userfaultfd.
+.PP
+.\" FIXME This user-space API seems not fully polished. Why are there
+.\" not constants defined for each of the bit-mask values listed below?
+Возвращаемое поле \fIioctls\fP можно содержать следующие биты:
+.TP 
+\fB1 << _UFFDIO_API\fP
+Поддерживается операция \fBUFFDIO_API\fP.
+.TP 
+\fB1 << _UFFDIO_REGISTER\fP
+Поддерживается операция \fBUFFDIO_REGISTER\fP.
+.TP 
+\fB1 << _UFFDIO_UNREGISTER\fP
+Поддерживается операция \fBUFFDIO_UNREGISTER\fP.
+.PP
+При успешном выполнении операции \fBioctl\fP(2) возвращается 0. При ошибке
+возвращается \-1 и в \fIerrno\fP записывается причина ошибки. Возможные
+значения:
+.TP 
+\fBEFAULT\fP
+Значение \fIargp\fP ссылается на адрес, который находится вне доступного
+адресного пространства вызывающего процесса.
+.TP 
+\fBEINVAL\fP
+Дескриптор userfaultfd уже включён предыдущей операцией \fBUFFDIO_API\fP.
+.TP 
+\fBEINVAL\fP
+.\" FIXME In the above error case, the returned 'uffdio_api' structure is
+.\" zeroed out. Why is this done? This should be explained in the manual page.
+.\"
+.\" Mike Rapoport:
+.\"     In my understanding the uffdio_api
+.\"     structure is zeroed to allow the caller
+.\"     to distinguish the reasons for -EINVAL.
+.\"
+Версия программного интерфейса, запрошенная в поле \fIapi\fP, не поддерживается
+данным ядром, или в переданном ядру поле \fIfeatures\fP установлены биты,
+которые не поддерживаются текущей версией ядра.
+.SS UFFDIO_REGISTER
+(начиная с Linux 4.3) Зарегистрировать диапазон адресов памяти в объекте
+userfaultfd. Страницы в диапазоне должны быть «совместимыми».
+.PP
+До ядра Linux 4.11 только частные анонимные диапазоны совместимы для
+регистрации с помощью \fBUFFDIO_REGISTER\fP.
+.PP
+Начиная с Linux 4.11 общие диапазоны памяти и hugetlbfs также совместимы с
+\fBUFFDIO_REGISTER\fP.
+.PP
+В аргументе \fIargp\fP содержится указатель на структуру \fIuffdio_register\fP,
+определённую следующим образом:
+.PP
+.in +4n
+.EX
+struct uffdio_range {
+    __u64 start;    /* начало диапазона */
+    __u64 len;      /* длина диапазона (в байтах) */
+};
+
+struct uffdio_register {
+    struct uffdio_range range;
+    __u64 mode;     /* желаемый режим операции (входные данные) */
+    __u64 ioctls;   /* доступные операции ioctl() (результат) */
+};
+.EE
+.in
+.PP
+В поле \fIrange\fP задаётся диапазон памяти (начинающийся с \fIstart\fP и длиной
+\fIlen\fP байт), который должен обрабатываться userfaultfd.
+.PP
+В поле \fImode\fP задаётся режим операции на этим диапазоном памяти. У режима
+userfaultfd могут быть указаны следующие значения (через операцию ИЛИ) для
+задаваемого диапазона:
+.TP 
+\fBUFFDIO_REGISTER_MODE_MISSING\fP
+Отслеживать страничные ошибки отсутствия страниц.
+.TP 
+\fBUFFDIO_REGISTER_MODE_WP\fP
+Отслеживать страничные ошибки защищённых от записи страниц.
+.PP
+В настоящее время поддерживается только режим
+\fBUFFDIO_REGISTER_MODE_MISSING\fP.
+.PP
+При успешном выполнении ядро изменяет битовую маску \fIioctls\fP показывая
+какие операции \fBioctl\fP(2) доступны для задаваемого диапазона. Здесь
+возвращается битовая маска как для \fBUFFDIO_API\fP.
+.PP
+.\" FIXME Is the following error list correct?
+.\"
+При успешном выполнении операции \fBioctl\fP(2) возвращается 0. При ошибке
+возвращается \-1 и в \fIerrno\fP записывается причина ошибки. Возможные
+значения:
+.TP 
+\fBEBUSY\fP
+Отображение в указанном диапазоне зарегистрировано в другом объекте
+userfaultfd.
+.TP 
+\fBEFAULT\fP
+Значение \fIargp\fP ссылается на адрес, который находится вне доступного
+адресного пространства вызывающего процесса.
+.TP 
+\fBEINVAL\fP
+В поле \fImode\fP указан некорректный или неподдерживаемый бит или поле \fImode\fP
+равно нулю.
+.TP 
+\fBEINVAL\fP
+Отображение в указанном адресном диапазоне отсутствует.
+.TP 
+\fBEINVAL\fP
+Значение \fIrange.start\fP или \fIrange.len\fP не кратно размеру системной
+страницы или значение \fIrange.len\fP равно или эти поля содержат другие
+некорректные значения.
+.TP 
+\fBEINVAL\fP
+.\" Mike Rapoport:
+.\" ENOMEM if the process is exiting and the
+.\" mm_struct has gone by the time userfault grabs it.
+В указанном адресном диапазоне имеется несовместимое отображение.
+.SS UFFDIO_UNREGISTER
+(начиная с Linux 4.3) Снять регистрацию диапазона адресов памяти в
+userfaultfd. Страницы в диапазоне должны быть «совместимыми» (смотрите
+описание \fBUFFDIO_REGISTER\fP).
+.PP
+Снимаемый с регистрации диапазон адресов задаётся в структуре
+\fIuffdio_range\fP, которая указывается в \fIargp\fP.
+.PP
+При успешном выполнении операции \fBioctl\fP(2) возвращается 0. При ошибке
+возвращается \-1 и в \fIerrno\fP записывается причина ошибки. Возможные
+значения:
+.TP 
+\fBEINVAL\fP
+Поле \fIstart\fP или \fIlen\fP структуры \fIufdio_range\fP не кратно размеру
+системной страницы или поле \fIlen\fP равно нулю или эти поля содержат другие
+некорректные значения.
+.TP 
+\fBEINVAL\fP
+В указанном адресном диапазоне имеется несовместимое отображение.
+.TP 
+\fBEINVAL\fP
+.\"
+Отображение в указанном адресном диапазоне отсутствует.
+.SS UFFDIO_COPY
+(начиная с Linux 4.3) Атомарно копировать непрерывный участок памяти в
+зарегистрированный в userfault диапазон и разбудить заблокированную нить (не
+обязательно). Адреса источника и назначения и количество копируемых байт
+задаётся в полях \fIsrc\fP, \fIdst\fP и \fIlen\fP структуры \fIuffdio_copy\fP, на
+которую указывает \fIargp\fP:
+.PP
+.in +4n
+.EX
+struct uffdio_copy {
+    __u64 dst;    /* источник копирования */
+    __u64 src;    /* назначение копирования */
+    __u64 len;    /* количество копируемых байт */
+    __u64 mode;   /* флаги, управляющие поведением копирования */
+    __s64 copy;   /* количество скопированных байт или отрицательная ошибка */
+};
+.EE
+.in
+.PP
+Для изменения поведения операции \fBUFFDIO_COPY\fP можно использовать следующие
+значения \fImode\fP (побитовое ИЛИ):
+.TP 
+\fBUFFDIO_COPY_MODE_DONTWAKE\fP
+Не будить нить, которая ждёт решения страничной ошибки
+.PP
+.\" FIXME Above: Why is the 'copy' field used to return error values?
+.\" This should be explained in the manual page.
+Поле \fIcopy\fP используется ядром для возврата количества байт, которые были
+скопированы, или ошибки (отрицательное значение, подобное \fIerrno\fP). Если
+значение, возвращённое в \fIcopy\fP, не совпадает со значением, указанным в
+\fIlen\fP, то операция завершается ошибкой \fBEAGAIN\fP. Поле \fIcopy\fP используется
+только для результата; оно не читается операцией \fBUFFDIO_COPY\fP.
+.PP
+При успешном выполнении операции \fBioctl\fP(2) возвращается 0. В этом случае
+была скопирована область целиком. При ошибке возвращается \-1 и в \fIerrno\fP
+записывается причина ошибки. Возможные значения:
+.TP 
+\fBEAGAIN\fP
+Количество скопированных байт (т. е., значение, возвращаемое в поле \fIcopy\fP)
+не равно значению, указанному в поле \fIlen\fP.
+.TP 
+\fBEINVAL\fP
+Значение \fIdst\fP или \fIlen\fP не кратно размеру системной страницы или
+диапазон, заданный в \fIsrc\fP и \fIlen\fP или \fIdst\fP и \fIlen\fP является
+неправильным.
+.TP 
+\fBEINVAL\fP
+В поле \fImode\fP установлен недопустимый бит.
+.TP 
+\fBENOENT\fP (начиная с Linux 4.11)
+Процесс с ошибкой изменил раскладку своей виртуальной памяти одновременно
+имея незавершённую операцию \fIUFFDIO_COPY\fP.
+.TP 
+\fBENOSPC\fP (в Linux 4.11 по Linux 4.13)
+Процесс с ошибкой завершил работу в момент выполнения операции
+\fIUFFDIO_COPY\fP.
+.TP 
+\fBESRCH\fP (начиная с Linux 4.13)
+.\"
+Процесс с ошибкой завершил работу в момент выполнения операции
+\fIUFFDIO_COPY\fP.
+.SS UFFDIO_ZEROPAGE
+(начиная с Linux 4.3) Обнулить диапазон памяти, зарегистрированный в
+userfaultfd.
+.PP
+Запрашиваемый диапазон указывается в поле \fIrange\fP структуры
+\fIuffdio_zeropage\fP, на которую указывает \fIargp\fP:
+.PP
+.in +4n
+.EX
+struct uffdio_zeropage {
+    struct uffdio_range range;
+    __u64 mode;     /* флаги, определяющие поведение копирования */
+    __s64 zeropage; /* количество обнуляемых байт или отрицательная ошибка */
+};
+.EE
+.in
+.PP
+Для изменения поведения операции \fBUFFDIO_ZEROPAGE\fP можно использовать
+следующие значения \fImode\fP (побитовое ИЛИ):
+.TP 
+\fBUFFDIO_ZEROPAGE_MODE_DONTWAKE\fP
+Не будить нить, которая ждёт решения страничной ошибки.
+.PP
+.\" FIXME Why is the 'zeropage' field used to return error values?
+.\" This should be explained in the manual page.
+Поле \fIzeropage\fP используется ядром для возврата количества байт, которые
+были обнулены, или ошибки (также, как для \fBUFFDIO_COPY\fP). Если значение,
+возвращённое в \fIzeropage\fP, не совпадает со значением, указанным в
+\fIrange.len\fP, то операция завершается ошибкой \fBEAGAIN\fP. Поле \fIzeropage\fP
+используется только для результата; оно не читается операцией
+\fBUFFDIO_ZEROPAGE\fP.
+.PP
+При успешном выполнении операции \fBioctl\fP(2) возвращается 0. В этом случае
+была обнулена вся область. При ошибке возвращается \-1 и в \fIerrno\fP
+записывается причина ошибки. Возможные значения:
+.TP 
+\fBEAGAIN\fP
+Количество обнулённых байт (т. е., значение, возвращаемое в поле
+\fIzeropage\fP) не равно значению, указанному в поле \fIrange.len\fP.
+.TP 
+\fBEINVAL\fP
+Значение \fIrange.start\fP или \fIrange.len\fP не кратно размеру системной
+страницы, значение \fIrange.len\fP равно нулю, указанный диапазон является
+неправильным.
+.TP 
+\fBEINVAL\fP
+В поле \fImode\fP установлен недопустимый бит.
+.TP 
+\fBESRCH\fP (начиная с Linux 4.13)
+.\"
+Процесс с ошибкой завершил работу в момент выполнения операции
+\fIUFFDIO_ZEROPAGE\fP.
+.SS UFFDIO_WAKE
+(начиная с Linux 4.3) Разбудить нить, которая ждёт решения страничной ошибки
+в указанном диапазоне адресов памяти.
+.PP
+Операция \fBUFFDIO_WAKE\fP используется вместе с \fBUFFDIO_COPY\fP и
+\fBUFFDIO_ZEROPAGE\fP, у которых установлен бит \fBUFFDIO_COPY_MODE_DONTWAKE\fP
+или \fBUFFDIO_ZEROPAGE_MODE_DONTWAKE\fP в поле \fImode\fP. При отслеживании
+userfault можно выполнять несколько операций \fBUFFDIO_COPY\fP и
+\fBUFFDIO_ZEROPAGE\fP вместе и затем явно будить нить с ошибкой с помощью
+\fBUFFDIO_WAKE\fP.
+.PP
+В аргументе \fIargp\fP содержится указатель на структуру \fIuffdio_range\fP
+(показана выше), в которой задаётся диапазон адресов.
+.PP
+При успешном выполнении операции \fBioctl\fP(2) возвращается 0. При ошибке
+возвращается \-1 и в \fIerrno\fP записывается причина ошибки. Возможные
+значения:
+.TP 
+\fBEINVAL\fP
+Поле \fIstart\fP или \fIlen\fP структуры \fIufdio_range\fP не кратно размеру
+системной страницы или поле \fIlen\fP равно нулю или указанный диапазон
+является неправильным.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Смотрите описание приведённое выше для каждой операции.
+.SH ОШИБКИ
+Смотрите описание приведённое выше для каждой операции. Также для всех
+описанных выше операций могут возникать общие ошибки:
+.TP 
+\fBEFAULT\fP
+Значение \fIargp\fP указывает на некорректный адрес памяти.
+.TP 
+\fBEINVAL\fP
+(для все операций кроме \fBUFFDIO_API\fP) Объект userfaultfd пока не включён (с
+помощью операции \fBUFFDIO_API\fP).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные операции \fBioctl\fP(2) есть только в Linux.
+.SH ДЕФЕКТЫ
+Чтобы определить доступные свойства userfault и включить некоторые из них
+нужно закрыть файловый дескриптор userfaultfd после первой операции
+\fBUFFDIO_API\fP, которая запрашивает доступность свойств, и повторно открыть
+его перед второй операцией \fBUFFDIO_API\fP, которая теперь включит желаемый
+свойства.
+.SH ПРИМЕР
+Смотрите \fBuserfaultfd\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBioctl\fP(2), \fBmmap\fP(2), \fBuserfaultfd\fP(2)
+.PP
+Файл \fIDocumentation/admin\-guide/mm/userfaultfd.rst\fP из дерева исходного
+кода ядра Linux

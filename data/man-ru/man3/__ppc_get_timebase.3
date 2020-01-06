@@ -1,0 +1,109 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2012, IBM Corporation.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume.
+.\" no responsibility for errors or omissions, or for damages resulting.
+.\" from the use of the information contained herein.  The author(s) may.
+.\" not have taken the same level of care in the production of this.
+.\" manual, which is licensed free of charge, as they might when working.
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH __PPC_GET_TIMEBASE 3 2019\-03\-06 "Библиотека GNU C" "Руководство программиста Linux"
+.SH ИМЯ
+__ppc_get_timebase, __ppc_get_timebase_freq \- возвращают текущее значение
+базового регистра времени на архитектуре Power и его частоту
+.SH ОБЗОР
+\fB#include <sys/platform/ppc.h>\fP
+.PP
+\fBuint64_t __ppc_get_timebase(void)\fP
+.PP
+\fBuint64_t __ppc_get_timebase_freq(void);\fP
+.SH ОПИСАНИЕ
+Функция \fB__ppc_get_timebase\fP() читает текущее значение базового регистра
+времени (Time Base Register) и возвращает его значение, а
+\fB__ppc_get_timebase_freq\fP() возвращает частоту обновления базового регистра
+времени.
+.PP
+Базовый регистр времени — это 64\-битный регистр процессоров с архитектурой
+Power. В нём хранится монотонно увеличивающееся значение, которое
+обновляется с зависимой от системы частотой, которая может отличаться от
+частоты процессора.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fB__ppc_get_timebase\fP() возвращает 64\-битное беззнаковое целое,
+которое представляет собой текущее значение базового регистра времени.
+.PP
+Функция \fB__ppc_get_timebase_freq\fP() возвращает 64\-битное беззнаковое целое,
+которое представляет собой частоту, с которой изменяется базовый регистр
+времени.
+.SH ВЕРСИИ
+.\" commit d9dc34cd569bcfe714fe8c708e58c028106e8b2e
+.\" commit 8ad11b9a9cf1de82bd7771306b42070b91417c11
+Поддержка \fB__ppc_get_timebase\fP() в библиотеку GNU C было добавлена в версию
+2.16, а \fB__ppc_get_timebase_freq\fP() доступна начиная с версии 2.17.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU.
+.SH ПРИМЕР
+Следующая программа вычисляет время в микросекундах, прошедшее между двумя
+вызовами \fB__ppc_get_timebase\fP().
+.SS "Исходный код программы"
+\&
+.EX
+#include <inttypes.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/platform/ppc.h>
+
+/* максимальное значение базового регистра времени: 2^60 \- 1.
+   Источник: POWER ISA.  */
+#define MAX_TB 0xFFFFFFFFFFFFFFF
+
+int
+main(void)
+{
+    uint64_t tb1, tb2, diff;
+
+    uint64_t freq = __ppc_get_timebase_freq();
+    printf("Базовая частота времени = %"PRIu64" Hz\en", freq);
+
+    tb1 = __ppc_get_timebase();
+
+    // что\-то делаем…
+
+    tb2 = __ppc_get_timebase();
+
+    if (tb2 > tb1) {
+        diff = tb2 \- tb1;
+    } else {
+        /* базовый регистр времени переполнился */
+        diff = (MAX_TB \- tb2) + tb1;
+    }
+
+    printf("Прошло  = %1.2f мкс\en",
+            (double) diff * 1000000 / freq );
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBtime\fP(2), \fBusleep\fP(3)

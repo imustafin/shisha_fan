@@ -1,0 +1,90 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MAKEDEV 3 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+makedev, major, minor \- управление номером устройства
+.SH ОБЗОР
+.nf
+\fB#include <sys/sysmacros.h>\fP
+.PP
+\fBdev_t makedev(unsigned int \fP\fImaj\fP\fB, unsigned int \fP\fImin\fP\fB);\fP
+.PP
+\fBunsigned int major(dev_t \fP\fIdev\fP\fB);\fP
+\fBunsigned int minor(dev_t \fP\fIdev\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Идентификатор (ID) устройства состоит из двух частей: старшего номера,
+определяющего класс устройства, и младшего номера, указывающего на
+определённый экземпляр устройства в этом классе. Для представления ID
+устройства используется тип \fIdev_t\fP.
+.PP
+Функция \fBmakedev\fP() объединяет указанные старший и младший ID устройства,
+возвращая ID устройства. Этот ID может быть передан \fBmknod\fP(2).
+.PP
+Функции \fBmajor\fP() и \fBminor\fP() выполняют обратную задачу: по указанному ID
+устройства они возвращают, соответственно, старший и младший номера. Данные
+макросы могут пригодиться, например, для разложения ID устройства из
+структуры, возвращенной \fBstat\fP(2).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmakedev\fP(),
+\fBmajor\fP(),
+\fBminor\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" The BSDs, HP-UX, Solaris, AIX, Irix.
+.\" The header location is inconsistent:
+.\" Could be sys/mkdev.h, sys/sysmacros.h, or sys/types.h.
+Функции \fBmakedev\fP(), \fBmajor\fP() и \fBminor\fP() не описаны в POSIX.1, однако
+присутствуют во многих системах.
+.SH ЗАМЕЧАНИЯ
+Данные интерфейсы определены как макросы. Начиная с glibc 2.3.3, они
+являются псевдонимами для трёх GNU\-функций: \fBgnu_dev_makedev\fP(),
+\fBgnu_dev_major\fP() и \fBgnu_dev_minor\fP(). Эти имена экспортированы, однако
+использование традиционных имён более переносимо.
+.PP
+.\" glibc commit dbab6577c6684c62bd2521c1c29dc25c3cac966f
+.\" glibc commit e16deca62e16f645213dffd4ecd1153c37765f17
+В BSD определения этих макросов доступны в \fI<sys/types.h>\fP. В
+зависимости от версии, в glibc они также доступны из этого заголовочного
+файла, если определён подходящий макрос тестирования свойств. Однако такое
+применение устарело в glibc 2.25, и начиная с glibc 2.28, эти определения
+были удалены из \fI<sys/types.h>\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmknod\fP(2), \fBstat\fP(2)

@@ -1,0 +1,87 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 2004, Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2004-05-40 Created by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" 2004-10-05 aeb, minor correction
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH READAHEAD 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+readahead \- включает упреждающее чтение файла в кэш страниц
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <fcntl.h>\fP
+.PP
+\fBssize_t readahead(int \fP\fIfd\fP\fB, off64_t \fP\fIoffset\fP\fB, size_t \fP\fIcount\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBreadahead\fP() включает упреждающее чтение (initiates readahead) из
+файла таким образом, что последующие операции чтения этого файла будут брать
+данные их кэша и не блокировать дисковый ввод\-вывод (предполагается, что
+упреждающее чтение началось раньше и что другие действия в системе не
+выбросили страницы из кэша).
+.PP
+Аргумент \fIfd\fP — это файловый дескриптор файла для чтения. В аргументе
+\fIoffset\fP указывает начальная точка, от которой нужно читать данные и в
+\fIcount\fP задаётся количество читаемых байт. Ввод\-вывод выполняется во все
+страницы, так что \fIoffset\fP эффективно округляется в меньшую сторону к
+границе страницы и байты читаются до границы следующей страницы, большей или
+равной \fI(offset+count)\fP. Вызов \fBreadahead\fP() не выполняет чтения за концом
+файла. Файловое смещение открытого файлового описания, на который указывает
+файловый дескриптор \fIfd\fP, остаётся неизменным.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBreadahead\fP() возвращает 0. В случае ошибки
+возвращается \-1, а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+\fIfd\fP не является допустимым файловым дескриптором или не открыт на чтение.
+.TP 
+\fBEINVAL\fP
+\fIfd\fP указывает на файл с типом, который нельзя использовать в
+\fBreadahead\fP().
+.SH ВЕРСИИ
+Системный вызов \fBreadahead\fP() появился в Linux 2.4.13; поддержка в glibc
+началась с версии 2.3.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Системный вызов \fBreadahead\fP() есть только в Linux, и не должен
+использоваться в переносимых приложениях.
+.SH ЗАМЕЧАНИЯ
+На некоторых 32\-битных архитектурах интерфейс системного вызова отличается
+от описанного выше, по причинам указанным в \fBsyscall\fP(2).
+.SH ДЕФЕКТЫ
+Вызов \fBreadahead\fP() пытается запланировать чтение в фоновом режиме и сразу
+завершается. Однако, он может заблокироваться на время чтения метаданных
+файловой системы, необходимых для обнаружения запрашиваемых блоков. Это
+часто происходит  ext[234] для больших файлов, у которых используются
+косвенные (indirect) блоки вместо непрерывных (extents), что приводит к
+блокировке вызова на время прочтения нужных данных.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlseek\fP(2), \fBmadvise\fP(2), \fBmmap\fP(2), \fBposix_fadvise\fP(2), \fBread\fP(2)

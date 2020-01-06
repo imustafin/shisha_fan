@@ -1,0 +1,85 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2004 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SET_TID_ADDRESS 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+set_tid_address \- устанавливает указатель идентификатора нити
+.SH ОБЗОР
+.nf
+\fB#include <linux/unistd.h>\fP
+.PP
+\fBlong set_tid_address(int *\fP\fItidptr\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+В ядре для каждой нити хранится два атрибута (адреса): \fIset_child_tid\fP и
+\fIclear_child_tid\fP. Их значение по умолчанию равно NULL.
+.TP 
+\fIset_child_tid\fP
+Если нить запущена с помощью \fBclone\fP(2) с флагом \fBCLONE_CHILD_SETTID\fP, то
+значение \fIset_child_tid\fP устанавливается равным аргументу системного вызова
+\fIctid\fP.
+.IP
+Если \fIset_child_tid\fP присвоено значение, то самое первое действие, которое
+выполняется для новой нити, это запись ID нити по этому адресу.
+.TP 
+\fIclear_child_tid\fP
+Если нить запущена с помощью \fBclone\fP(2) с флагом \fBCLONE_CHILD_CLEARTID\fP,
+то значение \fIclear_child_tid\fP устанавливается равным аргументу системного
+вызова \fIctid\fP.
+.PP
+Системный вызов \fBset_tid_address\fP() устанавливает у вызывающей нити
+значение \fIclear_child_tid\fP равным \fItidptr\fP.
+.PP
+Если нить, чьё значение \fIclear_child_tid\fP не равно NULL, завершается и если
+нить использовала общую память с другими нитями, то по адресу, указанному в
+\fIclear_child_tid\fP, записывается 0 и ядро выполняет следующую операцию:
+.PP
+    futex(clear_child_tid, FUTEX_WAKE, 1, NULL, NULL, 0);
+.PP
+Действие этой операции в том, что она пробуждает единственную нить,
+выполнявшую ожидание futex на расположение памяти. Ошибки операции
+пробуждения futex игнорируются.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Вызов \fBset_tid_address\fP() всегда возвращает ID вызывающей нити.
+.SH ОШИБКИ
+Вызов \fBset_tid_address\fP() всегда завершается без ошибок.
+.SH ВЕРСИИ
+Данный вызов появился в Linux 2.5.48. Представленное здесь описание
+соответствует вызову, начиная с Linux 2.5.49.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данного системного вызова; запускайте его с помощью
+\fBsyscall\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclone\fP(2), \fBfutex\fP(2), \fBgettid\fP(2)

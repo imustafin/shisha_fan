@@ -1,0 +1,128 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2002 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Inspired by a page written by Walter Harms.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETFSENT 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getfsent, getfsspec, getfsfile, setfsent, endfsent \- для работы с записями
+fstab
+.SH ОБЗОР
+\fB#include <fstab.h>\fP
+.PP
+\fBvoid endfsent(void);\fP
+.PP
+\fBstruct fstab *getfsent(void);\fP
+.PP
+\fBstruct fstab *getfsfile(const char *\fP\fImount_point\fP\fB);\fP
+.PP
+\fBstruct fstab *getfsspec(const char *\fP\fIspecial_file\fP\fB);\fP
+.PP
+\fBint setfsent(void);\fP
+.SH ОПИСАНИЕ
+Эти функции читают файл \fI/etc/fstab\fP. Структура \fIstruct fstab\fP определена
+следующим образом:
+.PP
+.in +4n
+.EX
+struct fstab {
+    char       *fs_spec;       /* имя блочного устройства */
+    char       *fs_file;       /* точка монтирования */
+    char       *fs_vfstype;    /* тип файловой системы */
+    char       *fs_mntops;     /* параметры монтирования */
+    const char *fs_type;       /* параметр rw/rq/ro/sw/xx */
+    int         fs_freq;       /* периодичность запуска dump, в днях */
+    int         fs_passno;     /* номер прохода при параллельном dump */
+};
+.EE
+.in
+.PP
+Здесь поле \fIfs_type\fP содержит (в системах *BSD) одну из пяти строк: «rw»,
+«rq», «ro», «sw», «xx» (чтение\-запись, чтение\-запись с квотами,
+только\-чтение, подкачка, игнорировать).
+.PP
+Функция \fBsetfsent\fP() открывает файл при необходимости и устанавливает
+указатель на первую строку.
+.PP
+Функция \fBgetfsent\fP() обрабатывает следующую строку из файла (открыв файл,
+если требуется).
+.PP
+Функция \fBendfsent\fP() закрывает файл, если требуется.
+.PP
+Функция \fBgetfsspec\fP() ищет с начала файла запись, для которой поле
+\fIfs_spec\fP соответствует аргументу \fIspecial_file\fP и возвращает её.
+.PP
+Функция \fBgetfsfile\fP() ищет с начала файла запись, для которой поле
+\fIfs_file\fP соответствует аргументу \fImount_point\fP и возвращает её.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.\" .SH HISTORY
+.\" The
+.\" .BR getfsent ()
+.\" function appeared in 4.0BSD; the other four functions appeared in 4.3BSD.
+При успешном выполнении функции \fBgetfsent\fP(), \fBgetfsfile\fP() и
+\fBgetfsspec\fP() возвращают указатель на структуру  \fIstruct fstab\fP, а
+\fBsetfsent\fP() возвращает 1. При ошибке или обнаружении конца файла эти
+функции возвращают, соответственно, NULL или 0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw24
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBendfsent\fP(),
+.br
+\fBsetfsent\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:fsent
+T{
+\fBgetfsent\fP(),
+.br
+\fBgetfsspec\fP(),
+.br
+\fBgetfsfile\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:fsent locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции не включены в POSIX.1. Они имеются в некоторых операционных
+системах, например *BSD, SunOS, Digital UNIX, AIX (в котором также есть
+\fBgetfstype\fP()). В HP\-UX есть функции с тем же именем, но вместо структуры
+\fIstruct fstab\fP они используют структуру \fIstruct checklist\fP, и вызовы этих
+функций устарели, они заменены на \fBgetmntent\fP(3).
+.SH ЗАМЕЧАНИЯ
+Эти функции нельзя использовать в нескольких нитях одновременно.
+.PP
+Так как Linux позволяет монтировать специальное блочное устройство в
+несколько разных точек, а также так как несколько устройств могут иметь одну
+точку монтирования, то неясно, будет ли результат (первая запись),
+возвращенный функциями \fBgetfsfile\fP() и \fBgetfsspec\fP() именно тем, что и
+ожидался. Поэтому эти две функции не подходят для использования под Linux.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetmntent\fP(3), \fBfstab\fP(5)

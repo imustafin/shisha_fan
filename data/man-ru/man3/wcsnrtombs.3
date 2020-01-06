@@ -1,0 +1,114 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCSNRTOMBS 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wcsnrtombs \- преобразует широкосимвольную строки в многобайтовую строку
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBsize_t wcsnrtombs(char *\fP\fIdest\fP\fB, const wchar_t **\fP\fIsrc\fP\fB, size_t \fP\fInwc\fP\fB,\fP
+\fB                  size_t \fP\fIlen\fP\fB, mbstate_t *\fP\fIps\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBwcsnrtombs\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+Функция \fBwcsnrtombs\fP() похожа на функцию \fBwcsrtombs\fP(3), исключая то, что
+количество преобразуемых широких символов, начиная с \fI*src\fP, ограничено
+\fInwc\fP.
+.PP
+Если \fIdest\fP не равно NULL, функция \fBwcsnrtombs\fP() преобразует не более
+\fInwc\fP широких символов из широкосимвольной строки \fI*src\fP в многобайтовую
+строку, начиная с \fIdest\fP. В \fIdest\fP будет записано максимум \fIlen\fP
+байтов. Обновляется состояние смещения в \fI*ps\fP. Замена происходит путем
+повторяющихся вызовов \fIwcrtomb(dest, *src, ps)\fP до тех пор, пока они
+выполняются без ошибок. При этом значение \fIdest\fP увеличивается на
+количество записанных байтов, а \fI*src\fP — на единицу. Замена может быть
+остановлена в трех случаях:
+.IP 1. 3
+Встретившийся широкий символ нельзя представить в виде многобайтовой
+последовательности (в соответствии с текущей системной локалью). В этом
+случае \fI*src\fP будет указывать на неправильный широкий символ, возвращается
+\fI(size_t)\ \-1\fP, а значение \fIerrno\fP становится равным \fBEILSEQ\fP.
+.IP 2.
+Было преобразовано \fInwc\fP широких символов, и при этом не встретился широкий
+символ null (L\(aq\e0\(aq), или произошла остановка по достижению
+ограничения на длину. В этом случае \fI*src\fP также будет указывать на
+следующий широкий символ, подлежащий преобразованию, и возвращается
+количество байтов, записанных в \fIdest\fP.
+.IP 3.
+Широкосимвольная строка была полностью преобразована, включая завершающий
+широкий символ null (побочный эффект: \fI*ps\fP возвращается в начальное
+состояние). В этом случае значение \fI*src\fP устанавливается равным NULL и
+возвращается количество байтов, записанных в \fIdest\fP, не считая завершающего
+байта null (\(aq\e0\(aq).
+.PP
+Если значение \fIdest\fP равно NULL, то \fIlen\fP игнорируется и преобразование
+выполняется как описано выше, исключая то, что преобразованные байты не
+записываются в память и нет ограничения на длину строки назначения.
+.PP
+В обоих перечисленных случаях, если \fIps\fP равно NULL, то используется
+статическое анонимное состояние, известное только функции \fBwcsnrtombs\fP().
+.PP
+Программист должен быть уверен, что в \fIdest\fP достаточно места для, по
+крайней мере, \fIlen\fP байт.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBwcsrntombs\fP() возвращает количество байт в полученной
+многобайтовой последовательности, не включая завершающий байт null. Если
+встречается широкий символ, который невозможно преобразовать, возвращается
+\fI(size_t)\ \-1\fP и значение \fIerrno\fP становится равным \fBEILSEQ\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw29
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwcsnrtombs\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:wcsnrtombs/!ps
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBwcsnrtombs\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.PP
+Передавать NULL в качестве \fIps\fP небезопасно при работе с нитями.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBiconv\fP(3), \fBmbsinit\fP(3), \fBwcsrtombs\fP(3)

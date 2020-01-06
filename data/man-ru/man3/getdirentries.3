@@ -1,0 +1,78 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\" Portions extracted from /usr/include/dirent.h are:
+.\"                    Copyright 1991, 1992 Free Software Foundation
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETDIRENTRIES 3 2016\-03\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getdirentries \- возвращает элементы каталога в формате, не зависящем от
+файловой системы
+.SH ОБЗОР
+\fB#include <dirent.h>\fP
+.PP
+\fBssize_t getdirentries(int \fP\fIfd\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fInbytes\fP \fB,
+off_t *\fP\fIbasep\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgetdirentries\fP(),
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE || _SVID_SOURCE
+.SH ОПИСАНИЕ
+Данная функция считывает (не более \fInbytes\fP байтов) элементы каталога,
+указанного в \fIfd\fP, в \fIbuf\fP. Чтение начинается со смещения \fI*basep\fP и
+после чтения \fI*basep\fP обновляется в соответствии с новой позицией.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBgetdirentries\fP() возвращает количество считанных байтов или ноль,
+если достигнут конец каталога. Если произошла ошибка, возвращается \-1, и
+устанавливается, соответствующим образом, переменная \fIerrno\fP.
+.SH ОШИБКИ
+Дополнительную информацию смотрите в исходном коде библиотеки Linux.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetdirentries\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Нет в POSIX.1. Присутствует в BSD и многих других системах. Используйте
+вместо нее \fBopendir\fP(3) и \fBreaddir\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlseek\fP(2), \fBopen\fP(2)

@@ -1,0 +1,296 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\" and Copyright (C) 2006, 2014 Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-21 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1997-01-12 by Michael Haardt
+.\"   <michael@cantor.informatik.rwth-aachen.de>: NFS details
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CHMOD 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+chmod, fchmod, fchmodat  \- изменяет права доступа к файлу
+.SH ОБЗОР
+.nf
+\fB#include <sys/stat.h>\fP
+.PP
+\fBint chmod(const char *\fP\fIpathname\fP\fB, mode_t \fP\fImode\fP\fB);\fP
+.br
+\fBint fchmod(int \fP\fIfd\fP\fB, mode_t \fP\fImode\fP\fB);\fP
+
+\fB#include <fcntl.h>\fP           /* определения констант AT_* */
+\fB#include <sys/stat.h>\fP
+.PP
+\fBint fchmodat(int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB, mode_t \fP\fImode\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+.PD 0
+\fBfchmod\fP():
+.RS 4
+.\"        || (_XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED)
+начиная с glibc 2.24:
+    _POSIX_C_SOURCE\ >=\ 199309L
+.PP
+в glibc 2.19 по 2.23
+    _POSIX_C_SOURCE
+.PP
+в glibc 2.16 по 2.19:
+    _BSD_SOURCE || _POSIX_C_SOURCE
+.PP
+в glibc 2.12 по 2.16:
+    _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500 ||
+        _POSIX_C_SOURCE >= 200809L
+.PP
+.\"        || (_XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED)
+в glibc 2.11 и старее:
+    _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.RE
+.PD
+.PP
+\fBfchmodat\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_ATFILE_SOURCE
+.RE
+.ad
+.PD
+.ad
+.SH ОПИСАНИЕ
+Системные вызовы \fBchmod\fP() и \fBfchmod\fP() изменяют биты режима файла (режим
+файла состоит из бит прав доступа к файлу плюс биты set\-user\-ID,
+set\-group\-ID и бит закрепления) Данные системные вызовы отличаются только
+способом указания файла:
+.IP * 2
+Вызов \fBchmod\fP() изменяет режим файла, задаваемого путём из параметра
+\fIpathname\fP, который разыменовывается, если является символьной ссылкой.
+.IP *
+Вызов \fBfchown\fP() изменяет режим файла, задаваемого открытым файловым
+дескриптором \fIfd\fP.
+.PP
+Новый режим файла указывается в \fImode\fP и представляет собой битовую маску,
+создаваемую побитовым сложением нуля или более следующих констант:
+.TP  18
+\fBS_ISUID\fP (04000)
+set\-user\-ID (установить эффективный  идентификатор пользователя процесса при
+\fBexecve\fP(2))
+.TP 
+\fBS_ISGID\fP (02000)
+set\-group\-ID (установить эффективный идентификатор группы процесса при
+\fBexecve\fP(2); обязательная блокировка, описывается в \fBfcntl\fP(2); выбрать
+новую группу файла от родительского каталога, описывается в \fBchown\fP(2) и
+\fBmkdir\fP(2))
+.TP 
+\fBS_ISVTX\fP (01000)
+закрепляющий бит (ограничительный флаг удаления, описывается в \fBunlink\fP(2))
+.TP 
+\fBS_IRUSR\fP (00400)
+владелец может читать
+.TP 
+\fBS_IWUSR\fP (00200)
+владелец может писать
+.TP 
+\fBS_IXUSR\fP (00100)
+владелец может выполнять файл или искать в каталоге  ("поиск" применим к
+каталогам и означает, что к элементам внутри каталога есть доступ)
+.TP 
+\fBS_IRGRP\fP (00040)
+группа\-владелец может читать
+.TP 
+\fBS_IWGRP\fP (00020)
+группа\-владелец может писать
+.TP 
+\fBS_IXGRP\fP (00010)
+группа\-владелец может выполнять файл или искать в каталоге
+.TP 
+\fBS_IROTH\fP (00004)
+все остальные могут читать
+.TP 
+\fBS_IWOTH\fP (00002)
+все остальные могут писать
+.TP 
+\fBS_IXOTH\fP (00001)
+все остальные могут выполнять файл или искать в каталоге
+.PP
+Эффективный идентификатор пользователя (UID) вызывающего процесса должен
+совпадать с UID владельца файла или процесс должен быть привилегированным
+(Linux: у него должен быть мандат \fBCAP_FOWNER\fP).
+.PP
+Если вызывающий процесс не является привилегированным (Linux: не имеет
+мандата \fBCAP_FSETID\fP), а группа\-владелец файла не совпадает с эффективным
+групповым ID процесса или одним из его дополнительных групповых
+идентификаторов, то бит \fBS_ISGID\fP будет сброшен, но ошибки при этом не
+возникнет.
+.PP
+В зависимости от файловой системы в целях безопасности биты выполнения
+set\-user\-ID и set\-group\-ID могут сбрасываться при записи в файл (в Linux это
+происходит, если записывающий процесс не имеет мандата \fBCAP_FSETID\fP). В
+некоторых файловых системах только суперпользователь может устанавливать
+закрепляющий бит, который может иметь специальное назначение. Значения
+закрепляющего бита, set\-user\-ID и set\-group\-ID для каталогов смотрите в
+\fBinode\fP(7).
+.PP
+.\"
+.\"
+В файловых системах NFS ограничивающие права сразу начинают действовать даже
+уже на открытые файлы, так как контроль доступа выполняется сервером, но
+открытые файлы находятся в ведении клиента. Распространение прав может
+откладываться для других клиентов, если у них установлен атрибут
+кэширования.
+.SS fchmodat()
+Системный вызов \fBfchmodat\fP() работает также как системный вызов \fBchmod\fP(),
+за исключением случаев, описанных здесь.
+.PP
+Если в \fIpathname\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBchmod\fP()).
+.PP
+Если в \fIpathname\fP задан относительный путь и \fIdirfd\fP равно специальному
+значению \fBAT_FDCWD\fP, то \fIpathname\fP рассматривается относительно текущего
+рабочего каталога вызывающего процесса (как \fBchmod\fP()).
+.PP
+Если в \fIpathname\fP задан абсолютный путь, то \fIdirfd\fP игнорируется.
+.PP
+Значение \fIflags\fP может быть 0, или включать следующие флаги:
+.TP 
+\fBAT_SYMLINK_NOFOLLOW\fP
+Если значение \fIpathname\fP является символьной ссылкой, не разыменовывать её,
+а изменить права на самой ссылке. Этот флаг пока не реализован.
+.PP
+Смотрите в \fBopenat\fP(2) объяснение необходимости \fBfchmodat\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+В зависимости от файловой системы могут также возвращаться другие ошибки,
+перечисленные далее.
+.PP
+Наиболее распространённые ошибки \fBchmod\fP() перечислены далее:
+.TP 
+\fBEACCES\fP
+Поиск запрещён из\-за одного из частей префикса пути (См. также
+\fBpath_resolution\fP(7).)
+.TP 
+\fBEFAULT\fP
+Аргумент \fIpathname\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEIO\fP
+Произошла ошибка ввода\-вывода.
+.TP 
+\fBELOOP\fP
+Во время определения \fIpathname\fP встретилось слишком много символьных
+ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fIpathname\fP.
+.TP 
+\fBENOENT\fP
+Файл не существует.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOTDIR\fP
+Компонент в префиксе пути не является каталогом.
+.TP 
+\fBEPERM\fP
+Эффективный UID не совпадает с идентификатором владельца файла, а процесс не
+является привилегированным (Linux: не имеет мандата \fBCAP_FOWNER\fP).
+.TP 
+\fBEPERM\fP
+Файл помечен как неизменяемый (immutable) или только для добавления
+(смотрите \fBioctl_iflags\fP(2)).
+.TP 
+\fBEROFS\fP
+Указанный файл находится на файловой системе, смонтированной только для
+чтения.
+.PP
+Общий набор ошибок для \fBfchmod\fP() таков:
+.TP 
+\fBEBADF\fP
+Файловый дескриптор \fIfd\fP не действителен.
+.TP 
+\fBEIO\fP
+См. выше.
+.TP 
+\fBEPERM\fP
+См. выше.
+.TP 
+\fBEROFS\fP
+См. выше.
+.PP
+В \fBfchmodat\fP() могут возникнуть те же ошибки, что и в \fBchmod\fP(). Также, в
+\fBfchmodat\fP() могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+Значение \fIdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+Указано неверное значение в \fIflags\fP.
+.TP 
+\fBENOTDIR\fP
+Значение \fIpathname\fP содержит относительный путь и \fIdirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог.
+.TP 
+\fBENOTSUP\fP
+В \fIflags\fP указано \fBAT_SYMLINK_NOFOLLOW\fP, но оно не поддерживается.
+.SH ВЕРСИИ
+Вызов \fBfchmodat\fP() был добавлен в ядро Linux версии 2.6.16; поддержка в
+glibc доступна с версии 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBchmod\fP(), \fBfchmod\fP(): 4.4BSD, SVr4, POSIX.1\-2001i, POSIX.1\-2008.
+.PP
+\fBfchmodat\fP(): POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.SS "Отличия между библиотекой C и ядром"
+В этой странице описана обёрточная функция \fBfchmodat\fP() библиотеки GNU C,
+реализующая POSIX\-интерфейс. Данный интерфейс отличается от лежащего в
+основе системного вызова Linux тем, что имеет аргумент \fIflags\fP.
+.SS "Замечания по glibc"
+В старых ядрах, где \fBfchmodat\fP() отсутствует, обёрточная функция glibc
+использует \fBchmod\fP(). Если \fIpathname\fP является относительным путём, то
+glibc собирает путь относительно символической ссылки в \fI/proc/self/fd\fP,
+которая соответствует аргументу \fIdirfd\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchmod\fP(1), \fBchown\fP(2), \fBexecve\fP(2), \fBopen\fP(2), \fBstat\fP(2), \fBinode\fP(7),
+\fBpath_resolution\fP(7), \fBsymlink\fP(7)

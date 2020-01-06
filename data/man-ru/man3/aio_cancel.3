@@ -1,0 +1,104 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2003 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH AIO_CANCEL 3 2015\-03\-02 "" "Руководство программиста Linux"
+.SH ИМЯ
+io_cancel \- отменяет ожидающий асинхронный запрос ввода\-вывода
+.SH ОБЗОР
+\fB#include <aio.h>\fP
+.PP
+\fBint aio_cancel(int \fP\fIfd\fP\fB, struct aiocb *\fP\fIaiocbp\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.SH ОПИСАНИЕ
+Функция \fBaio_cancel\fP() пытается отменить ожидающие асинхронные запросы
+ввода\-вывода для файлового дескриптора \fIfd\fP. Если значение \fIaiocbp\fP равно
+NULL, то отменяются все запросы. В противном случае, отменяется только
+запрос, описанный в управляющем блоке, на который указывает значение
+\fIaiocbp\fP (описание структуры \fIaiocb\fP смотрите в \fBaio\fP(7)).
+.PP
+При отмене запроса посылаются обычные асинхронные уведомления (смотрите
+\fBaio\fP(7) и \fBsigevent\fP(7)). Запрос возвращает состояние (\fBaio_return\fP(3))
+равное \-1, а состояние ошибки (\fBaio_error\fP(3)) устанавливается в
+\fBECANCELED\fP. Управляющие блоки запросов, которые не могут быть отменены, не
+изменяются.
+.PP
+Если запрос не может быть отменён, то он завершается как обычно после
+выполнения операции ввода\-вывода (в этом случае \fBaio_error\fP(3) вернёт
+состояние \fBEINPROGRESSS\fP).
+.PP
+В случае, если значение \fIaiocbp\fP не равно NULL и \fIfd\fP отличается от
+файлового дескриптора, для которого создавалась асинхронная операция, то
+поведение непредсказуемо.
+.PP
+.\" FreeBSD: not those on raw disk devices.
+Список операций, которые можно отменять, зависит от реализации.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBaio_cancel\fP() возвращает одно из следующих значений:
+.TP 
+\fBAIO_CANCELED\fP
+Все запросы успешно отменены.
+.TP 
+\fBAIO_NOTCANCELED\fP
+Как минимум, один указанный запрос не отменён, так как он находится в
+состоянии выполнения. В этом случае можно проверить состояние каждого
+запроса с помощью \fBaio_error\fP(3).
+.TP 
+\fBAIO_ALLDONE\fP
+Все запросы выполнены ещё до вызова.
+.TP 
+\-1
+Произошла ошибка. Значение ошибки можно узнать из \fIerrno\fP.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBENOSYS\fP
+Функция \fBaio_cancel\fP() не реализована.
+.SH ВЕРСИИ
+Функция \fBaio_cancel\fP() доступна в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBaio_cancel\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ПРИМЕР
+Смотрите \fBaio\fP(7).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaio_error\fP(3), \fBaio_fsync\fP(3), \fBaio_read\fP(3), \fBaio_return\fP(3),
+\fBaio_suspend\fP(3), \fBaio_write\fP(3), \fBlio_listio\fP(3), \fBaio\fP(7)

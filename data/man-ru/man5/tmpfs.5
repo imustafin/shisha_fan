@@ -1,0 +1,199 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2016 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TMPFS 5 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+tmpfs \- файловая система в виртуальной памяти
+.SH ОПИСАНИЕ
+Свойство \fBtmpfs\fP позволяет создавать файловые системы, чьё содержимое
+находится в виртуальной памяти. Так как файлы в таких файловых системах,
+обычно, располагаются в оперативной памяти, то доступ к файлах очень быстр.
+.PP
+Файловая система создаётся автоматически при монтировании с типом \fBtmpfs\fP с
+помощью команды следующего вида:
+.PP
+.in +4n
+.EX
+$ sudo mount \-t tmpfs \-o size=10M tmpfs /mnt/mytmpfs
+.EE
+.in
+.PP
+Файловая система \fBtmpfs\fP имеет следующие свойства:
+.IP * 3
+Файловая система может задействовать пространство подкачки, если это
+требуется из\-за нагрузки на физическую память.
+.IP *
+Файловая система потребляет физическую память и пространство подкачки только
+для хранения текущего содержимого файловой системы.
+.IP *
+При операции перемонтирования (\fImount\ \-o\ remount\fP), размер файловой
+системы можно изменить (без потери имеющегося содержимого файловой системы).
+.PP
+.\" See mm/shmem.c:shmem_parse_options for options it supports.
+При размонтировании файловой системы \fBtmpfs\fP её содержимое уничтожается
+(теряется).
+.SS "Параметры монтирования"
+Файловая система \fBtmpfs\fP поддерживает следующие параметры монтирования:
+.TP 
+\fBsize\fP=\fIбайт\fP
+Задать максимальный размер файловой системы. Указывается в байтах и
+округляется до полного размера страницы.
+.IP
+У размера может быть указан суффикс \fBk\fP, \fBm\fP или \fBg\fP единиц измерения Ki,
+Mi, Gi (двоичный кило (kibi), двоичный мега (mebi) и двоичный гига (gibi)
+\-байт).
+.IP
+Также у размер может быть указан суффикс %, задающий размер экземпляра в
+процентах от физической оперативной памяти.
+.IP
+Если \fBsize\fP или \fBnr_blocks\fP не заданы, то по умолчанию используется
+\fIsize=50%\fP.
+.TP 
+\fBnr_blocks\fP=\fIблоков\fP
+То же, что и \fBsize\fP, но считается в блоках \fBPAGE_CACHE_SIZE\fP.
+.IP
+У блоков может быть задан суффикс \fBk\fP, \fBm\fP или \fBg\fP, как у \fBsize\fP, но
+нельзя задать суффикс %.
+.TP 
+\fBnr_inodes\fP=\fIинод\fP
+Максимальное количество инод в экземпляре. Значением по умолчанию является
+или половина количества страниц оперативной памяти, или (для машины с
+highmem) количество страниц памяти lowmem, выбирается меньшее.
+.IP
+У инод может быть задан суффикс \fBk\fP, \fBm\fP или \fBg\fP, как у \fBsize\fP, но
+нельзя задать суффикс %.
+.TP 
+\fBmode\fP=\fIправа\fP
+Назначить начальные права на корневой каталог.
+.TP 
+\fBgid\fP=\fIgid\fP (начиная с Linux 2.5.7)
+.\" Technically this is also in some version of Linux 2.4.
+.\" commit 099445b489625b80b1d6687c9b6072dbeaca4096
+Назначить начальный идентификатор группы на корневой каталог.
+.TP 
+\fBuid\fP=\fIuid\fP (начиная с Linux 2.5.7)
+.\" Technically this is also in some version of Linux 2.4.
+.\" commit 099445b489625b80b1d6687c9b6072dbeaca4096
+Назначить начальный идентификатор пользователя на корневой каталог.
+.TP 
+\fBhuge\fP=\fIhuge_option\fP (начиная с Linux 4.7.0)
+.\" commit 5a6e75f8110c97e2a5488894d4e922187e6cb343
+Задать алгоритм выделения огромной табличной памяти для всех файлов в этом
+экземпляре (если включён \fBCONFIG_TRANSPARENT_HUGE_PAGECACHE\fP).
+.IP
+Значением \fIhuge_option\fP может быть одно из:
+.RS
+.TP 
+\fBnever\fP
+Не выделять огромные страницы. По умолчанию.
+.TP 
+\fBalways\fP
+Каждый раз пытаться выделить огромные страницы при необходимости в новой
+странице.
+.TP 
+\fBwithin_size\fP
+Выделять огромную страницу только, если в ней займётся \fIi_size\fP. Также
+учитываются подсказки \fBfadvise\fP(2)/\fBmadvise\fP(2).
+.TP 
+\fBadvise\fP
+Выделять огромные страницы только, если они запрашиваются с помощью
+\fBfadvise\fP(2)/\fBmadvise\fP(2).
+.TP 
+\fBdeny\fP
+Запретить включение огромных страниц у всех монтирований, используется в
+экстренных случаях.
+.TP 
+\fBforce\fP
+Принудительно включить огромные страницы у всех монтирований; полезно при
+отладке.
+.RE
+.TP 
+\fBmpol\fP=\fImpol_option\fP (начиная с Linux 2.6.15)
+.\" commit 7339ff8302fd70aabf5f1ae26e0c4905fa74a495
+Задать алгоритм выделения памяти NUMA для всех файлов в этом экземпляре
+(если включён \fBCONFIG_NUMA\fP).
+.IP
+Значением \fImpol_option\fP может быть одно из:
+.RS
+.TP 
+\fBdefault\fP
+Использовать алгоритм выделения из процесса (смотрите \fBset_mempolicy\fP(2)).
+.TP 
+\fBprefer\fP:\fIузел\fP
+Отдавать предпочтение выделению памяти из указанного \fIузла\fP.
+.TP 
+\fBbind\fP:\fIсписок_узлов\fP
+Выделять память только на узлах из \fIсписка_узлов\fP.
+.TP 
+\fBinterleave\fP
+Выделять на каждом узле по очереди.
+.TP 
+\fBinterleave\fP:\fIсписок_узлов\fP
+Выделять на каждом узле по очереди из \fIсписка_узлов\fP.
+.TP 
+\fBlocal\fP
+Отдавать предпочтение выделению памяти из локального узла.
+.RE
+.IP
+Здесь \fIсписок_узлов\fP — это список перечисленных через запятую десятичных
+чисел идиапазонов, указывающие узлы NUMA. Диапазон задаётся парой десятичных
+чисел через тире, наименьший и наибольший номера узлов диапазона. Пример:
+\fImpol=bind:0\-3,5,7,9\-15\fP.
+.SH ВЕРСИИ
+Свойство \fBtmpfs\fP было добавлено в Linux 2.4 как последователь старого
+свойства \fBramfs\fP, в котором отсутствует возможность проверки ограничения и
+использования пространства подкачки.
+.SH ЗАМЕЧАНИЯ
+Чтобы пользовательские инструменты и приложения могли создавать файловые
+системы \fBtmpfs\fP ядро должно быть собрано с параметром \fBCONFIG_TMPFS\fP.
+.PP
+Файловая система \fBtmpfs\fP поддерживает расширенные атрибуты (смотрите
+\fBxattr\fP(7)), но расширенные атрибуты \fIuser\fP не допускаются.
+.PP
+Для общей памяти System V \fBshmget\fP(2)) и общих анонимных отображений
+(\fBmmap\fP(2) с флагами \fBMAP_SHARED\fP и \fBMAP_ANONYMOUS\fP) используется
+внутренняя файловая система общей памяти. Эта файловая система доступна
+независимо от того, собрано ли ядро с параметром \fBCONFIG_TMPFS\fP.
+.PP
+Файловая система \fBtmpfs\fP, смонтированная в \fI/dev/shm\fP,  используется для
+реализации общей памяти POSIX (\fBshm_overview\fP(7)) и семафоров POSIX
+(\fBsem_overview\fP(7)).
+.PP
+Объём памяти, использованной во всех файловых системах \fBtmpfs\fP показывается
+в поле \fIShmem\fP файла \fI/proc/meminfo\fP и в поле \fIshared\fP, показываемом
+\fBfree\fP(1).
+.PP
+Свойство \fBtmpfs\fP раньше называлось \fBshmfs\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdf\fP(1), \fBdu\fP(1), \fBmemfd_create\fP(2), \fBmmap\fP(2), \fBset_mempolicy\fP(2),
+\fBshm_open\fP(3), \fBmount\fP(8)
+.PP
+Файлы исходного кода ядра \fIDocumentation/filesystems/tmpfs.txt\fP и
+\fIDocumentation/admin\-guide/mm/transhuge.rst\fP.

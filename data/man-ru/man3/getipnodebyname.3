@@ -1,0 +1,174 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2000 Sam Varshavchik <mrsam@courier-mta.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References: RFC 2553
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETIPNODEBYNAME 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getipnodebyname, getipnodebyaddr, freehostent \- возвращают сетевые имена и
+адреса машины
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/socket.h>\fP
+\fB#include <netdb.h>\fP
+.PP
+\fBstruct hostent *getipnodebyname(const char *\fP\fIname\fP\fB, int \fP\fIaf\fP\fB,\fP
+\fB                                int \fP\fIflags\fP\fB, int *\fP\fIerror_num\fP\fB);\fP
+.PP
+\fBstruct hostent *getipnodebyaddr(const void *\fP\fIaddr\fP\fB, size_t \fP\fIlen\fP\fB,\fP
+\fB                                int \fP\fIaf\fP\fB, int *\fP\fIerror_num\fP\fB);\fP
+.PP
+\fBvoid freehostent(struct hostent *\fP\fIip\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Эти функции устарели (и недоступны в glibc). Используйте вместо них функции
+\fBgetaddrinfo\fP(3) и \fBgetnameinfo\fP(3).
+.PP
+Функции \fBgetipnodebyname\fP() и \fBgetipnodebyaddr\fP() возвращают имена и
+адреса машины в сети. Эти функции возвращают указатель на следующую
+структуру:
+.PP
+.in +4n
+.EX
+struct hostent {
+    char  *h_name;
+    char **h_aliases;
+    int    h_addrtype;
+    int    h_length;
+    char **h_addr_list;
+};
+.EE
+.in
+.PP
+Эти функции заменяют функции \fBgethostbyname\fP(3) и \fBgethostbyaddr\fP(3),
+которые могут возвращать только сетевые адреса семейства IPv4. Функции
+\fBgetipnodebyname\fP() и \fBgetipnodebyaddr\fP() могут осуществлять доступ к
+нескольким семействам сетевых адресов.
+.PP
+В отличие от функций \fBgethostby\fP эти функции возвращают указатели на
+динамически выделяемую память. Функция \fBfreehostent\fP() используется для
+освобождения динамически выделенной памяти после того, как надобность в
+структуре \fIhostent\fP отпадёт.
+.SS "Параметры getipnodebyname()"
+Функция \fBgetipnodebyname\fP() ищет сетевой адрес узла, указанного в параметре
+\fIname\fP. В параметре \fIaf\fP указывается одно из следующих значений:
+.TP 
+\fBAF_INET\fP
+Параметр \fIname\fP указывает на адрес IPv4 в точечной нотации или на имя
+сетевого узла IPv4.
+.TP 
+\fBAF_INET6\fP
+Параметр \fIname\fP указывает на шестнадцатеричный адрес IPv6 или на имя
+сетевого узла IPv6.
+.PP
+В аргументе \fIflags\fP указываются дополнительные параметры. Возможно указать
+более одного параметра с помощью логического сложения (OR). Если параметры
+не требуются, то значение \fIflags\fP должно быть равно нулю.
+.TP 
+\fBAI_V4MAPPED\fP
+Этот флаг используется с \fBAF_INET6\fP для запроса адресов IPv4 вместо адресов
+IPv6; адрес IPv4 будет отображён в адрес IPv6.
+.TP 
+\fBAI_ALL\fP
+Это флаг используется с \fBAI_V4MAPPED\fP для запроса одновременно адресов IPv4
+и IPv6. Любой найденный адрес IPv4 будет отображён в адрес IPv6.
+.TP 
+\fBAI_ADDRCONFIG\fP
+Этот флаг используется с \fBAF_INET6\fP и указывает, что запросы адресов IPv6
+не должны производиться, если система не имеет хотя бы одного адреса IPv6,
+присвоенного сетевому интерфейсу, а также, что запросы адресов IPv4 не
+должны производиться, если система не имеет хотя бы одного адреса IPv4,
+присвоенного сетевому интерфейсу. Флаг может быть использован сам по себе
+или вместе с флагом \fBAI_V4MAPPED\fP.
+.TP 
+\fBAI_DEFAULT\fP
+Этот флаг эквивалентен \fB(AI_ADDRCONFIG | AI_V4MAPPED)\fP.
+.SS "Параметры getipnodebyaddr()"
+Функция \fBgetipnodebyaddr\fP() ищет имя узла, чей сетевой адрес указан в
+параметре \fIaddr\fP. В параметре \fIaf\fP указывается одно из следующих значений:
+.TP 
+\fBAF_INET\fP
+Параметр \fIaddr\fP указывает на структуру \fIstruct in_addr\fP и значение \fIlen\fP
+должно быть равно \fIsizeof(struct in_addr)\fP.
+.TP 
+\fBAF_INET6\fP
+Параметр \fIaddr\fP указывает на структуру \fIstruct in6_addr\fP и значение \fIlen\fP
+должно быть равно \fIsizeof(struct in6_addr)\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При ошибке возвращается NULL, а в \fIerror_num\fP будет содержаться код ошибки
+из следующего списка:
+.TP 
+\fBHOST_NOT_FOUND\fP
+Имя узла или сетевой адрес не найдены.
+.TP 
+\fBNO_ADDRESS\fP
+Сервер доменных имён распознал сетевой адрес или имя, но не ответил. Это
+может произойти, если сетевой узел имеет только адреса IPv4, а запрашивалась
+информация об IPv6, или наоборот.
+.TP 
+\fBNO_RECOVERY\fP
+Сервер доменных имён возвратил сообщение о постоянной ошибке.
+.TP 
+\fBTRY_AGAIN\fP
+Сервер доменных имён возвратил сообщение о временной ошибке. Возможно, ответ
+может быть получен при повторной попытке.
+.PP
+При выполненном запросе возвращается указатель на структуру \fIhostent\fP,
+содержащую следующие поля:
+.TP 
+\fIh_name\fP
+Официальное имя данного сетевого узла.
+.TP 
+\fIh_aliases\fP
+Массив указателей на неофициальные псевдонимы этого же узла. Массив
+оканчивается указателем null.
+.TP 
+\fIh_addrtype\fP
+Копия параметра \fIaf\fP вызова \fBgetipnodebyname\fP() или
+\fBgetipnodebyaddr\fP(). Значение \fIh_addrtype\fP всегда равно \fBAF_INET\fP, если
+значение \fIaf\fP равно \fBAF_INET\fP. Значение \fIh_addrtype\fP всегда равно
+\fBAF_INET6\fP, если значение \fIaf\fP равно \fBAF_INET6\fP.
+.TP 
+\fIh_length\fP
+Это поле равно \fIsizeof(struct in_addr)\fP, если \fIh_addrtype\fP равно
+\fBAF_INET\fP, и \fIsizeof(struct in6_addr)\fP, если \fIh_addrtype\fP равно
+\fBAF_INET6\fP.
+.TP 
+\fIh_addr_list\fP
+Массив из одного или нескольких указателей на структуры сетевого адреса для
+сетевого узла. Массив оканчивается указателем null.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" Not in POSIX.1-2001.
+RFC\ 2553.
+.SH ЗАМЕЧАНИЯ
+Эти функции существовали в glibc 2.1.91\-95, но были удалены. Некоторые
+UNIX\-подобные системы поддерживают их, но все эти вызовы устарели.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetaddrinfo\fP(3), \fBgetnameinfo\fP(3), \fBinet_ntop\fP(3), \fBinet_pton\fP(3)

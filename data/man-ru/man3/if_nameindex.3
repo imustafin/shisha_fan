@@ -1,0 +1,142 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2012 YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+.\" and Copyright (c) 2012 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume
+.\" no responsibility for errors or omissions, or for damages resulting
+.\" from the use of the information contained herein.  The author(s) may
+.\" not have taken the same level of care in the production of this
+.\" manual, which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IF_NAMEINDEX 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+if_nameindex, if_freenameindex \- получает имена сетевых интерфейсов и
+индексы
+.SH ОБЗОР
+.nf
+\fB#include <net/if.h>\fP
+.PP
+\fBstruct if_nameindex *if_nameindex(void);\fP
+\fBvoid if_freenameindex(struct if_nameindex *\fP\fIptr\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBif_nameindex\fP()  возвращает массив структур \fIif_nameindex\fP,
+каждая из которых содержит информацию об одном из сетевых интерфейсов
+системы. Структура \fIif_nameindex\fP содержит по крайней мере следующие
+данные:
+.PP
+.in +4n
+.EX
+unsigned int if_index; /* индекс интерфейса (1, 2, …) */
+char        *if_name;  /* имя с Null в конце («eth0», и т. д.) */
+.EE
+.in
+.PP
+В поле \fIif_index\fP содержится индекс интерфейса. Значение поля \fIif_name\fP
+указывает на имя интерфейса (завершается null). Конец массива определяется
+по записи \fIif_index\fP с нулевым значением и по записи \fIif_name\fP со
+значением NULL.
+.PP
+Память под структуру данных, возвращаемая \fBif_nameindex\fP(), выделяется
+динамически и должна освобождаться с помощью \fBif_freenameindex\fP(), когда
+больше не нужна.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBif_nameindex\fP() возвращает указатель на массив. В
+случае ошибки возвращается NULL, а \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+Функция \fBif_nameindex\fP() может завершиться с ошибкой и изменить \fIerrno\fP
+если:
+.TP 
+\fBENOBUFS\fP
+Недостаточно ресурсов.
+.PP
+Также функция \fBif_nameindex\fP() может завершиться с ошибками, перечисленными
+в \fBsocket\fP(2), \fBbind\fP(2), \fBioctl\fP(2), \fBgetsockname\fP(2), \fBrecvmsg\fP(2),
+\fBsendto\fP(2) или \fBmalloc\fP(3).
+.SH ВЕРСИИ
+Впервые функция \fBif_nameindex\fP() появилась в glibc 2.1, но до glibc 2.3.4,
+реализация поддерживала только интерфейсы с адресами IPv4. Поддержка
+интерфейсов без адресов IPv4 доступна только в ядрах, поддерживающих
+netlink.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBif_nameindex\fP(),
+.br
+\fBif_freenameindex\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, RFC\ 3493.
+.PP
+Эта функция впервые появилась в BSDi.
+.SH ПРИМЕР
+В программе, показанной далее, демонстрируется использование функции,
+описанной на этой странице. Пример вывода этой программы может быть
+следующим:
+.PP
+.in +4n
+.EX
+$ \fB./a.out\fP\fI
+1: lo
+2: wlan0
+3: em1\fP
+.EE
+.in
+.SS "Исходный код программы"
+.EX
+#include <net/if.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+    struct if_nameindex *if_ni, *i;
+
+    if_ni = if_nameindex();
+    if (if_ni == NULL) {
+        perror("if_nameindex");
+        exit(EXIT_FAILURE);
+    }
+
+    for (i = if_ni; ! (i\->if_index == 0 && i\->if_name == NULL); i++)
+        printf("%u: %s\en", i\->if_index, i\->if_name);
+
+    if_freenameindex(if_ni);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetsockopt\fP(2), \fBsetsockopt\fP(2), \fBgetifaddrs\fP(3), \fBif_indextoname\fP(3),
+\fBif_nametoindex\fP(3), \fBifconfig\fP(8)

@@ -1,0 +1,53 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ICONV_CLOSE 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+iconv_close \- освобождает дескриптор изменения кодировки символов
+.SH ОБЗОР
+.nf
+\fB#include <iconv.h>\fP
+.PP
+\fBint iconv_close(iconv_t \fP\fIcd\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBiconv_close\fP() освобождает дескриптор преобразования \fIcd\fP,
+служащий для изменения кодировки символов, созданный ранее функцией
+\fBiconv_open\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBiconv_close\fP() возвращает 0. В случае
+ошибки она меняет значение переменной \fIerrno\fP и возвращает \-1.
+.SH ВЕРСИИ
+Эта функция доступна в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBiconv_close\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SUSv2.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBiconv\fP(3), \fBiconv_open\fP(3)

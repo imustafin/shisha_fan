@@ -1,0 +1,100 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2012, Petr Benas
+.\" and Copyright (c) 2012, Michael Kerrisk <mtk.man-pages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume
+.\" no responsibility for errors or omissions, or for damages resulting
+.\" from the use of the information contained herein.  The author(s) may
+.\" not have taken the same level of care in the production of this
+.\" manual, which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GET_NPROCS 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+get_nprocs, get_nprocs_conf \- возвращает количество процессоров
+.SH ОБЗОР
+\fB#include <sys/sysinfo.h>\fP
+.PP
+\fBint get_nprocs(void);\fP
+.br
+\fBint get_nprocs_conf(void);\fP
+.SH ОПИСАНИЕ
+Функция \fBget_nprocs_conf\fP() возвращает количество процессоров, настроенных
+операционной системой.
+.PP
+Функция \fBget_nprocs\fP() возвращает количество процессоров, доступных в
+системе. Это значение может быть меньше чем возвращаемое
+\fBget_nprocs_conf\fP(), так как процессоры могут быть выключены (например, в
+системах с подключением на ходу).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Как указано в ОПИСАНИИ.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBget_nprocs\fP(),
+.br
+\fBget_nprocs_conf\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+.\" glibc 2.15
+Текущая реализация этих функций не оптимальна, так как при каждом вызове
+открываются и обрабатываются файлы в файловой системе \fI/sys\fP.
+.PP
+Следующие вызовы \fBsysconf\fP(3) возвращают тоже что и описанные здесь
+функции.
+.PP
+.in +4n
+.EX
+np = sysconf(_SC_NPROCESSORS_CONF);     /* настроенных процессоров */
+np = sysconf(_SC_NPROCESSORS_ONLN);     /* доступных процессоров */
+.EE
+.in
+.SH ПРИМЕР
+В следующем примере показано использование \fBget_nprocs\fP() и
+\fBget_nprocs_conf\fP().
+.PP
+.EX
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/sysinfo.h>
+
+int
+main(int argc, char *argv[])
+{
+    printf("В системе настроено %d процессоров и "
+            "%d процессоров доступно.\en",
+            get_nprocs_conf(), get_nprocs());
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBnproc\fP(1)

@@ -1,0 +1,373 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2009 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TIMER_CREATE 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+timer_create \- создаёт таймер POSIX для определённого процесса
+.SH ОБЗОР
+.nf
+\fB#include <signal.h>\fP
+\fB#include <time.h>\fP
+.PP
+\fBint timer_create(clockid_t \fP\fIclockid\fP\fB, struct sigevent *\fP\fIsevp\fP\fB,\fP
+\fB                 timer_t *\fP\fItimerid\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBtimer_create\fP(): _POSIX_C_SOURCE\ >=\ 199309L
+.SH ОПИСАНИЕ
+Вызов \fBtimer_create\fP() создаёт новый таймер для процесса. Идентификатор
+нового таймера возвращается в буфере, указанном в \fItimerid\fP, его значение
+не должно быть равно null. Данный идентификатор уникален для процесса, пока
+таймер не будет удалён. Новый таймер создаётся неактивным.
+.PP
+В аргументе \fIclockid\fP задаются часы, которые используются в новом таймере
+для учёта времени. Это может быть одно из следующих значений:
+.TP 
+\fBCLOCK_REALTIME\fP
+Настраиваемые системные часы реального времени.
+.TP 
+\fBCLOCK_MONOTONIC\fP
+.\" Note: the CLOCK_MONOTONIC_RAW clock added for clock_gettime()
+.\" in 2.6.28 is not supported for POSIX timers -- mtk, Feb 2009
+Ненастраиваемые, постоянно идущие вперёд часы, отсчитывающие время с
+некоторой неопределённой точки в прошлом, которая не изменяется с момент
+запуска системы.
+.TP 
+\fBCLOCK_PROCESS_CPUTIME_ID\fP (начиная с Linux 2.6.12)
+Часы, измеряющие время ЦП (пользовательское и системное), затраченное
+вызывающим процессом (всеми его нитями).
+.TP 
+\fBCLOCK_THREAD_CPUTIME_ID\fP (начиная с Linux 2.6.12)
+.\" The CLOCK_MONOTONIC_RAW that was added in 2.6.28 can't be used
+.\" to create a timer -- mtk, Feb 2009
+Часы, измеряющие время ЦП (пользовательское и системное), затраченное
+вызывающей нитью.
+.TP 
+\fBCLOCK_BOOTTIME\fP (начиная с Linux 2.6.39)
+.\" commit 70a08cca1227dc31c784ec930099a4417a06e7d0
+Подобно \fBCLOCK_MONOTONIC\fP, представляет монотонно растущие часы. Однако,
+если часы \fBCLOCK_MONOTONIC\fP не отсчитывают время когда система находится в
+состоянии ожидания (suspended), а часы \fBCLOCK_BOOTTIME\fP учитывают время в
+таком состоянии системы. Это полезно приложениям, которым необходимо
+учитывать состояние ожидания. \fBCLOCK_REALTIME\fP не подходят для таких
+приложений, так как эти часы подвержены скачкообразным изменениям системных
+часов.
+.TP 
+\fBCLOCK_REALTIME_ALARM\fP (начиная с Linux 3.0)
+.\" commit 9a7adcf5c6dea63d2e47e6f6d2f7a6c9f48b9337
+Эти часы подобны \fBCLOCK_REALTIME\fP, но разбудят систему, если она находится
+с состоянии ожидания. Для установки таймера по этим часам вызывающий должен
+иметь мандат \fBCAP_WAKE_ALARM\fP.
+.TP 
+\fBCLOCK_BOOTTIME_ALARM\fP (начиная с Linux 3.0)
+.\" commit 9a7adcf5c6dea63d2e47e6f6d2f7a6c9f48b9337
+Эти часы подобны \fBCLOCK_BOOTTIME\fP, но разбудят систему, если она находится
+с состоянии ожидания. Для установки таймера по этим часам вызывающий должен
+иметь мандат \fBCAP_WAKE_ALARM\fP.
+.PP
+Помимо значений, перечисленных ранее, в \fIclockid\fP может быть указано
+\fIclockid\fP, возвращённое вызовом \fBclock_getcpuclockid\fP(3) или
+\fBpthread_getcpuclockid\fP(3).
+.PP
+Аргумент \fIsevp\fP указывает на структуру \fIsigevent\fP, которая задаёт способ
+уведомления вызывающего при срабатывании таймера. Определение и описание
+структуры смотрите в \fBsigevent\fP(7).
+.PP
+В поле \fIsevp.sigev_notify\fP можно указать следующие значения:
+.TP 
+\fBSIGEV_NONE\fP
+Выполнять синхронное уведомление при срабатывании таймера. Ход таймера можно
+отслеживать с помощью \fBtimer_gettime\fP(2).
+.TP 
+\fBSIGEV_SIGNAL\fP
+При срабатывании таймера генерировать для процесса сигнал
+\fIsigev_signo\fP. Подробности смотрите в \fBsigevent\fP(7). Полю \fIsi_code\fP
+структуры \fIsiginfo_t\fP присваивается значение \fBSI_TIMER\fP. В любой момент
+времени для таймера в очередь процесса ставится не более одного сигнала;
+подробности смотрите в \fBtimer_getoverrun\fP(2).
+.TP 
+\fBSIGEV_THREAD\fP
+При срабатывании вызвать \fIsigev_notify_function\fP, как если бы это была
+начальная функция новой нити. Подробности смотрите в \fBsigevent\fP(7).
+.TP 
+\fBSIGEV_THREAD_ID\fP (есть только в Linux)
+Как для \fBSIGEV_SIGNAL\fP, но сигнал нацелен на нить, чей ID указывается в
+\fIsigev_notify_thread_id\fP, который должен быть нитью того же процесса что и
+вызывающий. В поле \fIsigev_notify_thread_id\fP указывается ID ядерной нити, то
+есть значение, возвращаемое \fBclone\fP(2) или \fBgettid\fP(2). Этот флаг
+предназначен только для использования в библиотеках нитей.
+.PP
+Указание в \fIsevp\fP значения NULL эквивалентно указанию указателя на
+структуру \fIsigevent\fP, в которой \fIsigev_notify\fP равно \fBSIGEV_SIGNAL\fP,
+\fIsigev_signo\fP равно \fBSIGALRM\fP и \fIsigev_value.sival_int\fP равно ID таймера.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBtimer_create\fP() возвращается 0 и ID нового таймера
+помещается в \fI*timerid\fP. При ошибке возвращается \-1, а \fIerrno\fP
+устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Временная ошибка, на время выделения ядром структур таймера.
+.TP 
+\fBEINVAL\fP
+Некорректный ID часов, \fIsigev_notify\fP, \fIsigev_signo\fP или
+\fIsigev_notify_thread_id\fP.
+.TP 
+\fBENOMEM\fP
+.\" glibc layer: malloc()
+Невозможно выделить память.
+.SH ВЕРСИИ
+Данный системный вызов появился в Linux 2.6.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+С помощью \fBtimer_create\fP() программа может создавать несколько интервальных
+таймеров.
+.PP
+Таймеры не наследуются в потомке после \fBfork\fP(2), и выключаются и удаляются
+при \fBexecve\fP(2).
+.PP
+Ядро заранее выделяет «сигнал реального времени в очереди» для каждого
+таймера, создаваемого \fBtimer_create\fP(). В результате, количество таймеров
+ограничено ресурсом \fBRLIMIT_SIGPENDING\fP (смотрите \fBsetrlimit\fP(2)).
+.PP
+Таймеры, созданные \fBtimer_create\fP(), часто называют «(интервальными)
+таймерами POSIX». Программный интерфейс таймеров POSIX состоит из следующих
+интерфейсов:
+.IP * 3
+\fBtimer_create\fP(): Создаёт таймер.
+.IP *
+\fBtimer_settime\fP(2): Включает (запускает) или выключает (останавливает)
+таймер.
+.IP *
+\fBtimer_gettime\fP(2): Возвращает время, оставшееся до следующего срабатывания
+таймера вместе с интервалом, заданным в таймере.
+.IP *
+\fBtimer_getoverrun\fP(2): Возвращает счётчик переполнения после последнего
+срабатывания таймера.
+.IP *
+\fBtimer_delete\fP(2): Выключает и удаляет таймер.
+.PP
+Начиная с Linux 3.10, файл \fI/proc/[pid]/timers\fP можно использовать для
+просмотра списка таймеров POSIX для процесса с PID равным
+\fIpid\fP. Подробности смотрите в \fBproc\fP(5).
+.PP
+.\" baa73d9e478ff32d62f3f9422822b59dd9a95a21
+.\"
+Начиная с Linux 4.10, поддержка таймеров POSIX теперь необязательна и
+включена по умолчанию. Поддержку в ядре можно выключить через параметр
+\fBCONFIG_POSIX_TIMERS\fP.
+.SS "Отличия между библиотекой C и ядром"
+.\" See nptl/sysdeps/unix/sysv/linux/timer_create.c
+Частично, реализация программного интерфейса таймеров POSIX предоставляется
+glibc. А именно:
+.IP * 3
+Большая часть функций для \fBSIGEV_THREAD\fP реализована в glibc, а не в ядре
+(это необходимо, так как в обработку уведомления вовлечена нить, которая
+должна управляться библиотекой C, реализующей нити POSIX). Хотя уведомление
+доставляется процессу через нить, внутри реализации NPTL для
+\fBSIGEV_THREAD_ID\fP используется значение \fIsigev_notify\fP и сигнал реального
+времени, который зарезервирован для реализации (смотрите \fBnptl\fP(7)).
+.IP *
+Стандартная ситуация, когда \fIevp\fP равно NULL, обрабатывается в glibc, где
+вызывается нижележащий системный вызов с заполненной подходящим образом
+структурой \fIsigevent\fP.
+.IP *
+.\" See the glibc source file kernel-posix-timers.h for the structure
+.\" that glibc uses to map user-space timer IDs to kernel timer IDs
+.\" The kernel-level timer ID is exposed via siginfo.si_tid.
+Идентификаторы таймеров, обрабатываемые на уровне пользователя,
+поддерживаются glibc, которая отображает эти ID в ID таймеров, созданных
+ядром.
+.PP
+.\" glibc commit 93a78ac437ba44f493333d7e2a4b0249839ce460
+Системные таймерные вызовы POSIX впервые появились в Linux 2.6. До этого в
+glibc была неполная реализация в пространстве пользователя (только таймеры
+\fBCLOCK_REALTIME\fP) с использованием нитей POSIX, а реализация glibc до
+версии 2.17 переключается на неё в системах с ядрами до Linux 2.6.
+.SH ПРИМЕР
+Программа ниже обрабатывает два аргумента: интервал сна в секундах и частоту
+таймера в наносекундах. Программа устанавливает обработчик сигнала для
+таймера, блокирует этот сигнал, создаёт и включает таймер, который
+срабатывает с заданной частотой, засыпает на указанное количество секунд, а
+после разблокирует сигнал таймера. Предполагая, что таймер сработает не
+менее одного раза пока программа спит, обработчик сигнала будет вызван и
+покажет некоторую информацию об уведомлении таймера. Программа завершается
+после одного вызова обработчика сигнала.
+.PP
+В следующем примере программа спит 1 секунду после создания таймера, который
+работает с частотой 100 наносекунд. За время разблокировки и доставки
+сигнала, произошло около 10 миллионов переполнений.
+.PP
+.in +4n
+.EX
+\&./$ \fB./a.out 1 100\fP
+Устанавливается обработчик сигнала 34
+Блокируется сигнал 34
+ID таймера — 0x804c008
+Спим 1 секунду
+Разблокируется сигнал 34
+Пойман сигнал 34
+    sival_ptr = 0xbfb174f4;     *sival_ptr = 0x804c008
+    счётчик переполнения = 10004886
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <signal.h>
+#include <time.h>
+
+#define CLOCKID CLOCK_REALTIME
+#define SIG SIGRTMIN
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+static void
+print_siginfo(siginfo_t *si)
+{
+    timer_t *tidp;
+    int or;
+
+    tidp = si\->si_value.sival_ptr;
+
+    printf("    sival_ptr = %p; ", si\->si_value.sival_ptr);
+    printf("    *sival_ptr = 0x%lx\en", (long) *tidp);
+
+    or = timer_getoverrun(*tidp);
+    if (or == \-1)
+        errExit("timer_getoverrun");
+    else
+        printf("    счётчик переполнения = %d\en", or);
+}
+
+static void
+handler(int sig, siginfo_t *si, void *uc)
+{
+    /* Замечание: вызов printf() из обработчика сигнала небезопасен
+       (и не должен выполняться в готовых программах), так как
+       printf() не async\-signal\-safe; смотрите signal\-safety(7).
+       Тем не менее, здесь мы используем printf(), так как это простой
+       способ показать когда вызывается обработчик. */
+
+    printf("Пойман сигнал %d\en", sig);
+    print_siginfo(si);
+    signal(sig, SIG_IGN);
+}
+
+int
+main(int argc, char *argv[])
+{
+    timer_t timerid;
+    struct sigevent sev;
+    struct itimerspec its;
+    long long freq_nanosecs;
+    sigset_t mask;
+    struct sigaction sa;
+
+    if (argc != 3) {
+        fprintf(stderr, "Использование: %s <secs> <nsecs>\en",
+                argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /* Устанавливаем обработчик для сигнала таймера */
+
+    printf("Устанавливается обработчик сигнала %d\en", SIG);
+    sa.sa_flags = SA_SIGINFO;
+    sa.sa_sigaction = handler;
+    sigemptyset(&sa.sa_mask);
+    if (sigaction(SIG, &sa, NULL) == \-1)
+        errExit("sigaction");
+
+    /* Временно блокируем сигнал таймера */
+
+    printf("Блокируется сигнал %d\en", SIG);
+    sigemptyset(&mask);
+    sigaddset(&mask, SIG);
+    if (sigprocmask(SIG_SETMASK, &mask, NULL) == \-1)
+        errExit("sigprocmask");
+
+    /* Создаём таймер */
+
+    sev.sigev_notify = SIGEV_SIGNAL;
+    sev.sigev_signo = SIG;
+    sev.sigev_value.sival_ptr = &timerid;
+    if (timer_create(CLOCKID, &sev, &timerid) == \-1)
+        errExit("timer_create");
+
+    printf("ID таймера — 0x%lx\en", (long) timerid);
+
+    /* Запускаем таймер */
+
+    freq_nanosecs = atoll(argv[2]);
+    its.it_value.tv_sec = freq_nanosecs / 1000000000;
+    its.it_value.tv_nsec = freq_nanosecs % 1000000000;
+    its.it_interval.tv_sec = its.it_value.tv_sec;
+    its.it_interval.tv_nsec = its.it_value.tv_nsec;
+
+    if (timer_settime(timerid, 0, &its, NULL) == \-1)
+         errExit("timer_settime");
+
+    /* Ненадолго засыпаем; за это время, таймер может сработать
+       несколько раз */
+
+    printf("Спим %d секунду\en", atoi(argv[1]));
+    sleep(atoi(argv[1]));
+
+    /* Разблокируем сигнал таймера, чтобы доставлялись
+       уведомления таймера */
+
+    printf("Разблокируется сигнал %d\en", SIG);
+    if (sigprocmask(SIG_UNBLOCK, &mask, NULL) == \-1)
+        errExit("sigprocmask");
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBclock_gettime\fP(2), \fBsetitimer\fP(2), \fBtimer_delete\fP(2),
+\fBtimer_getoverrun\fP(2), \fBtimer_settime\fP(2), \fBtimerfd_create\fP(2),
+\fBclock_getcpuclockid\fP(3), \fBpthread_getcpuclockid\fP(3), \fBpthreads\fP(7),
+\fBsigevent\fP(7), \fBsignal\fP(7), \fBtime\fP(7)

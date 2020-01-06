@@ -1,0 +1,59 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt (michael@moria.de)
+.\" Modified Sat Jul 24 14:48:00 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 1995 by Mike Battersby (mib@deakin.edu.au)
+.\" Modified 2000 by aeb, following Michael Kerrisk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PAUSE 2 2015\-08\-08 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pause \- ждать сигнала
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint pause(void);\fP
+.SH ОПИСАНИЕ
+\fBpause\fP() заставляет вызвавший процесс (или нить) уснуть до тех пор, пока
+не поступит сигнал, который или завершит процесс, или приведёт к запуску
+функции, обрабатывающей сигнал.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.\" .BR ERESTARTNOHAND .
+\fBpause\fP() возвращает значение, только когда был пойман сигнал и завершилась
+функция его обработки. В этом случае \fBpause\fP() возвращает \-1, а \fIerrno\fP
+устанавливается равной \fBEINTR\fP.
+.SH ОШИБКИ
+.TP 
+\fBEINTR\fP
+пойман сигнал и завершилась функция его обработки.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBselect\fP(2), \fBsignal\fP(2), \fBsigsuspend\fP(2)

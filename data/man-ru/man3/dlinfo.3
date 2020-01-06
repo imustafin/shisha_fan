@@ -1,0 +1,261 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2015 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DLINFO 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+dlinfo \- возвращает информацию о динамически загруженном объекте
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP
+\fB#include <link.h>\fP
+\fB#include <dlfcn.h>\fP
+.PP
+\fBint dlinfo(void *\fPhandle\fB, int \fPrequest\fB, void *\fPinfo\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-ldl\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBdlinfo\fP() возвращает информацию о динамически загруженном объекте,
+на который указывает \fIhandle\fP (обычно полученный ранее вызовом \fBdlopen\fP(3)
+или \fBdlmopen\fP(3)). В аргументе \fIrequest\fP указывается какую информацию
+нужно получить. Аргумент \fIinfo\fP — указатель на буфер для хранения
+информации, возвращаемой вызовом; тип данного аргумента зависит от
+\fIrequest\fP.
+.PP
+Для \fIrequest\fP поддерживаются следующие значения (соответствующий тип
+\fIinfo\fP показан в скобках):
+.TP 
+\fBRTLD_DI_LMID\fP (\fILmid_t *\fP)
+Возвратить ID списка карты связи (link\-map list, пространство имён), в
+который загружен \fIhandle\fP.
+.TP 
+\fBRTLD_DI_LINKMAP\fP (\fIstruct link_map **\fP)
+Возвратить указатель на структуру \fIlink_map\fP, соответствующую
+\fIhandle\fP. Аргумент \fIinfo\fP указывает на указатель на структуру \fIlink_map\fP,
+определённую в \fI<link.h>\fP следующим образом:
+.IP
+.in +4n
+.EX
+struct link_map {
+    ElfW(Addr) l_addr;  /* разница между
+                           адресом в файле ELF и
+                           адресом в памяти */
+    char      *l_name;  /* абсолютный путь, где
+                           был найден объект */
+    ElfW(Dyn) *l_ld;    /* динамический раздел
+                           общего объекта */
+    struct link_map *l_next, *l_prev;
+                        /* цепочка загруженных объектов */
+
+    /* дополнительные поля, зависящие от
+       реализации */
+};
+.EE
+.in
+.TP 
+\fBRTLD_DI_ORIGIN\fP (\fIchar *\fP)
+Скопировать путь источника общего объекта соответствующего \fIhandle\fP в
+место, указанное \fIinfo\fP.
+.TP 
+\fBRTLD_DI_SERINFO\fP (\fIDl_serinfo *\fP)
+Возвратить пути поиска библиотек общего объекта, на который указывает
+\fIhandle\fP. Аргумент \fIinfo\fP — указатель на \fIDl_serinfo\fP с путями
+поиска. Так как количество путей поиска может быть разным, то размер
+структуры, на которую указывает \fIinfo\fP, может быть различным. Запрос
+\fBRTLD_DI_SERINFOSIZE\fP, описанный далее, позволяет приложению установить
+подходящий размер. Вызывающий должен выполнить следующие шаги:
+.RS
+.IP 1. 3
+Использовать запрос \fBRTLD_DI_SERINFOSIZE\fP для заполнения структуры
+\fIDl_serinfo\fP размером (\fIdls_size\fP) структуры, необходимой для последующего
+запроса \fBRTLD_DI_SERINFO\fP.
+.IP 2.
+Выделить буфер \fIDl_serinfo\fP правильного размера (\fIdls_size\fP).
+.IP 3.
+Использовать запрос \fBRTLD_DI_SERINFOSIZE\fP для заполнения полей \fIdls_size\fP
+и \fIdls_cnt\fP буфера, выделенного на предыдущем шаге.
+.IP 4.
+Использовать \fBRTLD_DI_SERINFO\fP для получения путей поиска библиотек.
+.IP
+.RE
+.IP
+Структура \fIDl_serinfo\fP определена следующим образом:
+.IP
+.in +4n
+.EX
+typedef struct {
+    size_t dls_size;           /* размер в байтах
+                                  всего буфера */
+    unsigned int dls_cnt;      /* количество элементов
+                                  в «dls_serpath» */
+    Dl_serpath dls_serpath[1]; /* на самом деле больше,
+                                  элементы «dls_cnt» */
+} Dl_serinfo;
+.EE
+.in
+.IP
+Каждый из элементов \fIdls_serpath\fP, в упомянутой выше структуре,
+представляет собой структуру следующего вида:
+.IP
+.in +4n
+.EX
+typedef struct {
+    char *dls_name;            /* имя каталога в
+                                   путях поиска библиотек */
+    unsigned int dls_flags;    /* показывает, откуда
+                                  возник каталог */
+} Dl_serpath;
+.EE
+.in
+.IP
+Поле \fIdls_flags\fP в настоящее время не используется и всегда равно нулю.
+.TP 
+\fBRTLD_DI_SERINFOSIZE\fP (\fIDl_serinfo *\fP)
+Заполнить поля \fIdls_size\fP и \fIdls_cnt\fP структуры \fIDl_serinfo\fP, на которую
+указывает \fIinfo\fP, значениями, подходящими для выделения буфера, который
+будет использоваться в последующем запросе \fBRTLD_DI_SERINFO\fP.
+.TP 
+\fBRTLD_DI_TLS_MODID\fP (\fIsize_t *\fP, начиная с glibc 2.4)
+Получить ID модуля сегмента TLS (локальное хранилище нити) общего объекта,
+которое используется в перемещениях TLS. Если этот объект не задаёт сегмент
+TLS, то в \fI*info\fP помещается ноль.
+.TP 
+\fBRTLD_DI_TLS_DATA\fP (\fIvoid **\fP, начиная с glibc 2.4)
+Получить указатель на блок TLS вызывающей нити, соответствующий этому
+сегменту TLS общего объекта. Если этот объект не задаёт сегмент PT_TLS, или
+если у вызывающей нити для этого не выделен блок, то в \fI*info\fP помещается
+NULL.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBdlinfo\fP() возвращает 0. При ошибке возвращается
+\-1; причину ошибки можно узнать с помощью \fBdlerror\fP(3).
+.SH ВЕРСИИ
+Функция \fBdlinfo\fP() впервые появилась в glibc версии 2.3.3.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBdlinfo\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является нестандартным расширением GNU.
+.SH ЗАМЕЧАНИЯ
+Данная функция произошла от функции Solaris с тем же именем, а также есть в
+некоторых других системах. Набор запросов, поддерживаемых различными
+реализациями, перекрывается лишь частично.
+.SH ПРИМЕР
+Программа, показанная ниже, открывает общие объекты с помощью \fBdlopen\fP(3),
+а затем использует запросы \fBRTLD_DI_SERINFOSIZE\fP и \fBRTLD_DI_SERINFO\fP для
+получения библиотеки из списка путей поиска библиотек. Пример вывода работы
+программы:
+.PP
+.in +4n
+.EX
+$ \fB./a.out /lib64/libm.so.6\fP
+dls_serpath[0].dls_name = /lib64
+dls_serpath[1].dls_name = /usr/lib64
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <dlfcn.h>
+#include <link.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int
+main(int argc, char *argv[])
+{
+    void *handle;
+    Dl_serinfo serinfo;
+    Dl_serinfo *sip;
+    int j;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s <libpath>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /* получаем описатель общего объекта, указанного в командной строке */
+
+    handle = dlopen(argv[1], RTLD_NOW);
+    if (handle == NULL) {
+        fprintf(stderr, "ошибка dlopen(): %s\en", dlerror());
+        exit(EXIT_FAILURE);
+    }
+
+    /* определяем размер буфера, который мы должны передать
+       RTLD_DI_SERINFO */
+
+    if (dlinfo(handle, RTLD_DI_SERINFOSIZE, &serinfo) == \-1) {
+        fprintf(stderr, "ошибка RTLD_DI_SERINFOSIZE: %s\en", dlerror());
+        exit(EXIT_FAILURE);
+    }
+
+    /* выделяем буфер для RTLD_DI_SERINFO */
+
+    sip = malloc(serinfo.dls_size);
+    if (sip == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+
+    /* инициализируем поля \(aqdls_size\(aq и \(aqdls_cnt\(aq в только
+       что выделенном буфере */
+
+    if (dlinfo(handle, RTLD_DI_SERINFOSIZE, sip) == \-1) {
+        fprintf(stderr, "ошибка RTLD_DI_SERINFOSIZE: %s\en", dlerror());
+        exit(EXIT_FAILURE);
+    }
+
+    /* получаем и печатаем список поиска библиотек */
+
+    if (dlinfo(handle, RTLD_DI_SERINFO, sip) == \-1) {
+        fprintf(stderr, "ошибка RTLD_DI_SERINFO: %s\en", dlerror());
+        exit(EXIT_FAILURE);
+    }
+
+    for (j = 0; j < serinfo.dls_cnt; j++)
+        printf("dls_serpath[%d].dls_name = %s\en",
+                j, sip\->dls_serpath[j].dls_name);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdl_iterate_phdr\fP(3), \fBdladdr\fP(3), \fBdlerror\fP(3), \fBdlopen\fP(3),
+\fBdlsym\fP(3), \fBld.so\fP(8)

@@ -1,0 +1,127 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" based on glibc infopages
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LGAMMA 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+lgamma, lgammaf, lgammal, lgamma_r, lgammaf_r, lgammal_r, signgam \- логарифм
+гамма\-функции
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble lgamma(double \fP\fIx\fP\fB);\fP
+\fBfloat lgammaf(float \fP\fIx\fP\fB);\fP
+\fBlong double lgammal(long double \fP\fIx\fP\fB);\fP
+.PP
+\fBdouble lgamma_r(double \fP\fIx\fP\fB, int *\fP\fIsignp\fP\fB);\fP
+\fBfloat lgammaf_r(float \fP\fIx\fP\fB, int *\fP\fIsignp\fP\fB);\fP
+\fBlong double lgammal_r(long double \fP\fIx\fP\fB, int *\fP\fIsignp\fP\fB);\fP
+.PP
+\fBextern int \fP\fIsigngam\fP\fB;\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBlgamma\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L || _XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.br
+\fBlgammaf\fP(), \fBlgammal\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+\fBlgamma_r\fP(), \fBlgammaf_r\fP(), \fBlgammal_r\fP():
+.RS 4
+/* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+\fIsigngam\fP:
+.RS 4
+_XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Определение гамма\-функции смотрите в \fBtgamma\fP(3).
+.PP
+Функции \fBlgamma\fP(), \fBlgammaf\fP() и \fBlgammal\fP() возвращают натуральный
+логарифм абсолютного значения гамма\-функции. Знак гамма\-функции возвращается
+во внешнем целом \fIsigngam\fP, объявленном в \fI<math.h>\fP. Оно равно 1,
+если гамма\-функция положительна или равна нулю, и \-1, если она отрицательна.
+.PP
+Так как использование постоянного расположения \fIsigngam\fP не является
+безопасным при работе с нитями, то была созданы функции \fBlgamma_r\fP(),
+\fBlgammaf_r\fP() и \fBlgammal_r\fP(); они возвращают знак через аргумент
+\fIsignp\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные функции возвращают натуральный логарифм
+Gamma(x).
+.PP
+Если \fIx\fP равно NaN, будет возвращено NaN.
+.PP
+Если \fIx\fP равен 1 или 2, то возвращается +0.
+.PP
+Если \fIx\fP равен плюс бесконечности или минус бесконечности, возвращается
+плюс бесконечность.
+.PP
+Если \fIx\fP равно не положительному целому, генерируется ошибка особой точки,
+а функции возвращают +\fBHUGE_VAL\fP, +\fBHUGE_VALF\fP или +\fBHUGE_VALL\fP,
+соответственно.
+.PP
+.\" e.g., lgamma(DBL_MAX)
+Если происходит переполнение результата, возникает ошибка диапазона, а
+функция возвращает \fBHUGE_VAL\fP, \fBHUGE_VALF\fP или \fBHUGE_VALL\fP,
+соответственно, с математически правильным знаком.
+.SH ОШИБКИ
+Смотрите \fBmath_error\fP(7), чтобы определить, какие ошибки могут возникать
+при вызове этих функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка особой точки: \fIx\fP равно не положительному целому
+Значение \fIerrno\fP устанавливается в \fBERANGE\fP (но смотрите
+ДЕФЕКТЫ). Возникает исключение деления плавающей запятой на ноль
+(\fBFE_DIVBYZERO\fP).
+.TP 
+Ошибка диапазона: результат превысил разрядность
+.\" glibc (as at 2.8) also supports an inexact
+.\" exception for various cases.
+Значение \fIerrno\fP устанавливается в \fBERANGE\fP. Возникает исключение
+переполнения плавающей запятой (\fBFE_OVERFLOW\fP).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функции \fBlgamma\fP() определены в C99, POSIX.1\-2001 и
+POSIX.1\-2008. Переменная \fIsigngam\fP определена в POSIX.1\-2001 и
+POSIX.1\-2008, но отсутствует в C99. Функции \fBlgamma_r\fP() являются
+нестандартными, но существуют в нескольких других системах.
+.SH ДЕФЕКТЫ
+.\" http://sources.redhat.com/bugzilla/show_bug.cgi?id=6777
+В glibc 2.9 и ранее при возникновении ошибки особой точки, значению \fIerrno\fP
+присваивается \fBEDOM\fP вместо \fBERANGE\fP согласно POSIX. Начиная с версии
+2.10, в glibc это исправлено.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBtgamma\fP(3)

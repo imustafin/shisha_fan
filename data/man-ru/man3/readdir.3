@@ -1,0 +1,223 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright (C) 2008, 2016 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 16:09:49 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 11 June 1995 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified 22 July 1996 by Andries Brouwer (aeb@cwi.nl)
+.\" 2007-07-30 Ulrich Drepper <drepper@redhat.com>, mtk:
+.\"     Rework discussion of nonstandard structure fields.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH READDIR 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+readdir \- чтение содержимого каталога
+.SH ОБЗОР
+.nf
+\fB#include <dirent.h>\fP
+.PP
+\fBstruct dirent *readdir(DIR *\fP\fIdirp\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBreaddir\fP() возвращает указатель на структуру \fIdirent\fP,
+представляющую следующую запись каталога в потоке каталога, указанного в
+\fIdirp\fP. Функция возвращает NULL по достижении последней записи в потоке
+каталога или если произошла ошибка.
+.PP
+В реализации glibc структура \fIdirent\fP определена следующим образом:
+.PP
+.in +4n
+.EX
+struct dirent {
+    ino_t          d_ino;       /* номер иноды */
+    off_t          d_off;       /* не смещение, смотрите ниже */
+    unsigned short d_reclen;    /* длина этой записи */
+    unsigned char  d_type;      /* тип файла; поддерживается
+                                   не во всех файловых системах */
+    char           d_name[256]; /* имя файла с null в конце */
+};
+.EE
+.in
+.PP
+В соответствие с POSIX.1, структура \fIdirent\fP обязательно должна содержать
+поле \fId_name\fP[] и \fId_ino\fP. Другие поля не стандартизованы и имеются не во
+всех системах; подробней смотрите ЗАМЕЧАНИЯ далее.
+.PP
+Поля структуры \fIdirent\fP:
+.TP 
+\fId_ino\fP
+Номер иноды файла.
+.TP 
+\fId_off\fP
+.\" https://lwn.net/Articles/544298/
+Значение, возвращаемое в \fId_off\fP, тоже самое что и после вызова
+\fBtelldir\fP(3) в текущем положении курсора в потоке каталога. Учтите, что не
+смотря на тип и имя, в современных файловых системах поле \fId_off\fP мало
+похоже на смещение в каталоге. Приложения должны считать, что это поле
+неизвестного типа(чёрным ящиком) и не делать предположений о его содержимом;
+смотрите также \fBtelldir\fP(3).
+.TP 
+\fId_reclen\fP
+Размер (в байтах) возвращаемой записи. Может не совпадать с размером
+структуры, показанной выше; смотрите ЗАМЕЧАНИЯ.
+.TP 
+\fId_type\fP
+Это поле содержит значение типа файла, что позволяет не делать
+дополнительный вызов \fBlstat\fP(2), если дальнейшие действия зависят от типа
+файла.
+.IP
+Если определён подходящий макрос тестирования свойств (\fB_DEFAULT_SOURCE\fP в
+версиях glibc начиная с 2.19 или \fB_BSD_SOURCE\fP в версиях glibc 2.19 и
+старее), то для значения, возвращаемого в \fId_type\fP, glibc определяет
+следующие макросы\-константы:
+.RS
+.TP  12
+\fBDT_BLK\fP
+блочное устройство
+.TP 
+\fBDT_CHR\fP
+символьное устройство
+.TP 
+\fBDT_DIR\fP
+каталог
+.TP 
+\fBDT_FIFO\fP
+именованный канал (FIFO)
+.TP 
+\fBDT_LNK\fP
+символическая ссылка
+.TP 
+\fBDT_REG\fP
+обычный файл
+.TP 
+\fBDT_SOCK\fP
+доменный сокет UNIX
+.TP 
+\fBDT_UNKNOWN\fP
+Тип файла невозможно определить.
+.RE
+.IP
+.\" kernel 2.6.27
+.\" The same sentence is in getdents.2
+В настоящее время, только файловые системы (среди которых: Btrfs, ext2, ext3
+и ext4) поддерживают возврат типа файла в \fId_type\fP. Все приложения должны
+правильно обрабатывать возвращаемое значение \fBDT_UNKNOWN\fP.
+.TP 
+\fId_name\fP
+Это поле содержит имя файла с завершающим null. \fIСмотрите ЗАМЕЧАНИЯ\fP.
+.PP
+Данные, возвращаемые \fBreaddir\fP(), могут быть переписаны последующими
+вызовами \fBreaddir\fP() для того же потока каталога.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBreaddir\fP() возвращает указатель на структуру
+\fIdirent\fP (эта структура может выделяться статически; не пытайтесь
+освободить её с помощью \fBfree\fP(3)).
+.PP
+При достижении конца потока каталога возвращается NULL и \fIerrno\fP не
+изменяется. При возникновении ошибки возвращается NULL, а \fIerrno\fP
+изменяется соответствующим образом. Чтобы отличить конец потока от ошибки
+присваивайте \fIerrno\fP значение нуля перед вызовом \fBreaddir\fP(), а после
+проверяйте значение \fIerrno\fP, если возвращается NULL.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Неверный дескриптор потока каталога \fIdirp\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBreaddir\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:dirstream
+.TE
+.sp 1
+.PP
+.\" FIXME .
+.\" http://www.austingroupbugs.net/view.php?id=696
+В текущей спецификации POSIX.1 (POSIX.1\-2008), от \fBreaddir\fP() не требуется
+быть нитебезопасной. Однако в современных реализациях (включая glibc)
+параллельные вызовы \fBreaddir\fP() для различных потоков каталога являются
+нитебезопасными. В случаях, когда несколько нитей должны читать один поток
+каталога, всё равно предпочтительней использовать \fBreaddir\fP() с внешней
+синхронизацией, а не устаревшей \fBreaddir_r\fP(3). Ожидается, что в будущей
+версии POSIX.1 для \fBreaddir\fP() будет требоваться нитебезопасность при
+одновременной работе с разными потоками каталога.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Поток каталога открывается с помощью \fBopendir\fP(3).
+.PP
+Порядок последовательно читаемых имён файлов вызовом \fBreaddir\fP() зависит от
+реализации файловой системы; не очень здорово, что имена будут отсортированы
+в непредсказуемом порядке.
+.PP
+.\" POSIX.1-2001, POSIX.1-2008
+.\"
+В POSIX.1 определены только поля \fId_name\fP и \fId_ino\fP (расширение
+XSI). Кроме Linux, поле \fId_type\fP доступно, преимущественно только в
+системах BSD. Остальные поля доступны во многих, но не во всех системах. В
+glibc программы могут определить доступность полей, не определённых в
+POSIX.1, по наличию макросов \fB_DIRENT_HAVE_D_NAMLEN\fP,
+\fB_DIRENT_HAVE_D_RECLEN\fP, \fB_DIRENT_HAVE_D_OFF\fP или \fB_DIRENT_HAVE_D_TYPE\fP.
+.SS "Поле d_name"
+Определение структуры \fIdirent\fP, показанное выше, взято из заголовочных
+файлов glibc и отражает поле \fId_name\fP с постоянным размером.
+.PP
+\fIПредупреждение\fP: приложения не должны зависеть от размера поля
+\fId_name\fP. В POSIX оно определено как \fIchar\ d_name[]\fP, массив символов
+неопределённого размера, не более \fBNAME_MAX\fP символов с конечным байтом
+null (\(aq\e0\(aq).
+.PP
+В POSIX.1 явно сказано, что это поле не должно использоваться как lvalue. В
+стандарте также отмечено, что использование \fIsizeof(d_name)\fP некорректно;
+вместо него используйте \fIstrlen(d_name)\fP (в некоторых системах это поле
+определено как \fIchar\ d_name[1]\fP!). Как следствие, использовать
+\fIsizeof(struct dirent)\fP для получения размера записи, включающей размер
+\fId_name\fP также неправильно.
+.PP
+Заметим, что хотя вызов
+.PP
+    fpathconf(fd, _PC_NAME_MAX)
+.PP
+и возвращает значение 255 в большинстве файловых систем, но в некоторых
+файловых системах (например, CIFS, серверы Windows SMB) имя файла с null
+конце, возвращаемое (правильно) в \fId_name\fP, может превышать этот размер. В
+таких случаях поле \fId_reclen\fP будет содержать значение, превышающее размер
+структуры glibc \fIdirent\fP, показанной выше.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetdents\fP(2), \fBread\fP(2), \fBclosedir\fP(3), \fBdirfd\fP(3), \fBftw\fP(3),
+\fBoffsetof\fP(3), \fBopendir\fP(3), \fBreaddir_r\fP(3), \fBrewinddir\fP(3),
+\fBscandir\fP(3), \fBseekdir\fP(3), \fBtelldir\fP(3)

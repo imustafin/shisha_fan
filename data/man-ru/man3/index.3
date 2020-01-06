@@ -1,0 +1,77 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Mon Apr 12 12:54:34 1993, David Metcalfe
+.\" Modified Sat Jul 24 19:13:52 1993, Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INDEX 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+index, rindex \- находят местоположение символа в строке
+.SH ОБЗОР
+.nf
+\fB#include <strings.h>\fP
+.PP
+\fBchar *index(const char *\fP\fIs\fP\fB, int \fP\fIc\fP\fB);\fP
+.PP
+\fBchar *rindex(const char *\fP\fIs\fP\fB, int \fP\fIc\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBindex\fP() возвращает указатель на первый обнаруженный в строке \fIs\fP
+символ \fIc\fP.
+.PP
+Функция \fBindex\fP() возвращает указатель на последний обнаруженный в строке
+\fIs\fP символ \fIc\fP.
+.PP
+Завершающий байт null (\(aq\e0\(aq) считается частью строки.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBindex\fP() и \fBrindex\fP() возвращают указатель на найденное
+совпадение символа или NULL в случае, если совпадений не найдено.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBindex\fP(),
+\fBrindex\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.3BSD; в POSIX.1\-2001 помечены как LEGACY. В POSIX.1\-2008 спецификации
+\fBindex\fP() и \fBrindex\fP() удалены, вместо них рекомендуется использовать
+\fBstrchr\fP(3) и \fBstrrchr\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmemchr\fP(3), \fBstrchr\fP(3), \fBstring\fP(3), \fBstrpbrk\fP(3), \fBstrrchr\fP(3),
+\fBstrsep\fP(3), \fBstrspn\fP(3), \fBstrstr\fP(3), \fBstrtok\fP(3)

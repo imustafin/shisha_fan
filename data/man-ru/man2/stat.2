@@ -1,0 +1,496 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\" Parts Copyright (c) 1995 Nicolai Langfeldt (janl@ifi.uio.no), 1/1/95
+.\" and Copyright (c) 2006, 2007, 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1995-05-18 by Todd Larason <jtl@molehill.org>
+.\" Modified 1997-01-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1995-01-09 by Richard Kettlewell <richard@greenend.org.uk>
+.\" Modified 1998-05-13 by Michael Haardt <michael@cantor.informatik.rwth-aachen.de>
+.\" Modified 1999-07-06 by aeb & Albert Cahalan
+.\" Modified 2000-01-07 by aeb
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" 2007-06-08 mtk: Added example program
+.\" 2007-07-05 mtk: Added details on underlying system call interfaces
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STAT 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+stat, fstat, lstat, fstatat \- считывает состояние файла
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/stat.h>\fP
+\fB#include <unistd.h>\fP
+.PP
+\fBint stat(const char *\fP\fIpathname\fP\fB, struct stat *\fP\fIstatbuf\fP\fB);\fP
+\fBint fstat(int \fP\fIfd\fP\fB, struct stat *\fP\fIstatbuf\fP\fB);\fP
+\fBint lstat(const char *\fP\fIpathname\fP\fB, struct stat *\fP\fIstatbuf\fP\fB);\fP
+
+\fB#include <fcntl.h>           \fP/* определения констант AT_* */
+\fB#include <sys/stat.h>\fP
+.PP
+\fBint fstatat(int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB, struct stat *\fP\fIstatbuf\fP\fB,\fP
+\fB            int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBlstat\fP():
+.RS 4
+/* glibc 2.19 и старее */ _BSD_SOURCE
+.br
+    || /* начиная с glibc 2.20 */ _DEFAULT_SOURCE
+.br
+.\"   _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+    || _XOPEN_SOURCE\ >=\ 500
+.br
+    || /* начиная с glibc 2.10: */ _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.PP
+\fBfstatat\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_ATFILE_SOURCE
+.RE
+.PD
+.ad
+.SH ОПИСАНИЕ
+.PP
+Данные системные вызовы возвращают информацию о файле в буфер, на который
+указывает \fIstatbuf\fP. Для этого не требуется иметь права доступа к самому
+файлу, но — в случае \fBstat\fP(), \fBfstatat\fP() и \fBlstat\fP() — потребуются
+права выполнения (поиска) на все каталоги, указанные в полном имени файла
+\fIpathname\fP.
+.PP
+Вызовы \fBstat\fP() и \fBfstatat\fP() возвращают информацию о файле, указанном в
+\fIpathname\fP; различия с \fBfstatat\fP() описаны далее.
+.PP
+Вызов \fBlstat\fP() идентичен \fBstat\fP(), но в случае, если \fIpathname\fP является
+символьной ссылкой, то возвращается информация о самой ссылке, а не о файле,
+на который она указывает.
+.PP
+.\"
+Вызов \fBfstat\fP() идентичен \fBstat\fP(), но опрашиваемый файл задаётся в виде
+файлового дескриптора \fIfd\fP.
+.SS "Структура stat"
+Все эти системные вызовы возвращают структуру \fIstat\fP, которая содержит
+следующие поля:
+.PP
+.in +4n
+.EX
+struct stat {
+    dev_t     st_dev;         /* ID устройства с файлом */
+    ino_t     st_ino;         /* номер иноды */
+    mode_t    st_mode;        /* тип файла и режим доступа */
+    nlink_t   st_nlink;       /* количество жёстких ссылок */
+    uid_t     st_uid;         /* идентификатор пользователя\-владельца */
+    gid_t     st_gid;         /* идентификатор группы\-владельца */
+    dev_t     st_rdev;        /* идентификатор устройства
+                                 (для специального файла) */
+    off_t     st_size;        /* общий размер в байтах */
+    blksize_t st_blksize;     /* размер блока ввода\-вывода файловой системы */
+    blkcnt_t  st_blocks;      /* количество выделенных 512Б блоков */
+
+    /* Начиная с Linux 2.6, ядро поддерживает точность до
+       наносекунд в следующих полям меток времени.
+       Подробней о версиях до Linux 2.6, смотрите ЗАМЕЧАНИЯ. */
+
+    struct timespec st_atim;  /* время последнего доступа */
+    struct timespec st_mtim;  /* время последнего изменения */
+    struct timespec st_ctim;  /* время последней смены состояния */
+
+#define st_atime st_atim.tv_sec      /* для обратной совместимости */
+#define st_mtime st_mtim.tv_sec
+#define st_ctime st_ctim.tv_sec
+};
+.EE
+.in
+.PP
+\fIЗамечание\fP: порядок полей структуры \fIstat\fP для разных архитектур
+отличается. Также, в определении выше не показаны дополняющие байты, которые
+для различных архитектур могут присутствовать между некоторыми полями Если
+необходимы подробности, то посмотрите исходный код glibc и ядра.
+.PP
+.\" Background: inode attributes are modified with i_mutex held, but
+.\" read by stat() without taking the mutex.
+\fIЗамечание\fP: Для простоты и производительности различные поля структуры
+\fIstat\fP могут содержать информацию о состоянии из разных моментов работы
+системного вызова. Например, если \fIst_mode\fP или \fIst_uid\fP изменились другим
+процессом с помощью вызова \fBchmod\fP(2) или \fBchown\fP(2), то \fBstat\fP() может
+вернуть старое значение \fIst_mode\fP вместе с новым \fIst_uid\fP, или старое
+значение \fIst_uid\fP вместе с новым \fIst_mode\fP.
+.PP
+Поля структуры \fIstat\fP:
+.TP 
+\fIst_dev\fP
+Устройство, на котором расположен файл (для разбора идентификатора этого
+поля могут пригодиться макросы \fBmajor\fP(3) и \fBminor\fP(3)).
+.TP 
+\fIst_ino\fP
+Номер иноды файла.
+.TP 
+\fIst_mode\fP
+Тип файла и режим доступа. Дополнительную информацию смотрите в \fBinode\fP(7).
+.TP 
+\fIst_nlink\fP
+Количество жёстких ссылок на файл.
+.TP 
+\fIst_uid\fP
+Пользовательский идентификатор владельца файла.
+.TP 
+\fIst_gid\fP
+Групповой идентификатор владельца файла.
+.TP 
+\fIst_rdev\fP
+Устройство, который этот файл (инода) представляет.
+.TP 
+\fIst_size\fP
+Размер файла (если он обычный или является символьной ссылкой) в
+байтах. Размер символьной ссылки равен длине пути файла, на который она
+ссылается, без конечного нулевого байта.
+.TP 
+\fIst_blksize\fP
+«Предпочтительный» размер блока для эффективного ввода/вывода в файловой
+системе.
+.TP 
+\fIst_blocks\fP
+Количество блоков (по 512 байт), выделенных для файла (может быть меньше,
+чем \fIst_size\fP/512, когда в файле есть пропуски (holes)).
+.TP 
+\fIst_atime\fP
+Метка времени последнего доступа к файлу.
+.TP 
+\fIst_mtime\fP
+Метка времени последнего изменения файла.
+.TP 
+\fIst_ctime\fP
+Метка времени последнего изменения состояния файла.
+.PP
+.\"
+Дополнительную информацию об этих полях смотрите в \fBinode\fP(7).
+.SS fstatat()
+Системный вызов \fBfstatat\fP() представляет собой обобщённый интерфейс доступа
+к файловой информации, и может выполнить работу за \fBstat\fP(), \fBlstat\fP() и
+\fBfstat\fP().
+.PP
+Если в \fIpathname\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBstat\fP() и \fBlstat\fP()).
+.PP
+Если в \fIpathname\fP задан относительный путь и значение \fIdirfd\fP равно
+\fBAT_FDCWD\fP, то \fIpathname\fP рассматривается относительно текущего рабочего
+каталога вызывающего процесса (как \fBstat\fP() и \fBlstat\fP()).
+.PP
+Если в \fIpathname\fP задан абсолютный путь, то \fIdirfd\fP игнорируется.
+.PP
+Значение \fIflags\fP может быть 0, или включать один или более следующих
+флагов:
+.TP 
+\fBAT_EMPTY_PATH\fP (начиная с Linux 2.6.39)
+.\" commit 65cfc6722361570bfe255698d9cd4dccaf47570d
+.\" Before glibc 2.16, defining _ATFILE_SOURCE sufficed
+Если значение \fIpathname\fP равно пустой строке, то выполнять действие над
+файлом, на который указывает \fIdirfd\fP (который может быть получен с помощью
+\fBopen\fP(2) с флагом \fBO_PATH\fP). В этом случае \fIdirfd\fP может указывать на
+файл любого типа, а не только на каталог и поведение \fBfstatat\fP() подобно
+\fBfstat\fP(). Если \fIdirfd\fP равно \fBAT_FDCWD\fP, то вызов выполняет действие над
+текущим рабочим каталогом. Этот флаг есть только в Linux; для получения его
+определения определите \fB_GNU_SOURCE\fP.
+.TP 
+\fBAT_NO_AUTOMOUNT\fP (начиная с Linux 2.6.38)
+.\" commit 42f46148217865a545e129612075f3d828a2c4e4
+.\" Before glibc 2.16, defining _ATFILE_SOURCE sufficed
+Не выполнять автоматическое монтирование конечного компонента («basename»)
+\fIpathname\fP, если этот каталог является точкой автоматического
+монтирования. Это позволяет вызывающему получить атрибуты точки
+автоматического монтирования (а не расположения, где её предполагалось
+смонтировать). Начиная с  Linux 4.14, также не создаётся несуществующее имя
+в каталоге по требованию, например в неявных картах автоматического
+монтировщика. Этот флаг можно использовать в инструментах, сканирующих
+каталоги, для предотвращения массового автоматического монтирования
+каталогов в их точки автоматического монтирования. Флаг \fBAT_NO_AUTOMOUNT\fP
+не учитывается, если к точке уже была выполнено монтирование. Этот флаг есть
+только Linux; для его получения нужно задать \fB_GNU_SOURCE\fP. Вызовы
+\fBstat\fP() и \fBlstat\fP() работают, как если бы был установлен флаг
+\fBAT_NO_AUTOMOUNT\fP.
+.TP 
+\fBAT_SYMLINK_NOFOLLOW\fP
+Если значение \fIpathname\fP является символьной ссылкой, не разыменовывать её,
+а вернуть информацию о самой ссылке, как это делается в \fBlstat\fP(). (По
+умолчанию, \fBfstatat\fP() разыменовывает символьные ссылки как и \fBstat\fP().)
+.PP
+Смотрите в \fBopenat\fP(2) объяснение необходимости \fBfstatat\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Запрещён поиск в одном из каталогов пути \fIpathname\fP (смотрите также
+\fBpath_resolution\fP(7)).
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным открытым файловым дескриптором.
+.TP 
+\fBEFAULT\fP
+Неправильный адрес.
+.TP 
+\fBELOOP\fP
+Во время определения пути встретилось слишком много символьных ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fIpathname\fP.
+.TP 
+\fBENOENT\fP
+Компонент пути \fIpathname\fP не существует или является повисшей символьной
+ссылкой.
+.TP 
+\fBENOENT\fP
+Значение \fIpathname\fP равно пустой строке и в \fIflags\fP не указано значение
+\fBAT_EMPTY_PATH\fP.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти (например, памяти ядра).
+.TP 
+\fBENOTDIR\fP
+Компонент в префиксе пути \fIpathname\fP не является каталогом.
+.TP 
+\fBEOVERFLOW\fP
+Значение \fIpathname\fP или \fIfd\fP ссылаются на файл, чей размер, номер inode
+или количество блоков не может быть представлено с помощью типов \fIoff_t\fP,
+\fIino_t\fP или \fIblkcnt_t\fP, соответственно. Эта ошибка может возникнуть, если,
+например, приложение собрано на 32\-битной платформе без флага
+\fI\-D_FILE_OFFSET_BITS=64\fP при вызове \fBstat\fP() для файла, чей размер
+превышает \fI(1<<31)\-1\fP байт.
+.PP
+В \fBfstatat\fP() дополнительно могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+Значение \fIdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+Указано неверное значение в \fIflags\fP.
+.TP 
+\fBENOTDIR\fP
+Значение \fIpathname\fP содержит относительный путь и \fIdirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог.
+.SH ВЕРСИИ
+Вызов \fBfstatat\fP() был добавлен в ядро Linux версии 2.6.16; поддержка в
+glibc доступна с версии 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents additional
+.\" .BR fstat ()
+.\" error conditions EINTR, ENOLINK, and EOVERFLOW.  SVr4
+.\" documents additional
+.\" .BR stat ()
+.\" and
+.\" .BR lstat ()
+.\" error conditions EINTR, EMULTIHOP, ENOLINK, and EOVERFLOW.
+\fBstat\fP(), \fBfstat\fP(), \fBlstat\fP(): SVr4, 4.3BSD, POSIX.1\-2001, POSIX.1.2008.
+.PP
+\fBfstatat\fP(): POSIX.1\-2008.
+.PP
+Согласно POSIX.1\-2001, \fBlstat\fP() для символьной ссылки требует вернуть
+корректную информацию только в поле \fIst_size\fP и в типе файла в поле
+\fIst_mode\fP структуры \fIstat\fP. В POSIX.1\-2008 более жёсткая спецификация,
+требующая, чтобы \fBlstat\fP() возвращал корректную информацию во всех полях
+кроме битов режима в \fIst_mode\fP.
+.PP
+Использование полей \fIst_blocks\fP и \fIst_blksize\fP может усложнить перенос на
+другие платформы. (Эти поля появились из BSD. Их смысл различается в разных
+системах и, вероятно, даже в одной системе при использовании NFS).
+.SH ЗАМЕЧАНИЯ
+.SS "Поля с отметками времени"
+В старых ядрах и стандартах нет поддержки полей времени в
+наносекундах. Вместо них есть три поря времени — \fIst_atime\fP, \fIst_mtime\fP и
+\fIst_ctime\fP — с типом \fItime_t\fP, который имеет секундную точность.
+.PP
+.\"
+Начиная с ядра 2.5.48, в структуре \fIstat\fP поддерживается наносекундная
+точность для всех трёх полей времени. Наносекундные компоненты каждой метки
+времени доступны под именами вида \fIst_atim.tv_nsec\fP, если определён
+подходящий макрос тестирования свойств. Наносекундные метки времени
+стандартизованы в POSIX.1\-2008, и, начиная с версии 2.12, в glibc также есть
+поддержка имён наносекундных компонент, если определён \fB_POSIX_C_SOURCE\fP со
+значением 200809L или более, или \fB_XOPEN_SOURCE\fP со значением 700 или
+более. До glibc 2.19 включительно определения наносекундных компонент также
+доступны, если определён \fB_BSD_SOURCE\fP или \fB_SVID_SOURCE\fP. Если ни один из
+вышеупомянутых макросов не определён, то наносекундные значения доступны под
+именами вида \fIst_atimensec\fP.
+.SS "Отличия между библиотекой C и ядром"
+.\" See include/asm-i386/stat.h in the Linux 2.4 source code for the
+.\" various versions of the structure definitions
+В течении долгого времени увеличение размера структуры \fIstat\fP привело к
+появлению трёх новых версий \fBstat\fP(): \fIsys_stat\fP() (слот \fI__NR_oldstat\fP),
+\fIsys_newstat\fP() (слот \fI__NR_stat\fP) и \fIsys_stat64()\fP (слот \fI__NR_stat64\fP)
+на 32\-битных платформах, например, i386. Первые две версии уже существовали
+в Linux 1.0 (но под другими именами); последняя была добавлена в Linux
+2.4. Подобное замечание применимо к \fBfstat\fP() и \fBlstat\fP().
+.PP
+Внутренние ядерные структуры \fIstat\fP в разных версиях:
+.TP 
+\fI__old_kernel_stat\fP
+Самая первая версия структуры со слегка узкими полями и без заполнителей.
+.TP 
+\fIstat\fP
+Увеличенное поле \fIst_ino\fP и добавлены заполнители в различные части
+структуры для расширения в дальнейшем.
+.TP 
+\fIstat64\fP
+Ещё раз увеличенное поле \fIst_ino\fP, увеличены поля \fIst_uid\fP и \fIst_gid\fP для
+работы с увеличенными в Linux\-2.4 UID и GID до 32 бит, увеличены другие
+поля, дальнейшее добавление заполнителей в структуру (различные байты
+заполнения в дальнейшем были задействованы в Linux 2.6 с появлением
+32\-битных ID устройств и наносекундной части в полях временных отметок).
+.PP
+.\"
+.\" A note from Andries Brouwer, July 2007
+.\"
+.\" > Is the story not rather more complicated for some calls like
+.\" > stat(2)?
+.\"
+.\" Yes and no, mostly no. See /usr/include/sys/stat.h .
+.\"
+.\" The idea is here not so much that syscalls change, but that
+.\" the definitions of struct stat and of the types dev_t and mode_t change.
+.\" This means that libc (even if it does not call the kernel
+.\" but only calls some internal function) must know what the
+.\" format of dev_t or of struct stat is.
+.\" The communication between the application and libc goes via
+.\" the include file <sys/stat.h> that defines a _STAT_VER and
+.\" _MKNOD_VER describing the layout of the data that user space
+.\" uses. Each (almost each) occurrence of stat() is replaced by
+.\" an occurrence of xstat() where the first parameter of xstat()
+.\" is this version number _STAT_VER.
+.\"
+.\" Now, also the definitions used by the kernel change.
+.\" But glibc copes with this in the standard way, and the
+.\" struct stat as returned by the kernel is repacked into
+.\" the struct stat as expected by the application.
+.\" Thus, _STAT_VER and this setup cater for the application-libc
+.\" interface, rather than the libc-kernel interface.
+.\"
+.\" (Note that the details depend on gcc being used as c compiler.)
+Обёрточная функция glibc \fBstat\fP() прячет эти подробности от приложений,
+вызывая самую новую версию системного вызова, предоставляемого ядром, и
+перепаковывая возвращаемую информацию, если это нужно для старых программ.
+.PP
+В современных 64\-битных системах жизнь упростилась: единственный системный
+вызов \fBstat\fP() и ядро работает со структурой \fIstat\fP, в которой поля
+достаточного размера.
+.PP
+.\" strace(1) shows the name "newfstatat" on x86-64
+Нижележащий системный вызов, используемый обёрточной функцией \fBfstatat\fP() в
+glibc, на самом деле называется \fBfstatat64\fP() или, на некоторых
+архитектурах, \fBnewfstatat\fP().
+.SH ПРИМЕР
+Следующая программа вызывает \fBlstat\fP() и показывает некоторые поля из
+полученной структуры \fIstat\fP.
+.PP
+.EX
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/sysmacros.h>
+
+int
+main(int argc, char *argv[])
+{
+    struct stat sb;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s <путь>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    if (lstat(argv[1], &sb) == \-1) {
+        perror("lstat");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("ID содержащего устройства:  [%lx,%lx]\en",
+	    (long) major(sb.st_dev), (long) minor(sb.st_dev));
+
+    printf("Тип файла:                ");
+
+    switch (sb.st_mode & S_IFMT) {
+    case S_IFBLK:  printf("блочное устройство\en");     break;
+    case S_IFCHR:  printf("символьное устройство\en");  break;
+    case S_IFDIR:  printf("каталог\en");                break;
+    case S_IFIFO:  printf("FIFO/канал\en");             break;
+    case S_IFLNK:  printf("символьная ссылка\en");      break;
+    case S_IFREG:  printf("обычный файл\en");           break;
+    case S_IFSOCK: printf("сокет\en");                  break;
+    default:       printf("неизвестно?\en");            break;
+    }
+
+    printf("номер inode:              %ld\en", (long) sb.st_ino);
+
+    printf("Режим доступа:            %lo (octal)\en",
+            (unsigned long) sb.st_mode);
+
+    printf("Кол\-во ссылок:            %ld\en", (long) sb.st_nlink);
+    printf("Владелец:                 UID=%ld   GID=%ld\en",
+            (long) sb.st_uid, (long) sb.st_gid);
+
+    printf("Предпоч. размер бл. в/в:  %ld байт\en",
+            (long) sb.st_blksize);
+    printf("Размер файла:             %lld байт\en",
+            (long long) sb.st_size);
+    printf("Выделено блоков:          %lld\en",
+            (long long) sb.st_blocks);
+
+    printf("Посл. изм. состояния:     %s", ctime(&sb.st_ctime));
+    printf("Посл. доступ к файлу:     %s", ctime(&sb.st_atime));
+    printf("Посл. изм. файла:         %s", ctime(&sb.st_mtime));
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBls\fP(1), \fBstat\fP(1), \fBaccess\fP(2), \fBchmod\fP(2), \fBchown\fP(2),
+\fBreadlink\fP(2), \fBstatx\fP(2), \fButime\fP(2), \fBcapabilities\fP(7), \fBinode\fP(7),
+\fBsymlink\fP(7)

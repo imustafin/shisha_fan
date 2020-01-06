@@ -1,0 +1,203 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2016 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CGROUP_NAMESPACES 7 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+cgroup_namespaces \- обзор пространств имён Linux cgroup
+.SH ОПИСАНИЕ
+Обзор пространств имён смотрите в \fBnamespaces\fP(7).
+.PP
+Пространства имён cgroup_namespaces виртуализируют представление о cgroup
+процесса (смотрите \fBcgroups\fP(7)) в виде \fI/proc/[pid]/cgroup\fP и
+\fI/proc/[pid]/mountinfo\fP.
+.PP
+Каждое пространство имён cgroup имеет свой набор корневых каталогов
+cgroup. Данные корневые каталоги являются базовыми точками относительных
+расположений, показываемых в соответствующих записях файла
+\fI/proc/[pid]/cgroup\fP. Когда процесс создаёт новое пространство имён cgroup
+с помощью \fBclone\fP(2) или \fBunshare\fP(2) с флагом \fBCLONE_NEWCGROUP\fP, то его
+текущие каталоги cgroups становятся корневыми каталогами cgroup нового
+пространства имён (это применимо как для иерархии cgroups версии 1, так и
+для унифицированной иерархии cgroups версии 2).
+.PP
+При чтении членов cgroup «целевого» процесса из \fI/proc/[pid]/cgroup\fP путь в
+третьем поле каждой записи будет относительным по отношению к корневому
+каталогу cgroup читающего процесса для соответствующей иерархии cgroup. Если
+каталог cgroup процесса назначения лежит вне корневого каталоге пространства
+имён cgroup читающего процесса, то путь будет показан как \fI../\fP для каждого
+уровня предка в иерархии cgroup.
+.PP
+Следующий пример сеанса демонстрирует создание нового пространства имён
+cgroup.
+.PP
+Сначала (от суперпользователя) в оболочке начального пространства имён
+cgroup создадим дочернюю cgroup в иерархии \fIfreezer\fP и поместим в эту
+cgroup процесс, который будет использоваться как часть демонстрации далее:
+.PP
+.in +4n
+.EX
+# \fBmkdir \-p /sys/fs/cgroup/freezer/sub2\fP
+# \fBsleep 10000 &\fP     # создать процесс, который живёт какое\-то время
+[1] 20124
+# \fBecho 20124 > /sys/fs/cgroup/freezer/sub2/cgroup.procs\fP
+.EE
+.in
+.PP
+Затем создадим другую дочернюю cgroup в иерархии \fIfreezer\fP и поместим
+оболочку в эту cgroup:
+.PP
+.in +4n
+.EX
+# \fBmkdir \-p /sys/fs/cgroup/freezer/sub\fP
+# \fBecho $$\fP                      # выводим PID этой оболочки
+30655
+# \fBecho 30655 > /sys/fs/cgroup/freezer/sub/cgroup.procs\fP
+# \fBcat /proc/self/cgroup | grep freezer\fP
+7:freezer:/sub
+.EE
+.in
+.PP
+Затем с помощью \fBunshare\fP(1) создаётся процесс, выполняющий новую оболочку
+в новой cgroup и монтируется пространство имён:
+.PP
+.EX
+.in +4n
+# \fBPS1="sh2# " unshare \-Cm bash\fP
+.in
+.EE
+.PP
+Из новой оболочки, запущенной \fBunshare\fP(1), теперь файлы
+\fI/proc/[pid]/cgroup\fP содержат, соответственно, новый процесс\-оболочку,
+процесс, находящийся в первоначальном пространстве имён cgroup (\fIinit\fP с
+PID 1) и процесс в родственной cgroup (\fIsub2\fP):
+.PP
+.EX
+.in +4n
+sh2# \fBcat /proc/self/cgroup | grep freezer\fP
+7:freezer:/
+sh2# \fBcat /proc/1/cgroup | grep freezer\fP
+7:freezer:/..
+sh2# \fBcat /proc/20124/cgroup | grep freezer\fP
+7:freezer:/../sub2
+.in
+.EE
+.PP
+В выводе первой команды мы видим, что в cgroup freezer членство новой
+оболочки (находящейся в той же cgroup, что и начальная оболочка) определено
+относительно корневого каталога cgroup freezer, который был назначен при
+создании нового пространства имён cgroup (в абсолютном выражении, новая
+оболочка находится в \fI/sub\fP freezer cgroup и корневой каталог иерархии
+freezer cgroup в новом пространстве имён cgroup также находится в
+\fI/sub\fP. То есть, членство cgroup новой оболочки показывается как
+\(aq/\(aq).
+.PP
+Однако, если посмотреть \fI/proc/self/mountinfo\fP, то можно увидеть следующую
+аномалию:
+.PP
+.EX
+.in +4n
+sh2# \fBcat /proc/self/mountinfo | grep freezer\fP
+155 145 0:32 /.. /sys/fs/cgroup/freezer ...
+.in
+.EE
+.PP
+Четвёртое поле в этой строке (\fI/..\fP) должен содержать каталог в файловой
+системе cgroup, который является корнем этого монтирования. Так как по
+определению пространств имён cgroup текущий каталог freezer cgroup процесса
+становится его корневым каталогом freezer cgroup, в этом поле мы должны
+увидеть \(aq/\(aq. Проблема здесь в том, что мы видим запись о монтировании
+для файловой системы cgroup, которая соответствует начальному пространству
+имён cgroup (чья файловая система cgroup действительно имеет корень в
+родительском каталоге \fIsub\fP). Чтобы это исправить нам нужно перемонтировать
+файловую систему freezer cgroup из новой оболочки (т. е. выполнить
+монтирование из процесса, который находится в новом пространстве имён
+cgroup), после чего мы увидим ожидаемый результат:
+.PP
+.EX
+.in +4n
+sh2# \fBmount \-\-make\-rslave /\fP     # не распространять события монтирования
+                               # в другие пространства имён
+sh2# \fBumount /sys/fs/cgroup/freezer\fP
+sh2# \fBmount \-t cgroup \-o freezer freezer /sys/fs/cgroup/freezer\fP
+sh2# \fBcat /proc/self/mountinfo | grep freezer\fP
+155 145 0:32 / /sys/fs/cgroup/freezer rw,relatime ...
+.in
+.EE
+.\"
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Пространства имён есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Для использования пространств имён cgroup требуется, чтобы ядро было собрано
+с параметром \fBCONFIG_CGROUPS\fP.
+.PP
+Виртуализация, предоставляемая пространствами имён cgroup, подходит для
+решения нескольких задач:
+.IP * 2
+Предотвращение утечек информации о путях каталогов cgroup за пределами
+контейнера, иначе они были бы видимы процессам в контейнере. Такие утечки
+могли, например, выдать информацию о платформе контейнера приложениям в
+контейнере.
+.IP *
+Облегчение задач по переносу контейнера. Виртуализация, предоставляемая
+пространствами имён cgroup, позволяет контейнерам не знать информацию о
+путях родительских cgroup. Без такой изоляции потребовалось бы воссоздавать
+полные пути cgroup (показываемые в \fI/proc/self/cgroups\fP) в целевой системе
+при переносе контейнера; также эти пути должны были быть уникальными, чтобы
+они не пересекались с другими путями в целевой системе.
+.IP *
+Обеспечивает лучшее разграничение контейнеризированных процессов, так как
+возможно смонтировать файловые системы cgroup контейнера таким образом, что
+процессы контейнера не смогут получить доступ к каталогам предка
+cgroup. Рассмотрим, например, следующий сценарий:
+.RS 4
+.IP \(bu 2
+Есть каталог cgroup \fI/cg/1\fP, который принадлежит пользователю с ID 9000.
+.IP \(bu
+Есть процесс \fIX\fP, который также принадлежит пользователю с ID 9000, он
+находится в пространстве имён под \fI/cg/1/2\fP (т. е., \fIX\fP помещён в новое
+пространство имён cgroup посредством \fBclone\fP(2) или \fBunshare\fP(2) с флагом
+\fBCLONE_NEWCGROUP\fP).
+.RE
+.IP
+Если нет пространств имён cgroup, а каталог cgroup \fI/cg/1\fP принадлежит (и
+доступен на запись) UID 9000 и процесс \fIX\fP также принадлежит пользователю с
+ID 9000, процесс \fIX\fP может изменять содержимое файлов cgroups (т. е.,
+изменять настройки cgroup) не только в \fI/cg/1/2\fP, но и в родительском
+каталоге cgroup \fI/cg/1\fP. Выделение для процесса \fIX\fP пространства имён в
+каталоге cgroup \fI/cg/1/2\fP, в комбинации с нужными операциями монтирования
+файловой системы cgroup (как показано выше) не даёт изменять файлы в
+\fI/cg/1\fP, так как невозможно увидеть содержимое этого каталога (или, в
+дальнейшем, удалить каталоге родительского cgroup). В сочетании с правильным
+обеспечением иерархических ограничений это не позволяет процессу \fIX\fP обойти
+ограничения, накладываемые родительскими cgroups.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBunshare\fP(1), \fBclone\fP(2), \fBsetns\fP(2), \fBunshare\fP(2), \fBproc\fP(5),
+\fBcgroups\fP(7), \fBcredentials\fP(7), \fBnamespaces\fP(7), \fBuser_namespaces\fP(7)

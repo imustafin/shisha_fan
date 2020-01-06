@@ -1,0 +1,268 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\" Portions extracted from /usr/include/sys/socket.h, which does not have
+.\" any authorship information in it.  It is probably available under the GPL.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\" Other portions are from the 6.9 (Berkeley) 3/10/91 man page:
+.\"
+.\" Copyright (c) 1983 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"     This product includes software developed by the University of
+.\"     California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Mon Oct 21 23:05:29 EDT 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1998 by Andi Kleen
+.\" $Id: bind.2,v 1.3 1999/04/23 19:56:07 freitag Exp $
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BIND 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+bind \- привязывает имя к сокету
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP          /* См. ЗАМЕЧАНИЯ */
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint bind(int \fP\fIsockfd\fP\fB, const struct sockaddr *\fP\fIaddr\fP\fB,\fP
+\fB         socklen_t \fP\fIaddrlen\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+После создания с помощью \fBsocket\fP(2), сокет появляется в адресном
+пространстве (семействе адресов), но без назначенного адреса. \fBbind\fP()
+назначает адрес, заданный в \fIaddr\fP, сокету, указываемому дескриптором файла
+\fIsockfd\fP. В аргументе \fIaddrlen\fP задаётся размер структуры адреса (в
+байтах), на которую указывает \fIaddr\fP. В силу традиции, эта операция
+называется «присваивание сокету имени».
+.PP
+Обычно, сокету типа \fBSOCK_STREAM\fP нужно назначить локальный адрес с помощью
+\fBbind\fP() до того, как он сможет принимать соединения (см. \fBaccept\fP(2)).
+.PP
+Правила, используемые при привязке имён, отличаются в разных семействах
+адресов. Подробности см. в соответствующем справочных страницах в разделе
+7. Описание \fBAF_INET\fP находится в \fBip\fP(7), \fBAF_INET6\fP в \fBipv6\fP(7),
+\fBAF_UNIX\fP в \fBunix\fP(7), \fBAF_APPLETALK\fP в \fBddp\fP(7), \fBAF_PACKET\fP в
+\fBpacket\fP(7), \fBAF_X25\fP в \fBx25\fP(7), а \fBAF_NETLINK\fP в \fBnetlink\fP(7).
+.PP
+Реальная структура, передаваемая через \fIaddr\fP, зависит от семейства
+адресов. Структура \fIsockaddr\fP определяется так:
+.PP
+.in +4n
+.EX
+struct sockaddr {
+    sa_family_t sa_family;
+    char        sa_data[14];
+}
+.EE
+.in
+.PP
+Единственным смыслом этой структуры является преобразование указателя
+структуры, передаваемого в \fIaddr\fP, чтобы избежать предупреждений
+компилятора. См. ПРИМЕР ниже.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+.\" e.g., privileged port in AF_INET domain
+Адрес защищён, или пользователь не является суперпользователем.
+.TP 
+\fBEADDRINUSE\fP
+Указанный адрес уже используется.
+.TP 
+\fBEADDRINUSE\fP
+(доменные сокеты Интернета) В структуре адреса сокета указан номер порта
+равный нулю, но при попытке привязаться к эфемеридному порту, было
+определено, что все номера в диапазоне эфемеридных портов уже
+используются. Смотрите обсуждение \fI/proc/sys/net/ipv4/ip_local_port_range\fP
+в \fBip\fP(7).
+.TP 
+\fBEBADF\fP
+Значение \fIsockfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+.\" This may change in the future: see
+.\" .I linux/unix/sock.c for details.
+Сокет уже привязан к адресу.
+.TP 
+\fBEINVAL\fP
+Некорректное значение \fIaddrlen\fP, или в \fIaddr\fP указан некорректный адрес
+для этого доменного сокета.
+.TP 
+\fBENOTSOCK\fP
+Файловый дескриптор \fIsockfd\fP указывает не на каталог.
+.PP
+Следующие ошибки только для сокетов домена UNIX (\fBAF_UNIX\fP):
+.TP 
+\fBEACCES\fP
+Поиск запрещён из\-за одного из частей префикса пути (см. также
+\fBpath_resolution\fP(7)).
+.TP 
+\fBEADDRNOTAVAIL\fP
+Запрошен несуществующий интерфейс или запрашиваемый адрес не является
+локальным.
+.TP 
+\fBEFAULT\fP
+\fIaddr\fP указывает вне адресного пространства, доступного пользователю.
+.TP 
+\fBELOOP\fP
+При определении \fIaddr\fP превышено количество переходов по символьной ссылке.
+.TP 
+\fBENAMETOOLONG\fP
+Аргумент \fIaddr\fP слишком большой.
+.TP 
+\fBENOENT\fP
+Компонент из каталожного префикса пути сокета не существует.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOTDIR\fP
+Компонент в префиксе пути не является каталогом.
+.TP 
+\fBEROFS\fP
+Попытка создания inode сокета на файловой системе, доступной только для
+чтения.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents an additional
+.\" .B ENOSR
+.\" general error condition, and
+.\" additional
+.\" .B EIO
+.\" and
+.\" .B EISDIR
+.\" UNIX-domain error conditions.
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.4BSD, (\fBbind\fP() впервые появился в
+4.2BSD).
+.SH ЗАМЕЧАНИЯ
+В POSIX.1 не требуется включение \fI<sys/types.h>\fP, и этот
+заголовочный файл не требуется в Linux. Однако, для некоторых старых
+реализаций (BSD) данный файл нужен, и в переносимых приложениях для
+предосторожности, вероятно, лучше его указать.
+.PP
+Описание типа \fIsocklen_t\fP смотрите в \fBaccept\fP(2).
+.SH ДЕФЕКТЫ
+.\" FIXME Document transparent proxy options
+Не описываются возможности, связанные с работой прозрачных прокси.
+.SH ПРИМЕР
+Пример использования \fBbind\fP() с сокетами домена Internet можно найти в
+\fBgetaddrinfo\fP(3).
+.PP
+.\" listen.7 refers to this example.
+.\" accept.7 refers to this example.
+.\" unix.7 refers to this example.
+Следующий пример показывает как привязать потоковый сокет к домену UNIX
+(\fBAF_UNIX\fP) и принимать соединения:
+.PP
+.EX
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#define MY_SOCK_PATH "/somepath"
+#define LISTEN_BACKLOG 50
+
+#define handle_error(msg) \e
+    do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    int sfd, cfd;
+    struct sockaddr_un my_addr, peer_addr;
+    socklen_t peer_addr_size;
+
+    sfd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sfd == \-1)
+        handle_error("socket");
+
+    memset(&my_addr, 0, sizeof(struct sockaddr_un));
+                        /* Очистка структуры */
+    my_addr.sun_family = AF_UNIX;
+    strncpy(my_addr.sun_path, MY_SOCK_PATH,
+            sizeof(my_addr.sun_path) \- 1);
+
+    if (bind(sfd, (struct sockaddr *) &my_addr,
+            sizeof(struct sockaddr_un)) == \-1)
+        handle_error("bind");
+
+    if (listen(sfd, LISTEN_BACKLOG) == \-1)
+        handle_error("listen");
+
+    /* Теперь мы можем принимать входящие соединения по одному
+       с помощью accept(2) */
+
+    peer_addr_size = sizeof(struct sockaddr_un);
+    cfd = accept(sfd, (struct sockaddr *) &peer_addr,
+                 &peer_addr_size);
+    if (cfd == \-1)
+        handle_error("accept");
+
+    /* Код обработки входящего соединения(й)... */
+
+    /* Если имя пути сокета, MY_SOCK_PATH, больше не требуется,
+       то его нужно удалить с помощью unlink(2) или remove(3) */
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaccept\fP(2), \fBconnect\fP(2), \fBgetsockname\fP(2), \fBlisten\fP(2), \fBsocket\fP(2),
+\fBgetaddrinfo\fP(3), \fBgetifaddrs\fP(3), \fBip\fP(7), \fBipv6\fP(7),
+\fBpath_resolution\fP(7), \fBsocket\fP(7), \fBunix\fP(7)

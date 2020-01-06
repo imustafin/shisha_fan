@@ -1,0 +1,53 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCSCHR 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wcschr \- ищет широкий символ в широкосимвольной строке
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBwchar_t *wcschr(const wchar_t *\fP\fIwcs\fP\fB, wchar_t \fP\fIwc\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBwcschr\fP() является широкосимвольным аналогом функции
+\fBstrchr\fP(3). Она ищет первое появление широкого символа \fIwc\fP в строке, на
+которую указывает \fIwcs\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBwcschr\fP() возвращает указатель на первый обнаруженный символ \fIwc\fP
+в широкосимвольной строке, указанный в \fIwcs\fP, или NULL, если \fIwc\fP в строке
+отсутствует.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwcschr\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBstrchr\fP(3), \fBwcspbrk\fP(3), \fBwcsrchr\fP(3), \fBwcsstr\fP(3), \fBwmemchr\fP(3)

@@ -1,0 +1,585 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2007, 2008 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" and Copyright (c) 2006 Ulrich Drepper <drepper@redhat.com>
+.\" A few pieces of an earlier version remain:
+.\" Copyright 2000, Sam Varshavchik <mrsam@courier-mta.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References: RFC 2553
+.\"
+.\" 2005-08-09, mtk, added AI_ALL, AI_ADDRCONFIG, AI_V4MAPPED,
+.\"			and AI_NUMERICSERV.
+.\" 2006-11-25, Ulrich Drepper <drepper@redhat.com>
+.\"     Add text describing Internationalized Domain Name extensions.
+.\" 2007-06-08, mtk: added example programs
+.\" 2008-02-26, mtk; clarify discussion of NULL 'hints' argument; other
+.\"     minor rewrites.
+.\" 2008-06-18, mtk: many parts rewritten
+.\" 2008-12-04, Petr Baudis <pasky@suse.cz>
+.\"	Describe results ordering and reference /etc/gai.conf.
+.\"
+.\" FIXME . glibc's 2.9 NEWS file documents DCCP and UDP-lite support
+.\"           and is SCTP support now also there?
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETADDRINFO 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getaddrinfo, freeaddrinfo, gai_strerror \- трансляция сетевого адреса и
+службы
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/socket.h>\fP
+\fB#include <netdb.h>\fP
+.PP
+\fBint getaddrinfo(const char *\fP\fInode\fP\fB, const char *\fP\fIservice\fP\fB,\fP
+\fB                const struct addrinfo *\fP\fIhints\fP\fB,\fP
+\fB                struct addrinfo **\fP\fIres\fP\fB);\fP
+.PP
+\fBvoid freeaddrinfo(struct addrinfo *\fP\fIres\fP\fB);\fP
+.PP
+\fBconst char *gai_strerror(int \fP\fIerrcode\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.ad l
+.in
+.PP
+\fBgetaddrinfo\fP(),
+\fBfreeaddrinfo\fP(),
+\fBgai_strerror\fP():
+    начиная c glibc 2.22: _POSIX_C_SOURCE >= 200112L
+    в glibc 2.21 и старее: _POSIX_C_SOURCE
+.ad b
+.SH ОПИСАНИЕ
+.\" .BR getipnodebyname (3),
+.\" .BR getipnodebyaddr (3),
+По заданным \fInode\fP и \fIservice\fP, определяющим узел и службу Интернета,
+\fBgetaddrinfo\fP() возвращает одну или несколько структур \fIaddrinfo\fP, каждая
+из которых содержит Интернет\-адрес, который можно передавать в вызов
+\fBbind\fP(2) или \fBconnect\fP(2). Функция \fBgetaddrinfo\fP() объединяет
+возможности, предоставляемые функциями \fBgethostbyname\fP(3) и
+\fBgetservbyname\fP(3) в одном интерфейсе, но в отличие от этих функций,
+\fBgetaddrinfo\fP() реентерабельна и позволяет программам не зависеть от IPv4
+или IPv6.
+.PP
+Структура \fIaddrinfo\fP, используемая в \fBgetaddrinfo\fP(), содержит следующие
+поля:
+.PP
+.in +4n
+.EX
+struct addrinfo {
+    int              ai_flags;
+    int              ai_family;
+    int              ai_socktype;
+    int              ai_protocol;
+    socklen_t        ai_addrlen;
+    struct sockaddr *ai_addr;
+    char            *ai_canonname;
+    struct addrinfo *ai_next;
+};
+.EE
+.in
+.PP
+Аргумент \fIhints\fP указывает на структуру \fIaddrinfo\fP, которая определяет
+критерии выбора структур адреса сокета, возвращаемых в списке, указанном в
+\fIres\fP. Если \fIhints\fP не является NULL, то он указывает на структуру
+\fIaddrinfo\fP. В ней с помощью \fIai_family\fP, \fIai_socktype\fP и \fIai_protocol\fP
+определяются критерии, ограничивающие набор адресов сокета, возвращаемых
+\fBgetaddrinfo\fP():
+.TP  12
+\fIai_family\fP
+Это поле определяет предпочитаемое семейство адресов для возвращаемых
+адресов. Правильными значениями для данного поля могут быть \fBAF_INET\fP и
+\fBAF_INET6\fP. Значение \fBAF_UNSPEC\fP отображает, что \fBgetaddrinfo\fP() должна
+возвращать адреса сокета для любого семейства адресов (например, либо IPv4,
+либо IPv6), которые в дальнейшем могут быть использованы вместе с \fInode\fP и
+\fIservice\fP.
+.TP 
+\fIai_socktype\fP
+Это поле определяет предпочитаемы тип сокета, например, \fBSOCK_STREAM\fP или
+\fBSOCK_DGRAM\fP. Если в этом поле указан 0, то это означает, что
+\fBgetaddrinfo\fP() может вернуть адреса сокета любого типа.
+.TP 
+\fIai_protocol\fP
+Это поле определяет протокол для возвращаемых адресов сокета. Если в этом
+поле указан 0, то это означает, что \fBgetaddrinfo\fP() может вернуть адрес
+сокета с любым протоколом.
+.TP 
+\fIai_flags\fP
+В этом поле задаются дополнительные параметры, описываемые ниже. Несколько
+флагов указываются с логическим ИЛИ.
+.PP
+Все остальные поля структуры, указываемой \fIhints\fP, должны содержать 0 или
+указатель null, соответственно.
+.PP
+Указание в \fIhints\fP значения NULL эквивалентно установке \fIai_socktype\fP и
+\fIai_protocol\fP равными 0; \fIai_family\fP присваивается \fBAF_UNSPEC\fP;
+\fIai_flags\fP присваивается \fB(AI_V4MAPPED\ |\ AI_ADDRCONFIG)\fP (в POSIX
+указаны другие значения по умолчанию для \fIai_flags\fP; смотрите ЗАМЕЧАНИЯ). В
+\fInode\fP задаётся либо числовой сетевой адрес (для IPv4 это цифро\-точечная
+нотация, которую поддерживает \fBinet_aton\fP(3); для IPv6 это строка в
+шестнадцатеричном формате, который поддерживает \fBinet_pton\fP(3)), либо
+сетевое имя узла, для которого в дальнейшем определяется адрес. Если в
+\fIhints.ai_flags\fP содержится флаг \fBAI_NUMERICHOST\fP, тогда \fInode\fP должен
+иметь цифровой формат сетевого адреса. При \fBAI_NUMERICHOST\fP любые возможные
+преобразования сетевого адреса узла подавляются.
+.PP
+Если в \fIhints.ai_flags\fP указан флаг \fBAI_PASSIVE\fP и \fInode\fP равно NULL, то
+возвращаемые адреса сокета будут пригодны для \fBbind\fP(2) сокета, который
+принимает соединение с помощью \fBaccept\fP(2). Возвращаемый адрес сокета будет
+содержать «шаблонный адрес» (\fBINADDR_ANY\fP для адресов IPv4,
+\fBIN6ADDR_ANY_INIT\fP для адреса IPv6). Шаблонный адрес используется в
+приложениях (обычно, серверах), которым нужно принимать подключения с любых
+сетевых адресов узлов. Если \fInode\fP не равно NULL, то флаг \fBAI_PASSIVE\fP
+игнорируется.
+.PP
+Если флаг \fBAI_PASSIVE\fP отсутствует в \fIhints.ai_flags\fP, то возвращаемые
+адреса сокета будут пригодны для использоваться в \fBconnect\fP(2),
+\fBsendto\fP(2), или \fBsendmsg\fP(2). Если \fInode\fP равно NULL, то сетевому адресу
+будет назначен адрес кольцевого интерфейса (loopback) (\fBINADDR_LOOPBACK\fP
+для адресов IPv4, \fBIN6ADDR_LOOPBACK_INIT\fP для адреса IPv6); это
+используется в приложениях, которым нужно связываться с партнёрами,
+запущенными на том же узле.
+.PP
+В \fIservice\fP задаётся порт для каждой возвращаемой адресной структуры. Если
+этот аргумент — имя службы (смотрите \fBservices\fP(5)), то он транслируется в
+соответствующий номер порта. Также, данный параметр может быть указан в виде
+десятичного числа, которое просто преобразуется в двоичную форму. Если
+\fIservice\fP равно NULL, то номер порта возвращаемых сокетных адресов остаётся
+неинициализированным. Если в \fIhints.ai_flags\fP указан флаг \fBAI_NUMERICSERV\fP
+и \fIservice\fP не равно NULL, то значение \fIservice\fP должно указывать на
+строку с числовым номером порта. Данный флаг используется для запрета вызова
+службы определения имён, если известно, что она не требуется.
+.PP
+Либо \fInode\fP, либо \fIservice\fP (но не оба одновременно) могут быть равны
+NULL.
+.PP
+Функция \fBgetaddrinfo\fP() выделяет место и инициализирует связный список
+структур \fIaddrinfo\fP, по одной на каждый сетевой адрес, который совпадает с
+\fInode\fP и \fIservice\fP, в соответствии с любыми ограничениями, наложенными
+\fIhints\fP, и возвращает указатель на начало списка в \fIres\fP. Элементы в
+связном списке связаны через поле \fIai_next\fP.
+.PP
+Существует несколько причин того, почему связный список может содержать
+более одной структуры \fIaddrinfo\fP: сетевой узел имеет несколько адресов,
+доступен по нескольким протоколам (например, \fBAF_INET\fP и \fBAF_INET6\fP);
+служба доступна через несколько типов сокетов (например, один её адрес —
+\fBSOCK_STREAM\fP, а второй — \fBSOCK_DGRAM\fP). Обычно, приложение должно
+стараться использовать адреса в том порядке, в котором они получены. Функция
+сортировки, используемая в \fBgetaddrinfo\fP(), определена в RFC\ 3484; в
+системе порядок может быть изменён через файл \fI/etc/gai.conf\fP (доступен,
+начиная с glibc 2.5).
+.PP
+.\" In glibc prior to 2.3.4, the ai_canonname of each addrinfo
+.\" structure was set pointing to the canonical name; that was
+.\" more than POSIX.1-2001 specified, or other implementations provided.
+.\" MTK, Aug 05
+Если в \fIhints.ai_flags\fP выставлен флаг \fBAI_CANONNAME\fP, то в поле
+\fIai_canonname\fP первой из структур \fIaddrinfo\fP возвращаемого списка задаётся
+указатель официального имени узла.
+.PP
+Остальные поля каждой возвращаемой структуры \fIaddrinfo\fP инициализируются
+следующим образом:
+.IP * 2
+В полях \fIai_family\fP, \fIai_socktype\fP и \fIai_protocol\fP возвращаются параметры
+создания сокета (т. е., эти поля имеют те же значения, что и соответствующие
+аргументы в \fBsocket\fP(2)). Например, в \fIai_family\fP может вернуться
+\fBAF_INET\fP или \fBAF_INET6\fP; в \fIai_socktype\fP может вернуться \fBSOCK_DGRAM\fP
+или \fBSOCK_STREAM\fP; в \fIai_protocol\fP возвращается протокол сокета.
+.IP *
+Указатель на адрес сокета помещается в поле \fIai_addr\fP, а длина адреса
+сокета (в байтах) помещается в поле \fIai_addrlen\fP.
+.PP
+Если в \fIhints.ai_flags\fP содержится флаг \fBAI_ADDRCONFIG\fP, то адреса IPv4,
+возвращаются в списке, на который указывает \fIres\fP, только, если в локальной
+системе настроен, как минимум, один адрес IPv4, и адреса IPv6 возвращаются
+только, если в локальной системе настроен, как минимум, один адрес
+IPv6. Кольцевой (loopback) адрес в этом случае не учитывается как
+настроенный. Этот флаг полезен, например в только IPv4\-системах, чтобы
+\fBgetaddrinfo\fP() не возвращал сокетные адреса IPv6, с которыми невозможно
+выполнить \fBconnect\fP(2) или \fBbind\fP(2).
+.PP
+Если в \fIhints.ai_flags\fP содержится флаг \fBAI_V4MAPPED\fP и в
+\fIhints.ai_family\fP задан \fBAF_INET6\fP, и не найдено подходящих адресов IPv6,
+то в списке, на который указывает \fIres\fP, возвращаются IPv6 адреса
+отображённых адресов IPv4. Если в \fIhints.ai_flags\fP указаны и
+\fBAI_V4MAPPED\fP, и \fBAI_ALL\fP, то в списке, на который указывает \fIres\fP,
+возвращаются и адреса IPv6 и IPv6 адреса отображённых адресов IPv4. Флаг
+\fBAI_ALL\fP игнорируется, если с ним не задан \fBAI_V4MAPPED\fP.
+.PP
+Функция \fBfreeaddrinfo\fP() освобождает память, которая была выделена для
+динамического связного списка \fIres\fP.
+.SS "Расширения getaddrinfo() для интернациональных доменных имён"
+.PP
+Начиная с glibc 2.3.4, \fBgetaddrinfo\fP() был расширен для выборочного
+прозрачного разрешения исходящих и входящих адресов в формате
+интернациональных доменных имен (IDN, см. RFC 3490, \fIInternationalizing
+Domain Names in Applications (IDNA)\fP). Было определено четыре новых флага:
+.TP 
+\fBAI_IDN\fP
+Если указан этот флаг, то, в случае необходимости, имя узла, указанного в
+\fInode\fP, будет преобразовано в IDN\-формат. Исходной кодировкой будет текущая
+локаль.
+.IP
+.\" Implementation Detail:
+.\" To minimize effects on system performance the implementation might
+.\" want to check whether the input string contains any non-ASCII
+.\" characters.  If there are none the IDN step can be skipped completely.
+.\" On systems which allow not-ASCII safe encodings for a locale this
+.\" might be a problem.
+Если имя на входе содержит символы не\-ASCII, то будет задействовано
+кодирование IDN. Части имени узла (разделенные точками), которые содержат
+символы не\-ASCII, будут закодированы с помощью ASCII Compatible Encoding
+(ACE) прежде, чем будут переданы функциям преобразования имен
+.TP 
+\fBAI_CANONIDN\fP
+При указанном флаге \fBAI_CANONNAME\fP после успешного преобразования имени
+\fBgetaddrinfo\fP() вернет каноничное имя узла согласно значению структуры
+\fIaddrinfo\fP. Возвращаемое значение будет точной копией значения,
+возвращенного функцией разрешения имени.
+.IP
+.\"
+.\"Implementation Detail:
+.\"If no component of the returned name starts with xn\-\- the IDN
+.\"step can be skipped, therefore avoiding unnecessary slowdowns.
+Если имя закодировано с помощью ACE, то оно будет содержать префикс \fIxn\-\-\fP
+для каждого из закодированных компонентов имени. Чтобы преобразовать эти
+компоненты в читаемый вид, вместе с флагом \fBAI_CANONNAME\fP следует передать
+\fBAI_CANONIDN\fP. Итоговая строка будет кодирована при помощи текущей локали.
+.TP 
+\fBAI_IDN_ALLOW_UNASSIGNED\fP, \fBAI_IDN_USE_STD3_ASCII_RULES\fP
+Установка этих флагов включает IDNA_ALLOW_UNASSIGNED (разрешать не
+назначенные кодовые точки Юникода) и IDNA_USE_STD3_ASCII_RULES (проверять
+вывод на соответствие имени узла STD3) соответственно для возможности работы
+с IDNA.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.\" FIXME glibc defines the following additional errors, some which
+.\" can probably be returned by getaddrinfo(); they need to
+.\" be documented.
+.\"    #ifdef __USE_GNU
+.\"    #define EAI_INPROGRESS  -100  /* Processing request in progress.  */
+.\"    #define EAI_CANCELED    -101  /* Request canceled.  */
+.\"    #define EAI_NOTCANCELED -102  /* Request not canceled.  */
+.\"    #define EAI_ALLDONE     -103  /* All requests done.  */
+.\"    #define EAI_INTR        -104  /* Interrupted by a signal.  */
+.\"    #define EAI_IDN_ENCODE  -105  /* IDN encoding failed.  */
+.\"    #endif
+В случае успеха \fBgetaddrinfo\fP() возвращает 0, либо один из следующие
+ненулевых кодов ошибки:
+.TP 
+\fBEAI_ADDRFAMILY\fP
+.\" Not in SUSv3
+У указанного сетевого узла нет сетевых адресов в запрашиваемом семействе
+адресов.
+.TP 
+\fBEAI_AGAIN\fP
+Сервер имен вернул временную ошибку. Попробуйте позднее.
+.TP 
+\fBEAI_BADFLAGS\fP
+В \fIhints.ai_flags\fP содержатся неправильные флаги, либо \fIhints.ai_flags\fP
+содержит \fBAI_CANONNAME\fP, а \fIname\fP \- NULL.
+.TP 
+\fBEAI_FAIL\fP
+Сервер имен вернул постоянную ошибку.
+.TP 
+\fBEAI_FAMILY\fP
+Запрашиваемое семейство адресов не поддерживается.
+.TP 
+\fBEAI_MEMORY\fP
+Не хватает памяти.
+.TP 
+\fBEAI_NODATA\fP
+.\" Not in SUSv3
+Указанный сетевой узел существует, однако не имеет ни одного определенного
+сетевого адреса.
+.TP 
+\fBEAI_NONAME\fP
+\fInode\fP или \fIservice\fP неизвестно; либо и \fInode\fP, и \fIservice\fP равны NULL;
+либо в \fIhints.ai_flags\fP указан флаг \fBAI_NUMERICSERV\fP, а \fIservice\fP не
+является числовой строкой порта.
+.TP 
+\fBEAI_SERVICE\fP
+Запрошенная служба не доступна для запрошенного типа сокета. Она может быть
+доступна через другой тип сокета. Например, эта ошибка может возникнуть,
+если в \fIservice\fP указан «shell» (служба, доступная только для потоковых
+сокетов) при указанном в \fIhints.ai_protocol\fP \fBIPPROTO_UDP\fP, либо указанном
+в \fIhints.ai_socktype\fP \fBSOCK_DGRAM\fP. Также ошибка может возникнуть, если
+\fIservice\fP не равно NULL, а в \fIhints.ai_socktype\fP указано значение
+\fBSOCK_RAW\fP (тип сокета, для которого концепция служб неприменима).
+.TP 
+\fBEAI_SOCKTYPE\fP
+Запрашиваемый тип сокетов не поддерживается. Такая ошибка может возникнуть,
+если \fIhints.ai_socktype\fP и \fIhints.ai_protocol\fP противоречат друг другу
+(например, \fBSOCK_DGRAM\fP и \fBIPPROTO_TCP\fP соответственно).
+.TP 
+\fBEAI_SYSTEM\fP
+Для других системных ошибок следует проверять \fIerrno\fP.
+.PP
+Функция \fBgai_strerror\fP() транслирует эти коды ошибок в читаемый формат,
+подходящий для сообщений об ошибке.
+.SH ФАЙЛЫ
+\fI/etc/gai.conf\fP
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw15 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetaddrinfo\fP()
+T}	Безвредность в нитях	MT\-Safe env locale
+T{
+\fBfreeaddrinfo\fP(),
+\fBgai_strerror\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008. Функция \fBgetaddrinfo\fP() описана в RFC\ 2553.
+.SH ЗАМЕЧАНИЯ
+\fBgetaddrinfo\fP() поддерживает нотацию \fIaddress\fP\fB%\fP\fIscope\-id\fP для указания
+IPv6 scope\-ID.
+.PP
+\fBAI_ADDRCONFIG\fP, \fBAI_ALL\fP и \fBAI_V4MAPPED\fP доступны, начиная с glibc
+2.3.3.  \fBAI_NUMERICSERV\fP доступен, начиная с glibc 2.3.4.
+.PP
+.\" POSIX.1-2001, POSIX.1-2008
+Согласно POSIX.1, при указании \fIhints\fP в NULL \fIai_flags\fP должен
+предполагаться как равный 0. Вместо этого библиотека GNU C в данном случае
+предполагает значение \fB(AI_V4MAPPED\ |\ AI_ADDRCONFIG)\fP, так как данное
+значение было принято в качестве улучшения спецификации.
+.SH ПРИМЕР
+.\" getnameinfo.3 refers to this example
+.\" socket.2 refers to this example
+.\" bind.2 refers to this example
+.\" connect.2 refers to this example
+.\" recvfrom.2 refers to this example
+.\" sendto.2 refers to this example
+Следующие программы демонстрируют использование \fBgetaddrinfo\fP(),
+\fBgai_strerror\fP(), \fBfreeaddrinfo\fP() и \fBgetnameinfo\fP(3). Это программы
+эхо\-сервера и клиента UDP\-дейтаграмм.
+.SS "Серверная программа"
+\&
+.EX
+#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+#define BUF_SIZE 500
+
+int
+main(int argc, char *argv[])
+{
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
+    int sfd, s;
+    struct sockaddr_storage peer_addr;
+    socklen_t peer_addr_len;
+    ssize_t nread;
+    char buf[BUF_SIZE];
+
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s port\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;    /* Разрешены IPv4 и IPv6 */
+    hints.ai_socktype = SOCK_DGRAM; /* Сокет для дейтаграмм */
+    hints.ai_flags = AI_PASSIVE;    /* Для wildcard IP\-адреса */
+    hints.ai_protocol = 0;          /* Любой протокол */
+    hints.ai_canonname = NULL;
+    hints.ai_addr = NULL;
+    hints.ai_next = NULL;
+
+    s = getaddrinfo(NULL, argv[1], &hints, &result);
+    if (s != 0) {
+        fprintf(stderr, "getaddrinfo: %s\en", gai_strerror(s));
+        exit(EXIT_FAILURE);
+    }
+
+    /* getaddrinfo() возвращает список структур адресов.
+       Идет проверка каждого адреса до успешного bind(2).
+       Если socket(2) (или bind(2)) терпит неудачу, мы (закрываем
+       сокет и) пробуем следующий. */
+
+    for (rp = result; rp != NULL; rp = rp\->ai_next) {
+        sfd = socket(rp\->ai_family, rp\->ai_socktype,
+                rp\->ai_protocol);
+        if (sfd == \-1)
+            continue;
+
+        if (bind(sfd, rp\->ai_addr, rp\->ai_addrlen) == 0)
+            break;                  /* Успех */
+
+        close(sfd);
+    }
+
+    if (rp == NULL) {               /* Нет успешных адресов */
+        fprintf(stderr, "Could not bind\en");
+        exit(EXIT_FAILURE);
+    }
+
+    freeaddrinfo(result);           /* Больше не нужен */
+
+    /* Читаем дейтаграмму и пересылаем ее назад отправителю */
+
+    for (;;) {
+        peer_addr_len = sizeof(struct sockaddr_storage);
+        nread = recvfrom(sfd, buf, BUF_SIZE, 0,
+                (struct sockaddr *) &peer_addr, &peer_addr_len);
+        if (nread == \-1)
+            continue;               /* Игнорируем запрос с ошибкой */
+
+        char host[NI_MAXHOST], service[NI_MAXSERV];
+
+        s = getnameinfo((struct sockaddr *) &peer_addr,
+                        peer_addr_len, host, NI_MAXHOST,
+                        service, NI_MAXSERV, NI_NUMERICSERV);
+       if (s == 0)
+            printf("Получено %zd байт из %s:%s\en",
+                    nread, host, service);
+        else
+            fprintf(stderr, "getnameinfo: %s\en", gai_strerror(s));
+
+        if (sendto(sfd, buf, nread, 0,
+                    (struct sockaddr *) &peer_addr,
+                    peer_addr_len) != nread)
+            fprintf(stderr, "Ошибка отправки ответа\en");
+    }
+}
+.EE
+.SS "Клиентская программа"
+\&
+.EX
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
+#define BUF_SIZE 500
+
+int
+main(int argc, char *argv[])
+{
+    struct addrinfo hints;
+    struct addrinfo *result, *rp;
+    int sfd, s, j;
+    size_t len;
+    ssize_t nread;
+    char buf[BUF_SIZE];
+
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s host port msg...\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /* Получаем адрес(а), соответствующие узлу/порту */
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC;    /* Разрешены IPv4 и IPv6 */
+    hints.ai_socktype = SOCK_DGRAM; /* Сокет дейтаграмм */
+    hints.ai_flags = 0;
+    hints.ai_protocol = 0;          /* Любой протокол */
+
+    s = getaddrinfo(argv[1], argv[2], &hints, &result);
+    if (s != 0) {
+        fprintf(stderr, "getaddrinfo: %s\en", gai_strerror(s));
+        exit(EXIT_FAILURE);
+    }
+
+    /* getaddrinfo() возвращает список структур адресов.
+       Идет проверка каждого адреса до успешного connect(2).
+       Если socket(2) (или connect(2)) терпит неудачу, мы (закрываем
+       сокет и) пробуем следующий. */
+
+    for (rp = result; rp != NULL; rp = rp\->ai_next) {
+        sfd = socket(rp\->ai_family, rp\->ai_socktype,
+                     rp\->ai_protocol);
+        if (sfd == \-1)
+            continue;
+
+        if (connect(sfd, rp\->ai_addr, rp\->ai_addrlen) != \-1)
+            break;                  /* Успех */
+
+        close(sfd);
+    }
+
+    if (rp == NULL) {               /* Нет успешных адресов */
+        fprintf(stderr, "Could not connect\en");
+        exit(EXIT_FAILURE);
+    }
+
+    freeaddrinfo(result);           /* Больше не нужен */
+
+    /* Отправляем оставшиеся аргументы командной строки
+       в виде отдельных дейтаграмм и ждем ответа от сервера */
+
+    for (j = 3; j < argc; j++) {
+        len = strlen(argv[j]) + 1;
+                /* +1 для завершающего null\-байта */
+
+        if (len > BUF_SIZE) {
+            fprintf(stderr,
+                    "Игнорируем длинное сообщение в аргументе %d\en", j);
+            continue;
+        }
+
+        if (write(sfd, argv[j], len) != len) {
+            fprintf(stderr, "partial/failed write\en");
+            exit(EXIT_FAILURE);
+        }
+
+        nread = read(sfd, buf, BUF_SIZE);
+        if (nread == \-1) {
+            perror("read");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Получено %zd байт: %s\en", nread, buf);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.\" .BR getipnodebyaddr (3),
+.\" .BR getipnodebyname (3),
+\fBgetaddrinfo_a\fP(3), \fBgethostbyname\fP(3), \fBgetnameinfo\fP(3), \fBinet\fP(3),
+\fBgai.conf\fP(5), \fBhostname\fP(7), \fBip\fP(7)

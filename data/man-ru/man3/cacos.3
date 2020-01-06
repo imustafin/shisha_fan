@@ -1,0 +1,87 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\" and Copyright (C) 2011 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CACOS 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+cacos, cacosf, cacosl \- вычисляет комплексный арккосинус
+.SH ОБЗОР
+\fB#include <complex.h>\fP
+.PP
+\fBdouble complex cacos(double complex \fP\fIz\fP\fB);\fP
+.br
+\fBfloat complex cacosf(float complex \fP\fIz\fP\fB);\fP
+.br
+\fBlong double complex cacosl(long double complex \fP\fIz\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.SH ОПИСАНИЕ
+Эти функции вычисляют арккосинус комплексного числа \fIz\fP. Если \fIy\ =\ cacos(z)\fP, то \fIz\ =\ ccos(y)\fP. Реальная часть \fIy\fP лежит в интервале
+[0,pi].
+.PP
+Формула вычисления:
+.PP
+.nf
+    cacos(z) = \-i * clog(z + i * csqrt(1 \- z * z))
+.fi
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw28 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBcacos\fP(),
+\fBcacosf\fP(),
+\fBcacosl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.SH ПРИМЕР
+.EX
+/* Компонуется при указании параметра «\-lm» */
+
+#include <complex.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+    double complex z, c, f;
+    double complex i = I;
+
+    if (argc != 3) {
+        fprintf(stderr, "Использование: %s <real> <imag>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    z = atof(argv[1]) + atof(argv[2]) * I;
+
+    c = cacos(z);
+
+    printf("cacos() = %6.3f %6.3f*i\en", creal(c), cimag(c));
+
+    f = \-i * clog(z + i * csqrt(1 \- z * z));
+
+    printf("formula = %6.3f %6.3f*i\en", creal(f), cimag(f));
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBccos\fP(3), \fBclog\fP(3), \fBcomplex\fP(7)

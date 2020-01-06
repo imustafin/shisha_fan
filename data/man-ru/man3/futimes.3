@@ -1,0 +1,102 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2006, 2008, Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FUTIMES 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+futimes, lutimes \- изменяют метки времени файла
+.SH ОБЗОР
+.nf
+\fB#include <sys/time.h>\fP
+.PP
+\fBint futimes(int \fP\fIfd\fP\fB, const struct timeval \fP\fItv\fP\fB[2]);\fP
+.PP
+\fBint lutimes(const char *\fP\fIfilename\fP\fB, const struct timeval \fP\fItv\fP\fB[2]);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfutimes\fP(),
+\fBlutimes\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBfutimes\fP() изменяет время доступа и изменения файла также как это
+делает \fButimes\fP(2); единственное отличие в том, что файл чьи временные
+метки изменяются, указывается в виде файлового дескриптора, \fIfd\fP, а не в
+виде пути.
+.PP
+Функция \fBlutimes\fP() изменяет время доступа и изменения файла также как это
+делает \fButimes\fP(2); единственное отличие в том, что если \fIfilename\fP
+является символьной ссылкой, то ссылка не разыменовывается — изменяются
+метки времени самой ссылки.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+Возникают те же ошибки что и для \fButimes\fP(2), а также дополнительно для
+\fBfutimes\fP():
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBENOSYS\fP
+Нет доступа к файловой системе \fI/proc\fP.
+.PP
+Для \fBlutimes\fP() может возникать следующая дополнительная ошибка:
+.TP 
+\fBENOSYS\fP
+Ядро не поддерживает этот вызов; требуется Linux версии 2.6.22 или новее.
+.SH ВЕРСИИ
+Функция \fBfutimes\fP() доступна в glibc начиная с версии 2.3. Функция
+\fBlutimes\fP() доступа в glibc начиная с версии 2.6, и реализована на основе
+системного вызова \fButimensat\fP(2), который поддерживается в ядре начиная с
+версии 2.6.22.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw20 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfutimes\fP(),
+\fBlutimes\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции не определены ни в одном стандарте. Помимо Linux, они доступны
+только в некоторых BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fButime\fP(2), \fButimensat\fP(2), \fBsymlink\fP(7)

@@ -1,0 +1,142 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MQ_RECEIVE 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+mq_receive, mq_timedreceive \- выбирают сообщения из очереди сообщений
+.SH ОБЗОР
+.nf
+\fB#include <mqueue.h>\fP
+.PP
+\fBssize_t mq_receive(mqd_t \fP\fImqdes\fP\fB, char *\fP\fImsg_ptr\fP\fB,\fP
+\fB                   size_t \fP\fImsg_len\fP\fB, unsigned int *\fP\fImsg_prio\fP\fB);\fP
+.PP
+\fB#include <time.h>\fP
+\fB#include <mqueue.h>\fP
+.PP
+\fBssize_t mq_timedreceive(mqd_t \fP\fImqdes\fP\fB, char *\fP\fImsg_ptr\fP\fB,\fP
+\fB                   size_t \fP\fImsg_len\fP\fB, unsigned int *\fP\fImsg_prio\fP\fB,\fP
+\fB                   const struct timespec *\fP\fIabs_timeout\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.PP
+.ad l
+.in -4n
+Требования макроса тестирования свойств для glibc (смотрите
+\fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBmq_timedreceive\fP():
+.RS 4
+_POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBmq_receive\fP() удаляет самое старое сообщение с наивысшим
+приоритетом из очереди сообщений, на которою указывает дескриптор очереди
+сообщений \fImqdes\fP, и помещает сообщение в буфер, на который указывает
+\fImsg_ptr\fP. В аргументе \fImsg_len\fP задаётся размер буфера, на который
+указывает \fImsg_ptr\fP; он должен быть больше или равен  атрибуту очереди
+\fImq_msgsize\fP (смотрите \fBmq_getattr\fP(3)). Если \fImsg_prio\fP не равно NULL,
+то указанный в нём буфер используется для возврата приоритета, связанного с
+полученным сообщением.
+.PP
+Если очередь пуста, то по умолчанию функция \fBmq_receive\fP() блокирует
+выполнение до тех пор, показ не поступит сообщение или вызов не будет
+прерван обработчиком сигнала. Если в описании очереди сообщений включён флаг
+\fBO_NONBLOCK\fP, то вызов завершается сразу же с ошибкой \fBEAGAIN\fP.
+.PP
+Функция \fBmq_timedreceive\fP() действует подобно \fBmq_receive\fP(), за
+исключением того, что если  очередь пуста и в описании очереди сообщений не
+установлен флаг \fBO_NONBLOCK\fP, то \fIabs_timeout\fP указывает на структуру,
+которой задаётся длительность блокировки вызова. Это абсолютное значение
+задаётся в секундах и наносекундах начиная с Эпохи, 1970\-01\-01 00:00:00
++0000 (UTC) в структуре вида:
+.PP
+.in +4n
+.EX
+struct timespec {
+    time_t tv_sec;        /* секунды */
+    long   tv_nsec;       /* наносекунды */
+};
+.EE
+.in
+.PP
+Если сообщения нет и вышло время ожидания на момент вызова, то
+\fBmq_timedreceive\fP() сразу же завершается.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBmq_receive\fP() и \fBmq_timedreceive\fP()  возвращается
+количество байт в полученном сообщении; при ошибке возвращается \-1 и в
+\fIerrno\fP записывается значение ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Очередь была пуста и в описании очереди сообщений, на которое ссылается
+\fImqdes\fP, указан флаг \fBO_NONBLOCK\fP.
+.TP 
+\fBEBADF\fP
+В \fImqdes\fP указан некорректный или не открытый на чтение дескриптор.
+.TP 
+\fBEINTR\fP
+Вызов был прерван обработчиком сигнала; смотрите \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Вызов бы заблокировался и в \fIabs_timeout\fP указано некорректное значение,
+так как \fItv_sec\fP меньше нуля или \fItv_nsec\fP меньше нуля или более 1000
+миллионов.
+.TP 
+\fBEMSGSIZE\fP
+\fImsg_len\fP меньше чем свойство очереди сообщений, \fImq_msgsize\fP.
+.TP 
+\fBETIMEDOUT\fP
+Истёк период ожидания в вызове, раньше появления возможности передачи
+сообщения.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw31 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmq_receive\fP(),
+\fBmq_timedreceive\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В Linux, \fBmq_receive\fP() является системным вызовом, а \fBmq_timedreceive\fP()
+— библиотечной функцией, реализованной на основе этого системного вызова:
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmq_close\fP(3), \fBmq_getattr\fP(3), \fBmq_notify\fP(3), \fBmq_open\fP(3),
+\fBmq_send\fP(3), \fBmq_unlink\fP(3), \fBmq_overview\fP(7), \fBtime\fP(7)

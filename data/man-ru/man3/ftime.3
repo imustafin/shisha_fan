@@ -1,0 +1,98 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt
+.\" (michael@moria.de)
+.\" Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 14:23:14 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Sun Oct 18 17:31:43 1998 by Andries Brouwer (aeb@cwi.nl)
+.\" 2008-06-23, mtk, minor rewrites, added some details
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FTIME 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+ftime \- возвращает дату и время
+.SH ОБЗОР
+\fB#include <sys/timeb.h>\fP
+.PP
+\fBint ftime(struct timeb *\fP\fItp\fP\fB);\fP
+.SH ОПИСАНИЕ
+Данная функция возвращает текущее время в секундах и миллисекундах,
+прошедших начиная с эпохи (Epoch), 1970\-01\-01 00:00:00 +0000 (UTC). Время
+возвращается в \fItp\fP, определённой следующим образом:
+.PP
+.in +4n
+.EX
+struct timeb {
+    time_t         time;
+    unsigned short millitm;
+    short          timezone;
+    short          dstflag;
+};
+.EE
+.in
+.PP
+В данной структуре \fItime\fP — это количество секунд с начала эпохи;
+\fImillitm\fP — количество миллисекунд, прошедших после \fItime\fP секунд с начала
+эпохи. Поле \fItimezone\fP — локальный часовой пояс, измеряемый в минутах
+западнее Гринвича (отрицательные значения означают минуты восточнее
+Гринвича). Поле \fIdstflag\fP — флаг, ненулевое значение которого указывает,
+что в соответствующее время года используется летнее время.
+.PP
+В POSIX.1\-2001 сказано, что содержимое полей \fItimezone\fP и \fIdstflag\fP не
+определено; не используйте их.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Эта функция всегда возвращает 0 (в POSIX.1\-2001, а также в некоторых
+системах возвращается \-1 при ошибке).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBftime\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.2BSD, POSIX.1\-2001. В POSIX.1\-2008 спецификация \fBftime\fP() удалена.
+.PP
+Эта функция устарела. Не используйте её. В случаях, когда достаточно секунд,
+можно использовать \fBtime\fP(2); \fBgettimeofday\fP(2) позволяет работать с
+микросекундами; функция \fBclock_gettime\fP(3) позволяет работать с
+наносекундами, однако она пока ещё не очень широко распространена.
+.SH ДЕФЕКТЫ
+.PP
+.\" .SH HISTORY
+.\" The
+.\" .BR ftime ()
+.\" function appeared in 4.2BSD.
+Ранние версии glibc2 работают некорректно и возвращают 0 в поле \fImillitm\fP;
+начиная с glibc 2.1.1 эта ошибка исправлена.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgettimeofday\fP(2), \fBtime\fP(2)

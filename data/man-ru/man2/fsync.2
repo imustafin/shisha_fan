@@ -1,0 +1,150 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu) and
+.\" and Copyright 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 21 Aug 1994 by Michael Chastain <mec@shell.portal.com>:
+.\"   Removed note about old libc (pre-4.5.26) translating to 'sync'.
+.\" Modified 15 Apr 1995 by Michael Chastain <mec@shell.portal.com>:
+.\"   Added `see also' section.
+.\" Modified 13 Apr 1996 by Markus Kuhn <mskuhn@cip.informatik.uni-erlangen.de>
+.\"   Added remarks about fdatasync.
+.\" Modified 31 Jan 1997 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 18 Apr 2001 by Andi Kleen
+.\"   Fix description to describe what it really does; add a few caveats.
+.\" 2006-04-28, mtk, substantial rewrite of various parts.
+.\" 2012-02-27 Various changes by Christoph Hellwig <hch@lst.de>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FSYNC 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+fsync, fdatasync \- синхронизирует состояние файла в памяти с состоянием на
+устройстве хранения
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint fsync(int \fP\fIfd\fP\fB);\fP
+.PP
+\fBint fdatasync(int \fP\fIfd\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfsync\fP():
+    в glibc 2.16 и новее:
+        Не требуется определять макросы тестирования свойств
+    до glibc 2.15 включительно:
+        _BSD_SOURCE || _XOPEN_SOURCE
+            || /* начиная с glibc 2.8: */ _POSIX_C_SOURCE\ >=\ 200112L
+.br
+\fBfdatasync\fP():
+    _POSIX_C_SOURCE\ >=\ 199309L || _XOPEN_SOURCE\ >=\ 500
+.SH ОПИСАНИЕ
+Вызов \fBfsync\fP() пересылает («сбрасывает») все изменённые в памяти (in\-core)
+данные (т. е., изменённые страницы буферного кэша) файла, на который
+указывает файловый дескриптор \fIfd\fP, на дисковое устройство (или другое
+устройство постоянного хранения) таким образом, что вся изменённая
+информация может быть получена даже после падения системы или внезапной
+перезагрузки. При этом выполняется непосредственная запись или сброс
+дискового кэша (если он есть). Вызов блокируется до тех пор, пока устройство
+не сообщит, что пересылка завершена.
+.PP
+Помимо сброса самих данных, также сбрасывается информация о метаданных,
+связанная с файлом (смотрите \fBinode\fP(7)).
+.PP
+Вызов \fBfsync\fP() необязательно приводит к тому, что элемент каталога,
+содержащий файл, также будет сброшен на диск. Для этого нужно явно выполнить
+\fBfsync\fP() для файлового дескриптора каталога.
+.PP
+Вызов \fBfdatasync\fP() подобен \fBfsync\fP(), но не записывает изменившиеся
+метаданные, если эти метаданные не нужны для последующего получения
+данных. Например, изменения \fIst_atime\fP или \fIst_mtime\fP (время последнего
+доступа и последнего изменения, соответственно; смотрите \fBinode\fP(7)) не
+нужно записывать, так как они ненужны для чтения самих данных. С другой
+стороны, при изменении размера файла (\fIst_size\fP, изменяется, например,
+\fBftruncate\fP(2)) запись метаданных будет нужна.
+.PP
+Целью создания \fBfdatasync\fP() является сокращение обменов с диском для
+приложений, которым не нужна синхронизация метаданных с диском.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае успеха данные системные вызовы возвращают ноль. Если произошла
+ошибка возвращается \-1 и \fIerrno\fP устанавливается должным образом.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+\fIfd\fP не является правильным открытым файловым дескриптором.
+.TP 
+\fBEIO\fP
+.\" commit 088737f44bbf6378745f5b57b035e57ee3dc4750
+Во время синхронизации произошла ошибка. Эта ошибка может относится к
+данным, записанным в какой\-то другой файловый дескриптор того же
+файла. Начиная с Linux 4.13, об ошибках отложенной записи (write\-back) будет
+сообщено всем файловым дескрипторам, которые могли записывать данные при
+возникновении ошибки. Некоторые файловые системы (например, NFS) следят за
+тем какие данные поступили из файлового дескриптора и сообщают только там,
+где нужно. Другие файловые системы (например, большинство локальных файловых
+систем) сообщат об ошибках всем файловым дескрипторам, которые уже открыли
+файл при возникновении ошибки.
+.TP 
+\fBENOSPC\fP
+При синхронизации закончилось дисковое пространство.
+.TP 
+\fBEROFS\fP, \fBEINVAL\fP
+Значение \fIfd\fP связано со специальным файлом (например, канал, FIFO или
+сокет), который не поддерживает синхронизацию.
+.TP 
+\fBENOSPC\fP, \fBEDQUOT\fP
+Значение \fIfd\fP указывает на файл в NFS или другой файловой системе, которая
+не выделяет место во время системного вызова \fBwrite\fP(2), и какая\-то
+предыдущая операция записи завершилась ошибкой из\-за нехватки места.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.3BSD.
+.SH ДОСТУПНОСТЬ
+.\" POSIX.1-2001: It shall be defined to -1 or 0 or 200112L.
+.\" -1: unavailable, 0: ask using sysconf().
+.\" glibc defines them to 1.
+В системах POSIX, в которых есть \fBfdatasync\fP(), в \fI<unistd.h>\fP
+определено значение для \fB_POSIX_SYNCHRONIZED_IO\fP и оно больше 0 (см. также
+\fBsysconf\fP(3)).
+.SH ЗАМЕЧАНИЯ
+В некоторых системах UNIX (но не в Linux), \fIfd\fP должен быть файловым
+дескриптором, \fIдоступным для записи\fP.
+.PP
+В Linux 2.2 и ранее, вызов \fBfdatasync\fP() эквивалентен \fBfsync\fP(), и поэтому
+не даёт преимуществ в производительности.
+.PP
+Реализации \fBfsync\fP() в старых ядрах и ранее, использовавшиеся в файловых
+системах, не знают как очищать (flush) дисковые кэши. В этих случаях
+дисковые кэши требуется заблокировать с помощью \fBhdparm\fP(8) или
+\fBsdparm\fP(8), чтобы гарантировать безопасное выполнение.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsync\fP(1), \fBbdflush\fP(2), \fBopen\fP(2), \fBposix_fadvise\fP(2), \fBpwritev\fP(2),
+\fBsync\fP(2), \fBsync_file_range\fP(2), \fBfflush\fP(3), \fBfileno\fP(3), \fBhdparm\fP(8),
+\fBmount\fP(8)

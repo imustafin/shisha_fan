@@ -1,0 +1,455 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2009 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2009-01-12, mtk, Created
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RTLD\-AUDIT 7 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+rtld\-audit \- программный интерфейс слежения за динамическим компоновщиком
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* смотрите feature_test_macros(7) */
+\fB#include <link.h>\fP
+.fi
+.SH ОПИСАНИЕ
+Динамический компоновщик GNU (компоновщик времени выполнения) предоставляет
+API слежения, который позволяет приложению получать уведомления о различных
+событиях динамической компоновки. Данный API очень похож на интерфейс
+слежения, предоставляемый компоновщиком времени выполнения из
+Solaris. Необходимые константы и прототипы определены в \fI<link.h>\fP.
+.PP
+Чтобы использовать этот интерфейс, программист создаёт общую библиотеку
+функций со стандартизованными именами. Не все функции нужно реализовывать: в
+большинстве случаев, если программист не заинтересован в конкретном классе
+отслеживаемых событий, то нет нужды в создании соответствующей отслеживающей
+функции.
+.PP
+Для применения интерфейса слежения переменная окружения \fBLD_AUDIT\fP должна
+содержать разделённый двоеточиями список общих библиотек, каждая из которых
+может реализовывать (частично) API слежения. Когда возникает отслеживаемое
+событие, из каждой библиотеки вызывается соответствующая функция в том
+порядке, в котором эти библиотеки были перечислены.
+.SS la_version()
+\&
+.nf
+\fBunsigned int la_version(unsigned int \fP\fIversion\fP\fB);\fP
+.fi
+.PP
+Это единственная функция, которая \fIдолжна\fP быть определена в отслеживающей
+библиотеке: она осуществляет первичную связь между динамическим
+компоновщиком и отслеживающей библиотекой. При вызове этой функции
+динамический компоновщик передаёт в \fIversion\fP максимальную версию
+интерфейса слежения, которую поддерживает сам компоновщик. При
+необходимости, отслеживающая библиотека может проверить, что эта версия
+удовлетворяет её требованиям.
+.PP
+Данная функция должна возвращать версию интерфейса слежения, которую
+отслеживающая библиотека собирается использовать (возврат \fIversion\fP
+приемлем). Если возвращаемое значение равно 0 или больше чем максимальная
+версия, поддерживаемая динамическим компоновщиком, то отслеживающая
+библиотека игнорируется.
+.SS la_objsearch()
+\&
+.nf
+\fBchar *la_objsearch(const char *\fP\fIname\fP\fB, uintptr_t *\fP\fIcookie\fP\fB,\fP
+\fB                   unsigned int \fP\fIflag\fP\fB);\fP
+.fi
+.PP
+Динамический компоновщик вызывает эту функцию для информирования
+отслеживающей библиотеки при поиске общего объекта. Аргумент \fIname\fP
+содержит имя файла или путь, который будет разыскиваться. В \fIcookie\fP
+указывается общий объект, который начал поиск. Аргумент \fIflag\fP
+устанавливается в одно из следующих значений:
+.TP  17
+\fBLA_SER_ORIG\fP
+Это оригинальное имя, которое будет разыскиваться. Как правило, это имя
+хранится в записи ELF \fBDT_NEEDED\fP или был передан в аргументе \fIfilename\fP
+при вызове \fBdlopen\fP(3).
+.TP 
+\fBLA_SER_LIBPATH\fP
+Значение \fIname\fP было создано с использованием каталога из
+\fBLD_LIBRARY_PATH\fP.
+.TP 
+\fBLA_SER_RUNPATH\fP
+Значение \fIname\fP было создано с использованием каталога из списка ELF
+\fBDT_RPATH\fP или \fBDT_RUNPATH\fP.
+.TP 
+\fBLA_SER_CONFIG\fP
+Значение \fIname\fP было найдено в кэше \fBldconfig\fP(8) (\fI/etc/ld.so.cache\fP).
+.TP 
+\fBLA_SER_DEFAULT\fP
+Значение \fIname\fP было найдено при поиске в одном из каталогов по умолчанию.
+.TP 
+\fBLA_SER_SECURE\fP
+Значение \fIname\fP относится к объекту безопасности (не используется в Linux).
+.PP
+Функция \fBla_objsearch\fP() возвращает путь, который динамический компоновщик
+должен использовать в дальнейшей работе. Если возвращается NULL, то путь
+игнорируется в дальнейшей работе. Если данная отслеживающая библиотека
+создана для простого слежения за путями поиска, то должно возвращаться
+\fIname\fP.
+.SS la_activity()
+\&
+.nf
+\fBvoid la_activity( uintptr_t *\fP\fIcookie\fP\fB, unsigned int \fP\fIflag\fP\fB);\fP
+.fi
+.PP
+Динамический компоновщик вызывает эту функцию для информирования библиотеки
+слежения о выполнении действия с картой ссылок (link\-map). В \fIcookie\fP
+задаётся объект, находящийся в начале карты ссылок. Когда динамический
+компоновщик вызывает эту функцию, аргумент \fIflag\fP устанавливается в одно из
+следующих значений:
+.TP  19
+\fBLA_ACT_ADD\fP
+В карту ссылок добавляется новый объект.
+.TP 
+\fBLA_ACT_DELETE\fP
+Из карты ссылок удаляется объект.
+.TP 
+\fBLA_ACT_CONSISTENT\fP
+Действие с картой ссылок завершено: карта снова корректна (consistent).
+.SS la_objopen()
+\&
+.nf
+\fBunsigned int la_objopen(struct link_map *\fP\fImap\fP\fB, Lmid_t \fP\fIlmid\fP\fB,\fP
+\fB                        uintptr_t *\fP\fIcookie\fP\fB);\fP
+.fi
+.PP
+Динамический компоновщик вызывает эту функцию при загрузке нового общего
+объекта. Аргумент \fImap\fP является указателем на структуру карты ссылок
+(link\-map), которая описывает объект. Поле \fIlmid\fP устанавливается в одно из
+следующих значений:
+.TP  17
+\fBLM_ID_BASE\fP
+Карта ссылок является частью начального пространства имён (namespace).
+.TP 
+\fBLM_ID_NEWLM\fP
+Карта ссылок является частью нового пространства имён, запрошенного через
+\fBdlmopen\fP(3).
+.PP
+Аргумент \fIcookie\fP — указатель на идентификатор этого объекта. Идентификатор
+используется при последующих вызовах функций отслеживающей библиотеки для
+идентификации этого объекта. Данный идентификатор инициализируется
+указателем на карту ссылок объекта, но отслеживающая библиотека может
+изменить идентификатор на другое значение, которое ей удобней использовать
+для обращения к объекту.
+.PP
+Функция \fBla_objopen\fP() возвращает битовую маску, созданное с помощью
+сложения (OR) нуля или более следующих констант, которые позволяют
+отслеживающей библиотеке выбирать наблюдаемые объекты через
+\fBla_symbind*\fP():
+.TP  17
+\fBLA_FLG_BINDTO\fP
+Следить за символьными привязками этого объекта.
+.TP 
+\fBLA_FLG_BINDFROM\fP
+Следить за символьными привязками из этого объекта.
+.PP
+Возвращаемое значение 0 из \fBla_objopen\fP() указывает на то, что не нужно
+отслеживать символьные привязки этого объекта.
+.SS la_objclose()
+\&
+.nf
+\fBunsigned int la_objclose(uintptr_t *\fP\fIcookie\fP\fB);\fP
+.fi
+.PP
+Динамический компоновщик вызывает эту функцию после выполнения конечного
+кода (finalization code), но до выгрузки объекта. В \fIcookie\fP задаётся
+идентификатор, полученный ранее из вызова \fBla_objopen\fP().
+.PP
+В текущей реализации значение, возвращаемое \fBla_objclose\fP(), игнорируется.
+.SS la_preinit()
+\&
+.nf
+\fBvoid la_preinit(uintptr_t *\fP\fIcookie\fP\fB);\fP
+.fi
+.PP
+Динамический компоновщик вызывает эту функцию после загрузки всех общих
+объектов, но до передачи управления приложению (то есть, до вызова
+\fImain\fP()). Заметим, что \fImain\fP() позднее всё ещё может динамически
+загрузить объекты с помощью \fBdlopen\fP(3).
+.SS la_symbind*()
+\&
+.nf
+\fBuintptr_t la_symbind32(Elf32_Sym *\fP\fIsym\fP\fB, unsigned int \fP\fIndx\fP\fB,\fP
+\fB                       uintptr_t *\fP\fIrefcook\fP\fB, uintptr_t *\fP\fIdefcook\fP\fB,\fP
+\fB                       unsigned int *\fP\fIflags\fP\fB, const char *\fP\fIsymname\fP\fB);\fP
+\fBuintptr_t la_symbind64(Elf64_Sym *\fP\fIsym\fP\fB, unsigned int \fP\fIndx\fP\fB,\fP
+\fB                       uintptr_t *\fP\fIrefcook\fP\fB, uintptr_t *\fP\fIdefcook\fP\fB,\fP
+\fB                       unsigned int *\fP\fIflags\fP\fB, const char *\fP\fIsymname\fP\fB);\fP
+.fi
+.PP
+Динамический компоновщик вызывает одну из этих функций при выполнении
+символьной привязки между двумя общими объектами, которые были помечены для
+уведомления функцией \fBla_objopen\fP(). Функция \fBla_symbind32\fP() применяется
+на 32\-битных платформах; \fBla_symbind64\fP() применяется на 64\-битных
+платформах.
+.PP
+Аргумент \fIsym\fP является указателем на структуру, которая содержит
+информацию о привязываемом символе. Определение структуры находится в
+\fI<elf.h>\fP. Среди полей структуры есть поле \fIst_value\fP, которое
+содержит адрес привязываемого символа.
+.PP
+В аргументе \fIndx\fP указывается индекс символа в таблице символов
+привязываемого общего объекта.
+.PP
+В аргументе \fIrefcook\fP указывается общий объект, который ссылается на
+символ; это тот же идентификатор, который указывается в функции
+\fBla_objopen\fP(), возвращающей \fBLA_FLG_BINDFROM\fP. В аргументе \fIdefcook\fP
+указывается общий объект, который определяет символ, на который производится
+ссылка; это тот же идентификатор, который указывается в функции
+\fBla_objopen\fP(), возвращающей  \fBLA_FLG_BINDTO\fP.
+.PP
+В аргументе \fIsymname\fP задаётся строка, содержащая имя символа.
+.PP
+.\" LA_SYMB_STRUCTCALL appears to be unused
+Аргумент \fIflags\fP представляет собой битовую маску, которая содержит
+информацию о символе и может использоваться для изменения дальнейшего
+отслеживания этой записи PLT (Procedure Linkage Table). Динамический
+компоновщик может передавать следующие битовые значения в этом аргументе:
+.TP  22
+\fBLA_SYMB_DLSYM\fP
+Привязка возникла из\-за вызова \fBdlsym\fP(3).
+.TP 
+\fBLA_SYMB_ALTVALUE\fP
+Предыдущий вызов \fBla_symbind*\fP() вернул альтернативное значение для этого
+символа.
+.PP
+.\" pltenter/pltexit are called for non-dynamically loaded libraries,
+.\" but don't seem to be called for dynamically loaded libs?
+.\" Is this the same on Solaris?
+По умолчанию, если в отслеживающей библиотеке реализованы функции
+\fBla_pltenter\fP() и \fBla_pltexit\fP() (смотрите ниже), то эти функции
+вызываются после \fBla_symbind\fP() для записей PLT каждый раз при ссылке на
+символ. Следующие флаги могут объединяться с помощью OR в \fI*flags\fP для
+изменения данного поведения по умолчанию:
+.TP  22
+\fBLA_SYMB_NOPLTENTER\fP
+Не вызывать \fBla_pltenter\fP() для этого символа.
+.TP  22
+\fBLA_SYMB_NOPLTEXIT\fP
+Не вызывать \fBla_pltexit\fP() для этого символа.
+.PP
+Возвращаемое значение \fBla_symbind32\fP() и \fBla_symbind64\fP() представляет
+собой адрес, по которому нужно передать управление после возврата
+функций. Если отслеживающая библиотека просто наблюдает за привязкой
+символов, то должно возвращаться \fIsym\->st_value\fP. Может возвращаться
+другое значение, если библиотека хочет передать управление в другое место.
+.SS la_pltenter()
+Точное имя и типы аргументов данной функции зависят от аппаратной платформы
+(подходящее определение приведено в \fI<link.h>\fP). Ниже показано
+определение для x86\-32:
+.PP
+.nf
+\fBElf32_Addr la_i86_gnu_pltenter(Elf32_Sym *\fP\fIsym\fP\fB, unsigned int \fP\fIndx\fP\fB,\fP
+\fB                 uintptr_t *\fP\fIrefcook\fP\fB, uintptr_t *\fP\fIdefcook\fP\fB,\fP
+\fB                 La_i86_regs *\fP\fIregs\fP\fB, unsigned int *\fP\fIflags\fP\fB,\fP
+\fB                 const char *\fP\fIsymname\fP\fB, long int *\fP\fIframesizep\fP\fB);\fP
+.fi
+.PP
+Эта функция вызывается до вызова записи PLT между двумя общими объектами,
+которые помечены для уведомления о привязке.
+.PP
+Значение аргументов \fIsym\fP, \fIndx\fP, \fIrefcook\fP, \fIdefcook\fP и \fIsymname\fP
+такое же как у \fBla_symbind*\fP().
+.PP
+Аргумент \fIregs\fP указывает на структуру (определена в \fI<link.h>\fP),
+содержащую значения регистров, которые будут использованы для вызова этой
+записи PLT.
+.PP
+Аргумент \fIflags\fP указывает на битовую маску, которая сообщает информацию и
+может использоваться для изменения последующего слежения за этой записью
+PLT; значения как у \fBla_symbind*\fP().
+.PP
+.\" FIXME . Is the following correct?
+Аргумент \fIframesizep\fP указывает на буфер \fIlong\ int\fP, который можно
+использовать для явного определения размера фрейма, используемого для вызова
+этой записи PLT. Если другие вызовы \fBla_pltenter\fP() для этого символа
+возвращают другие значения, то используется максимальное полученное
+значение. Функция \fBla_pltexit\fP() вызывается только, если этот буфер явно
+устанавливает подходящее значение.
+.PP
+Возвращаемое \fBla_pltenter\fP() значение подобно \fBla_symbind*\fP().
+.SS la_pltexit()
+Точное имя и типы аргументов данной функции зависят от аппаратной платформы
+(подходящее определение приведено в \fI<link.h>\fP). Ниже показано
+определение для x86\-32:
+.PP
+.nf
+\fBunsigned int la_i86_gnu_pltexit(Elf32_Sym *\fP\fIsym\fP\fB, unsigned int \fP\fIndx\fP\fB,\fP
+\fB                 uintptr_t *\fP\fIrefcook\fP\fB, uintptr_t *\fP\fIdefcook\fP\fB,\fP
+\fB                 const La_i86_regs *\fP\fIinregs\fP\fB, La_i86_retval *\fP\fIoutregs\fP\fB,\fP
+\fB                 const char *\fP\fIsymname\fP\fB);\fP
+.fi
+.PP
+Эта функция вызывается после завершения вызова записи PLT, выполняемой между
+двумя общими объектами, которые были помечены для уведомления при
+привязке. Функция вызывается перед передачей управления из записи PLT
+вызывающему.
+.PP
+Значение аргументов \fIsym\fP, \fIndx\fP, \fIrefcook\fP, \fIdefcook\fP и \fIsymname\fP
+такое же как у \fBla_symbind*\fP().
+.PP
+Аргумент \fIinregs\fP указывает на структуру (определена в
+\fI<link.h>\fP), содержащую значения регистров, используемых для вызова
+этой записи PLT. Аргумент \fIoutregs\fP указывает на структуру (определена в
+\fI<link.h>\fP), содержащую значения для вызова в эту запись PLT. Эти
+значения могут изменяться вызывающим и изменения будут видимы вызывающему
+запись PLT.
+.PP
+.\" This differs from Solaris, where an audit library that monitors
+.\" symbol binding should return the value of the 'retval' argument
+.\" (not provided by GNU, but equivalent to returning outregs->lrv_eax
+.\" on (say) x86-32).
+В текущей реализации GNU возвращаемое значение \fBla_pltexit\fP() игнорируется.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный API не стандартен, но очень похож на Solaris API, описанный в Solaris
+\fILinker and Libraries Guide\fP в главе \fIRuntime Linker Auditing Interface\fP.
+.SH ЗАМЕЧАНИЯ
+Отметим следующие отличия API динамического компоновщика в Solaris:
+.IP * 3
+Интерфейс Solaris \fBla_objfilter\fP() не поддерживается в реализации GNU.
+.IP *
+В функциях Solaris \fBla_symbind32\fP() и \fBla_pltexit\fP() нет аргумента
+\fIsymname\fP.
+.IP *
+В функции Solaris \fBla_pltexit\fP() нет аргументов \fIinregs\fP и \fIoutregs\fP (но
+есть аргумент \fIretval\fP со значением, возвращаемым функцией).
+.SH ДЕФЕКТЫ
+.\" FIXME . Specifying multiple audit libraries doesn't work on GNU.
+.\" My simple tests on Solaris work okay, but not on Linux -- mtk, Jan 2009
+.\" glibc bug filed: http://sourceware.org/bugzilla/show_bug.cgi?id=9733
+.\" Reportedly, this is fixed on 16 Mar 2009 (i.e., for glibc 2.10)
+В glibc до версии 2.9 включительно, указание более одной отслеживающей
+библиотеки в \fBLD_AUDIT\fP приводит к падению во время выполнения. Это
+исправлено в glibc 2.10.
+.SH ПРИМЕР
+.EX
+#include <link.h>
+#include <stdio.h>
+
+unsigned int
+la_version(unsigned int version)
+{
+    printf("la_version(): %d\en", version);
+
+    return version;
+}
+
+char *
+la_objsearch(const char *name, uintptr_t *cookie, unsigned int flag)
+{
+    printf("la_objsearch(): name = %s; cookie = %p", name, cookie);
+    printf("; flag = %s\en",
+            (flag == LA_SER_ORIG) ?    "LA_SER_ORIG" :
+            (flag == LA_SER_LIBPATH) ? "LA_SER_LIBPATH" :
+            (flag == LA_SER_RUNPATH) ? "LA_SER_RUNPATH" :
+            (flag == LA_SER_DEFAULT) ? "LA_SER_DEFAULT" :
+            (flag == LA_SER_CONFIG) ?  "LA_SER_CONFIG" :
+            (flag == LA_SER_SECURE) ?  "LA_SER_SECURE" :
+            "???");
+
+    return name;
+}
+
+void
+la_activity (uintptr_t *cookie, unsigned int flag)
+{
+    printf("la_activity(): cookie = %p; flag = %s\en", cookie,
+            (flag == LA_ACT_CONSISTENT) ? "LA_ACT_CONSISTENT" :
+            (flag == LA_ACT_ADD) ?        "LA_ACT_ADD" :
+            (flag == LA_ACT_DELETE) ?     "LA_ACT_DELETE" :
+            "???");
+}
+
+unsigned int
+la_objopen(struct link_map *map, Lmid_t lmid, uintptr_t *cookie)
+{
+    printf("la_objopen(): loading \e"%s\e"; lmid = %s; cookie=%p\en",
+            map\->l_name,
+            (lmid == LM_ID_BASE) ?  "LM_ID_BASE" :
+            (lmid == LM_ID_NEWLM) ? "LM_ID_NEWLM" :
+            "???",
+            cookie);
+
+    return LA_FLG_BINDTO | LA_FLG_BINDFROM;
+}
+
+unsigned int
+la_objclose (uintptr_t *cookie)
+{
+    printf("la_objclose(): %p\en", cookie);
+
+    return 0;
+}
+
+void
+la_preinit(uintptr_t *cookie)
+{
+    printf("la_preinit(): %p\en", cookie);
+}
+
+uintptr_t
+la_symbind32(Elf32_Sym *sym, unsigned int ndx, uintptr_t *refcook,
+        uintptr_t *defcook, unsigned int *flags, const char *symname)
+{
+    printf("la_symbind32(): symname = %s; sym\->st_value = %p\en",
+            symname, sym\->st_value);
+    printf("        ndx = %d; flags = 0x%x", ndx, *flags);
+    printf("; refcook = %p; defcook = %p\en", refcook, defcook);
+
+    return sym\->st_value;
+}
+
+uintptr_t
+la_symbind64(Elf64_Sym *sym, unsigned int ndx, uintptr_t *refcook,
+        uintptr_t *defcook, unsigned int *flags, const char *symname)
+{
+    printf("la_symbind64(): symname = %s; sym\->st_value = %p\en",
+            symname, sym\->st_value);
+    printf("        ndx = %d; flags = 0x%x", ndx, *flags);
+    printf("; refcook = %p; defcook = %p\en", refcook, defcook);
+
+    return sym\->st_value;
+}
+
+Elf32_Addr
+la_i86_gnu_pltenter(Elf32_Sym *sym, unsigned int ndx,
+        uintptr_t *refcook, uintptr_t *defcook, La_i86_regs *regs,
+        unsigned int *flags, const char *symname, long int *framesizep)
+{
+    printf("la_i86_gnu_pltenter(): %s (%p)\en", symname, sym\->st_value);
+
+    return sym\->st_value;
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBldd\fP(1), \fBdlopen\fP(3), \fBld.so\fP(8), \fBldconfig\fP(8)

@@ -1,0 +1,193 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) International Business Machines Corp., 2006
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_3_PARA)
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See
+.\" the GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" HISTORY:
+.\" 2005-09-28, created by Arnd Bergmann <arndb@de.ibm.com>
+.\" 2006-06-16, revised by Eduardo M. Fleury <efleury@br.ibm.com>
+.\" 2007-07-10, some polishing by mtk
+.\" 2007-09-28, updates for newer kernels by Jeremy Kerr <jk@ozlabs.org>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SPU_CREATE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+spu_create \- создаёт новый контекст spu
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/spu.h>\fP
+.PP
+\fBint spu_create(const char *\fP\fIpathname\fP\fB, int \fP\fIflags\fP\fB, mode_t \fP\fImode\fP\fB);\fP
+\fBint spu_create(const char *\fP\fIpathname\fP\fB, int \fP\fIflags\fP\fB, mode_t \fP\fImode\fP\fB,\fP
+\fB               int \fP\fIneighbor_fd\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Системный вызов \fBspu_create\fP() используется на машинах PowerPC с
+архитектурой Cell Broadband Engine для получения доступа к Synergistic
+Processor Unit (SPU). Он создаёт новый логический контекст для SPU в
+\fIpathname\fP и возвращает связанный с ним файловый дескриптор. Аргумент
+\fIpathname\fP должен указывать на несуществующий каталог в точке монтирования
+файловой системы SPU (\fBspufs\fP). Если работа \fBspu_create\fP() выполнена без
+ошибок, то создаётся каталог \fIpathname\fP, а в нём создаются файлы, описанные
+в \fBspufs\fP(7).
+.PP
+После создания контекста, полученный файловый дескриптор может быть передан
+только \fBspu_run\fP(2), семейству системных вызовов \fB*at\fP (например,
+\fBopenat\fP(2)) в аргументе \fIdirfd\fP или закрыт; другие операции не
+определены. Логический контекст SPU уничтожается (вместе с файлами,
+созданными внутри каталога контекста \fIpathname\fP) после освобождения
+последней ссылки на контекст; обычно, это происходит после закрытия
+файлового дескриптора, возвращённого \fBspu_create\fP().
+.PP
+Аргумент \fIflags\fP может быть равен нулю или содержать любую побитовую
+комбинацию (посредством OR) следующих констант:
+.TP 
+\fBSPU_CREATE_EVENTS_ENABLED\fP
+Вместо использования сигналов для сообщения об ошибках DMA, использовать
+аргумент \fIevent\fP в \fBspu_run\fP(2).
+.TP 
+\fBSPU_CREATE_GANG\fP
+Создать блок (gang) SPU вместо контекста (блок — это группа контекстов SPU,
+которые близки по функциям и у которых общие параметры планирования —
+приоритет и политика. В будущем, планирование блока на включение и
+выключение может быть реализовано как единого целое).
+.IP
+В месте, указанном в аргументе \fIpathname\fP, будет создан новый каталог. Этот
+блок может использоваться для хранения других контекстов SPU, если указывать
+путь блока в последующих вызовах \fBspu_create\fP().
+.TP 
+\fBSPU_CREATE_NOSCHED\fP
+Создать контекст, на который не влияет планировщик SPU. После запуска
+контекста, он не будет планироваться для выполнения пока не будет уничтожен
+создавшим его процессом.
+.IP
+Так как контекст не может быть удалён из SPU, у контекстов
+\fBSPU_CREATE_NOSCHED\fP отключены некоторые возможности. Не все файлы будут
+доступны в каталоге этого контекста в \fBspufs\fP. Также, для контекстов
+\fBSPU_CREATE_NOSCHED\fP не может быть создан файл дампа при поломке.
+.IP
+Для создания контекстов \fBSPU_CREATE_NOSCHED\fP требуется мандат
+\fBCAP_SYS_NICE\fP.
+.TP 
+\fBSPU_CREATE_ISOLATE\fP
+Создать изолированный контекст SPU. Изолированные контексты защищены от
+некоторых операций PPE (PowerPC Processing Element), таких как доступ к
+локальному хранилищу SPU и регистру NPC.
+.IP
+Для создания контекста \fBSPU_CREATE_ISOLATE\fP также требуется флаг
+\fBSPU_CREATE_NOSCHED\fP.
+.TP 
+\fBSPU_CREATE_AFFINITY_SPU\fP
+Создать контекст со связью с другим контекстом SPU. Эта информация о связи
+используется в алгоритме планирования SPU. При использовании этого флага
+требуется, чтобы файловый дескриптор, ссылающийся на другой контекст SPU,
+передавался в аргументе \fIneighbor_fd\fP.
+.TP 
+\fBSPU_CREATE_AFFINITY_MEM\fP
+Создать контекст со связью с системной памятью. Эта информация о связи
+используется в алгоритме планирования SPU.
+.PP
+В аргументе \fImode\fP (не считая битов \fBumask\fP(2) процесса) задаются права,
+которые используются при создании нового каталога в \fBspufs\fP. Полное
+описание всех значений \fImode\fP смотрите в \fBstat\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBspu_create\fP() возвращается новый файловый
+дескриптор; при ошибке возвращается \-1, а в \fIerrno\fP содержится один из
+кодов ошибки, описанных далее.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Текущий пользователь не имеет прав на запись в точку монтирования
+\fBspufs\fP(7).
+.TP 
+\fBEEXIST\fP
+Контекст SPU с указанным именем пути уже существует.
+.TP 
+\fBEFAULT\fP
+Значение \fIpathname\fP не является допустимым строковым указателем в адресном
+пространстве вызывающего процесса.
+.TP 
+\fBEINVAL\fP
+Значение \fIpathname\fP не является каталогом в точке монтирования \fBspufs\fP(7),
+или указаны неправильные флаги.
+.TP 
+\fBELOOP\fP
+Во время определения \fIpathname\fP встретилось слишком много символьных
+ссылок.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fIpathname\fP.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENODEV\fP
+Был запрошен изолированный контекст, но аппаратная часть не поддерживает
+изоляцию SPU.
+.TP 
+\fBENOENT\fP
+Невозможно определить часть \fIpathname\fP.
+.TP 
+\fBENOMEM\fP
+Ядро не может выделить все требуемые ресурсы.
+.TP 
+\fBENOSPC\fP
+Недостаточно ресурсов SPU для создания нового контекста или достигнуто
+ограничение на количество контекстов SPU для пользователя.
+.TP 
+\fBENOSYS\fP
+Возможность не предоставляется текущей системой, так как или аппаратура не
+предоставляет SPU, или не загружен модуль spufs.
+.TP 
+\fBENOTDIR\fP
+Часть \fIpathname\fP не является каталогом.
+.TP 
+\fBEPERM\fP
+Указан флаг \fISPU_CREATE_NOSCHED\fP, но пользователь не имеет мандата
+\fBCAP_SYS_NICE\fP.
+.SH ФАЙЛЫ
+Значение \fIpathname\fP должно указываться относительно точки монтирования
+\fBspufs\fP. По соглашению всё монтируется в \fI/spu\fP.
+.SH ВЕРСИИ
+Системный вызов \fBspu_create\fP() был добавлен в ядро Linux версии 2.6.16.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов существует только в Linux и реализован только для архитектуры
+PowerPC. Программы, использующие данный вызов, не переносимы.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для этого системного вызова; запускайте его с помощью
+\fBsyscall\fP(2). Однако заметим, что \fBspu_run\fP() предназначен для работы в
+библиотеках, которые реализуют более абстрактный интерфейс к SPU и не должен
+вызываться из обычных приложений. Рекомендуемые библиотеки приведены на
+странице
+.UR http://www.bsc.es\:/projects\:/deepcomputing\:/linuxoncell/
+.UE .
+.SH ПРИМЕР
+В \fBspu_run\fP(2) дан пример использования \fBspu_create\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclose\fP(2), \fBspu_run\fP(2), \fBcapabilities\fP(7), \fBspufs\fP(7)

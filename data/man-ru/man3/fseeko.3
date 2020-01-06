@@ -1,0 +1,91 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2001 Andries Brouwer <aeb@cwi.nl>.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FSEEKO 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+fseeko, ftello \- изменить или сообщить положение в файле
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+.PP
+\fBint fseeko(FILE *\fP\fIstream\fP\fB, off_t \fP\fIoffset\fP\fB, int \fP\fIwhence\fP\fB);\fP
+.PP
+\fBoff_t ftello(FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfseeko\fP(), \fBftello\fP():
+.br
+.RS 4
+.ad l
+_FILE_OFFSET_BITS\ ==\ 64 || _POSIX_C_SOURCE\ >=\ 200112L
+.br
+(с определением устаревшего макроса _LARGEFILE_SOURCE также сработает)
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функции \fBfseeko\fP() и \fBftello\fP() идентичны функциям \fBfseek\fP(3) и
+\fBftell\fP(3) (смотрите \fBfseek\fP(3)), соответственно, за исключением того, что
+аргумент \fIoffset\fP функции \fBfseeko\fP() и возвращаемое значение функции
+\fBftello\fP() вместо типа \fIlong\fP имеют тип \fIoff_t\fP.
+.PP
+На некоторых архитектурах аргументы \fIoff_t\fP и \fIlong\fP являются 32\-битными
+типами, но если определить \fB_FILE_OFFSET_BITS\fP со значением 64 (до
+включения \fIкаких\-либо\fP заголовочных файлов), то \fIoff_t\fP станет 64\-битным
+типом.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBfseeko\fP() возвращает 0, \fBftello\fP() возвращает
+текущее смещение. При ошибке возвращается \-1, а в \fIerrno\fP содержится код
+ошибки.
+.SH ОШИБКИ
+Смотрите ОШИБКИ в \fBfseek\fP(3).
+.SH ВЕРСИИ
+Эти функции доступны в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw18 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfseeko\fP(),
+\fBftello\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SUSv2.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfseek\fP(3)

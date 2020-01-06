@@ -1,0 +1,165 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)popen.3	6.4 (Berkeley) 4/30/91
+.\"
+.\" Converted for Linux, Mon Nov 29 14:45:38 1993, faith@cs.unc.edu
+.\" Modified Sat May 18 20:37:44 1996 by Martin Schulze (joey@linux.de)
+.\" Modified 7 May 1998 by Joseph S. Myers (jsm28@cam.ac.uk)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH POPEN 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+popen, pclose \- конвейерный поток в или из процесса
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+.PP
+\fBFILE *popen(const char *\fP\fIcommand\fP\fB, const char *\fP\fItype\fP\fB);\fP
+.PP
+\fBint pclose(FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.ad l
+.in
+.PP
+\fBpopen\fP(), \fBpclose\fP():
+.RS 4
+_POSIX_C_SOURCE\ >=\ 2
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBpopen\fP() открывает процесс следующим образом: создаёт канал,
+выполняет fork и вызывает командную оболочку. Так как канал задается
+однонаправленным, в аргументе \fItype\fP может быть задан один режим: либо
+чтение либо запись.
+.PP
+Аргумент \fIcommand\fP представляет собой указатель на строку с null в конце,
+которая содержит командную строку оболочки. Эта команда передаётся в
+\fI/bin/sh\fP с помощью флага \fB\-c\fP; все подстановке в ней выполняются
+оболочкой.
+.PP
+Аргумент \fItype\fP представляет собой указатель на строку с null в конце,
+которая содержит или букву \(aqr\(aq (чтение) или букву \(aqw\(aq
+(запись). Начиная с glibc 2.9 в этом аргументе также может быть буква
+\(aqe\(aq, которая указывает на необходимость установки флага закрытия при
+выполнении (\fBFD_CLOEXEC\fP) в используемом файловом дескрипторе; про
+полезность флага \fBO_CLOEXEC\fP смотрите в \fBopen\fP(2).
+.PP
+Возвращаемое \fBpopen\fP() значение является стандартным потоком ввода\-вывода,
+за исключением того, что его нужно закрывать с помощью \fBpclose\fP(), а не
+\fBfclose\fP(3). Запись в такой поток выполняет запись в стандартный поток
+ввода команды; стандартного потока вывода команды тот же, что и у процесса,
+вызвавшего \fBpopen\fP(), если он не был изменён самой командой. При чтении из
+потока выполняется чтение из  стандартного потока вывода команды, а
+стандартный поток ввода тот же, что и у процесса, вызвавшего \fBpopen\fP(),
+если он не был изменён самой командой.
+.PP
+Заметим, что потоки вывода \fBpopen\fP() по умолчанию блокируемые и
+буферизированные.
+.PP
+Функция \fBpclose\fP() ожидает завершения ассоциированного процесса и
+возвращает код выхода команды, возвращаемый функцией \fBwait4\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+\fBpopen\fP(): при успешном выполнении возвращается указатель на открытый
+поток, его можно использовать для чтения или записи в канал; если вызов
+\fBfork\fP(2) или \fBpipe\fP(2) завершается с ошибкой или если функция не может
+выделить память, то возвращается NULL.
+.PP
+.\" These conditions actually give undefined results, so I commented
+.\" them out.
+.\" .I stream
+.\" is not associated with a "popen()ed" command, if
+.\".I stream
+.\" already "pclose()d", or if
+\fBpclose\fP(): при успешном выполнении возвращает код завершения команды; если
+\fBwait4\fP(2) возвращает ошибку или возникает какая\-то другая ошибка, то
+возвращается \-1.
+.PP
+Обе функции записывают в \fIerrno\fP соответствующее значение ошибки.
+.SH ОШИБКИ
+Функция \fBpopen\fP() не изменяет \fIerrno\fP, если не удалось выделить
+память. Если завершаются с ошибкой вызовы \fBfork\fP(2) или \fBpipe\fP(2), то в
+\fIerrno\fP содержится номер ошибки. Если значение \fItype\fP некорректно и это
+обнаружено, то \fIerrno\fP присваивается \fBEINVAL\fP.
+.PP
+Если \fBpclose\fP() не удаётся получить код выхода потомка, то \fIerrno\fP
+присваивается \fBECHILD\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw17 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpopen\fP(),
+\fBpclose\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.PP
+Значение \(aqe\(aq для \fItype\fP есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+\fBПримечание\fP: внимательно прочитайте ЗАМЕЧАНИЯ в \fBsystem\fP(3).
+.SH ДЕФЕКТЫ
+Так как смещение поиска у открытого для чтения стандартного ввода команды
+доступным процессу, вызвавшему \fBpopen\fP(), и исходный процесс выполнял
+буферное чтение, то позиция ввода команды может быть не той, что
+ожидается. Подобным образом, вывод из команды, открытой на запись, может
+будет спутан с выводом из исходного процесса. Последнего можно избежать,
+если вызывать \fBfflush\fP(3) перед \fBpopen\fP().
+.PP
+.\" .SH HISTORY
+.\" A
+.\" .BR popen ()
+.\" and a
+.\" .BR pclose ()
+.\" function appeared in Version 7 AT&T UNIX.
+Ошибка при попытке запуска оболочки неотличима от ошибки оболочки при
+попытке запуска программы или от ошибки при немедленном выходе
+команды. Единственное отличие это код выхода 127.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsh\fP(1), \fBfork\fP(2), \fBpipe\fP(2), \fBwait4\fP(2), \fBfclose\fP(3), \fBfflush\fP(3),
+\fBfopen\fP(3), \fBstdio\fP(3), \fBsystem\fP(3)

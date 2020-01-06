@@ -1,0 +1,280 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SPROF 1 2019\-03\-06 Linux "Руководство пользователя Linux"
+.SH ИМЯ
+sprof \- читает и показывает общие объекты данных профилирования
+.SH ОБЗОР
+.nf
+\fBsprof\fP [\fIпараметр\fP]… \fIshared\-object\-path\fP [\fIprofile\-data\-path\fP]
+.fi
+.SH ОПИСАНИЕ
+Команда \fBsprof\fP выводит краткий отчёт по профилированию для общего объекта
+(общей библиотеки), заданного в первом аргументе командной строки. Краткий
+отчёт по профилированию создан с помощью ранее сгенерированных данных
+профилирования во втором (необязательном) аргументе командной строки. Если
+путь данных профилирования отсутствует, то \fBsprof\fP попытается вычислить его
+используя soname общего объекта и поищет файл с именем
+\fI<soname>.profile\fP в текущем каталоге.
+.SH ПАРАМЕТРЫ
+Следующие параметры командной строки определяют выводимые данные
+профилирования:
+.TP 
+\fB\-c\fP, \fB\-\-call\-pairs\fP
+Вывести список пар путей вызова для интерфейсов, экспортируемых общим
+объектом, а также сколько раз использовался каждый путь.
+.TP 
+\fB\-p\fP, \fB\-\-flat\-profile\fP
+Сгенерировать плоский профиль всех функций в отслеживаемом объекте, а также
+количество вызовов и время работы.
+.TP 
+\fB\-q\fP, \fB\-\-graph\fP
+Сгенерировать граф вызовов.
+.PP
+Если ни один из этих параметров не указан, то действием по умолчанию
+является вывод плоского профиля и графа вызовов.
+.PP
+Доступны следующие дополнительные параметры командной строки:
+.TP 
+\fB\-?\fP, \fB\-\-help\fP
+Показать справку по параметрам командной строки и аргументам и завершить
+работу.
+.TP 
+\fB\-\-usage\fP
+Показать короткое сообщение об использовании и завершить работу.
+.TP 
+\fB\-V\fP, \fB\-\-version\fP
+Вывести версию программы и выйти.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Команда \fBsprof\fP является расширением GNU и отсутствует в POSIX.1.
+.SH ПРИМЕР
+В следующем примере показано использование \fBsprof\fP. Пример состоит из
+основной программы, которая вызывает две функции из общего объекта. Вот код
+основной программы:
+.PP
+.in +4n
+.EX
+$ \fBcat prog.c\fP
+#include <stdlib.h>
+
+void x1(void);
+void x2(void);
+
+int
+main(int argc, char *argv[])
+{
+    x1();
+    x2();
+    exit(EXIT_SUCCESS);
+}
+.EE
+.in
+.PP
+Функции \fIx1\fP() и \fIx2\fP() определены в следующем файле исходного кода,
+который используется для сборки общего объекта:
+.PP
+.in +4n
+.EX
+$ \fBcat libdemo.c\fP
+#include <unistd.h>
+
+void
+consumeCpu1(int lim)
+{
+    int j;
+
+    for (j = 0; j < lim; j++)
+	getppid();
+}
+
+void
+x1(void) {
+    int j;
+
+    for (j = 0; j < 100; j++)
+	consumeCpu1(200000);
+}
+
+void
+consumeCpu2(int lim)
+{
+    int j;
+
+    for (j = 0; j < lim; j++)
+	getppid();
+}
+
+void
+x2(void)
+{
+    int j;
+
+    for (j = 0; j < 1000; j++)
+	consumeCpu2(10000);
+}
+.EE
+.in
+.PP
+Соберём общий объект с реальным именем \fIlibdemo.so.1.0.1\fP и soname
+\fIlibdemo.so.1\fP:
+.PP
+.in +4n
+.EX
+$ \fBcc \-g \-fPIC \-shared \-Wl,\-soname,libdemo.so.1 \e\fP
+        \fB\-o libdemo.so.1.0.1 libdemo.c\fP
+.EE
+.in
+.PP
+Создадим символьные ссылки на soname библиотеки и имя библиотеки для
+компоновщика:
+.PP
+.in +4n
+.EX
+$ \fBln \-sf libdemo.so.1.0.1 libdemo.so.1\fP
+$ \fBln \-sf libdemo.so.1 libdemo.so\fP
+.EE
+.in
+.PP
+Скомпилируем основную программу, скомпонуем её с общим объектом и выведем
+список динамических зависимостей программы:
+.PP
+.in +4n
+.EX
+$ \fBcc \-g \-o prog prog.c \-L. \-ldemo\fP
+$ \fBldd prog\fP
+	linux\-vdso.so.1 =>  (0x00007fff86d66000)
+	libdemo.so.1 => not found
+	libc.so.6 => /lib64/libc.so.6 (0x00007fd4dc138000)
+	/lib64/ld\-linux\-x86\-64.so.2 (0x00007fd4dc51f000)
+.EE
+.in
+.PP
+Чтобы получить информацию о профилировании общего объекта мы определим
+переменную окружения \fBLD_PROFILE\fP с soname библиотеки:
+.PP
+.in +4n
+.EX
+$ \fBexport LD_PROFILE=libdemo.so.1\fP
+.EE
+.in
+.PP
+Затем определим переменную окружения \fBLD_PROFILE_OUTPUT\fP с именем каталога
+куда нужно сохранить результат профилирования и создадим этот каталог, если
+его ещё нет:
+.PP
+.in +4n
+.EX
+$ \fBexport LD_PROFILE_OUTPUT=$(pwd)/prof_data\fP
+$ \fBmkdir \-p $LD_PROFILE_OUTPUT\fP
+.EE
+.in
+.PP
+Переменная \fBLD_PROFILE\fP приводит к \fIдобавлению\fP результата профилирования
+в выходной файл, если он уже существует, поэтому убедимся, что не существует
+каких\-либо результатов профилирования:
+.PP
+.in +4n
+.EX
+$ \fBrm \-f $LD_PROFILE_OUTPUT/$LD_PROFILE.profile\fP
+.EE
+.in
+.PP
+Затем запустим программу для получения результата профилирования, которые
+записывается в файл в каталоге, указанном в \fBLD_PROFILE_OUTPUT\fP:
+.PP
+.in +4n
+.EX
+$ \fBLD_LIBRARY_PATH=. ./prog\fP
+$ \fBls prof_data\fP
+libdemo.so.1.profile
+.EE
+.in
+.PP
+Используем параметр \fBsprof \-p\fP для генерации плоского профиля с счётчиками
+и временем:
+.PP
+.in +4n
+.EX
+$ \fBsprof \-p libdemo.so.1 $LD_PROFILE_OUTPUT/libdemo.so.1.profile\fP
+Плоский профиль:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total
+ time   seconds   seconds    calls  us/call  us/call  name
+ 60.00      0.06     0.06      100   600.00           consumeCpu1
+ 40.00      0.10     0.04     1000    40.00           consumeCpu2
+  0.00      0.10     0.00        1     0.00           x1
+  0.00      0.10     0.00        1     0.00           x2
+.EE
+.in
+.PP
+Параметр \fBsprof \-q\fP генерирует граф вызовов:
+.PP
+.in +4n
+.EX
+$ \fBsprof \-q libdemo.so.1 $LD_PROFILE_OUTPUT/libdemo.so.1.profile\fP
+
+index % time    self  children    called     name
+
+                0.00    0.00      100/100         x1 [1]
+[0]    100.0    0.00    0.00      100         consumeCpu1 [0]
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+                0.00    0.00        1/1           <UNKNOWN>
+[1]      0.0    0.00    0.00        1         x1 [1]
+                0.00    0.00      100/100         consumeCpu1 [0]
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+                0.00    0.00     1000/1000        x2 [3]
+[2]      0.0    0.00    0.00     1000         consumeCpu2 [2]
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+                0.00    0.00        1/1           <UNKNOWN>
+[3]      0.0    0.00    0.00        1         x2 [3]
+                0.00    0.00     1000/1000        consumeCpu2 [2]
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+.EE
+.in
+.PP
+Выше и ниже строки «<UNKNOWN>» представляют идентификаторы, которые
+находятся вне объекта профилирования (в этом примере они являются
+экземплярами \fImain()\fP).
+.PP
+Параметр \fBsprof \-c\fP генерирует список пар вызовов и количество их
+появления:
+.PP
+.in +4n
+.EX
+$ \fBsprof \-c libdemo.so.1 $LD_PROFILE_OUTPUT/libdemo.so.1.profile\fP
+<UNKNOWN>                  x1                                 1
+x1                         consumeCpu1                      100
+<UNKNOWN>                  x2                                 1
+x2                         consumeCpu2                     1000
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgprof\fP(1), \fBldd\fP(1), \fBld.so\fP(8)

@@ -1,0 +1,251 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2012 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" A few fragments remain from a version
+.\" Copyright (C) 1996 Free Software Foundation, Inc.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INIT_MODULE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+init_module, finit_module \- загружает модуль ядра
+.SH ОБЗОР
+.nf
+\fBint init_module(void *\fP\fImodule_image\fP\fB, unsigned long \fP\fIlen\fP\fB,\fP
+\fB                const char *\fP\fIparam_values\fP\fB);\fP
+.PP
+\fBint finit_module(int \fP\fIfd\fP\fB, const char *\fP\fIparam_values\fP\fB,\fP
+\fB                 int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В заголовочных файлах glibc отсутствует \fBinit_module\fP() и
+\fBfinit_module\fP(); смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Вызов \fBinit_module\fP() загружает образ ELF в пространство ядра, выполняет
+все необходимые перемещения символов, инициализирует значения параметров
+модуля, предоставленные вызывающим и запускает функцию модуля
+\fIinit\fP. Данный системный вызов требует дополнительных прав.
+.PP
+Аргумент \fImodule_image\fP указывает на буфер, содержащий двоичный образ для
+загрузки; в \fIlen\fP задаётся размер этого буфера. Образ модуля должен быть
+корректным образом в формате ELF, собранным для работающего в данный момент
+ядра.
+.PP
+Значением \fIparam_values\fP является строка, содержащая значения параметров
+модуля (через пробел), определённых в модуле через \fBmodule_param\fP() и
+\fBmodule_param_array\fP(). Ядро обрабатывает эту строку и инициализирует
+указанные параметры. Каждый параметр имеет вид:
+.PP
+\fIимя\fP[\fB=\fP\fIзначение\fP[\fB,\fP\fIзначение\fP…]]
+.PP
+Параметр \fIимя\fP — один из определённых параметров модуля с помощью
+\fImodule_param\fP() (смотрите файл исходного кода ядра Linux
+\fIinclude/linux/moduleparam.h\fP). Параметр \fIзначение\fP не обязателен в случае
+параметров с типом \fIbool\fP и \fIinvbool\fP. Значение массива параметров
+указываются через запятую.
+.SS finit_module()
+.\" commit 34e1169d996ab148490c01b65b4ee371cf8ffba2
+.\" https://lwn.net/Articles/519010/
+Системный вызов \fBfinit_module\fP() подобен \fBinit_module\fP(), но читает модуль
+для загрузки из файлового дескриптора \fIfd\fP. Он полезен, если подлинность
+модуля ядра можно определить по его расположению в файловой системе; в таких
+случаях затрат на использование криптографически подписанных модулей для
+определения подлинности модуля можно избежать. Аргумент \fIparam_values\fP
+такой же как у \fBinit_module\fP().
+.PP
+.\" commit 2f3238aebedb243804f58d62d57244edec4149b2
+Аргумент \fIflags\fP изменяет выполнение \fBfinit_module\fP(). Это битовая маска,
+создаваемая объединением нуля или более следующих флагов:
+.TP 
+\fBMODULE_INIT_IGNORE_MODVERSIONS\fP
+Игнорировать хэши версий символов.
+.TP 
+\fBMODULE_INIT_IGNORE_VERMAGIC\fP
+Игнорировать версию ядра.
+.PP
+.\" http://www.tldp.org/HOWTO/Module-HOWTO/basekerncompat.html
+.\" is dated, but informative
+Есть несколько элементов, встроенных в модуль, которые позволяют убедиться,
+что модуль подходит для загрузки в ядро. Эти элементы записываются в модуль
+на этапе сборки и проверяются при загрузке ядра. Во\-первых, модуль имеет
+строку «vermagic», содержащую номер версии ядра и основные свойства (такие
+как тип ЦП). Во\-вторых, если модуль собран с включённым параметром настройки
+\fBCONFIG_MODVERSIONS\fP, то он содержит хэш версии для каждого используемого
+модулем символа. Данный хэш основан на типе аргумента и возвращаемом
+значении функции с именем символа. В этом случае номер версии ядра в строке
+«vermagic» игнорируется, так как считается, что хэши версий символов
+достаточно надёжны.
+.PP
+Использование флага \fBMODULE_INIT_IGNORE_VERMAGIC\fP требует игнорировать
+строку «vermagic», а флаг \fBMODULE_INIT_IGNORE_MODVERSIONS\fP требует
+игнорировать хэши версий символов. Если ядро собрано с разрешением
+принудительной загрузки (параметр настройки \fBCONFIG_MODULE_FORCE_LOAD\fP), то
+загрузка продолжается, в противном случае она завершается ошибкой
+\fBENOEXEC\fP, как и ожидается для некорректных модулей.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBADMSG\fP (начиная с Linux 3.7)
+Неправильный формат подписи модуля.
+.TP 
+\fBEBUSY\fP
+Истекло время ожидания попытки определения символьной ссылки данным модулем.
+.TP 
+\fBEFAULT\fP
+Аргумент адреса ссылается на положение вне доступного адресного пространства
+процесса.
+.TP 
+\fBENOKEY\fP (начиная с Linux 3.7)
+.\" commit 48ba2462ace6072741fd8d0058207d630ce93bf1
+.\" commit 1d0059f3a468825b5fc5405c636a2f6e02707ffa
+.\" commit 106a4ee258d14818467829bf0e12aeae14c16cd7
+Некорректная подпись или ядро не содержит ключа этого модуля. Данная ошибка
+возвращается только, если ядро было настроено с параметром
+\fBCONFIG_MODULE_SIG_FORCE\fP; если ядро собрано без этого параметра, то
+некорректный или не подписанный модуль просто примешивается (taints) в ядро.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти.
+.TP 
+\fBEPERM\fP
+Вызывающий не имеет прав (не имеет мандата \fBCAP_SYS_MODULE\fP), или отключена
+загрузка модулей\ (смотрите \fI/proc/sys/kernel/modules_disabled\fP в
+\fBproc\fP(5)).
+.PP
+Дополнительно в \fBinit_module\fP() могут возникать следующие ошибки:
+.TP 
+\fBEEXIST\fP
+Модуль с таким именем уже загружен.
+.TP 
+\fBEINVAL\fP
+.\" .TP
+.\" .BR EINVAL " (Linux 2.4 and earlier)"
+.\" Some
+.\" .I image
+.\" slot is filled in incorrectly,
+.\" .I image\->name
+.\" does not correspond to the original module name, some
+.\" .I image\->deps
+.\" entry does not correspond to a loaded module,
+.\" or some other similar inconsistency.
+Некорректное значение \fIparam_values\fP, или какая\-то часть образа ELF в
+\fImodule_image\fP содержит противоречивую информацию.
+.TP 
+\fBENOEXEC\fP
+Двоичный образ, переданный \fImodule_image\fP, не является образом ELF, или
+образ ELF некорректный или для другой архитектуры.
+.PP
+Дополнительно в \fBfinit_module\fP() могут возникать следующие ошибки:
+.TP 
+\fBEBADF\fP
+Файл, на который ссылается \fIfd\fP, не открыт для чтения.
+.TP 
+\fBEFBIG\fP
+Файл, на который ссылается \fIfd\fP, слишком большой.
+.TP 
+\fBEINVAL\fP
+Значение \fIflags\fP неверно.
+.TP 
+\fBENOEXEC\fP
+Значение \fIfd\fP не указывает на открытый файл.
+.PP
+Дополнительно к этим ошибкам, если функция модуля \fIinit\fP при выполнении
+возвратила ошибку, то \fBinit_module\fP() или \fBfinit_module\fP() завершается с
+ошибкой и в \fIerrno\fP записывается значение, полученное от функции \fIinit\fP.
+.SH ВЕРСИИ
+Вызовы \fBfinit_module\fP() доступен в Linux, начиная с версии 3.8.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызовы \fBinit_module\fP() и \fBfinit_module\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Системный вызов \fBinit_module\fP() не поддерживается glibc. В заголовочных
+файлах glibc он не объявлен, но в недавнем прошлом glibc до версии 2.23
+экспортировал ABI для этого системного вызова. Поэтому чтобы получить данный
+системный вызов достаточно вручную объявить интерфейс в своём коде; или же
+вы можете вызвать его через \fBsyscall\fP(2).
+.PP
+В glibc нет обёртки для \fBfinit_module\fP(); запускайте его с помощью
+\fBsyscall\fP(2).
+.PP
+Информацию по уже загруженным модулями можно найти в файле \fI/proc/modules\fP
+и в соответствующем каждому модулю подкаталогу в \fI/sys/module\fP.
+.PP
+Дополнительную информацию смотрите в файле \fIinclude/linux/module.h\fP из
+исходного кода ядра Linux.
+.SS "Linux версии 2.4 и более ранние"
+.PP
+В Linux версии 2.4 и более ранних системный вызов \fBinit_module\fP() был
+немного другим:
+.PP
+\fB#include <linux/module.h>\fP
+.PP
+\fB int init_module(const char *\fP\fIname\fP\fB, struct module *\fP\fIimage\fP\fB);\fP
+.PP
+(Приложения пользовательского пространства могут определить какая из версий
+\fBinit_module\fP() доступна, вызвав \fBquery_module\fP(); этот вызов завершается
+ошибкой \fBENOSYS\fP в Linux 2.6 и более новых.)
+.PP
+Старая версия системного вызова загружает перемещённый образ модуля
+\fIimage\fP, в пространство ядра и выполняет функцию модуля \fIinit\fP. Вызывающий
+должен предоставить перемещённый образ (начиная с Linux 2.6, системный вызов
+\fBinit_module\fP() сам делает перемещение).
+.PP
+Образ модуля начинается со структуры модуля, за которой следует код и
+данные. Начиная с Linux 2.2 структура модуля определена следующим образом:
+.PP
+.in +4n
+.EX
+struct module {
+    unsigned long         size_of_struct;
+    struct module        *next;
+    const char           *name;
+    unsigned long         size;
+    long                  usecount;
+    unsigned long         flags;
+    unsigned int          nsyms;
+    unsigned int          ndeps;
+    struct module_symbol *syms;
+    struct module_ref    *deps;
+    struct module_ref    *refs;
+    int                 (*init)(void);
+    void                (*cleanup)(void);
+    const struct exception_table_entry *ex_table_start;
+    const struct exception_table_entry *ex_table_end;
+#ifdef __alpha__
+    unsigned long gp;
+#endif
+};
+.EE
+.in
+.PP
+Все поля указателей, за исключением \fInext\fP и \fIrefs\fP, указывают в тело
+модуля и будут инициализированы в соответствии с адресным пространством
+ядра, то есть перемещены с остальной частью модуля.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcreate_module\fP(2), \fBdelete_module\fP(2), \fBquery_module\fP(2), \fBlsmod\fP(8),
+\fBmodprobe\fP(8)

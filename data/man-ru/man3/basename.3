@@ -1,0 +1,144 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2000 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Created, 14 Dec 2000 by Michael Kerrisk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BASENAME 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+basename, dirname \- разделяет путь на компоненты
+.SH ОБЗОР
+.nf
+\fB#include <libgen.h>\fP
+.PP
+\fBchar *dirname(char *\fP\fIpath\fP\fB);\fP
+.PP
+\fBchar *basename(char *\fP\fIpath\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Предупреждение: есть две разных функции \fBbasename\fP() — смотрите далее.
+.PP
+Функция \fBdirname\fP() и \fBbasename\fP() разделяют строку с путём,
+заканчивающуюся null, на каталог и имя файла. Обычно, \fBdirname\fP()
+возвращает строку до последнего символа \(aq/\(aq, не включая его, а
+\fBbasename\fP() возвращает часть, следующую за последним символов
+\(aq/\(aq. Конечные символы \(aq/\(aq не считаются частью пути.
+.PP
+Если \fIpath\fP не содержит косую черту, то \fBdirname\fP() возвращает строку «.»,
+а \fBbasename\fP() возвращает копию \fIpath\fP. Если строка \fIpath\fP равна «/», то
+\fBdirname\fP() и \fBbasename\fP() возвращают строку «/». Если значение \fIpath\fP
+равно указателю null или указывает на пустую строку, то \fBdirname\fP() и
+\fBbasename\fP() возвращают строку «.».
+.PP
+Если объединить строку, возвращаемую \fBdirname\fP(), «/» и строку,
+возвращаемую \fBbasename\fP(), то получится первоначальный путь.
+.PP
+Функции \fBdirname\fP() и \fBbasename\fP() могут изменить содержимое \fIpath\fP,
+поэтому желательно передавать копию строки при их вызове.
+.PP
+Данные функции могут возвращать указатели на статически выделенную память,
+которая может измениться при последующих вызовах. Или же они могут
+возвращать указатель на часть \fIpath\fP, поэтому строка, на которую ссылается
+\fIpath\fP, не должна изменяться или освобождаться до тех пор, пока указатель,
+возвращаемый функцией, станет ненужным.
+.PP
+В следующих примерах (взяты из SUSv2) показаны строки, возвращаемые
+\fBdirname\fP() и \fBbasename\fP() для различных путей:
+.RS
+.TS
+lb lb lb
+l l l l.
+путь    	dirname	basename
+/usr/lib	/usr	lib
+/usr/   	/	usr
+usr     	.	usr
+/       	/	/
+\&.       	.	.
+\&..      	.	..
+.TE
+.RE
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBdirname\fP() и \fBbasename\fP() возвращают указатели на строки,
+оканчивающиеся null (не передавайте эти указатели \fBfree\fP(3)).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBbasename\fP(),
+\fBdirname\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Существует две различные версии \fBbasename\fP() — версия POSIX, описанная
+выше, и версия GNU, которая описана далее
+.PP
+.in +4n
+.EX
+\fB    #define _GNU_SOURCE\fP         /* смотрите feature_test_macros(7) */
+\fB#include <string.h>\fP
+.EE
+.in
+.PP
+Версия GNU никогда не изменяет свои аргументы и возвращает пустую строку,
+если \fIpath\fP оканчивается символом косой черты, а в частности, если значение
+равно «/». Версии GNU для \fBdirname\fP() не существует.
+.PP
+Если в исходный код включён файл \fI<libgen.h>\fP, то из glibc
+используется версия \fBbasename\fP(), описанная в POSIX, иначе — версия GNU.
+.SH ДЕФЕКТЫ
+Функции версии POSIX, реализованные в glibc, изменяют аргумент \fIpath\fP, что
+приводит к ошибки сегментации при их вызове со статической строкой вида
+«/usr/».
+.PP
+До glibc 2.2.1, функция \fBdirname\fP() некорректно обрабатывала пути,
+оканчивающиеся символами \(aq/\(aq, а также вызывало ошибку сегментирования,
+если указывался аргумент со значением NULL.
+.SH ПРИМЕР
+Следующий пример кода демонстрирует использование \fBbasename\fP() и
+\fBdirname\fP():
+.in +4n
+.EX
+char *dirc, *basec, *bname, *dname;
+char *path = "/etc/passwd";
+
+dirc = strdup(path);
+basec = strdup(path);
+dname = dirname(dirc);
+bname = basename(basec);
+printf("dirname=%s, basename=%s\en", dname, bname);
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbasename\fP(1), \fBdirname\fP(1)

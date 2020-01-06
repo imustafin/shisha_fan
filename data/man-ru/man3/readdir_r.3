@@ -1,0 +1,121 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2008, 2016 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" and Copyright (C) 2016 Florian Weimer <fweimer@redhat.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH READDIR_R 3 2016\-03\-01 "" "Руководство программиста Linux"
+.SH ИМЯ
+readdir_r \- чтение содержимого каталога
+.SH ОБЗОР
+.nf
+\fB#include <dirent.h>\fP
+.PP
+\fBint readdir_r(DIR *\fP\fIdirp\fP\fB, struct dirent *\fP\fIentry\fP\fB, struct dirent **\fP\fIresult\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.ad l
+.in
+.PP
+\fBreaddir_r\fP():
+.RS 4
+_POSIX_C_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Эта функция устарела; вместо неё используйте \fBreaddir\fP(3).
+.PP
+Функция \fBreaddir_r\fP() является реентерабельной версией \fBreaddir\fP(3). Она
+читает следующий элемент каталога из потока каталога \fIdirp\fP и возвращает
+его в выделенный вызывающим буфер, на который указывает \fIentry\fP. Описание
+структуры \fIdirent\fP смотрите в \fBreaddir\fP(3).
+.PP
+Указатель на возвращаемый буфер помещается в \fI*result\fP; если достигнут
+конец потока каталога, то в \fI*result\fP возвращается NULL..
+.PP
+В приложениях рекомендуется использовать \fBreaddir\fP(3) вместо
+\fBreaddir_r\fP(). Также, начиная с версии 2.24, в glibc \fBreaddir_r\fP()
+считается устаревшей. Причины:
+.IP * 3
+В системах, у которых значение \fBNAME_MAX\fP не определено, вызов
+\fBreaddir_r\fP() может быть небезопасным, так как интерфейс не позволяет
+вызывающему задать длину буфера, который используется для возврата элемента
+каталога.
+.IP *
+В некоторых системах \fBreaddir_r\fP() не может прочитать элементы каталога с
+очень длинными именами. Когда реализации glibc встречается такое имя, вызов
+\fBreaddir_r\fP() завершается с ошибкой \fBENAMETOOLONG\fP \fIтолько после чтения
+последнего элемента каталога\fP. В других системах \fBreaddir_r\fP() может
+выполняться без ошибок, но возвращаемое поле \fId_name\fP может не завершаться
+null или может быть обрезанным.
+.IP *
+В текущей спецификации POSIX.1 (POSIX.1\-2008), от \fBreaddir\fP(3) не требуется
+быть нитебезопасной. Однако в современных реализациях (включая glibc)
+параллельные вызовы \fBreaddir\fP(3) для различных потоков каталога являются
+нитебезопасными. Поэтому использовать \fBreaddir_r\fP() в многонитевых
+программах, обычно, не требуется. В случаях, когда несколько нитей должны
+читать один поток каталога, всё равно предпочтительней использовать
+\fBreaddir\fP(3) с внешней синхронизацией, а не \fBreaddir_r\fP(), по причинам,
+описанным выше.
+.IP *
+.\" FIXME .
+.\" http://www.austingroupbugs.net/view.php?id=696
+Ожидается, что в будущей версии POSIX.1 функция \fBreaddir_r\fP() будет
+помечена как устаревшая, а для \fBreaddir\fP(3) будет требоваться
+нитебезопасность при одновременной работе с разными потоками каталога.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBreaddir_r\fP() возвращает 0. При ошибке она
+возвращает положительный номер ошибки (перечислены в ОШИБКАХ). Если
+достигнут конец потока каталога, то \fBreaddir_r\fP() возвращает 0 и NULL в
+\fI*result\fP.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Неверный дескриптор потока каталога \fIdirp\fP.
+.TP 
+\fBENAMETOOLONG\fP
+Обнаружено слишком длинное имя элемента каталога для чтения.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBreaddir_r\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBreaddir\fP(3)

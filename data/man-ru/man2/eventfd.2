@@ -1,0 +1,321 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2008 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" starting from a version by Davide Libenzi <davidel@xmailserver.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_3_PARA)
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 2008-10-10, mtk: describe eventfd2(), and EFD_NONBLOCK and EFD_CLOEXEC
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH EVENTFD 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+eventfd \- создаёт файловый дескриптор для уведомления о событиях
+.SH ОБЗОР
+\fB#include <sys/eventfd.h>\fP
+.PP
+\fBint eventfd(unsigned int \fP\fIinitval\fP\fB, int \fP\fIflags\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBeventfd\fP() создаёт «объект eventfd», который можно использовать в
+качестве механизма ожидания/уведомления о событиях в приложениях
+пространства пользователя и ядра. Объект содержит беззнаковое 64\-битный
+(\fIuint64_t\fP) счётчик, обслуживаемый ядром. Этот счётчик инициализируется
+значением, указанным в аргументе \fIinitval\fP.
+.PP
+При завершении работы \fBeventfd\fP() возвращает новый файловый дескриптор,
+который можно использовать для ссылки на объект eventfd.
+.PP
+Для изменения поведения \fBeventfd\fP() можно использовать следующие значения
+\fIflags\fP (через OR):
+.TP 
+\fBEFD_CLOEXEC\fP (начиная с Linux 2.6.27)
+Устанавливает флаг close\-on\-exec (\fBFD_CLOEXEC\fP) для нового открытого
+файлового дескриптора. Смотрите описание флага \fBO_CLOEXEC\fP в \fBopen\fP(2) для
+того, чтобы узнать как это может пригодиться.
+.TP 
+\fBEFD_NONBLOCK\fP (начиная с Linux 2.6.27)
+Устанавливает флаг состояния файла \fBO_NONBLOCK\fP для нового открытого
+файлового описания (смотрите \fBopen\fP(2)), на которое ссылается новый
+файловый дескриптор. Использование данного флага делает ненужными
+дополнительные вызовы \fBfcntl\fP(2) для достижения того же результата.
+.TP 
+\fBEFD_SEMAPHORE\fP (начиная с Linux 2.6.30)
+Предоставляет семафоро\-подобную семантику для чтения из нового файлового
+дескриптора. Смотрите ниже.
+.PP
+До версии Linux 2.6.26 аргумент \fIflags\fP не использовался, и должен быть
+равен нулю.
+.PP
+Следующие операции могут выполняться над полученным файловым дескриптором
+\fBeventfd\fP():
+.TP 
+\fBread\fP(2)
+Каждый завершившийся без ошибок вызов \fBread\fP(2) возвращает 8\-байтное
+целое. Вызов \fBread\fP(2) завершается с ошибкой \fBEINVAL\fP, если размер
+указанного буфера меньше 8 байт.
+.IP
+Возвращаемое \fBread\fP(2) значение имеет порядок байт узла, т. е.,
+используемый порядок байт для целых на машине узла.
+.IP
+Семантика \fBread\fP(2) зависит от значения счётчика eventfd — равно оно нулю
+или нет, и был ли указан флаг \fBEFD_SEMAPHORE\fP при создании файлового
+дескриптора eventfd:
+.RS
+.IP * 3
+Если флаг \fBEFD_SEMAPHORE\fP не указан и счётчик eventfd не равен нулю, то
+\fBread\fP(2) возвращает 8 байт с его значением и значение счётчика
+сбрасывается в ноль.
+.IP *
+Если флаг \fBEFD_SEMAPHORE\fP задан указан и счётчик eventfd не равен нулю, то
+\fBread\fP(2) возвращает 8 байт, содержащие значение 1, и значение счётчика
+уменьшается на 1.
+.IP *
+Если счётчик eventfd равен нулю во время вызова \fBread\fP(2), то вызов
+блокируется до тех пор, пока счётчик станет не равным нулю (время работы
+\fBread\fP(2) описано выше) или завершается с ошибкой \fBEAGAIN\fP, если файловый
+дескриптор создан неблокируемым.
+.RE
+.TP 
+\fBwrite\fP(2)
+При вызове \fBwrite\fP(2) из его буфера к счётчику добавляется 8\-байтовое целое
+значение. Максимальное значение, которое может храниться в счётчике, равно
+наибольшему 64\-битному беззнаковому значению минус 1 (т.е.,
+0xfffffffffffffffe). Если при добавлении значение счётчика превысит
+максимум, то \fBwrite\fP(2) заблокируется до тех пор, пока для файлового
+дескриптора не будет выполнен вызов \fBread\fP(2), или завершится с ошибкой
+\fBEAGAIN\fP, если файловый дескриптор создан неблокируемым.
+.IP
+Вызов \fBwrite\fP(2) завершается с ошибкой \fBEINVAL\fP, если размер указанного
+буфера меньше 8 байт, или если попытаться записать значение
+0xffffffffffffffff.
+.TP 
+\fBpoll\fP(2), \fBselect\fP(2) (и подобные)
+Возвращённый файловый дескриптор поддерживает \fBpoll\fP(2) (и, аналогично,
+\fBepoll\fP(7)) и \fBselect\fP(2) следующим образом:
+.RS
+.IP * 3
+Файловый дескриптор доступен для чтения (в \fBselect\fP(2) аргумент \fIreadfds\fP;
+в \fBpoll\fP(2) флаг \fBPOLLIN\fP), если счётчик больше 0.
+.IP *
+Файловый дескриптор доступен для записи (в \fBselect\fP(2) аргумент
+\fIwritefds\fP; в \fBpoll\fP(2) флаг \fBPOLLOUT\fP), если можно записать значение
+равное, как минимум, "1" без блокировки.
+.IP *
+Если обнаружено переполнение счётчика, то \fBselect\fP(2) указывает на файловый
+дескриптор, доступный на чтение и запись, и \fBpoll\fP(2) возвращает событие
+\fBPOLLERR\fP. Как упоминалось ранее, \fBwrite\fP(2) никогда не может вызвать
+переполнение счётчика. Однако переполнение может произойти, если подсистемой
+KAIO выполнится (возможно теоретически) 2^64 "передач сигналов"
+eventfd. Если переполнение произошло, то \fBread\fP(2) вернёт максимальное
+значение типа \fIuint64_t\fP (т.е., 0xffffffffffffffff).
+.RE
+.IP
+Файловый дескриптор eventfd также поддерживает другие мультиплексные
+программные интерфейсы: \fBpselect\fP(2) и \fBppoll\fP(2).
+.TP 
+\fBclose\fP(2)
+Если файловый дескриптор больше не требуется, его нужно закрыть. Когда все
+файловые дескрипторы, связанные с одним объектом eventfd, будут закрыты,
+ядро освобождает ресурсы объекта.
+.PP
+Копия файлового дескриптора, созданного \fBeventfd\fP(), наследуется потомком,
+созданным с помощью \fBfork\fP(2). Копия файлового дескриптора связывается с
+тем же объектом eventfd. Файловые дескрипторы, созданные \fBeventfd\fP(),
+сохраняются при вызове \fBexecve\fP(2), если не указан флаг close\-on\-exec.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBeventfd\fP() возвращает новый файловый дескриптор
+eventfd. При ошибке возвращается \-1, и \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указано неподдерживаемое значение.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENODEV\fP
+.\" Note from Davide:
+.\" The ENODEV error is basically never going to happen if
+.\" the kernel boots correctly. That error happen only if during
+.\" the kernel initialization, some error occur in the anonymous
+.\" inode source initialization.
+Не удалось смонтировать (внутреннее) безымянное устройство inode.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для создания нового файлового дескриптора eventfd.
+.SH ВЕРСИИ
+.\" eventfd() is in glibc 2.7, but reportedly does not build
+Вызов \fBeventfd\fP() доступен в Linux начиная с ядра 2.6.22. Поддержка в glibc
+появилась в версии 2.8. Системный вызов \fBeventfd2\fP() (см. ЗАМЕЧАНИЯ)
+доступен в Linux начиная с ядра 2.6.27. В glibc версии 2.9 в обёртке
+\fBeventfd\fP() используется системный вызов \fBeventfd2\fP(), если он
+поддерживается ядром.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBeventfd\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызовы \fBeventfd\fP() и \fBeventfd2\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Приложения могут использовать файловый дескриптор eventfd вместо канала
+(см. \fBpipe\fP(2)) во всех случаях, когда канал используется только для
+сигнализации о событиях. Издержки ядра по файловому дескриптору eventfd
+намного меньше, чем по каналу и требуется только один файловый дескриптор
+(против двух, при использовании канала).
+.PP
+.\" or eventually syslets/threadlets
+При использовании в ядре файловый дескриптор eventfd может предоставлять
+мост из ядерного в пользовательское пространство, позволяя например
+работать, подобно KAIO ( ядерный AIO), сигнализируя, что завершена какая\-то
+операция над файловым дескриптором.
+.PP
+Важным моментом файлового дескриптора eventfd является то, что за ним можно
+следить как за обычным файловым дескриптором с помощью \fBselect\fP(2),
+\fBpoll\fP(2) или \fBepoll\fP(7). Это означает, что приложение может одновременно
+отслеживать готовность "обычных" файлов и готовность других механизмов ядра,
+которые поддерживают интерфейс eventfd. (Без интерфейса \fBeventfd\fP() эти
+механизмы невозможно мультиплексировать через \fBselect\fP(2), \fBpoll\fP(2) или
+\fBepoll\fP(7).)
+.PP
+.\"
+Текущее значение счётчика eventfd можно найти в записи для соответствующего
+файлового дескриптора в каталоге процесса \fI/proc/[pid]/fdinfo\fP. Подробности
+смотрите в \fBproc\fP(5).
+.SS "Отличия между библиотекой C и ядром"
+Основу составляют два системных вызова Linux: \fBeventfd\fP() и более новый
+\fBeventfd2\fP(). В первом системном вызове не реализован аргумент
+\fIflags\fP. Последний системный вызов использует значения \fIflags\fP, которые
+были описаны ранее. Обёрточная функция glibc использует \fBeventfd2\fP(), если
+он доступен.
+.SS "Дополнительные возможности glibc"
+В библиотеке GNU C определён дополнительный тип и две функции, которые
+пытаются устранить сложности чтения и записи из файлового дескриптора
+eventfd:
+.PP
+.in +4n
+.EX
+typedef uint64_t eventfd_t;
+
+int eventfd_read(int fd, eventfd_t *value);
+int eventfd_write(int fd, eventfd_t value);
+.EE
+.in
+.PP
+Функции выполняют операции чтения и записи из файлового дескриптора eventfd,
+и возвращают 0, если передано правильное количество байт и \-1 в противном
+случае.
+.SH ПРИМЕР
+.PP
+Следующая программа создаёт файловый дескриптор eventfd и затем создаёт
+дочерний процесс. Пока родительский процесс на короткое время засыпает,
+потомок пишет все числа, переданные в командной строке программы, в файловый
+дескриптор eventfd. Когда родитель просыпается, он читает их из файлового
+дескриптора eventfd.
+.PP
+Пример сеанса работы с программой:
+.PP
+.in +4n
+.EX
+$\fB ./a.out 1 2 4 7 14\fP
+Child writing 1 to efd
+Child writing 2 to efd
+Child writing 4 to efd
+Child writing 7 to efd
+Child writing 14 to efd
+Child completed write loop
+Parent about to read
+Parent read 28 (0x1c) from efd
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <sys/eventfd.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>             /* определение uint64_t */
+
+#define handle_error(msg) \e
+    do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    int efd, j;
+    uint64_t u;
+    ssize_t s;
+
+    if (argc < 2) {
+        fprintf(stderr, "Использование: %s <num>...\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    efd = eventfd(0, 0);
+    if (efd == \-1)
+        handle_error("eventfd");
+
+    switch (fork()) {
+    case 0:
+        for (j = 1; j < argc; j++) {
+            printf("Child writing %s to efd\en", argv[j]);
+            u = strtoull(argv[j], NULL, 0);
+                    /* в strtoull() разрешены различные основания */
+            s = write(efd, &u, sizeof(uint64_t));
+            if (s != sizeof(uint64_t))
+                handle_error("write");
+        }
+        printf("Child completed write loop\en");
+
+        exit(EXIT_SUCCESS);
+
+    default:
+        sleep(2);
+
+        printf("Parent about to read\en");
+        s = read(efd, &u, sizeof(uint64_t));
+        if (s != sizeof(uint64_t))
+            handle_error("read");
+        printf("Parent read %llu (0x%llx) from efd\en",
+                (unsigned long long) u, (unsigned long long) u);
+        exit(EXIT_SUCCESS);
+
+    case \-1:
+        handle_error("fork");
+    }
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfutex\fP(2), \fBpipe\fP(2), \fBpoll\fP(2), \fBread\fP(2), \fBselect\fP(2),
+\fBsignalfd\fP(2), \fBtimerfd_create\fP(2), \fBwrite\fP(2), \fBepoll\fP(7),
+\fBsem_overview\fP(7)

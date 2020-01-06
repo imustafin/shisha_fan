@@ -1,0 +1,119 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\"
+.\" Modified Sat Jul 24 19:37:37 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Mon May 27 22:40:48 1996 by Martin Schulze (joey@linux.de)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FGETPWENT 3 2018\-02\-02 GNU "Руководство программиста Linux"
+.SH ИМЯ
+fgetpwent \- получает записи из файла паролей
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+\fB#include <sys/types.h>\fP
+\fB#include <pwd.h>\fP
+.PP
+\fBstruct passwd *fgetpwent(FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfgetpwent\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _SVID_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBfgetpwent\fP() возвращает указатель на структуру, содержащую
+отдельные поля строки файла \fIstream\fP. Во время первого вызова функция
+возвращает первую запись; в дальнейшем она возвращает все последующие
+записи. Формат файла \fIstream\fP должен быть таким же как у \fI/etc/passwd\fP
+(смотрите \fBpasswd\fP(5)).
+.PP
+Структура \fIpasswd\fP определена в \fI<pwd.h>\fP таким образом:
+.PP
+.in +4n
+.EX
+struct passwd {
+    char   *pw_name;       /* имя пользователя */
+    char   *pw_passwd;     /* пароль пользователя */
+    uid_t   pw_uid;        /* идентификатор пользователя */
+    gid_t   pw_gid;        /* идентификатор группы */
+    char   *pw_gecos;      /* настоящее имя */
+    char   *pw_dir;        /* домашний каталог */
+    char   *pw_shell;      /* программная оболочка */
+};
+.EE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBfgetpwent\fP() возвращает указатель на структуру \fIpasswd\fP или NULL,
+если больше паролей не найдено или произошла ошибка. При ошибке \fIerrno\fP
+присваивается соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для структуры \fIpasswd\fP.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/passwd\fP
+файл, содержащий базу паролей
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfgetpwent\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:fgetpwent
+.TE
+.\" FIXME: The marking is different from that in the glibc manual,
+.\" which has:
+.\"
+.\"    fgetpwent: MT-Unsafe race:fpwent
+.\"
+.\" We think race:fpwent in glibc maybe hard for users to understand,
+.\" and have sent a patch to the GNU libc community for changing it to
+.\" race:fgetpwent, however, something about the copyright impeded the
+.\" progress.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBendpwent\fP(3), \fBfgetpwent_r\fP(3), \fBfopen\fP(3), \fBgetpw\fP(3), \fBgetpwent\fP(3),
+\fBgetpwnam\fP(3), \fBgetpwuid\fP(3), \fBputpwent\fP(3), \fBsetpwent\fP(3), \fBpasswd\fP(5)

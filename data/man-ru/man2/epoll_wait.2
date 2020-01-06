@@ -1,0 +1,178 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"  Copyright (C) 2003  Davide Libenzi
+.\"  Davide Libenzi <davidel@xmailserver.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_3_PARA)
+.\"  This program is free software; you can redistribute it and/or modify
+.\"  it under the terms of the GNU General Public License as published by
+.\"  the Free Software Foundation; either version 2 of the License, or
+.\"  (at your option) any later version.
+.\"
+.\"  This program is distributed in the hope that it will be useful,
+.\"  but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\"  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\"  GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 2007-04-30: mtk, Added description of epoll_pwait()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH EPOLL_WAIT 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+epoll_wait, epoll_pwait \- ждать события ввода/вывода на файловом дескрипторе
+epoll
+.SH ОБЗОР
+.nf
+\fB#include <sys/epoll.h>\fP
+.PP
+\fBint epoll_wait(int \fP\fIepfd\fP\fB, struct epoll_event *\fP\fIevents\fP\fB,\fP
+\fB               int \fP\fImaxevents\fP\fB, int \fP\fItimeout\fP\fB);\fP
+\fBint epoll_pwait(int \fP\fIepfd\fP\fB, struct epoll_event *\fP\fIevents\fP\fB,\fP
+\fB               int \fP\fImaxevents\fP\fB, int \fP\fItimeout\fP\fB,\fP
+\fB               const sigset_t *\fP\fIsigmask\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBepoll_wait\fP() ожидает события на экземпляре \fBepoll\fP(7),
+на который указывает файловый дескриптор \fIepfd\fP. Область памяти, на которую
+указывает \fIevents\fP, будет содержать события, доступные для
+вызываемого. Вызов \fBepoll_wait\fP() может вернуть до \fImaxevents\fP
+событий. Параметр \fImaxevents\fP должен быть больше нуля.
+.PP
+В аргументе \fItimeout\fP указывается количество миллисекунд, на которые будет
+заблокирован \fBepoll_wait\fP(). Время отслеживается по часам
+\fBCLOCK_MONOTONIC\fP. Вызов будет заблокирован пока:
+.IP * 3
+событие не будет доставлено в файловый дескриптор;
+.IP *
+вызов не прервётся обработчиком сигнала;
+.IP *
+не истечёт время ожидания.
+.PP
+Заметим, что интервал \fItimeout\fP будет округлён в соответствии с точностью
+системных часов, а задержки ядерного планирования приведут к тому, что
+интервал блокировки может быть немного больше. Если присвоить \fItimeout\fP
+значение \-1, то \fBepoll_wait\fP() блокируется навсегда; если значение
+\fItimeout\fP равно 0, то \fBepoll_wait\fP() сразу завершает работу, даже если
+никаких событий не произошло.
+.PP
+Структура \fIstruct epoll_event\fP определена так:
+.PP
+.in +4n
+.EX
+typedef union epoll_data {
+    void    *ptr;
+    int      fd;
+    uint32_t u32;
+    uint64_t u64;
+} epoll_data_t;
+
+struct epoll_event {
+    uint32_t     events;    /* События epoll */
+    epoll_data_t data;      /* Переменная для данных пользователя */
+};
+.EE
+.in
+.PP
+Поле \fIdata\fP в каждой возвращаемой структуре содержит те же данные, которые
+были указаны в самом последнем вызове \fBepoll_ctl\fP(2) (\fBEPOLL_CTL_ADD\fP,
+\fBEPOLL_CTL_MOD\fP) для соответствующего открытого описания файла. В поле
+\fIevents\fP содержится битовое поле возвращаемого события.
+.SS epoll_pwait()
+Отношения между \fBepoll_wait\fP() и \fBepoll_pwait\fP() аналогичны родству
+\fBselect\fP(2) и \fBpselect\fP(2): как \fBpselect\fP(2), \fBepoll_pwait\fP() позволяет
+приложению безопасно ждать, пока файловый дескриптор не станет готов или
+пока не будет получен сигнал.
+.PP
+Вызов \fBepoll_pwait\fP():
+.PP
+.in +4n
+.EX
+ready = epoll_pwait(epfd, &events, maxevents, timeout, &sigmask);
+.EE
+.in
+.PP
+эквивалентен \fIатомарному\fP выполнению следующих вызовов:
+.PP
+.in +4n
+.EX
+sigset_t origmask;
+
+pthread_sigmask(SIG_SETMASK, &sigmask, &origmask);
+ready = epoll_wait(epfd, &events, maxevents, timeout);
+pthread_sigmask(SIG_SETMASK, &origmask, NULL);
+.EE
+.in
+.PP
+Аргумент \fIsigmask\fP может быть равен NULL \(em в этом случае
+\fBepoll_pwait\fP() эквивалентен \fBepoll_wait\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При нормальном выполнении \fBepoll_wait\fP() возвращает количество файловых
+дескрипторов, готовых для запросов ввода\-вывода, или ноль, если ни один
+файловый дескриптор не стал готов за отведённые \fItimeout\fP миллисекунд. При
+возникновении ошибки \fBepoll_wait\fP() возвращает \-1 и устанавливает \fIerrno\fP
+в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fIepfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEFAULT\fP
+Память, указанная \fIevents\fP, недоступна на запись из\-за прав доступа.
+.TP 
+\fBEINTR\fP
+Вызов был прерван обработчиком сигнала до возникновения любого из
+запрошенных событий или истечения \fItimeout\fP; см. \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+\fIepfd\fP не является файловым дескриптором \fBepoll\fP, или \fImaxevents\fP меньше
+или равно нулю.
+.SH ВЕРСИИ
+.\" To be precise: kernel 2.5.44.
+.\" The interface should be finalized by Linux kernel 2.5.66.
+Вызов \fBepoll_wait\fP() был добавлен в ядро версии 2.6. В glibc
+соответствующая функция появилась в версии 2.3.2.
+.PP
+Вызов \fBepoll_pwait\fP() был добавлен в ядро Linux 2.6.19. В glibc
+соответствующая функция появилась в версии 2.6.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBepoll_wait\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Пока одна нить блокирована в вызове \fBepoll_wait\fP(), в другой нити возможно
+добавить файловый дескриптор, который будет ожидаться экземпляром
+\fBepoll\fP. Как только новый файловый дескриптор станет готовым, это
+разблокирует вызов \fBepoll_wait\fP().
+.PP
+Если готово более \fImaxevents\fP файловых дескрипторов при вызове
+\fBepoll_wait\fP(), то последующие вызовы \fBepoll_wait\fP() циклически обработают
+весь набор готовых файловых дескрипторов. Такое поведение помогает избежать
+голодания — когда процесс не уведомляется, что дополнительные файловые
+дескрипторы готовы, так как он нацелен на набор файловых дескрипторов, про
+которые уже известно об их готовности.
+.PP
+Заметим, что возможно вызвать \fBepoll_wait\fP() для экземпляра \fBepoll\fP, чей
+список interest ещё пуст (или чей список interest станет пустым, так как
+файловые дескрипторы закрыты или удалены из interest в другой нити). Вызов
+будет заблокирован до тех пор, пока какой\-нибудь файловый дескриптор не
+будет добавлен в список interest (в другой нити) и этот файлоый дескриптор
+не станет готовым.
+.SH ДЕФЕКТЫ
+В ядрах до версии 2.6.37, если значение \fItimeout\fP больше чем
+приблизительное \fILONG_MAX / HZ\fP секунд, то оно воспринимается как \-1 (т.е.,
+бесконечность). То есть, например, в системе, где \fIsizeof(long)\fP равно 4 и
+значение ядра \fIHZ\fP равно 1000, задержка более 35,79 минут считается
+бесконечностью.
+.SS "Отличия между библиотекой C и ядром"
+Ядерный системный вызов \fBepoll_pwait\fP() имеет шестой аргумент, \fIsize_t
+sigsetsize\fP, в котором указывается размер аргумента \fIsigmask\fP в байтах. В
+обёрточной функции glibc \fBepoll_pwait\fP() в этом аргументе передаётся
+постоянная величина (равная \fIsizeof(sigset_t)\fP).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBepoll_create\fP(2), \fBepoll_ctl\fP(2), \fBepoll\fP(7)

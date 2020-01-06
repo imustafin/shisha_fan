@@ -1,0 +1,59 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MQ_GETSETATTR 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+mq_getsetattr \- получить/установить атрибуты очереди сообщений
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <mqueue.h>\fP
+.PP
+\fBint mq_getsetattr(mqd_t \fP\fImqdes\fP\fB, struct mq_attr *\fP\fInewattr\fP\fB,\fP
+\fB                 struct mq_attr *\fP\fIoldattr\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Не используйте этот системный вызов.
+.PP
+Этот низкоуровневый системный вызов используется для реализации функций
+\fBmq_getattr\fP(3) и \fBmq_setattr\fP(3). Более подробно о работе этого
+системного вызова можно узнать на странице \fBmq_setattr\fP(3).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Этот интерфейс является нестандартным, не используйте его.
+.SH ЗАМЕЧАНИЯ
+Glibc не предоставляет обертку (wrapper) для этого системного вызова;
+используйте \fBsyscall\fP(2). (Даже не вызывайте его, если не пишете C
+библиотеку!)
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmq_getattr\fP(3), \fBmq_overview\fP(7)

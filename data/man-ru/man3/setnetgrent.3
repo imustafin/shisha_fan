@@ -1,0 +1,125 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"  Copyright 2002 walter harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\"  based on glibc infopages
+.\" polished - aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETNETGRENT 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+setnetgrent, endnetgrent, getnetgrent, getnetgrent_r, innetgr \- работа с
+элементами групп сетей
+.SH ОБЗОР
+.nf
+\fB#include <netdb.h>\fP
+.PP
+\fBint setnetgrent(const char *\fP\fInetgroup\fP\fB);\fP
+.PP
+\fBvoid endnetgrent(void);\fP
+.PP
+\fBint getnetgrent(char **\fP\fIhost\fP\fB, char **\fP\fIuser\fP\fB, char **\fP\fIdomain\fP\fB);\fP
+.PP
+\fBint getnetgrent_r(char **\fP\fIhost\fP\fB, char **\fP\fIuser\fP\fB,\fP
+\fB                  char **\fP\fIdomain\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fIbuflen\fP\fB);\fP
+.PP
+\fBint innetgr(const char *\fP\fInetgroup\fP\fB, const char *\fP\fIhost\fP\fB,\fP
+\fB            const char *\fP\fIuser\fP\fB, const char *\fP\fIdomain\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBsetnetgrent\fP(),
+\fBendnetgrent\fP(),
+\fBgetnetgrent\fP(),
+\fBgetnetgrent_r\fP(),
+\fBinnetgr\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    glibc 2.19 и старее:
+        _BSD_SOURCE || _SVID_SOURCE
+.ad b
+.SH ОПИСАНИЕ
+Файл \fInetgroup\fP впервые появился в SunOS. База данных netgroup представляет
+собой список строк с тремя элементами (\fIhostname\fP, \fIusername\fP,
+\fIdomainname\fP)  или с другими именами netgroup. Любой из элементов тройки
+может быть пустым, то есть совпадает с любым значением. Описываемые здесь
+функции предоставляют доступ к базам данных netgroup. В файле
+\fI/etc/nsswitch.conf\fP задаётся какая база данных будет использована при
+поиске.
+.PP
+Вызов \fBsetnetgrent\fP() настраивает netgroup, которая будет использована при
+поиске в последующих вызовах \fBgetnetgrent\fP(). Функция \fBgetnetgrent\fP()
+выбирает следующий элемент netgroup и возвращает указатели в \fIhost\fP,
+\fIuser\fP, \fIdomain\fP. Указатель null означает, что соответствующая запись
+совпадает с любой строкой. Значения указателей корректны до тех пор, пока не
+произойдёт других вызовов функций работы с netgroup. Чтобы избежать этой
+проблемы вы можете использовать функцию GNU \fBgetnetgrent_r\fP(), которая
+хранит строки в переданной ей буфере. Чтобы освободить все выделенные буферы
+используйте \fBendnetgrent\fP().
+.PP
+В большинстве случаев чаще всего проверяется присутствие тройки
+(\fIhostname\fP, \fIusername\fP, \fIdomainname\fP)  в netgroup. Для этого можно
+использовать функцию \fBinnetgr\fP() и не вызывать остальные три функции. Не
+забудьте, что указатель null — универсальный символ и совпадает с любой
+строкой. Функцию можно безопасно использовать в нитях.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 1 и 0 при ошибке.
+.SH ФАЙЛЫ
+\fI/etc/netgroup\fP
+.br
+\fI/etc/nsswitch.conf\fP
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw16 lb lbw23
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsetnetgrent\fP(),
+.br
+\fBgetnetgrent_r\fP(),
+.br
+\fBinnetgr\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:netgrent
+.br
+locale
+T}
+T{
+\fBendnetgrent\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:netgrent
+T{
+\fBgetnetgrent\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:netgrent
+.br
+race:netgrentbuf locale
+T}
+.TE
+.sp 1
+В приведённой выше таблице \fInetgrent\fP в \fIrace:netgrent\fP означает, что если
+в нескольких нитях программы одновременно используются функции
+\fBsetnetgrent\fP(), \fBgetnetgrent_r\fP(), \fBinnetgr\fP(), \fBgetnetgrent\fP() или
+\fBendnetgrent\fP(), то может возникнуть состязательность по данным.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" getnetgrent_r() is on Solaris 8 and AIX 5.1, but not the BSDs.
+Эти функции отсутствуют в POSIX.1, но \fBsetnetgrent\fP(), \fBendnetgrent\fP(),
+\fBgetnetgrent\fP() и \fBinnetgr\fP() доступны в большинстве систем UNIX. Функция
+\fBgetnetgrent_r\fP() не так широко распространена в других системах.
+.SH ЗАМЕЧАНИЯ
+В реализации BSD функция \fBsetnetgrent\fP() возвращает void.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsethostent\fP(3), \fBsetprotoent\fP(3), \fBsetservent\fP(3)

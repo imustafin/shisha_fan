@@ -1,0 +1,133 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Justin Pryzby <pryzbyj@justinpryzby.com>
+.\"
+.\" %%%LICENSE_START(PERMISSIVE_MISC)
+.\" Permission is hereby granted, free of charge, to any person obtaining
+.\" a copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\"
+.\" The above copyright notice and this permission notice shall be
+.\" included in all copies or substantial portions of the Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+.\" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+.\" CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+.\" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+.\" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.\" %%%LICENSE_END
+.\"
+.\" References:
+.\"   glibc manual and source
+.\"
+.\" 2006-05-19, mtk, various edits and example program
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RPMATCH 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+rpmatch \- определяет, является ли ответ на вопрос утвердительным или
+отрицательным
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint rpmatch(const char *\fP\fIresponse\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBrpmatch\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _SVID_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBrpmatch\fP() обрабатывает ответ пользователя «да» или «нет» на
+вопросы, учитывая интернационализацию.
+.PP
+В аргументе \fIresponse\fP должен указываться ответ пользователя в виде строки,
+заканчивающейся null, полученной, например, с помощью \fBfgets\fP(3) или
+\fBgetline\fP(3).
+.PP
+Пользовательские языковые настройки определяются с помощью переменных
+окружения \fBLANG\fP, \fBLC_MESSAGES\fP и \fBLC_ALL\fP, если для их учёта программа
+вызывала \fBsetlocale\fP(3).
+.PP
+Вне зависимости от локали, ответы, соответствующие \fB^[Yy]\fP, всегда
+считаются утвердительными, а соответствующие \fB^[Nn]\fP, всегда принимаются за
+отрицательные.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+После проверки \fIresponse\fP, функция \fBrpmatch\fP() возвращает 0 при найденном
+отрицательном ответе («нет»), 1 при положительном ответе («да») и \-1, когда
+значение \fIresponse\fP не распознано.
+.SH ОШИБКИ
+Возвращаемое значение \-1 может указывать на неправильные входные данные,
+либо какую\-то другую ошибку. Не стоит проверять является ли возвращаемое
+значение лишь отличным от нуля.
+.PP
+Функция \fBrpmatch\fP() может завершиться с ошибкой по любой из причин, по
+которым могут не выполниться \fBregcomp\fP(3) или \fBregexec\fP(3); причина ошибки
+не указывается в \fIerrno\fP или где\-то ещё — это указывает на ошибку в самом
+механизме regex (но этот случай не отличается от нераспознанных значений
+\fIresponse\fP).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBrpmatch\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" It is available on at least AIX 5.1 and FreeBSD 6.0.
+Функция \fBrpmatch\fP() не является стандартной, но доступна в некоторых других
+системах.
+.SH ДЕФЕКТЫ
+Реализация \fBrpmatch\fP() учитывает лишь первый символ \fIresponse\fP. Так что,
+«ну, да.» вернёт 0, а «да нет же, ни за что!» вернёт 1. Правильнее было бы
+использовать расширенные правила для обработки входных строк (использования
+дополненных регулярных выражений описано в \fBregex\fP(7)): \fB^([yY]|yes|YES)$\fP
+и \fB^([nN]|no|NO)$\fP.
+.SH ПРИМЕР
+Следующая программа показывает результаты, когда в \fBrpmatch\fP() передана
+строка, полученная программой из командной строки.
+.PP
+.EX
+#define _SVID_SOURCE
+#include <locale.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+    if (argc != 2 || strcmp(argv[1], "\-\-help") == 0) {
+        fprintf(stderr, "%s response\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    setlocale(LC_ALL, "");
+    printf("rpmatch() returns: %d\en", rpmatch(argv[1]));
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfgets\fP(3), \fBgetline\fP(3), \fBnl_langinfo\fP(3), \fBregcomp\fP(3),
+\fBsetlocale\fP(3)

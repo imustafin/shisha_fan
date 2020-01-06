@@ -1,0 +1,121 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2017 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BZERO 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+bzero, explicit_bzero \- обнуляет строку байт
+.SH ОБЗОР
+.nf
+\fB#include <strings.h>\fP
+.PP
+\fBvoid bzero(void *\fP\fIs\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.PP
+\fB#include <string.h>\fP
+.PP
+\fBvoid explicit_bzero(void *\fP\fIs\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBbzero\fP() стирает данные длиной \fIn\fP байт в памяти, начиная с
+места, указанного в \fIs\fP, записывая в эту область нули (байты \(aq\e0\(aq).
+.PP
+Функция \fBexplicit_bzero\fP() выполняет ту же задачу что и \fBbzero\fP(). Она
+отличается от \fBbzero\fP() тем, что гарантирует выполнение операции стирания,
+что есть при оптимизации компилятор её не удалит, если решит, что операция
+«не нужна».
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Нет.
+.SH ВЕРСИИ
+Функция \fBexplicit_bzero\fP() впервые появилась в glibc 2.25.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBbzero\fP(),
+.br
+\fBexplicit_bzero\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функция \fBbzero\fP() устарела (отмечена как LEGACY в POSIX.1\-2001): в новых
+программах следует использовать \fBmemset\fP(3). В POSIX.1\-2008 определение
+\fBbzero\fP() удалено. Впервые функция \fBbzero\fP() появилась в 4.3BSD.
+.PP
+Функция \fBexplicit_bzero\fP() является нестандартным расширением, которое
+также имеется в некоторых BSD. В других реализациях есть подобная функция,
+например \fBmemset_explicit\fP() или \fBmemset_s\fP().
+.SH ЗАМЕЧАНИЯ
+Функция \fBexplicit_bzero\fP() призвана решить проблему с безопасностью,
+которая может возникнуть у приложений при использовании \fBbzero\fP(): если
+компилятор решит, что обнуляемое расположение больше никогда не будет
+использовано \fIправильной\fP программой, то он может удалить вызов
+\fBbzero\fP(). Это проблема, если целью вызова \fBbzero\fP() было стирание
+конфиденциальных данных (например, паролей) для предотвращения их возможной
+утечки из\-за некорректной или взломанной программы. Вызовы
+\fBexplicit_bzero\fP() никогда не удаляются компилятором.
+.PP
+Функция \fBexplicit_bzero\fP() не решает всех проблем, связанных со стиранием
+конфиденциальных данных:
+.IP 1. 3
+Функция \fBexplicit_bzero\fP() \fIне\fP гарантирует, что конфиденциальные данные
+полностью стираются из памяти (тоже верно и для \fBbzero\fP()). Например,
+остаётся много копий конфиденциальных данных в регистрах и временных
+областях стека. Функция \fBexplicit_bzero\fP() не учитывает эти копии и не
+стирает их.
+.IP 2.
+В некоторых случаях \fBexplicit_bzero\fP() может \fIухудшить\fP безопасность. Если
+компилятор определит, что переменная, содержащая конфиденциальные данные,
+может быть оптимизирована и сохранит её в регистре (так это позволяет малый
+размер и нет другой операции кроме вызова \fBexplicit_bzero\fP(), обращающейся
+к переменной), то вызов \fBexplicit_bzero\fP() скопирует данные из регистра в
+расположение в памяти, которая затем будет сразу затёрта (но останется копия
+в регистре). Здесь проблема в том, что данные в памяти, вероятно, более
+доступны при взломе, чем данные в регистре и, таким образом, вызов
+\fBexplicit_bzero\fP() создаёт короткий временной промежуток, в котором
+конфиденциальные данные становятся более уязвимы, чем если бы вообще не
+делалось попытки стереть данные.
+.PP
+Заметим, что объявление регистра с конфиденциальными данными с
+квалификатором \fBvolatile\fP \fIне\fP решает показанную выше проблему. На самом
+деле, получится ещё хуже, так как, например, это может заставить
+оптимизированную хранимую в регистре переменную переместить в (более
+уязвимую) память на всё время её существования.
+.PP
+Несмотря на вышеупомянутые детали, для безопасности в приложениях лучше всё
+же использовать \fBexplicit_bzero\fP(). Разработчики \fBexplicit_bzero\fP()
+ожидают, что в будущем компиляторы будут учитывать вызовы
+\fBexplicit_bzero\fP() и предпринимать шаги по стиранию всех копий
+конфиденциальных данных, включая копии в регистрах или во временных областях
+стека.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbstring\fP(3), \fBmemset\fP(3), \fBswab\fP(3)

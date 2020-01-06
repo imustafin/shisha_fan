@@ -1,0 +1,71 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification
+.\"     http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\" Modified Tue Oct 16 23:18:40 BST 2001 by John Levon <moz@compsoc.man.ac.uk>
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FGETWS 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+fgetws \- читает строку широких символов из потока FILE
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBwchar_t *fgetws(wchar_t *\fP\fIws\fP\fB, int \fP\fIn\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBfgetws\fP() — это эквивалент \fBfgets\fP(3), но работающий со строками
+широких символов. Она читает строку из не более чем \fIn\-1\fP широких символов,
+записывает её в массив широких символов \fIws\fP и добавляет завершающий
+широкий символ null (L\(aq\e0\(aq). Она прекращает чтение после обнаружения
+и записи широкого символа новой строки. Это также происходит и в случае
+достижения конца потока.
+.PP
+Программист должен убедиться в том, что выделил для \fIws\fP память,
+достаточную для записи не менее \fIn\fP широких символов.
+.PP
+Неблокирующий аналог смотрите в \fBunlocked_stdio\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBfgetws\fP() в случае удачного выполнения возвращает \fIws\fP. Если
+достигнут конец потока или возникает ошибка, то возвращается NULL.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfgetws\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBfgetws\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.PP
+Из\-за отсутствия дополнительной информации, передаваемой в \fBfopen\fP(3),
+закономерно ожидать, что \fBfgetws\fP() на самом деле читает многобайтовую
+строку из потока, а затем преобразует её в широкую строку.
+.PP
+Данная функция  ненадёжна, так как не позволяет правильно обработать
+ситуацию, когда во входных данных появляется широкий символ null.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfgetwc\fP(3), \fBunlocked_stdio\fP(3)

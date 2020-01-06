@@ -1,0 +1,319 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This man page is Copyright (C) 2000 Andi Kleen <ak@muc.de>.
+.\"
+.\" %%%LICENSE_START(VERBATIM_ONE_PARA)
+.\" Permission is granted to distribute possibly modified copies
+.\" of this page provided the header is included verbatim,
+.\" and in case of nontrivial modification author and date
+.\" of the modification is added to the header.
+.\" %%%LICENSE_END
+.\"
+.\" $Id: ipv6.7,v 1.3 2000/12/20 18:10:31 ak Exp $
+.\"
+.\" The following socket options are undocumented
+.\"	All of the following are from:
+.\"	    commit 333fad5364d6b457c8d837f7d05802d2aaf8a961
+.\"	    Author: YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+.\"	    Support several new sockopt / ancillary data in Advanced API (RFC3542).
+.\"		IPV6_2292PKTINFO (2.6.14)
+.\"		    Formerly IPV6_PKTINFO
+.\"		IPV6_2292HOPOPTS (2.6.14)
+.\"		    Formerly IPV6_HOPOPTS, which is documented
+.\"		IPV6_2292DSTOPTS (2.6.14)
+.\"		    Formerly IPV6_DSTOPTS, which is documented
+.\"		IPV6_2292RTHDR (2.6.14)
+.\"		    Formerly IPV6_RTHDR, which is documented
+.\"		IPV6_2292PKTOPTIONS (2.6.14)
+.\"		    Formerly IPV6_PKTOPTIONS
+.\"		IPV6_2292HOPLIMIT (2.6.14)
+.\"		    Formerly IPV6_HOPLIMIT, which is documented
+.\"
+.\"		IPV6_RECVHOPLIMIT (2.6.14)
+.\"		IPV6_RECVHOPOPTS (2.6.14)
+.\"		IPV6_RTHDRDSTOPTS (2.6.14)
+.\"		IPV6_RECVRTHDR (2.6.14)
+.\"		IPV6_RECVDSTOPTS (2.6.14)
+.\"
+.\"	IPV6_RECVPATHMTU (2.6.35, flag value added in 2.6.14)
+.\"	    commit 793b14731686595a741d9f47726ad8b9a235385a
+.\"	    Author: Brian Haley <brian.haley@hp.com>
+.\"	IPV6_PATHMTU (2.6.35, flag value added in 2.6.14)
+.\"	    commit 793b14731686595a741d9f47726ad8b9a235385a
+.\"	    Author: Brian Haley <brian.haley@hp.com>
+.\"	IPV6_DONTFRAG (2.6.35, flag value added in 2.6.14)
+.\"	    commit 793b14731686595a741d9f47726ad8b9a235385a
+.\"	    Author: Brian Haley <brian.haley@hp.com>
+.\"	    commit 4b340ae20d0e2366792abe70f46629e576adaf5e
+.\"	    Author: Brian Haley <brian.haley@hp.com>
+.\"
+.\"	IPV6_RECVTCLASS (2.6.14)
+.\"	    commit 41a1f8ea4fbfcdc4232f023732584aae2220de31
+.\"	    Author: YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+.\"		Based on patch from David L Stevens <dlstevens@us.ibm.com>
+.\"
+.\"	IPV6_CHECKSUM (2.2)
+.\"	IPV6_NEXTHOP (2.2)
+.\"	IPV6_JOIN_ANYCAST (2.4.21 / 2.6)
+.\"	IPV6_LEAVE_ANYCAST (2.4.21 / 2.6)
+.\"	IPV6_FLOWLABEL_MGR (2.2.7 / 2.4)
+.\"	IPV6_FLOWINFO_SEND (2.2.7 / 2.4)
+.\"	IPV6_IPSEC_POLICY (2.6)
+.\"	IPV6_XFRM_POLICY (2.6)
+.\"	IPV6_TCLASS (2.6)
+.\"
+.\"	IPV6_ADDR_PREFERENCES (2.6.26)
+.\"	    commit 7cbca67c073263c179f605bdbbdc565ab29d801d
+.\"	    Author: YOSHIFUJI Hideaki <yoshfuji@linux-ipv6.org>
+.\"	IPV6_MINHOPCOUNT (2.6.35)
+.\"	    commit e802af9cabb011f09b9c19a82faef3dd315f27eb
+.\"	    Author: Stephen Hemminger <shemminger@vyatta.com>
+.\"	IPV6_ORIGDSTADDR (2.6.37)
+.\"	    Actually a CMSG rather than a sockopt?
+.\"	    In header file, we have IPV6_RECVORIGDSTADDR == IPV6_ORIGDSTADDR
+.\"	    commit 6c46862280c5f55eda7750391bc65cd7e08c7535
+.\"	    Author: Balazs Scheidler <bazsi@balabit.hu>
+.\"	IPV6_RECVORIGDSTADDR (2.6.37)
+.\"	    commit 6c46862280c5f55eda7750391bc65cd7e08c7535
+.\"	    Author: Balazs Scheidler <bazsi@balabit.hu>
+.\"	        Support for IPV6_RECVORIGDSTADDR sockopt for UDP sockets
+.\"		were contributed by Harry Mason.
+.\"	IPV6_TRANSPARENT (2.6.37)
+.\"	    commit 6c46862280c5f55eda7750391bc65cd7e08c7535
+.\"	    Author: Balazs Scheidler <bazsi@balabit.hu>
+.\"	IPV6_UNICAST_IF (3.4)
+.\"	    commit c4062dfc425e94290ac427a98d6b4721dd2bc91f
+.\"	    Author: Erich E. Hoover <ehoover@mines.edu>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IPV6 7 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ipv6  \- реализация протокола IPv6 в Linux
+.SH ОБЗОР
+\fB#include <sys/socket.h>\fP
+.br
+\fB#include <netinet/in.h>\fP
+.PP
+\fItcp6_socket\fP\fB = socket(AF_INET6, SOCK_STREAM, 0);\fP
+.br
+\fIraw6_socket\fP\fB = socket(AF_INET6, SOCK_RAW, \fP\fIprotocol\fP\fB);\fP
+.br
+\fIudp6_socket\fP\fB = socket(AF_INET6, SOCK_DGRAM, \fP\fIprotocol\fP\fB);\fP
+.SH ОПИСАНИЕ
+В Linux 2.2 реализован протокол Интернета версии 6. Эта справочная страница
+содержит описание основного программного интерфейса IPv6, который реализован
+в ядре Linux и в glibc 2.1. Программный интерфейс основан на интерфейсе
+сокетов BSD; смотрите \fBsocket\fP(7).
+.PP
+Программный интерфейс IPv6, по большей части, совместим с IPv4 (смотрите
+\fBip\fP(7)). В этой справочной странице описаны только различия между ними.
+.PP
+Чтобы привязать сокет \fBAF_INET6\fP к любому процессу нужно скопировать
+локальный адрес из переменной \fIin6addr_any\fP, имеющей тип \fIin6_addr\fP. При
+статической инициализации также может быть использован макрос
+\fBIN6ADDR_ANY_INIT\fP, который раскрывается в константное выражение. В обоих
+значениях используется сетевой порядок байт.
+.PP
+Адрес устройства обратной петли IPv6 (::1) доступен в глобальной переменной
+\fIin6addr_loopback\fP. Для инициализации нужно использовать
+\fBIN6ADDR_LOOPBACK_INIT\fP.
+.PP
+Соединения IPv4 могут обрабатываться программным интерфейсом v6 с помощью
+адресного типа v4\-преобразованный\-в\-v6; то есть программе необходимо
+поддерживать только данный тип программного интерфейса для работы с обоими
+протоколами. Прозрачная работа с адресами реализована в функциях библиотеки
+Си.
+.PP
+IPv4 и IPv6 совместно используют локальное портовое пространство. При
+установлении соединения IPv4 или приёма пакета на сокете IPv6, адрес его
+источника отобразится в v6, и в дальнейшем он будет отображаться как v6.
+.SS "Формат адреса"
+.in +4n
+.EX
+struct sockaddr_in6 {
+    sa_family_t     sin6_family;   /* AF_INET6 */
+    in_port_t       sin6_port;     /* номер порта */
+    uint32_t        sin6_flowinfo; /* информация о потоке IPv6 */
+    struct in6_addr sin6_addr;     /* адрес IPv6 */
+    uint32_t        sin6_scope_id; /* ID области (новое в 2.4) */
+};
+
+struct in6_addr {
+    unsigned char   s6_addr[16];   /* адрес IPv6 */
+};
+.EE
+.in
+.PP
+Значение \fIsin6_family\fP всегда устанавливается в \fBAF_INET6\fP; в \fIsin6_port\fP
+указывается порт протокола (смотрите \fIsin_port\fP в \fBip\fP(7)); в
+\fIsin6_flowinfo\fP указывается идентификатор потока IPv6; в \fIsin6_addr\fP
+указывается 128\-битный адрес IPv6. Значением \fIsin6_scope_id\fP является
+идентификатор, зависящий от области адреса. Это новое поле, появившееся в
+версии Linux 2.4. Linux поддерживает его только для адресов локальной связи
+(link local); в этом случае \fIsin6_scope_id\fP содержит индекс интерфейса
+(смотрите \fBnetdevice\fP(7)).
+.PP
+IPv6 поддерживает несколько типов адресов: однозначные (unicast) — для
+адресации одного узла, многоадресные (multicast) — для адресации группы
+узлов, anycast — для адресации ближайшего члена группы узлов (не реализовано
+в Linux), IPv4\-on\-IPv6 — для адресации узла IPv4, и несколько других
+зарезервированных типов адресов.
+.PP
+Адрес IPv6 представляет собой группу из 8 4\-разрядных шестнадцатеричных
+чисел, разделённых двоеточием «:». Два двоеточия «::» обозначают строку 0
+бит. Специальные адреса: ::1 (для устройства обратной петли) и
+FFFF::<адрес IPv4> — для IPv4\-преобразованного\-в\-IPv6.
+.PP
+В IPv6 используется единое с IPv4 пространство портов.
+.SS "Параметры сокета"
+IPv6 поддерживает некоторые параметры сокета, относящиеся к протоколу,
+которые могут быть установлены с помощью \fBsetsockopt\fP(2) и прочитаны с
+помощью \fBgetsockopt\fP(2). Значением уровня (level) параметров сокета для
+IPv6 является \fBIPPROTO_IPV6\fP. Логический флаг в виде целого числа со
+значением 0 означает «ложь», другие значения — «истина».
+.TP 
+\fBIPV6_ADDRFORM\fP
+Преобразует сокет \fBAF_INET6\fP в сокет другого семейства адресов. На данный
+момент поддерживается только \fBAF_INET\fP. Разрешено только для сокетов IPv6,
+которые подсоединены и привязаны к адресам v4\-преобразованные\-в\-v6. В
+аргументе задаётся указатель на целое со значением \fBAF_INET\fP. Это полезно
+для передачи v4\-преобразованных сокетов в виде дескрипторов файлов
+программам, которые не понимают программного интерфейса IPv6.
+.TP 
+\fBIPV6_ADD_MEMBERSHIP, IPV6_DROP_MEMBERSHIP\fP
+Определяет членство в многоадресных (multicast) группах. Аргументом является
+указатель на \fIstruct ipv6_mreq\fP.
+.TP 
+\fBIPV6_MTU\fP
+\fBgetsockopt\fP(): Возвращает известное в данный момент значение MTU маршрута
+текущего сокета. Только для подключённых сокетов. Возвращается целое число.
+.IP
+\fBsetsockopt\fP(): Устанавливает MTU, который должен использоваться для
+сокета. MTU ограничивается значением MTU устройства или MTU пути, если
+включено определение пути MTU. Аргументом является указатель на целое.
+.TP 
+\fBIPV6_MTU_DISCOVER\fP
+Управляет определением пути MTU для сокета. Смотрите описание
+\fBIP_MTU_DISCOVER\fP в \fBip\fP(7).
+.TP 
+\fBIPV6_MULTICAST_HOPS\fP
+Определяет лимит многоадресных пересылок (hop) для сокета. Аргументом
+является указатель на целое число. Значение \-1 означает использование
+маршрута по умолчанию, в противном случае значение должно быть в диапазоне
+от 0 до 255.
+.TP 
+\fBIPV6_MULTICAST_IF\fP
+Назначает устройство для исходящих многоадресных пакетов для сокета. Это
+разрешено только для сокетов \fBSOCK_DGRAM\fP и \fBSOCK_RAW\fP. Аргументом
+является указатель на индекс интерфейса (смотрите \fBnetdevice\fP(7)) в виде
+целого числа.
+.TP 
+\fBIPV6_MULTICAST_LOOP\fP
+Определяет, видит ли сокет многоадресные пакеты, которые сам и
+посылал. Аргументом является указатель на логическое значение.
+.TP 
+\fBIPV6_RECVPKTINFO\fP (начиная с Linux 2.6.14)
+Задаёт отправку управляющего сообщения \fBIPV6_PKTINFO\fP для входящих
+дейтаграмм. Такие управляющие сообщения содержат структуру \fIstruct
+in6_pktinfo\fP, описанную в RFC 3542. Разрешено только для сокетов
+\fBSOCK_DGRAM\fP или \fBSOCK_RAW\fP. Аргументом является указатель на логическое
+значение в виде целого числа.
+.TP 
+.nh
+\fBIPV6_RTHDR, IPV6_AUTHHDR, IPV6_DSTOPTS, IPV6_HOPOPTS, IPV6_FLOWINFO,
+IPV6_HOPLIMIT\fP
+.hy
+Задают отправку управляющих сообщений для входящих датаграмм, содержащих
+заголовки расширения из принятых пакетов. \fBIPV6_RTHDR\fP доставляет заголовок
+маршрутизации, \fBIPV6_AUTHHDR\fP доставляет заголовок аутентификации,
+\fBIPV6_DSTOPTS\fP доставляет параметры назначения, \fBIPV6_HOPOPTS\fP доставляет
+параметры пересылок (hop), \fBIPV6_FLOWINFO\fP доставляет целое, содержащее ID
+потока, \fBIPV6_HOPLIMIT\fP доставляет целое, содержащее счётчик пересылок
+пакета. Управляющие сообщения имеют тот же тип, что и параметры сокета. Все
+эти параметры заголовка могут также устанавливаться для исходящих пакетов
+посылкой определённого управляющего сообщения в управляющий буфер
+\fBsendmsg\fP(2). Разрешено только для сокетов \fBSOCK_DGRAM\fP или
+\fBSOCK_RAW\fP. Аргументом является указатель на логическое значение.
+.TP 
+\fBIPV6_RECVERR\fP
+Управляет получением асинхронных параметров ошибки. Смотрите описание
+\fBIP_RECVERR\fP в \fBip\fP(7). Аргументом является указатель на логическое
+значение.
+.TP 
+\fBIPV6_ROUTER_ALERT\fP
+Передаёт все пересланные пакеты, содержащие предупреждающий параметр
+hop\-by\-hop маршрутизатора в сокет. Разрешено только для сокетов
+\fBSOCK_RAW\fP. Выявленные пакеты не пересылаются ядром, пользователь должен
+отправить заново самостоятельно. Аргументом является указатель на
+целое. Положительное число означает перехват значения предупреждающего
+параметра маршрутизатора. Пакеты, содержащие предупреждающий параметр
+маршрутизатора с таким значением поля, будут доставлены в
+сокет. Отрицательное значение отключает доставку пакетов с предупреждающим
+параметром маршрутизатора в сокет.
+.TP 
+\fBIPV6_UNICAST_HOPS\fP
+Определяет лимит однозначных (unicast) пересылок (hop) для
+сокета. Аргументом является указатель на целое число. Значение \-1 означает
+использование маршрута по умолчанию, в противном случае его значение должно
+быть в диапазоне от 0 до 255.
+.TP 
+\fBIPV6_V6ONLY\fP (начиная с Linux 2.4.21 и 2.6)
+.\" See RFC 3493
+Если этот флаг установлен (не равен 0), то сокет отправляет и принимает
+только пакеты IPv6. В этом случае приложение IPv4 и IPv6 может привязать
+один порт за раз.
+.IP
+Если этот флаг сброшен (равен 0), то сокет можно использовать для отправки и
+приёма пакетов с и на адрес IPv6 или адрес IPv4\-преобразованный\-в\-IPv6.
+.IP
+Аргументом является указатель на логическое значение в виде целого числа.
+.IP
+.\" FLOWLABEL_MGR, FLOWINFO_SEND
+Значение этого флага по умолчанию определяется из содержимого файла
+\fI/proc/sys/net/ipv6/bindv6only\fP. По умолчанию значение в файле 0.
+.SH ОШИБКИ
+.TP 
+\fBENODEV\fP
+Пользователь пытался выполнить \fBbind\fP(2) на адрес локальной связи IPv6, но
+\fIsin6_scope_id\fP в переданной структуре \fIsockaddr_in6\fP содержит
+некорректный индекс интерфейса.
+.SH ВЕРСИИ
+В Linux 2.4 сломана двоичная совместимость \fIsockaddr_in6\fP у 64\-битных узлов
+из\-за изменения выравнивания \fIin6_addr\fP и добавления дополнительного поля
+\fIsin6_scope_id\fP. Интерфейс ядра остался совместимым, но программа,
+включающая \fIsockaddr_in6\fP или \fIin6_addr\fP в другие структуры, уже может не
+быть совместимой. Это не является проблемой для 32\-битных узлов, например с
+архитектурой i386.
+.PP
+Поле \fIsin6_flowinfo\fP является нововведением в Linux 2.4. Оно прозрачно
+передаётся/считывается ядром в длине переданного адреса. Некоторые
+программы, которые передают более длинный буфер адреса и затем проверяют
+длину исходящего адреса, могут перестать работать.
+.SH ЗАМЕЧАНИЯ
+Структура \fIsockaddr_in6\fP по размеру больше, чем обычная
+\fIsockaddr\fP. Программы, которые допускают, что все типы адреса могут без
+проблем сохраняться в \fIstruct sockaddr\fP, нужно изменить использовав вместо
+неё \fIstruct sockaddr_storage\fP.
+.PP
+Параметры сокета \fBSOL_IP\fP, \fBSOL_IPV6\fP, \fBSOL_ICMPV6\fP и другие \fBSOL_\fP*
+являются непереносимыми вариантами \fBIPPROTO_\fP*\fB.\fP Смотрите также \fBip\fP(7).
+.SH ДЕФЕКТЫ
+Расширенный программный интерфейс IPv6, описанный в RFC\ 2292, к настоящему
+времени реализован частично; хотя ядро версии 2.2 имеет почти полную
+поддержку параметров приёма, макросы для генерации параметров IPv6 в glibc
+2.1 отсутствуют.
+.PP
+Поддержка IPSec для заголовков EH и АХ отсутствует.
+.PP
+Описание управления потоком на основе меток (label) не завершено и здесь не
+описано.
+.PP
+Эта справочная страница не полна.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcmsg\fP(3), \fBip\fP(7)
+.PP
+RFC\ 2553: IPv6 BASIC API; Linux пытается быть совместимым с этим
+стандартом. RFC\ 2460: спецификация IPv6.

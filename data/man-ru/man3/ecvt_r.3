@@ -1,0 +1,98 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2002 Andries Brouwer <aeb@cwi.nl>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" This replaces an earlier man page written by Walter Harms
+.\" <walter.harms@informatik.uni-oldenburg.de>.
+.\"
+.\" Corrected return types; from Fabian; 2004-10-05
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ECVT_R 3 2016\-03\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+ecvt_r, fcvt_r, qecvt_r, qfcvt_r \- преобразует число с плавающей запятой в
+строку
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint ecvt_r(double \fP\fInumber\fP\fB, int \fP\fIndigits\fP\fB, int *\fP\fIdecpt\fP\fB,\fP
+\fB           int *\fP\fIsign\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.PP
+\fBint fcvt_r(double \fP\fInumber\fP\fB, int \fP\fIndigits\fP\fB, int *\fP\fIdecpt\fP\fB,\fP
+\fB           int *\fP\fIsign\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.PP
+\fBint qecvt_r(long double \fP\fInumber\fP\fB, int \fP\fIndigits\fP\fB, int *\fP\fIdecpt\fP\fB,\fP
+\fB           int *\fP\fIsign\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.PP
+\fBint qfcvt_r(long double \fP\fInumber\fP\fB, int \fP\fIndigits\fP\fB, int *\fP\fIdecpt\fP\fB,\fP
+\fB           int *\fP\fIsign\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBecvt_r\fP(), \fBfcvt_r\fP(), \fBqecvt_r\fP(), \fBqfcvt_r\fP():
+.RS 4
+/* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версиях glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Функции \fBecvt_r\fP(), \fBfcvt_r\fP(), \fBqecvt_r\fP() и \fBqfcvt_r\fP() идентичны
+функциям \fBecvt\fP(3), \fBfcvt\fP(3), \fBqecvt\fP(3) и \fBqfcvt\fP(3), соответственно,
+за исключением того, что они не возвращают результаты в статическом буфере,
+а вместо этого используют указанный \fIbuf\fP размером \fIlen\fP. Смотрите
+\fBecvt\fP(3) и \fBqecvt\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0 и \-1 при ошибке.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw20 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBecvt_r\fP(),
+\fBfcvt_r\fP(),
+.br
+\fBqecvt_r\fP(),
+\fBqfcvt_r\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+Данные функции устарели. Вместо них рекомендуется использовать
+\fBsprintf\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBecvt\fP(3), \fBqecvt\fP(3), \fBsprintf\fP(3)

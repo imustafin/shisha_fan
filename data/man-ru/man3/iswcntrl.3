@@ -1,0 +1,62 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ISWCNTRL 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+iswcntrl \- проверяет, является ли символ широким управляющим символом
+.SH ОБЗОР
+.nf
+\fB#include <wctype.h>\fP
+.PP
+\fBint iswcntrl(wint_t \fP\fIwc\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBiswcntrl\fP() является эквивалентом функции \fBiscntrl\fP(3), но для
+широких символов. Она проверяет, является ли \fIwc\fP широким символом,
+принадлежащим классу широких символов «cntrl».
+.PP
+Класс широких символов «cntrl» не пересекается с классом широких символов
+«print» и, следовательно, также не пересекается с его подклассами «graph»,
+«alpha», «upper», «lower», «digit», «xdigit», «punct».
+.PP
+Для \fIc\fP с типом «unsigned char» функция \fIiscntrl(c)\fP выполняет
+\fIiswcntrl(btowc(c))\fP, но не наоборот.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBiswcntrl\fP() возвращает ненулевое значение, если \fIwc\fP является
+широким символом, принадлежащим классу широких символов «cntrl». В других
+случаях возвращается 0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBiswcntrl\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBiswcntrl\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBiscntrl\fP(3), \fBiswctype\fP(3)

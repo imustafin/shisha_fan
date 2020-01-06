@@ -1,0 +1,230 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Michael Haardt, Ian Jackson.
+.\" and Copyright (C) 2007 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 13:35:59 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sun Nov 28 17:19:01 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sat Jan 13 12:58:08 1996 by Michael Haardt
+.\"   <michael@cantor.informatik.rwth-aachen.de>
+.\" Modified Sun Jul 21 18:59:33 1996 by Andries Brouwer <aeb@cwi.nl>
+.\" 2001-12-13 added remark by Zack Weinberg
+.\" 2007-06-18 mtk:
+.\"    	Added details about seekable files and file offset.
+.\"	Noted that write() may write less than 'count' bytes, and
+.\"	gave some examples of why this might occur.
+.\"	Noted what happens if write() is interrupted by a signal.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WRITE 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+write \- запись в файловый дескриптор
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBssize_t write(int \fP\fIfd\fP\fB, const void *\fP\fIbuf\fP\fB, size_t \fP\fIcount\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBwrite\fP() пишет до \fIcount\fP байт из буфера, начиная с \fIbuf\fP, в файл,
+на который ссылается файловый дескриптор \fIfd\fP.
+.PP
+Количество записанных байт может быть меньше чем \fIcount\fP если, например,
+недостаточно места на физическом носителе, или исчерпан отведённый лимит
+ресурса \fBRLIMIT_FSIZE\fP (см. \fBsetrlimit\fP(2)), или вызов был прерван
+обработчиком сигналов после уже записанных меньше чем \fIcount\fP
+байт. (См. также \fBpipe\fP(7).)
+.PP
+В случае с файлами, разрешающими позиционирование (т.е., к которым можно
+применить \fBlseek\fP(2), например, обычные файлы), запись производится по
+текущему файловому смещению, а смещение файла увеличивается на реальное
+число записанных байт. Если файл был открыт с помощью \fBopen\fP(2) с
+аргументом \fBO_APPEND\fP, то перед записью файловое смещение устанавливается в
+конец файла. Согласование файлового смещения и операции записи выполняются
+атомарно.
+.PP
+В POSIX требуется, чтобы \fBread\fP(2), который может быть вызван сразу после
+\fBwrite\fP(), возвращал новые данные. Заметим, что не все файловые системы
+соответствуют стандарту POSIX.
+.PP
+В соответствие с POSIX.1, если \fIcount\fP больше \fBSSIZE_MAX\fP, то результат
+зависит от реализации; смотрите ЗАМЕЧАНИЯ по верхнему пределу в Linux.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается количество записанных байт. При ошибке
+возвращается \-1 и \fIerrno\fP устанавливается в соответствующее значение.
+.PP
+Заметим, что при успешном выполнении \fBwrite\fP() может передать меньше чем
+\fIcount\fP байт. Такая частичная запись может возникать по нескольким
+причинам; например, из\-за недостаточного количества места на диске, на
+который пишутся все запрошенные байты или из\-за прерывания блокировки
+\fBwrite\fP() сокета, канала или подобного обработчиком сигнала после частичной
+передачи, но до того, как были переданы все запрашиваемый байты. При даже
+частичной записи вызывающий может запустить другой вызов \fBwrite\fP() для
+передачи оставшихся байт. Последующий вызов или передаст остальные байты,
+или может завершиться ошибкой (например, если переполнен диск).
+.PP
+Если \fIcount\fP равен нулю и \fIfd\fP указывает на обычный файл, то \fBwrite\fP()
+может вернуть ошибку, если обнаружена одна из перечисленных ниже
+ошибок. Если ошибок не обнаружено или проверка ошибки не производилась, то
+возвращается 0 без каких\-либо других последствий. Если \fIcount\fP равен нулю и
+\fIfd\fP указывает на отличный от обычного файл, то результат не определён.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Файловый дескриптор \fIfd\fP указывает на файл, не являющийся сокетом и
+помеченный как неблокирующий ввод/вывод (\fBO_NONBLOCK\fP), а запись вызовет
+блокировку. См. \fBopen\fP(2) для дальнейшей информации по флагу \fBO_NONBLOCK\fP.
+.TP 
+\fBEAGAIN\fP или \fBEWOULDBLOCK\fP
+.\" Actually EAGAIN on Linux
+Файловый дескриптор \fIfd\fP указывает на сокет, который помечен как
+неблокирующий ввод/вывод (\fBO_NONBLOCK\fP), а запись вызовет блокировку. По
+POSIX.1\-2001 разрешено возвращать ошибку в обоих случая и не требуется,
+чтобы эти константы имели одно значение, поэтому переносимые приложения
+должны проверять обе причины.
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором или он не открыт
+для записи.
+.TP 
+\fBEDESTADDRREQ\fP
+Значение \fIfd\fP ссылается на сокет дейтаграмм, у которого с помощью
+\fBconnect\fP(2) не назначен адрес другой стороны.
+.TP 
+\fBEDQUOT\fP
+Исчерпана пользовательская квота на дисковые блоки файловой системы с
+файлом, на который указывает \fIfd\fP.
+.TP 
+\fBEFAULT\fP
+\fIbuf\fP находится за пределами доступного вам адресного пространства.
+.TP 
+\fBEFBIG\fP
+Попытка записать в файл, который превышает заданное при реализации
+ограничение на размер файла или ограничение на размер файла для текущего
+процесса, или запись в позицию после максимально разрешённого смещения.
+.TP 
+\fBEINTR\fP
+Этот вызов был прерван сигналом, перед тем как были записаны какие\-либо
+данные; см \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+\fIfd\fP присоединён к объекту, который не подходит для записи; или файл был
+открыт с указанием флага \fBO_DIRECT\fP, или неправильно выравнено адрес в
+\fIbuf\fP, значение \fIcount\fP или файловое смещение.
+.TP 
+\fBEIO\fP
+.\" commit 088737f44bbf6378745f5b57b035e57ee3dc4750
+Во время изменения иноды возникла низкоуровневая ошибка ввода/вывода. Эта
+ошибка может относится к отложенным (write\-back) данным предыдущего вызова
+\fBwrite\fP(), который выполнялся с другим файловым дескриптором для этого же
+файла. Начиная с Linux 4.13 ошибки отложенных данных поступают с обещанием,
+что о них \fIможет\fP быть сообщено следующему вызову. Результаты запросов
+\fBwrite\fP() \fIбудут\fP переданы последующему \fBfsync\fP(2) (независимо от того,
+сообщалось ли об этом \fBwrite\fP()). Также \fBEIO\fP может возникать у сетевых
+файловых систем, когда консультативная блокировка была убрана у дескриптора
+файла и потеряна. Подробности смотрите в абзаце \fIПотерянные блокировки\fP в
+\fBfcntl\fP(2).
+.TP 
+\fBENOSPC\fP
+На устройстве, содержащем файл, на который ссылается \fIfd\fP, нет свободного
+места.
+.TP 
+\fBEPERM\fP
+Выполнение операции предотвращено опечатыванием (file seal); смотрите
+\fBfcntl\fP(2).
+.TP 
+\fBEPIPE\fP
+\fIfd\fP ссылается на конвейер или сокет, у которого закрыто чтение. Когда
+такое случается, пишущий процесс также получит сигнал \fBSIGPIPE\fP. (Таким
+образом, возвращаемое значение можно будет увидеть только если программа
+перехватывает, блокирует или игнорирует этот сигнал.)
+.PP
+В зависимости от объекта, на который указывает \fIfd\fP, могут происходить и
+другие ошибки.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents additional error
+.\" conditions EDEADLK, ENOLCK, ENOLNK, ENOSR, ENXIO, or ERANGE.
+SVr4, 4.3BSD, POSIX.1\-2001.
+.PP
+Согласно SVr4, запись может быть прервана в любом месте (с возвратом
+\fBEINTR\fP), а не только перед тем как будут записаны какие\-либо данные.
+.SH ЗАМЕЧАНИЯ
+Типы данных \fIsize_t\fP и \fIssize_t\fP представляют собой, соответственно,
+беззнаковый и знаковый целочисленный тип, определены в POSIX.1.
+.PP
+Успешный возврат из вызова \fBwrite\fP() не даёт никаких гарантий, что данные
+сохранены на диске. В некоторых файловых системах, включая NFS, даже не
+гарантируется, что для данных было зарезервировано место. В этом случае
+некоторые ошибки могут появиться только в будущем \fBwrite\fP(), \fBfsync\fP(2)
+или даже \fBclose\fP(2). Единственный способ получить гарантированную запись —
+вызвать \fBfsync\fP(2) после записи всех данных.
+.PP
+Если \fBwrite\fP() прерван обработчиком сигналов до начала записи, то вызов
+возвращает ошибку \fBEINTR\fP; если он прерван после начала записи, то вызов
+считается успешным, и возвращается число записанных байт.
+.PP
+.\" commit e28cc71572da38a5a12c1cfe4d7032017adccf69
+В Linux \fBwrite\fP() (и похожие системные вызовы) передаст не больше
+0x7ffff000 (2 147 479 552) байт, возвращая число байт, переданных на самом
+деле (это утверждение справедливо как к 32\-битным, так и к 64\-битным
+системам).
+.PP
+Возвращаемое значение ошибки при выполнении \fBwrite\fP() прямого ввода\-вывода
+не означает ошибки записи целиком. Данные могут быть записаны частично, а по
+смещению в файле, на котором \fBwrite\fP() остановился, данные должны считаться
+некорректными.
+.SH ДЕФЕКТЫ
+В соответствие с POSIX.1\-2008/SUSv4 раздел XSI 2.9.7 ("Thread Interactions
+with Regular File Operations"):
+.PP
+.RS 4
+Следующие функции должны выполняться атомарно по отношению друг к другу,
+чтобы работать с обычными файлами или символическими ссылками так, как
+указано в POSIX.1\-2008: …
+.RE
+.PP
+.\" http://thread.gmane.org/gmane.linux.kernel/1649458
+.\"    From: Michael Kerrisk (man-pages <mtk.manpages <at> gmail.com>
+.\"    Subject: Update of file offset on write() etc. is non-atomic with I/O
+.\"    Date: 2014-02-17 15:41:37 GMT
+.\"    Newsgroups: gmane.linux.kernel, gmane.linux.file-systems
+.\" commit 9c225f2655e36a470c4f58dbbc99244c5fc7f2d4
+.\"    Author: Linus Torvalds <torvalds@linux-foundation.org>
+.\"    Date:   Mon Mar 3 09:36:58 2014 -0800
+.\"
+.\"        vfs: atomic f_pos accesses as per POSIX
+Среди перечисленных в программном интерфейсе есть \fBwrite\fP() и
+\fBwritev\fP(2). И среди действий, которые должны выполняться атомарно между
+нитями (и процессами), если обновление файлового смещения. Однако в Linux до
+версии 3.14 это было не так: если два процесса с общим открытым файловым
+описанием (смотрите \fBopen\fP(2)) выполняют \fBwrite\fP() (или \fBwritev\fP(2))
+одновременно, то операции ввода\-вывода не атомарны при обновлении файлового
+смещения; в результате записанные двумя процессами блоки данных могут
+(некорректно) перекрываться. Эта ошибка исправлена в Linux 3.14.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclose\fP(2), \fBfcntl\fP(2), \fBfsync\fP(2), \fBioctl\fP(2), \fBlseek\fP(2), \fBopen\fP(2),
+\fBpwrite\fP(2), \fBread\fP(2), \fBselect\fP(2), \fBwritev\fP(2), \fBfwrite\fP(3)

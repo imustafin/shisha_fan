@@ -1,0 +1,68 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" Based on glibc infopages, copyright Free Software Foundation
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGNBIT 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+signbit \- проверка знака вещественного числа с плавающей точкой
+.SH ОБЗОР
+\fB#include <math.h>\fP
+.PP
+\fBint signbit(\fP\fIx\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBsignbit\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBsignbit\fP() является общим макросом, который может работать со всем
+типами вещественных чисел с плавающей точкой. Она возвращает ненулевое
+значение, если у \fIx\fP установлен бит знака.
+.PP
+Это не подходит для \fIx < 0.0\fP, так как, согласно IEEE 754, спецификация
+плавающей точки допускает, что ноль может иметь знак. Сравнение \fI\-0.0 <
+0.0\fP будет ложным, однако \fIsignbit(\-0.0)\fP вернет ненулевое значение.
+.PP
+Значение NaN и бесконечностей имеют бит знака.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Макрос \fBsignbit\fP() возвращает ненулевое значение, если знак \fIx\fP
+отрицателен, иначе он возвращает ноль.
+.SH ОШИБКИ
+Ошибки не возникают.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsignbit\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99. Эта функция определена в IEC 559 (и в
+приложении с рекомендуемыми функциями IEEE 754/IEEE 854).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcopysign\fP(3)

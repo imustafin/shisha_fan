@@ -1,0 +1,54 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CIMAG 3 2015\-04\-19 "" "Руководство программиста Linux"
+.SH ИМЯ
+cimag, cimagf, cimagl \- получение мнимой части комплексного числа
+.SH ОБЗОР
+\fB#include <complex.h>\fP
+.PP
+\fBdouble cimag(double complex \fP\fIz\fP\fB);\fP
+.br
+\fBfloat cimagf(float complex \fP\fIz\fP\fB);\fP
+.br
+\fBlong double cimagl(long double complex \fP\fIz\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.SH ОПИСАНИЕ
+Эти функции возвращают мнимую часть комплексного числа \fIz\fP.
+.PP
+Формула вычисления:
+.PP
+.nf
+    z = creal(z) + I * cimag(z)
+.fi
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBcimag\fP(),
+\fBcimagf\fP(),
+\fBcimagl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+gcc также поддерживает __imag__ Это расширение GNU.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcabs\fP(3), \fBcreal\fP(3), \fBcomplex\fP(7)

@@ -1,0 +1,92 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2007 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH EUIDACCESS 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+euidaccess, eaccess \- проверяет эффективные права пользователя на файл
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <unistd.h>\fP
+.PP
+\fBint euidaccess(const char *\fP\fIpathname\fP\fB, int \fP\fImode\fP\fB);\fP
+\fBint eaccess(const char *\fP\fIpathname\fP\fB, int \fP\fImode\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Подобно \fBaccess\fP(2), \fBeuidaccess\fP() проверяет права и существование файла,
+указанного в аргументе \fIpathname\fP. Однако, если \fBaccess\fP(2) выполняет
+проверку для реального идентификатора пользователя и группы процесса, то
+\fBeuidaccess\fP() использует эффективные идентификаторы.
+.PP
+Значение \fImode\fP представляет собой маску, состоящую из одного и более
+флагов \fBR_OK\fP, \fBW_OK\fP, \fBX_OK\fP и \fBF_OK\fP (значение описано в
+\fBaccess\fP(2)).
+.PP
+Функция \fBeaccess\fP() — ещё одно название \fBeuidaccess\fP(), предоставляется
+для совместимости с некоторыми другими системами.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении (есть все запрошенные права) возвращается ноль. При
+ошибке (по крайней мере, один флаг из \fImode\fP был не удовлетворён, или
+произошла другая ошибка), возвращается \-1, а \fIerrno\fP устанавливается
+должным образом.
+.SH ОШИБКИ
+Аналогичны \fBaccess\fP(2).
+.SH ВЕРСИИ
+Функция \fBeaccess\fP() впервые появилась в glibc 2.4.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw23 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBeuidaccess\fP(),
+\fBeaccess\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" e.g., FreeBSD 6.1.
+Эти функции являются нестандартными. В некоторых системах есть функция
+\fBeaccess\fP().
+.SH ЗАМЕЧАНИЯ
+\fIПредупреждение\fP: Использование этой функции для проверки прав процесса на
+файл перед выполнением какой\-то операции на основе этой информации приводит
+к состоянию состязательности: права на файл могут измениться между двумя
+этими шагами. Обычно, безопасней просто попытаться выполнить желаемую
+операцию и что\-то предпринять при возникновении ошибки с правами.
+.PP
+Эта функция всегда разыменовывает символьные ссылки. Если вам нужно
+проверить права символьной ссылки, используйте вызов \fBfaccessat\fP(2) с
+флагами \fBAT_EACCESS\fP и \fBAT_SYMLINK_NOFOLLOW\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaccess\fP(2), \fBchmod\fP(2), \fBchown\fP(2), \fBfaccessat\fP(2), \fBopen\fP(2),
+\fBsetgid\fP(2), \fBsetuid\fP(2), \fBstat\fP(2), \fBcredentials\fP(7),
+\fBpath_resolution\fP(7)

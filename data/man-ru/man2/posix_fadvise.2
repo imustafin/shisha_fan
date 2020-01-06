@@ -1,0 +1,189 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2003 Abhijit Menon-Sen <ams@wiw.org>
+.\" and Copyright (C) 2010, 2015, 2017 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2005-04-08 mtk, noted kernel version and added BUGS
+.\" 2010-10-09, mtk, document arm_fadvise64_64()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH POSIX_FADVISE 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+posix_fadvise \- предварительно декларирует вариант доступа для данных файла
+.SH ОБЗОР
+.nf
+\fB#include <fcntl.h>\fP
+.PP
+\fBint posix_fadvise(int \fP\fIfd\fP\fB, off_t \fP\fIoffset\fP\fB, off_t \fP\fIlen\fP\fB, int \fP\fIadvice\fP\fB);\fP
+.fi
+.PP
+.ad l
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBposix_fadvise\fP():
+.RS 4
+_POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Программы могут использовать \fBposix_fadvise\fP() для объявления намерений
+осуществить доступ к файлу данных в скором будущем определённым образом, тем
+самым позволяя ядру выполнить некоторые операции по оптимизации.
+.PP
+Аргумент \fIadvice\fP применяется к (не обязательно существующей) области,
+начинающейся с \fIoffset\fP, длиной \fIlen\fP байт (или до конца файла, если
+\fIlen\fP равно 0) внутри файла, на который ссылается \fIfd\fP. Аргумент \fIadvice\fP
+не является привязкой; он всего лишь выражает ожидание приложения.
+.PP
+Допустимые значения \fIadvice\fP:
+.TP 
+\fBPOSIX_FADV_NORMAL\fP
+Указывает, что приложение не может подсказать тип доступа для указанных
+данных. Если не указано предположение для открываемого файла, то
+используется предположение по умолчанию.
+.TP 
+\fBPOSIX_FADV_SEQUENTIAL\fP
+Приложение ожидает последовательный доступ к указанным данным (чтение
+выполняется начиная с младших адресов).
+.TP 
+\fBPOSIX_FADV_RANDOM\fP
+Указанные данные будут запрашиваться в случайном порядке.
+.TP 
+\fBPOSIX_FADV_NOREUSE\fP
+Указанные данные будут запрошены только один раз.
+.IP
+В ядрах до версии 2.6.18, для \fBPOSIX_FADV_NOREUSE\fP использовалась такая же
+семантика что и у \fBPOSIX_FADV_WILLNEED\fP. Это, вероятно, было дефектом;
+начиная с ядра 2.6.18 для этого флага нет операции.
+.TP 
+\fBPOSIX_FADV_WILLNEED\fP
+Указанные данные будут запрошены в скором будущем.
+.IP
+При \fBPOSIX_FADV_WILLNEED\fP запускается неблокировочное чтение указанной
+области в страницу кэша. Число неблокированных данных может быть уменьшено
+ядром в зависимости от загрузки виртуальной памяти (несколько мегабайт
+памяти наверняка будут выделены, а больше, обычно, и не бывает нужно).
+.TP 
+\fBPOSIX_FADV_DONTNEED\fP
+Указанные данные не будут запрошены в скором будущем.
+.IP
+При указании \fBPOSIX_FADV_DONTNEED\fP вызов пытается высвободить кэшированные
+страницы, связанные с указанной областью. Это полезно, например, при
+потоковой обработке больших файлов. Программа может периодически запрашивать
+ядро об освобождении уже использованных кэшированных данных, так что
+полезные кэшированные страницы не будут освобождаться.
+.IP
+Запросы на удаление частичных страниц игнорируются. Предпочтительней
+сохранять необходимые данные, а не удалять ненужные. Если приложению
+требуется, чтобы данные считались подходящими для удаления, то \fIoffset\fP и
+\fIlen\fP должны быть выровнены по границе страницы.
+.IP
+Реализация \fIможет\fP пытаться записать неактуальные (dirty) страницы
+указанную область, но это не гарантируется. Все не записанные неактуальные
+страницы не будут освобождены. Если приложение хочет обязательно освободить
+неактуальные страницы, то оно сначала должно вызвать \fBfsync\fP(2) или
+\fBfdatasync\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается номер
+ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Аргумент \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+Неверное значение \fIadvice\fP.
+.TP 
+\fBESPIPE\fP
+.\" commit 87ba81dba431232548ce29d5d224115d0c2355ac
+Указанный файловый дескриптор ссылается на канал (pipe) или FIFO (в этом
+случае в Linux до версии  2.6.16, возвращал \fBEINVAL\fP, хотя согласно POSIX
+ошибка должна быть \fBESPIPE\fP).
+.SH ВЕРСИИ
+.\" of fadvise64_64()
+Поддержка в ядре впервые появилась в Linux 2.5.60; используемый системный
+вызов называется \fBfadvise64\fP(). Поддержка в библиотеке glibc появилась в
+версии 2.2; обёрточная функция называется \fBposix_fadvise\fP().
+.PP
+.\" commit d3ac21cacc24790eb45d735769f35753f5b56ceb
+Начиная с Linux 3.18 поддержка данного системного вызова необязательна, она
+зависит от того, собрано ли ядро с параметром \fBCONFIG_ADVISE_SYSCALLS\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008. Заметим, что в POSIX.1\-2003 TC1 тип аргумента
+\fIlen\fP был изменён с \fIsize_t\fP на \fIoff_t\fP.
+.SH ЗАМЕЧАНИЯ
+В Linux \fBPOSIX_FADV_NORMAL\fP устанавливает окно упреждающего чтения согласно
+используемому размеру по умолчанию для ниже лежащего устройства;
+\fBPOSIX_FADV_SEQUENTIAL\fP удваивает этот размер, а \fBPOSIX_FADV_RANDOM\fP
+отменяет упреждающее чтение вообще. Эти изменения влияют на весь файл, а не
+только на указанную его область (но другие открытые обработчики файлов на
+этом файле не изменяются).
+.PP
+Содержимое буферного кэша ядра может быть очищено через интерфейс
+\fI/proc/sys/vm/drop_caches\fP, описанный в \fBproc\fP(5).
+.PP
+Можно получить снимок страниц файла, которые располагаются в буферном кэше:
+открыть файл, отобразить его через \fBmmap\fP(2) и затем применить
+\fBmincore\fP(2) к отображению.
+.SS "Отличия между библиотекой C и ядром"
+Обёрточная функция в библиотеке C называется
+\fBposix_fadvise\fP(). Используемый ей системный вызов называется
+\fBfadvise64\fP() (на некоторых архитектурах — \fBfadvise64_64\fP()); разница
+между ними в том, что в библиотечной функциитип аргумента \fIlen\fP равен
+\fIsize_t\fP, а у системного вызова — \fIloff_t\fP.
+.SS "Варианты, зависящие от архитектуры"
+На некоторых архитектурах требуется, чтобы 64\-битные аргументы были
+выровнены в подходящей паре регистров (подробности в \fBsyscall\fP(2)). На
+таких архитектурах показанная в СИНТАКСИСЕ форма вызова \fBposix_fadvise\fP()
+приводила бы пустой трате регистра для заполнения между аргументами \fIfd\fP и
+\fIoffset\fP. Поэтому на этих архитектурах определена версия системного вызова
+с исправленным порядком аргументов, иначе используется формат как у
+\fBposix_fadvise\fP().
+.PP
+Например, начиная с Linux 2.6.14, в ARM есть следующий системный вызов:
+.PP
+.in +4n
+.EX
+\fBlong arm_fadvise64_64(int \fP\fIfd\fP\fB, int \fP\fIadvice\fP\fB,\fP
+\fB                      loff_t \fP\fIoffset\fP\fB, loff_t \fP\fIlen\fP\fB);\fP
+.EE
+.in
+.PP
+Данные, зависящие от архитектуры, детали, обычно, скрываются от приложений в
+обёрточной функции glibc \fBposix_fadvise\fP(), которая использует
+соответствующий архитектуре системный вызов.
+.SH ДЕФЕКТЫ
+В ядрах до версии 2.6.6, если значение \fIlen\fP равнялось 0, то это
+воспринималось дословно как «ноль байт», а не как «все байты до конца
+файла».
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfincore\fP(1), \fBmincore\fP(2), \fBreadahead\fP(2), \fBsync_file_range\fP(2),
+\fBposix_fallocate\fP(3), \fBposix_madvise\fP(3)

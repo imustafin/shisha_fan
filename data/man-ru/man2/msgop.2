@@ -1,0 +1,468 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Giorgio Ciucci <giorgio@crcc.it>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Tue Oct 22 16:40:11 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Mon Jul 10 21:09:59 2000 by aeb
+.\" Modified 1 Jun 2002, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Language clean-ups.
+.\"	Enhanced and corrected information on msg_qbytes, MSGMNB and MSGMAX
+.\"	Added note on restart behavior of msgsnd() and msgrcv()
+.\"	Formatting clean-ups (argument and field names marked as .I
+.\"		instead of .B)
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\" Modified, 11 Nov 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Language and formatting clean-ups
+.\"	Added notes on /proc files
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MSGOP 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+msgrcv, msgsnd \- операции с очередью сообщений System V
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/ipc.h>\fP
+\fB#include <sys/msg.h>\fP
+.PP
+\fBint msgsnd(int \fP\fImsqid\fP\fB, const void *\fP\fImsgp\fP\fB, size_t \fP\fImsgsz\fP\fB, int \fP\fImsgflg\fP\fB);\fP
+.PP
+\fBssize_t msgrcv(int \fP\fImsqid\fP\fB, void *\fP\fImsgp\fP\fB, size_t \fP\fImsgsz\fP\fB, long \fP\fImsgtyp\fP\fB,\fP
+\fB               int \fP\fImsgflg\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системные вызовы \fBmsgsnd\fP() и \fBmsgrcv\fP() используются для отправки и
+получения сообщений из очереди сообщений System\ V. Вызывающий процесс
+должен иметь права на запись в очередь сообщений, чтобы отправлять сообщения
+и права на чтение для получения сообщений.
+.PP
+Аргумент \fImsgp\fP представляет собой указатель на структуру, определяемую
+вызывающим как:
+.PP
+.in +4n
+.EX
+struct msgbuf {
+    long mtype;       /* тип сообщения, значение должно быть > 0 */
+    char mtext[1];    /* данные сообщения */
+};
+.EE
+.in
+.PP
+Поле \fImtext\fP является массивом (или другой структурой), размер которого
+определяется \fImsgsz\fP — неотрицательным целым значением. Разрешены сообщения
+нулевой длины (т.е. без поля \fImtext\fP). Поле \fImtype\fP должно быть только
+положительным целым значением. Это значение используется
+процессом\-получателем для выбора сообщения (см. описание \fBmsgrcv\fP() далее).
+.SS msgsnd()
+Системный вызов \fBmsgsnd\fP() добавляет копию сообщения, указанного \fImsgp\fP, в
+очередь сообщений, идентификатор которой задаётся в \fImsqid\fP.
+.PP
+Если в очереди достаточно места, то \fBmsgsnd\fP() сразу успешно
+завершается. Размер очереди управляется полем \fImsg_qbytes\fP в связанной
+структуре данных очереди сообщений. При создании очереди это поле
+инициализируется значением \fBMSGMNB\fP байт, но данное ограничение можно
+изменить с помощью \fBmsgctl\fP(2). Очередь сообщений считается заполненной при
+одном из следующих условий:
+.IP * 2
+Добавление нового сообщения привело бы к превышению общего количества байт
+очереди над максимальным количеством размером очереди (поле \fImsg_qbytes\fP).
+.IP *
+Добавление другого сообщения привело бы к превышению общего количества
+сообщений очереди над максимальным количеством размером очереди (поле
+\fImsg_qbytes\fP). Эта проверка необходима для предотвращения помещения в
+очередь бесконечного количества сообщений нулевой длины. Хотя такие
+сообщения не содержат данных, тем не менее, они потребляют (блокируют)
+память ядра.
+.PP
+Если в очереди недостаточно места, то по умолчанию \fBmsgsnd\fP() блокирует
+выполнение до появления свободного места. Если в \fImsgflg\fP указан
+\fBIPC_NOWAIT\fP, то вызов вместо этого завершается с ошибкой \fBEAGAIN\fP.
+.PP
+Заблокированный вызов \fBmsgsnd\fP() может завершиться ошибкой если:
+.IP * 2
+очередь удалена (в этом случае системный вызов выдаст ошибку, определив
+\fIerrno\fP в значение \fBEIDRM\fP;
+.IP *
+пойман сигнал; в этом случае системный вызов завершается с ошибкой и
+присваивает \fIerrno\fP значение \fBEINTR\fP; \fBсм.\fP \fBsignal\fP(7). Вызов
+\fBmsgsnd\fP() никогда не перезапускается автоматически после прерывания
+обработчиком сигнала, независимо от установки флага \fBSA_RESTART\fP при
+настройке обработчика сигнала.
+.PP
+Перед успешным завершением структура данных очереди сообщений будет
+обновлена следующим образом:
+.IP
+Значение \fImsg_lspid\fP устанавливается равным идентификатору вызывающего
+процесса.
+.IP
+Значение \fImsg_qnum\fP увеличивается на 1.
+.IP
+Значение \fImsg_stime\fP присваивается значение текущего времени.
+.SS msgrcv()
+Системный вызов \fBmsgrcv\fP() удаляет сообщение из очереди, указанной в
+\fImsqid\fP и помещает его в буфер, указанный в \fImsgp\fP.
+.PP
+Параметр \fImsgsz\fP задаёт максимальный размер (в байтах) элемента \fImtext\fP
+структуры, находящейся по адресу, указанному в аргументе \fImsgp\fP. Если длина
+текста сообщения больше чем \fImsgsz\fP, то поведение зависит от наличия флага
+\fBMSG_NOERROR\fP в \fImsgflg\fP. Если \fBMSG_NOERROR\fP указан, то текст сообщения
+будет урезан (а урезанная часть потеряна); иначе сообщение не удаляется из
+очереди, а системный вызов возвращает \-1 и присваивает \fIerrno\fP значение
+\fBE2BIG\fP.
+.PP
+Если в \fImsgflg\fP (смотрите ниже ) не указан \fBMSG_COPY\fP, то в аргументе
+\fImsgtyp\fP указывается тип запрашиваемого сообщения:
+.IP * 2
+Если \fImsgtyp\fP равно нулю, то читается первое сообщение в очереди.
+.IP *
+Если \fImsgtyp\fP больше нуля, то из очереди читается первое сообщение с типом
+\fImsgtyp\fP (если только в \fImsgflg\fP не указан \fBMSG_EXCEPT\fP. В этом случае из
+очереди читается первое сообщение, тип которого не равен \fImsgtyp\fP).
+.IP *
+Если \fImsgtyp\fP меньше нуля, то из очереди читается первое сообщение со
+значением, меньшим или равным абсолютному значению \fImsgtyp\fP.
+.PP
+Аргумент \fImsgflg\fP представляет собой битовую маску из комбинации нуля или
+более следующих флагов:
+.TP 
+\fBIPC_NOWAIT\fP
+Немедленный возврат, если в очереди нет сообщений необходимого типа. При
+этом системный вызов возвращает ошибку, присваивая \fIerrno\fP значение
+\fBENOMSG\fP.
+.TP 
+\fBMSG_COPY\fP (начиная с Linux 3.8)
+.\" commit 4a674f34ba04a002244edaf891b5da7fc1473ae8
+Забирает копию сообщения без удаления из начальной позиции в очереди,
+заданной в \fImsgtyp\fP (сообщения нумеруются начиная с 0).
+.IP
+Этот флаг должен указываться вместе с \fBIPC_NOWAIT\fP; в этом случае, если в
+заданной позиции сообщение отсутствует, то вызов завершается с ошибкой
+\fBENOMSG\fP немедленно. Флаги \fBMSG_COPY\fP и \fBMSG_EXCEPT\fP не могут указываться
+вместе в \fImsgflg\fP, так как кардинально изменяют смысл \fImsgtyp\fP.
+.IP
+Флаг \fBMSG_COPY\fP был добавлен для реализации способности ядра для
+контрольных точек/восстановления и доступен только, если ядро собрано с
+параметром \fBCONFIG_CHECKPOINT_RESTORE\fP.
+.TP 
+\fBMSG_EXCEPT\fP
+Используется, если \fImsgtyp\fP больше 0, для чтения первого сообщения в
+очереди с типом, отличным от \fImsgtyp\fP.
+.TP 
+\fBMSG_NOERROR\fP
+Используется для урезания текста сообщения, если его размер больше \fImsgsz\fP
+байт.
+.PP
+Если в очереди нет сообщения необходимого типа и в \fImsgflg\fP не указан
+\fBIPC_NOWAIT\fP, то вызывающий процесс будет заблокирован до тех пор, пока не
+произойдет одно из следующих событий:
+.IP * 2
+В очередь не будет помещено сообщение необходимого типа.
+.IP *
+Очередь сообщений удалена из системы. В этом случае системный вызов
+возвращает ошибку и присваивает \fIerrno\fP значение \fBEIDRM\fP.
+.IP *
+Вызывающий процесс не получит сигнал, который должен обработать. В этом
+случае системный вызов возвращает ошибку и присваивает переменной \fIerrno\fP
+значение \fBEINTR\fP. Вызов \fBmsgrcv\fP() никогда не перезапускается
+автоматически после прерывания обработчиком сигнала, независимо от установки
+флага \fBSA_RESTART\fP при настройке обработчика сигнала.
+.PP
+Перед успешным завершением структура данных очереди сообщений будет
+обновлена следующим образом:
+.IP
+Значение \fImsg_lrpid\fP устанавливается равным идентификатору вызывающего
+процесса.
+.IP
+Значение \fImsg_qnum\fP уменьшается на 1.
+.IP
+Значение \fImsg_rtime\fP становится равным текущему времени.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При ошибке оба вызова возвращают \-1, а переменная \fIerrno\fP приобретает
+соответствующее значение. В противном случае \fBmsgsnd\fP() возвращает 0, а
+\fBmsgrcv\fP() возвращает количество байтов, скопированных в массив \fImtext\fP.
+.SH ОШИБКИ
+Значения \fIerrno\fP, устанавливаемые при возникновении ошибок в \fBmsgsnd\fP():
+.TP 
+\fBEACCES\fP
+Вызывающий процесс не имеет прав записи в очередь сообщений и не имеет
+мандата \fBCAP_IPC_OWNER\fP в пользовательском пространстве имён, которое
+управляет его пространством имён IPC.
+.TP 
+\fBEAGAIN\fP
+Сообщение не может быть отправлено, так как размер очереди превысит лимит,
+равный \fImsg_qbytes\fP, а в параметре \fImsgflg\fP установлен флаг \fBIPC_NOWAIT\fP.
+.TP 
+\fBEFAULT\fP
+Память с адресом, указанным \fImsgp\fP, недоступна.
+.TP 
+\fBEIDRM\fP
+Очередь сообщений была удалена.
+.TP 
+\fBEINTR\fP
+Процесс ждал свободного места в очереди и получил сигнал, который должен
+обработать.
+.TP 
+\fBEINVAL\fP
+Задано неправильное значение \fImsqid\fP, не положительное значение \fImtype\fP
+или неправильное значение \fImsgsz\fP (меньше 0, или больше системного лимита,
+заданного \fBMSGMAX\fP).
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти в системе для копирования сообщения, указанного \fImsgp\fP.
+.PP
+Значения \fIerrno\fP, устанавливаемые при возникновении ошибок в \fBmsgrcv\fP():
+.TP 
+\fBE2BIG\fP
+Длина текста получаемого сообщения больше, чем \fImsgsz\fP, а в поле \fImsgflg\fP
+не установлен флаг \fBMSG_NOERROR\fP.
+.TP 
+\fBEACCES\fP
+Вызывающий процесс не имеет прав чтобы прочитать очереди сообщений и не
+имеет мандата \fBCAP_IPC_OWNER\fP в пространстве имён пользователя, который
+управляет его пространством имён IPC.
+.TP 
+\fBEFAULT\fP
+Память с адресом, указанным \fImsgp\fP, недоступна.
+.TP 
+\fBEIDRM\fP
+Процесс ждал приёма сообщения, и в это время очередь сообщений была удалена.
+.TP 
+\fBEINTR\fP
+Во время ожидания приёма сообщения процесс получил сигнал; см. \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Неверное значение \fImsqid\fP или \fImsgsz\fP меньше 0.
+.TP 
+\fBEINVAL\fP (начиная с Linux 3.14)
+В \fImsgflg\fP указан флаг \fBMSG_COPY\fP, но нет \fBIPC_NOWAIT\fP.
+.TP 
+\fBEINVAL\fP (начиная с Linux 3.14)
+В \fImsgflg\fP указаны \fBMSG_COPY\fP и \fBMSG_EXCEPT\fP.
+.TP 
+\fBENOMSG\fP
+В очереди нет сообщения необходимого типа, а в параметре \fImsgflg\fP
+установлен флаг \fBIPC_NOWAIT\fP.
+.TP 
+\fBENOMSG\fP
+Флаги \fBIPC_NOWAIT\fP и \fBMSG_COPY\fP указаны в \fImsgflg\fP, но в очереди
+содержится меньше \fImsgtyp\fP сообщений.
+.TP 
+\fBENOSYS\fP (начиная с Linux 3.8)
+Флаг \fIMSG_COPY\fP указан в \fImsgflg\fP, но ядро собрано без параметра
+\fBCONFIG_CHECKPOINT_RESTORE\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4.
+.PP
+.\" MSG_COPY since glibc 2.18
+Флаги \fBMSG_EXCEPT\fP и \fBMSG_COPY\fP есть только в Linux; их определения можно
+получить указав макрос тестирования свойств \fB_GNU_SOURCE\fP.
+.SH ЗАМЕЧАНИЯ
+.\" Like Linux, the FreeBSD man pages still document
+.\" the inclusion of these header files.
+Включение файлов \fI<sys/types.h>\fP и \fI<sys/ipc.h>\fP не
+требуется в Linux или любых версий POSIX. Однако, некоторые старые
+реализации требуют включения данных заголовочных файлов, и это также
+требуется по SVID. В приложениях, которые нужно перенести на такие старые
+системы, может потребоваться включить данных заголовочные файлы.
+.PP
+Аргумент \fImsgp\fP в glibc 2.0 и 2.1 объявлен как \fIstruct msgbuf *\fP. В glibc
+2.2 и новее, в соответствии с SUSv2 и SUSv3, он объявлен как \fIvoid\ *\fP.
+.PP
+На работу системного вызова \fBmsgsnd\fP() влияют следующие системные
+ограничения на ресурсы очереди сообщений:
+.TP 
+\fBMSGMAX\fP
+Максимальный размер текста сообщения: по умолчанию он равен 8192 байтам (в
+Linux это ограничение можно прочитать и изменить через
+\fI/proc/sys/kernel/msgmax\fP).
+.TP 
+\fBMSGMNB\fP
+Максимальное количество байт, которое может храниться в очереди сообщений
+(по умолчанию 16384 байт). В Linux это ограничение можно прочитать и
+изменить через \fI/proc/sys/kernel/msgmnb\fP. Привилегированный процесс (Linux:
+процесс с мандатом \fBCAP_SYS_RESOURCE\fP) может устанавливать размер очереди
+сообщений больше чем \fBMSGMNB\fP при помощи вызова \fBmsgctl\fP() с операцией
+\fBIPC_SET\fP.
+.PP
+Реализация не накладывает существенных системных ограничений на максимальное
+количество заголовков сообщений (\fBMSGTQL\fP) и на количество байт в пуле
+сообщений (\fBMSGPOOL\fP).
+.SH ДЕФЕКТЫ
+.\" http://marc.info/?l=linux-kernel&m=139048542803605&w=2
+.\" commit 4f87dac386cc43d5525da7a939d4b4e7edbea22c
+В Linux 3.13 и старее, если \fBmsgrcv\fP() был вызван с флагом \fBMSG_COPY\fP
+flag, но без \fBIPC_NOWAIT\fP, и очередь сообщений содержала менее \fImsgtyp\fP
+сообщений, то вызов блокировал выполнения до тех пор, пока следующее
+сообщение не записывалось в очередь. written to the queue. В этот момент
+вызов возвращал копию сообщения, \fIнезависимо\fP от того, что сообщение было в
+начальной позиции \fImsgtyp\fP. Этот дефект был исправлен в Linux 3.14.
+.PP
+.\" http://marc.info/?l=linux-kernel&m=139048542803605&w=2
+.\" commit 4f87dac386cc43d5525da7a939d4b4e7edbea22c
+Указание обоих флагов \fBMSG_COPY\fP и \fBMSC_EXCEPT\fP в \fImsgflg\fP является
+логической ошибкой (так как для флагов по\-разному интерпретируется
+\fImsgtyp\fP). В Linux 3.13 и старее эта ошибка не определялась
+\fBmsgrcv\fP(). Этот дефект был исправлен в Linux 3.14.
+.SH ПРИМЕР
+Представленная ниже программа показывает использование \fBmsgsnd\fP() и
+\fBmsgrcv\fP().
+.PP
+В первый раз программа запускается с параметром \fB\-s\fP для отправки
+сообщения, а в второй — с параметром \fB\-r\fP для получения сообщения.
+.PP
+Пример сеанса работы с программой:
+.PP
+.in +4n
+.EX
+$\fB ./a.out \-s\fP
+отправка: дата сообщения Wed Mar  4 16:25:45 2015
+
+$\fB ./a.out \-r\fP
+приём: дата сообщения Wed Mar  4 16:25:45 2015
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+struct msgbuf {
+    long mtype;
+    char mtext[80];
+};
+
+static void
+usage(char *prog_name, char *msg)
+{
+    if (msg != NULL)
+        fputs(msg, stderr);
+
+    fprintf(stderr, "Использование: %s [параметры]\en", prog_name);
+    fprintf(stderr, "Параметры:\en");
+    fprintf(stderr, "\-s        отправить сообщение с помощью msgsnd()\en");
+    fprintf(stderr, "\-r        прочитать сообщение с помощью msgrcv()\en");
+    fprintf(stderr, "\-t        тип сообщения (по умолчанию 1)\en");
+    fprintf(stderr, "\-k        ключ очереди сообщения (по умолчанию 1234)\en");
+    exit(EXIT_FAILURE);
+}
+
+static void
+send_msg(int qid, int msgtype)
+{
+    struct msgbuf msg;
+    time_t t;
+
+    msg.mtype = msgtype;
+
+    time(&t);
+    snprintf(msg.mtext, sizeof(msg.mtext), "дата сообщения %s",
+            ctime(&t));
+
+    if (msgsnd(qid, (void *) &msg, sizeof(msg.mtext),
+                IPC_NOWAIT) == \-1) {
+        perror("msgsnd error");
+        exit(EXIT_FAILURE);
+    }
+    printf("отправка: %s\en", msg.mtext);
+}
+
+static void
+get_msg(int qid, int msgtype)
+{
+    struct msgbuf msg;
+
+    if (msgrcv(qid, (void *) &msg, sizeof(msg.mtext), msgtype,
+               MSG_NOERROR | IPC_NOWAIT) == \-1) {
+        if (errno != ENOMSG) {
+            perror("msgrcv");
+            exit(EXIT_FAILURE);
+        }
+        printf("С помощью msgrcv() сообщений не получено\en");
+    } else
+        printf("приём: %s\en", msg.mtext);
+}
+
+int
+main(int argc, char *argv[])
+{
+    int qid, opt;
+    int mode = 0;               /* 1 = send, 2 = receive */
+    int msgtype = 1;
+    int msgkey = 1234;
+
+    while ((opt = getopt(argc, argv, "srt:k:")) != \-1) {
+        switch (opt) {
+        case \(aqs\(aq:
+            mode = 1;
+            break;
+        case \(aqr\(aq:
+            mode = 2;
+            break;
+        case \(aqt\(aq:
+            msgtype = atoi(optarg);
+            if (msgtype <= 0)
+                usage(argv[0], "параметр \-t должен быть больше 0\en");
+            break;
+        case \(aqk\(aq:
+            msgkey = atoi(optarg);
+            break;
+        default:
+            usage(argv[0], "Неизвестный параметр\en");
+        }
+    }
+
+    if (mode == 0)
+        usage(argv[0], "нужно указать параметр \-s или \-r\en");
+
+    qid = msgget(msgkey, IPC_CREAT | 0666);
+
+    if (qid == \-1) {
+        perror("msgget");
+        exit(EXIT_FAILURE);
+    }
+
+    if (mode == 2)
+        get_msg(qid, msgtype);
+    else
+        send_msg(qid, msgtype);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmsgctl\fP(2), \fBmsgget\fP(2), \fBcapabilities\fP(7), \fBmq_overview\fP(7),
+\fBsysvipc\fP(7)

@@ -1,0 +1,42 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"
+.\" Modified, aeb, 990824
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MB_CUR_MAX 3 2015\-08\-08 Linux "Руководство программиста Linux"
+.SH ИМЯ
+MB_CUR_MAX \- максимальная длина многобайтового символа, для текущей локали
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.fi
+.SH ОПИСАНИЕ
+Макрос  \fBMB_CUR_MAX\fP определяет целочисленное выражение, задающее
+максимальное количества байтов необходимых для представления единственного
+широкого символа в текущей локали. Данное значение зависит от локали и
+поэтому не является постоянным времени\-компиляции.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Целое число в диапазоне [1, \fBMB_LEN_MAX\fP]. Значение 1 обозначает
+традиционное 8\-разрядное кодирование символов.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBMB_LEN_MAX\fP(3), \fBmblen\fP(3), \fBmbstowcs\fP(3), \fBmbtowc\fP(3), \fBwcstombs\fP(3),
+\fBwctomb\fP(3)

@@ -1,0 +1,95 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 17:48:42 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TELLDIR 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+telldir \- возвращает текущее положение в потоке каталога
+.SH ОБЗОР
+.nf
+\fB#include <dirent.h>\fP
+.PP
+\fBlong telldir(DIR *\fP\fIdirp\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBtelldir\fP():
+ _XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версиях glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBtelldir\fP() возвращает текущее положение, связанное с потоком
+каталога \fIdirp\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBtelldir\fP() возвращает текущее расположение
+в потоке каталога. В случае ошибки возвращается \-1, и устанавливается
+соответствующее значение \fIerrno\fP.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Неверный дескриптор потока каталога \fIdirp\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBtelldir\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+В glibc до версии 2.1.1, тип возвращаемого значения \fBtelldir\fP() был равен
+\fIoff_t\fP. В POSIX.1\-2001 указан тип \fIlong\fP, и это стало используемым типом
+в glibc начиная с версии 2.1.2.
+.PP
+.\" https://lwn.net/Articles/544298/
+В старых файловых системах возвращаемое \fBtelldir\fP() значение было просто
+файловым смещением в каталоге. В современных файловых системах для
+представления каталогов используются структуры деревьев или хэшей, а не
+плоские таблицы. В таких файловых системах значение, возвращаемое
+\fBtelldir\fP() (и используемое внутри \fBreaddir\fP(3)) — некая «подсказка»,
+которая используется реализацией для получения позиции в
+каталоге. Прикладные программы должны считать это значение «чёрным ящиком» и
+\fIне\fP делать предположений о его содержимом.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclosedir\fP(3), \fBopendir\fP(3), \fBreaddir\fP(3), \fBrewinddir\fP(3),
+\fBscandir\fP(3), \fBseekdir\fP(3)

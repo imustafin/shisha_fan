@@ -1,0 +1,95 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt
+.\" (michael@moria.de)
+.\" Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 15:12:05 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Aug  1 16:27    1995 by Jochen Karrer
+.\"                              <cip307@cip.physik.uni-wuerzburg.de>
+.\" Modified Tue Oct 22 08:11:14 EDT 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Mon Feb 15 17:28:41 CET 1999 by Andries E. Brouwer <aeb@cwi.nl>
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IOPERM 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ioperm \- устанавливает права на работу с портами ввода/вывода
+.SH ОБЗОР
+\fB#include <sys/io.h>\fP /* для glibc */
+.PP
+\fBint ioperm(unsigned long \fP\fIfrom\fP\fB, unsigned long \fP\fInum\fP\fB, int
+\fP\fIturn_on\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBioperm\fP() устанавливает \fInum\fP бит прав доступа вызывающей нити,
+начиная с адреса порта \fIfrom\fP. Если \fIturn_on\fP не равно 0, то права для
+указанных битов устанавливаются, иначе сбрасываются. Если \fIturn_on\fP не
+равно 0, вызывающая нить должна быть привилегированной (\fBCAP_SYS_RAWIO\fP).
+.PP
+До Linux 2.6.8, можно было указывать только первые 0x3ff портов
+ввода\-вывода. Для остальных портов нужно было использовать системный вызов
+\fBiopl\fP(2) (с аргументом \fIlevel\fP равным 3). Начиная с Linux 2.6.8, можно
+указывать 65536 портов ввода\-вывода.
+.PP
+Права наследуются дочерним процессом, созданным \fBfork\fP(2) (но смотрите
+ЗАМЕЧАНИЯ). Права сохраняются при вызове \fBexecve\fP(2); это полезно для
+предоставления доступа к портам ввода\-вывода непривилегированным программам.
+.PP
+Данный вызов, в основном, предназначен для архитектуры i386. На большинстве
+других архитектур он не существует или будет возвращать ошибку.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Неверные значения \fIfrom\fP или \fInum\fP.
+.TP 
+\fBEIO\fP
+(на PowerPC) Этот системный вызов не поддерживается.
+.TP 
+\fBENOMEM\fP
+.\" Could not allocate I/O bitmap.
+Не хватает памяти.
+.TP 
+\fBEPERM\fP
+Вызывающая нить не имеет достаточно прав.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBioperm\fP() есть только в Linux. Он не должен использоваться в
+переносимых программах.
+.SH ЗАМЕЧАНИЯ
+В \fI/proc/ioports\fP показываются все порты ввода\-вывода, которые выделены в
+системе в настоящий момент.
+.PP
+До Linux 2.4 права не наследовались потомком, созданным \fBfork\fP(2).
+.PP
+В glibc прототип \fBioperm\fP() расположен в \fI<sys/io.h>\fP и
+\fI<sys/perm.h>\fP. Не используйте последний вариант, он существует
+только для i386.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBiopl\fP(2), \fBoutb\fP(2), \fBcapabilities\fP(7)

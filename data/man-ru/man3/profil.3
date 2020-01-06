@@ -1,0 +1,90 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Fri Jun 23 01:35:19 1995 Andries Brouwer <aeb@cwi.nl>
+.\" (prompted by Bas V. de Bakker <bas@phys.uva.nl>)
+.\" Corrected (and moved to man3), 980612, aeb
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PROFIL 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+profil \- профилирование времени работы
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBint profil(unsigned short *\fP\fIbuf\fP\fB, size_t \fP\fIbufsiz\fP\fB,\fP
+\fB           size_t \fP\fIoffset\fP\fB, unsigned int \fP\fIscale\fP\fB);\fP
+.PP
+.fi
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBprofil\fP():
+.nf
+.\"             commit 266865c0e7b79d4196e2cc393693463f03c90bd8
+    Начиная с glibc 2.21:
+        _DEFAULT_SOURCE
+    В glibc 2.19 и 2.20:
+        _DEFAULT_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+    По glibc 2.19 включительно:
+        _BSD_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+.fi
+.SH ОПИСАНИЕ
+Эта функция позволяет выяснить какие области вашей программы работают больше
+всего. В аргументе \fIbuf\fP указывается \fIbufsiz\fP байт ядра. Каждые 10
+виртуальных миллисекунд проверяется пользовательский программный счётчик
+(PC): из него вычитается \fIoffset\fP, умножается на \fIscale\fP и делится на
+65536. Если полученное значение меньше \fIbufsiz\fP, то в \fIbuf\fP увеличивается
+соответствующая запись. Если \fIbuf\fP равно NULL, профилирование выключено.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Всегда возвращается ноль.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBprofil\fP()
+T}	Безвредность в нитях	MT\-Unsafe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Подобно вызову в SVr4 (но не POSIX.1).
+.SH ДЕФЕКТЫ
+Функцию \fBprofil\fP() нельзя использовать на программе, которая также
+использует таймеры интервалов \fBITIMER_PROF\fP (смотрите \fBsetitimer\fP(2)).
+.PP
+При профилировании настоящим ядром получаются более точные результаты. В
+libc 4.4 есть заплата к ядру, добавляющая системный вызов profil.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgprof\fP(1), \fBsprof\fP(1), \fBsetitimer\fP(2), \fBsigaction\fP(2), \fBsignal\fP(2)

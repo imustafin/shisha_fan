@@ -1,0 +1,246 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"  Copyright (C) 2003  Davide Libenzi
+.\"  Davide Libenzi <davidel@xmailserver.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_3_PARA)
+.\"  This program is free software; you can redistribute it and/or modify
+.\"  it under the terms of the GNU General Public License as published by
+.\"  the Free Software Foundation; either version 2 of the License, or
+.\"  (at your option) any later version.
+.\"
+.\"  This program is distributed in the hope that it will be useful,
+.\"  but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\"  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\"  GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH EPOLL_CTL 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+epoll_ctl \- интерфейс управления файловым дескриптором epoll
+.SH ОБЗОР
+\fB#include <sys/epoll.h>\fP
+.PP
+\fBint epoll_ctl(int \fP\fIepfd\fP\fB, int \fP\fIop\fP\fB, int \fP\fIfd\fP\fB, struct
+epoll_event *\fP\fIevent\fP\fB);\fP
+.SH ОПИСАНИЕ
+Данный системный вызов, используется для добавления, изменения или удаления
+записей в списке interest экземпляра \fBepoll\fP(7), на который указывает
+файловый дескриптор \fIepfd\fP. Он запрашивает выполнение операции \fIop\fP для
+файлового дескриптора назначения \fIfd\fP.
+.PP
+Допустимые значения аргумента \fIop\fP:
+.TP 
+\fBEPOLL_CTL_ADD\fP
+Добавить \fIfd\fP в список interest и связать настройки, указанные в \fIevent\fP,
+с внутренним файлом, связанным с \fIfd\fP.
+.TP 
+\fBEPOLL_CTL_MOD\fP
+Изменить настройки, связанные с \fIfd\fP в списке interest, на новые, указанные
+в \fIevent\fP.
+.TP 
+\fBEPOLL_CTL_DEL\fP
+Удалить (отменить регистрацию) файлового дескриптора назначения \fIfd\fP из
+списка interest. Значение \fIevent\fP игнорируется и может быть NULL (но
+смотрите ДЕФЕКТЫ далее).
+.PP
+Аргумент \fIevent\fP описывает объект, связанный с файловым дескриптором
+\fIfd\fP. Структура \fIstruct epoll_event\fP определена так:
+.PP
+.in +4n
+.EX
+typedef union epoll_data {
+    void        *ptr;
+    int          fd;
+    uint32_t     u32;
+    uint64_t     u64;
+} epoll_data_t;
+
+struct epoll_event {
+    uint32_t     events;      /* События epoll */
+    epoll_data_t data;        /* Переменная для данных пользователя */
+};
+.EE
+.in
+.PP
+Поле \fIevents\fP является битовой маской, составляемой из объединяемых (OR)
+нуля и более следующих возможных типов событий:
+.TP 
+\fBEPOLLIN\fP
+Связанный файл доступен для чтения с помощью \fBread\fP(2).
+.TP 
+\fBEPOLLOUT\fP
+Связанный файл доступен для записи с помощью \fBwrite\fP(2).
+.TP 
+\fBEPOLLRDHUP\fP (начиная с Linux 2.6.17)
+Одна из сторон потокового сокета закрыла соединение или выключила
+записывающую часть соединения (этот флаг особенно полезен при написании
+простого кода для обнаружения отключения стороны с помощью слежения Edge
+Triggered).
+.TP 
+\fBEPOLLPRI\fP
+Исключительное состояние файлового дескриптора. Смотрите описание \fBPOLLPRI\fP
+в \fBpoll\fP(2).
+.TP 
+\fBEPOLLERR\fP
+Возникло ошибочное состояние связанного файлового дескриптора. Это событие
+также возникает на пишущей стороне канала, когда читающий конец
+закрылся. Вызов \fBepoll_wait\fP(2) всегда будет сообщать об этом событии; его
+не нужно устанавливать в \fIevents\fP.
+.TP 
+\fBEPOLLHUP\fP
+Произошло зависание связанного файлового дескриптора. Вызов \fBepoll_wait\fP(2)
+будет всегда ждать этого события; его не нужно указывать в \fIevents\fP.
+.IP
+Заметим, что при чтении из канала, такого как канал (pipe) или потоковый
+сокет, это событие всего\-навсего показывает, что партнёр закрыл канал со
+своего конца. Дальнейшее чтение из канала будет возвращать 0 (конец файла)
+только после потребления всех неполученных данных в канале.
+.TP 
+\fBEPOLLET\fP
+Установить поведение Edge Triggered для связанного файлового
+дескриптора. Поведение по умолчанию для \fBepoll\fP равно Level
+Triggered. Более подробное описание архитектуры распределения событий Edge и
+Level Triggered смотрите в \fBepoll\fP(7).
+.TP 
+\fBEPOLLONESHOT\fP (начиная с Linux 2.6.2)
+Установить однократное получение для связанного файлового дескриптора. Это
+означает, что после извлечения события с помощью \fBepoll_wait\fP(2) со
+связанным дескриптором приём отключается и о других событиях интерфейс
+\fBepoll\fP сообщать не будет. Пользователь должен вызвать \fBepoll_ctl\fP() с
+операцией \fBEPOLL_CTL_MOD\fP для переустановки новой маски событий для
+файлового дескриптора.
+.TP 
+\fBEPOLLWAKEUP\fP (начиная с Linux 3.5)
+.\" commit 4d7e30d98939a0340022ccd49325a3d70f7e0238
+Если флаги \fBEPOLLONESHOT\fP и \fBEPOLLET\fP сброшены и процесс имеет мандат
+\fBCAP_BLOCK_SUSPEND\fP, то убедитесь, что система не находится в режиме
+«suspend» или «hibernate», пока это событие ожидает обработки или
+обрабатывается. Событие считается «обрабатывающимся» начиная с момента,
+когда оно возвращается вызовом \fBepoll_wait\fP(2) и до следующего вызова
+\fBepoll_wait\fP(2) для того же файлового дескриптора \fBepoll\fP(7), закрытия
+этого файлового дескриптора, удаление файлового дескриптора события с
+помощью \fBEPOLL_CTL_DEL\fP или сброс \fBEPOLLWAKEUP\fP для файлового дескриптора
+события с помощью \fBEPOLL_CTL_MOD\fP. Также смотрите ДЕФЕКТЫ.
+.TP 
+\fBEPOLLEXCLUSIVE\fP (начиная с Linux 4.5)
+Установить единоличный режим пробуждения файлового дескриптора epoll,
+присоединённого к целевому файловому дескриптору \fIfd\fP. При появлении
+события пробуждения и к целевому файлу присоединены несколько файловых
+дескрипторов epoll с помощью \fBEPOLLEXCLUSIVE\fP, то события получат один или
+несколько файловых дескрипторов epoll через \fBepoll_wait\fP(2). По умолчанию в
+этом случае (если \fBEPOLLEXCLUSIVE\fP не установлен) все файловые дескрипторы
+epoll получают событие. Таким образом \fBEPOLLEXCLUSIVE\fP в некоторых случаях
+помогает избежать проблем стадной работы.
+.IP
+Если один файловый дескриптор указан в нескольких экземплярах epoll, и одни
+имеют флаг \fBEPOLLEXCLUSIVE\fP, а другие нет, то события получат все
+экземпляры epoll, у которых не указан \fBEPOLLEXCLUSIVE\fP, и, как минимум,
+один экземпляр epoll, у которого есть задан \fBEPOLLEXCLUSIVE\fP.
+.IP
+Следующие значения можно указывать вместе с \fBEPOLLEXCLUSIVE\fP: \fBEPOLLIN\fP,
+\fBEPOLLOUT\fP, \fBEPOLLWAKEUP\fP и \fBEPOLLET\fP. Также можно указывать \fBEPOLLHUP\fP
+и \fBEPOLLERR\fP, но они не обязательны: как обычно, события всегда приходят,
+если они возникают, независимо указаны ли они в \fIevents\fP. При указании
+других значений в \fIevents\fP возникает ошибка \fBEINVAL\fP.
+.IP
+\fBEPOLLEXCLUSIVE\fP можно использовать только в операции \fBEPOLL_CTL_ADD\fP;
+попытка использовать его в \fBEPOLL_CTL_MOD\fP вызывает ошибку. Если
+\fBEPOLLEXCLUSIVE\fP установлен с помощью \fBepoll_ctl\fP(), то последующая
+\fBEPOLL_CTL_MOD\fP с той же парой \fIepfd\fP,\ \fIfd\fP вызывает ошибку. Вызов
+\fBepoll_ctl\fP(), в котором указан \fBEPOLLEXCLUSIVE\fP в \fIevents\fP и целевой
+файловый дескриптор \fIfd\fP в качестве экземпляра epoll, также вызывает
+ошибку. Во всех случаях возникает ошибка \fBEINVAL\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBepoll_ctl\fP() возвращается ноль. При возникновении
+ошибок \fBepoll_ctl\fP() возвращает \-1 и устанавливает \fIerrno\fP в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fIepfd\fP или \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEEXIST\fP
+Значение \fIop\fP равно \fBEPOLL_CTL_ADD\fP, и указанный файловый дескриптор \fIfd\fP
+уже зарегистрирован в данном экземпляре epoll.
+.TP 
+\fBEINVAL\fP
+Значение \fIepfd\fP не является файловым дескриптором \fBepoll\fP, или значение
+\fIfd\fP равно \fIepfd\fP, или запрашиваемая операция \fIop\fP не поддерживается
+данным интерфейсом.
+.TP 
+\fBEINVAL\fP
+Указан недопустимый тип события, так как в \fIevents\fP установлен
+\fBEPOLLEXCLUSIVE\fP.
+.TP 
+\fBEINVAL\fP
+Значение \fIop\fP равно \fBEPOLL_CTL_MOD\fP и \fIevents\fP содержит
+\fBEPOLLEXCLUSIVE\fP.
+.TP 
+\fBEINVAL\fP
+Значение \fIop\fP равно \fBEPOLL_CTL_MOD\fP, а ранее для этой пары \fIepfd\fP,\ \fIfd\fP
+был применён флаг \fBEPOLLEXCLUSIVE\fP.
+.TP 
+\fBEINVAL\fP
+Флаг \fBEPOLLEXCLUSIVE\fP указан в \fIevent\fP и \fIfd\fP ссылается на экземпляр
+epoll.
+.TP 
+\fBELOOP\fP
+Значение \fIfd\fP ссылается на экземпляр epoll и эта операция \fBEPOLL_CTL_ADD\fP
+привела бы к зацикливанию экземпляров epoll, отслеживающих один другого.
+.TP 
+\fBENOENT\fP
+В \fIop\fP было указано \fBEPOLL_CTL_MOD\fP или \fBEPOLL_CTL_DEL\fP, а \fIfd\fP не было
+зарегистрировано в данном экземпляре epoll.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для обработки запрошенной управляющей операции \fIop\fP.
+.TP 
+\fBENOSPC\fP
+При попытке регистрации (\fBEPOLL_CTL_ADD\fP) нового файлового дескриптора в
+экземпляре достигнут предел, накладываемый
+\fI/proc/sys/fs/epoll/max_user_watches\fP. Подробней см. в \fBepoll\fP(7).
+.TP 
+\fBEPERM\fP
+Файл назначения \fIfd\fP не поддерживает \fBepoll\fP. Эта ошибка может возникнуть,
+если \fIfd\fP ссылается на, например, обычный файл или каталог.
+.SH ВЕРСИИ
+.\" To be precise: kernel 2.5.44.
+.\" The interface should be finalized by Linux kernel 2.5.66.
+Системный вызов \fBepoll_ctl\fP() был добавлен в ядро версии 2.6.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBepoll_ctl\fP() есть только в Linux. В glibc соответствующая функция
+появилась в версии 2.3.2.
+.SH ЗАМЕЧАНИЯ
+Интерфейс \fBepoll\fP поддерживает все файловые дескрипторы, которые
+поддерживает \fBpoll\fP(2).
+.SH ДЕФЕКТЫ
+В ядрах до версии 2.6.9 для операции \fBEPOLL_CTL_DEL\fP в \fIevent\fP требовался
+указатель со значением не равным null, хотя этот аргумент
+игнорировался. Начиная с Linux 2.6.9, при \fBEPOLL_CTL_DEL\fP в \fIevent\fP можно
+указывать NULL. В переносимых приложениях, которые должны быть
+работоспособными в системах на ядрах до 2.6.9, в \fIevent\fP нужно указывать
+указатель со значением не равным null.
+.PP
+.\" commit a8159414d7e3af7233e7a5a82d1c5d85379bd75c (behavior change)
+.\" https://lwn.net/Articles/520198/
+Если в \fIflags\fP указан \fBEPOLLWAKEUP\fP, но вызывающий не имеет мандата
+\fBCAP_BLOCK_SUSPEND\fP, то флаг \fBEPOLLWAKEUP\fP \fIпросто игнорируется\fP. Такое
+неуместное поведение необходимо, так как в первоначальной реализации не
+выполнялась проверка корректности аргумента \fIflags\fP, и добавление
+\fBEPOLLWAKEUP\fP с проверкой того, что вызов завершился с ошибкой, если
+вызывающий не имеет мандата \fBCAP_BLOCK_SUSPEND\fP, привело к поломке не
+одного существующего пользовательского приложения, которое произвольно
+устанавливало (и зря) этот бит. Корректное приложение должно дважды
+проверить, что имеет мандат \fBCAP_BLOCK_SUSPEND\fP, если пытается использовать
+флаг \fBEPOLLWAKEUP\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBepoll_create\fP(2), \fBepoll_wait\fP(2), \fBpoll\fP(2), \fBepoll\fP(7)

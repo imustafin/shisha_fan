@@ -1,0 +1,89 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This file is derived from unlink.2, which has the following copyright:
+.\"
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Ian Jackson.
+.\"
+.\" Edited into remove.3 shape by:
+.\" Graeme W. Wilford (G.Wilford@ee.surrey.ac.uk) on 13th July 1994
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH REMOVE 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+remove \- удаляет файл или каталог
+.SH ОБЗОР
+\fB#include <stdio.h>\fP
+.PP
+\fBint remove(const char *\fP\fIpathname\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функция \fBremove\fP() удаляет имя из файловой системы. Она вызывает
+\fBunlink\fP(2) для файлов и \fBrmdir\fP(2) для каталогов.
+.PP
+Если удалённое имя было последней ссылкой на файл и больше нет процессов,
+которые держат этот файл открытым, то данный файл удаляется и место, которое
+он занимает, освобождается для дальнейшего использования.
+.PP
+Если имя было последней ссылкой на файл, но какие\-либо процессы всё ещё
+держат этот файл открытым, файл будет существовать, пока последний файловый
+дескриптор, указывающий на него, не будет закрыт.
+.PP
+Если имя указывает на символьную ссылку, то будет удалена ссылка.
+.PP
+Если имя указывает на сокет, FIFO или устройство, то имя будет удалено, но
+процессы, которые открыли объект, могут продолжать его использовать.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+Ошибки, которые возникают у \fBunlink\fP(2) и \fBrmdir\fP(2).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBremove\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" .SH NOTES
+.\" Under libc4 and libc5,
+.\" .BR remove ()
+.\" was an alias for
+.\" .BR unlink (2)
+.\" (and hence would not remove directories).
+POSIX.1\-2001, POSIX.1\-2008, C89, C99, 4.3BSD.
+.SH ДЕФЕКТЫ
+Неточности в протоколе NFS могут приводить к неожиданному исчезновению
+файлов, которые всё ещё используются.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBrm\fP(1), \fBunlink\fP(1), \fBlink\fP(2), \fBmknod\fP(2), \fBopen\fP(2), \fBrename\fP(2),
+\fBrmdir\fP(2), \fBunlink\fP(2), \fBmkfifo\fP(3), \fBsymlink\fP(7)

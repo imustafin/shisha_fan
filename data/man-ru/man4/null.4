@@ -1,0 +1,65 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt (michael@moria.de),
+.\"     Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 17:00:12 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NULL 4 2015\-07\-23 Linux "Руководство программиста Linux"
+.SH ИМЯ
+null, zero \- сток для данных
+.SH ОПИСАНИЕ
+Любые данные, записанные в специальные файлы \fI/dev/null\fP или \fI/dev/zero\fP,
+отбрасываются.
+.PP
+Считывание информации из специального файла \fI/dev/null\fP всегда возвращает
+конец файла (то есть \fBread\fP(2) вернёт 0), а чтение из файла \fI/dev/zero\fP
+всегда возвращает байты, содержащие 0 (символы \(aq\e0\(aq).
+.PP
+Эти устройства обычно создаются так:
+.PP
+.in +4n
+.EX
+mknod \-m 666 /dev/null c 1 3
+mknod \-m 666 /dev/zero c 1 5
+chown root:root /dev/null /dev/zero
+.EE
+.in
+.SH ФАЙЛЫ
+\fI/dev/null\fP
+.br
+\fI/dev/zero\fP
+.SH ЗАМЕЧАНИЯ
+Если эти файлы сделать недоступными для чтения и записи для всех
+пользователей, то многие программы станут работать непредсказуемо.
+.PP
+.\" commit 2b83868723d090078ac0e2120e06a1cc94dbaef0
+Начиная с Linux 2.6.31, чтение из \fI/dev/zero\fP может быть прервано сигналами
+(это изменение было сделано для того, чтобы помочь исправить большое время
+отклика при чтении больших объёмов из \fI/dev/zero\fP).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchown\fP(1), \fBmknod\fP(1), \fBfull\fP(4)

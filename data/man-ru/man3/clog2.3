@@ -1,0 +1,38 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CLOG2 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+clog2, clog2f, clog2l \- логарифм по основанию 2 комплексного числа
+.SH ОБЗОР
+\fB#include <complex.h>\fP
+.PP
+\fBdouble complex clog2(double complex \fP\fIz\fP\fB);\fP
+.br
+\fBfloat complex clog2f(float complex \fP\fIz\fP\fB);\fP
+.br
+.\" .PP
+.\" Link with \fI\-lm\fP.
+\fBlong double complex clog2l(long double complex \fP\fIz\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функция \fIclog2(z)\fP эквивалентна \fIclog(z)/log(2)\fP.
+.PP
+Другие функции выполняют ту же задачу для типов \fIfloat\fP и \fIlong double\fP.
+.PP
+Заметим, что \fIz\fP, близкое к нулю, вызовет переполнение.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Имена функций зарезервированы для будущего использования в C99.
+.SH ДОСТУПНОСТЬ
+.\" But reserved in NAMESPACE.
+Пока не в glibc (версия 2.19).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcabs\fP(3), \fBcexp\fP(3), \fBclog\fP(3), \fBclog10\fP(3), \fBcomplex\fP(7)

@@ -1,0 +1,122 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Justin Pryzby <pryzbyj@justinpryzby.com>
+.\" and Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(PERMISSIVE_MISC)
+.\" Permission is hereby granted, free of charge, to any person obtaining
+.\" a copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\"
+.\" The above copyright notice and this permission notice shall be
+.\" included in all copies or substantial portions of the Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+.\" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+.\" CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+.\" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+.\" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.\" %%%LICENSE_END
+.\"
+.\" References:
+.\"   glibc manual and source
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ERROR 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+error, error_at_line, error_message_count, error_one_per_line,
+error_print_progname \- функции вывода ошибок glibc
+.SH ОБЗОР
+.nf
+\fB#include <error.h>\fP
+.PP
+\fBvoid error(int \fP\fIstatus\fP\fB, int \fP\fIerrnum\fP\fB, const char *\fP\fIformat\fP\fB, ...);\fP
+.PP
+\fBvoid error_at_line(int \fP\fIstatus\fP\fB, int \fP\fIerrnum\fP\fB, const char *\fP\fIfilename\fP\fB,\fP
+\fB                   unsigned int \fP\fIlinenum\fP\fB, const char *\fP\fIformat\fP\fB, ...);\fP
+.PP
+\fBextern unsigned int \fP\fIerror_message_count\fP\fB;\fP
+.PP
+\fBextern int \fP\fIerror_one_per_line\fP\fB;\fP
+.PP
+\fBextern void (*\fP\fIerror_print_progname\fP\fB) (void);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBerror\fP() предназначена для сообщения об ошибках разного рода. Она
+сбрасывает \fIstdout\fP, а затем выводит в \fIstderr\fP имя программы, двоеточие,
+пробел, сообщение, задаваемое строкой \fIformat\fP в формате \fBprintf\fP(3) и,
+если значение \fIerrnum\fP не равно нулю, второе двоеточие и пробел, за
+которыми выводится строка, возвращаемая вызовом \fIstrerror(errnum)\fP. Все
+аргументы, необходимые для \fIformat\fP, должны указываться в списке аргументов
+после \fIformat\fP. Вывод завершается символом новой строки.
+.PP
+Имя программы, выводимое \fBerror\fP(), представляет собой значение глобальной
+переменной \fBprogram_invocation_name\fP(3). Первоначально, переменная
+\fIprogram_invocation_name\fP имеет то же значение что и \fIargv[0]\fP в функции
+\fImain\fP(). Значение этой переменной может быть изменено для показа в выводе
+\fBerror\fP().
+.PP
+Если значение \fIstatus\fP не равно нулю, то \fBerror\fP() вызывает \fBexit\fP(3) для
+завершения программы и это значение используется как код выхода.
+.PP
+Функция \fBerror_at_line\fP() делает то же что и \fBerror\fP(), но имеет
+дополнительные аргументы \fIfilename\fP и \fIlinenum\fP. Вывод аналогичен
+\fBerror\fP(), но после имени программы записывается: двоеточие, значение
+\fIfilename\fP, двоеточие и значение \fIlinenum\fP. При вызове \fBerror_at_line\fP()
+могут быть полезны значения препроцессора \fB__LINE__\fP и \fB__FILE__\fP, но
+можно использовать и другие значения. Например, эти аргументы могут
+указывать на место во входном файле.
+.PP
+Если значение глобальной переменной \fIerror_one_per_line\fP не равно нулю, то
+последовательность вызовов \fBerror_at_line\fP() с тем же значением \fIfilename\fP
+и \fIlinenum\fP выводит только одно сообщение (первое).
+.PP
+В глобальной переменной \fIerror_message_count\fP подсчитывается количество
+сообщений, которые были показаны с помощью \fBerror\fP() и \fBerror_at_line\fP().
+.PP
+Если глобальной переменной \fIerror_print_progname\fP назначен адрес функции
+(т.е., её значение не равно NULL), то вместо показа в начале сообщения имени
+программы и двоеточия вызывается эта функция. Функция должна вывести нужную
+строку в \fIstderr\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lb lb lbw33
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBerror\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+T{
+\fBerror_at_line\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe\ race: error_at_line/error_one_per_line locale
+T}
+.TE
+.ad
+.PP
+Доступна внутренняя переменная \fIerror_one_per_line\fP (нет никакой
+синхронизации, но так как этот \fIint\fP используется только один раз, это не
+проблема) и, если \fIerror_one_per_line\fP установлена в ненулевое значение, то
+становятся доступны для чтения и изменения без синхронизации внутренние
+статические переменные (невидимые пользователю), которые используются для
+хранения последнего напечатанного имени файла и номера строки; обновление не
+атомарно и происходит прежде, чем отключить отмену, поэтому может быть
+прервано только после того, как одна из этих двух переменных изменена. После
+этого \fBerror_at_line\fP() очень похожа на \fBerror\fP().
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции и глобальные переменные являются расширениями GNU, и они не
+должны использоваться в переносимых программах.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBerr\fP(3), \fBerrno\fP(3), \fBexit\fP(3), \fBperror\fP(3),
+\fBprogram_invocation_name\fP(3), \fBstrerror\fP(3)

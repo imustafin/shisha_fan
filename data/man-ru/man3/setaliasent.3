@@ -1,0 +1,153 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2003 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" Polished a bit, added a little, aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETALIASENT 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+setaliasent, endaliasent, getaliasent, getaliasent_r, getaliasbyname,
+getaliasbyname_r \- читает запись о псевдониме
+.SH ОБЗОР
+\fB#include <aliases.h>\fP
+.PP
+\fBvoid setaliasent(void);\fP
+.PP
+\fBvoid endaliasent(void);\fP
+.PP
+\fBstruct aliasent *getaliasent(void);\fP
+.PP
+\fBint getaliasent_r(struct aliasent *\fP\fIresult\fP\fB,\fP
+.br
+\fB char *\fP\fIbuffer\fP\fB, size_t \fP\fIbuflen\fP\fB, struct aliasent **\fP\fIres\fP\fB);\fP
+.PP
+\fBstruct aliasent *getaliasbyname(const char *\fP\fIname\fP\fB);\fP
+.PP
+\fBint getaliasbyname_r(const char *\fP\fIname\fP\fB, struct aliasent
+*\fP\fIresult\fP\fB,\fP
+.br
+\fB char *\fP\fIbuffer\fP\fB, size_t \fP\fIbuflen\fP\fB, struct aliasent **\fP\fIres\fP\fB);\fP
+.SH ОПИСАНИЕ
+Одной из баз данных, доступных в диспетчере службы имён (NSS), является база
+данных псевдонимов (aliases), в которой содержатся почтовые псевдонимы (для
+вывода поддерживаемых баз  данных, запустите \fIgetent \-\-help\fP.) Для доступа
+к базе данных псевдонимов существуют шесть функций.
+.PP
+Функция \fBgetaliasent\fP() возвращает указатель на структуру, содержащую
+информацию о группе из базы данных псевдонимов. Во время первого вызова
+функция возвращает первую запись; в дальнейшем она возвращает все
+последующие записи.
+.PP
+Функция \fBsetaliasent\fP() возвращает файловый указатель в начало базы данных
+псевдонимов.
+.PP
+Функция \fBendaliasent\fP() закрывает базу данных псевдонимов.
+.PP
+Функция \fBgetaliasent_r\fP() является реентерабельной версией предыдущей
+функции. Запрашиваемая структура сохраняется через первый аргумент, но
+программисту также требуется передать и другие аргументы. При нехватке места
+функция завершается с ошибкой.
+.PP
+Функция \fBgetaliasbyname\fP() берёт имя из аргумента и ищет его в базе данных
+псевдонимов. Найденный элемент возвращается в виде указателя на \fIstruct
+aliasent\fP.
+.PP
+Функция \fBgetaliasbyname_r\fP() является реентерабельной версией предыдущей
+функции. Запрашиваемая структура сохраняется через второй аргумент, но
+программисту также требуется передать и другие аргументы. При нехватке места
+функция завершается с ошибкой.
+.PP
+Структура \fIstruct aliasent\fP определена в \fI<aliases.h>\fP:
+.PP
+.in +4n
+.EX
+struct aliasent {
+    char    *alias_name;             /* имя псевдонима */
+    size_t   alias_members_len;
+    char   **alias_members;          /* список имён псевдонима */
+    int      alias_local;
+};
+.EE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При ошибке функции \fBgetaliasent_r\fP() и \fBgetaliasbyname_r\fP() возвращают
+ненулевое значение.
+.SH ФАЙЛЫ
+По умолчанию файлом базы данных псевдонимов является \fI/etc/aliases\fP. Это
+можно изменить в файле \fI/etc/nsswitch.conf\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw19 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsetaliasent\fP(),
+\fBendaliasent\fP(),
+\fBgetaliasent_r\fP(),
+\fBgetaliasbyname_r\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+T{
+\fBgetaliasent\fP(),
+\fBgetaliasbyname\fP()
+T}	Безвредность в нитях	MT\-Unsafe
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции есть только в glibc. В системе NeXT есть подобные функции:
+.PP
+.in +4n
+.EX
+#include <aliasdb.h>
+
+void alias_setent(void);
+void alias_endent(void);
+alias_ent *alias_getent(void);
+alias_ent *alias_getbyname(char *name);
+.EE
+.in
+.SH ПРИМЕР
+Следующий пример компилируется командой \fIgcc example.c \-o example\fP. Он
+выводит все имена из баз данных псевдонимов.
+.PP
+.EX
+#include <aliases.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+
+int
+main(void)
+{
+    struct aliasent *al;
+    setaliasent();
+    for (;;) {
+        al = getaliasent();
+        if (al == NULL)
+            break;
+        printf("Имя: %s\en", al\->alias_name);
+    }
+    if (errno) {
+        perror("чтение псевдонимов");
+        exit(EXIT_FAILURE);
+    }
+    endaliasent();
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetgrent\fP(3), \fBgetpwent\fP(3), \fBgetspent\fP(3), \fBaliases\fP(5)
+.\"
+.\" /etc/sendmail/aliases
+.\" Yellow Pages
+.\" newaliases, postalias

@@ -1,0 +1,83 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_SELF 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_self \- возвращает ID вызвавшей нити
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBpthread_t pthread_self(void);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_self\fP() возвращает идентификатор вызвавшей нити. Это
+значение совпадает с возвращаемым в \fI*thread\fP вызовом \fBpthread_create\fP(3)
+при создании этой нити.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Данная функция всегда завершается успешно, возвращая идентификатор вызвавшей
+нити.
+.SH ОШИБКИ
+Данная функция всегда завершается успешно.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_self\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В POSIX.1 предоставляет реализации большую свободу выбора типа,
+используемого под идентификатор нити; например, допускается представление
+как виде целого числа так и структуры. Поэтому переменные типа \fIpthread_t\fP
+нельзя сравнивать оператором равенства C (\fB==\fP); для этого предназначена
+функция \fBpthread_equal\fP(3).
+.PP
+Состав идентификаторов нити следует считать «чёрным ящиком»: все попытки
+использовать ID нити кроме как в вызовах pthreads являются непереносимыми и
+могут приводить к непредсказуемым результатам.
+.PP
+Для идентификаторов нити гарантируется их уникальность только внутри
+процесса. Идентификатор нити может использоваться повторно после
+присоединения завершённой нити или завершения отключённой нити.
+.PP
+Идентификатор нити, возвращаемый \fBpthread_self\fP() не тоже самое что
+идентификатор нити возвращаемый вызовом ядра \fBgettid\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthread_create\fP(3), \fBpthread_equal\fP(3), \fBpthreads\fP(7)

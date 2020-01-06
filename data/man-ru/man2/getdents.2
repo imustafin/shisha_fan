@@ -1,0 +1,264 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1995 Andries Brouwer (aeb@cwi.nl)
+.\" and Copyright 2008, 2015 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Written 11 June 1995 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 22 July 1995 by Michael Chastain <mec@duracef.shout.net>:
+.\"   Derived from 'readdir.2'.
+.\" Modified Tue Oct 22 08:11:14 EDT 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETDENTS 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getdents, getdents64 \- возвращает записи каталога
+.SH ОБЗОР
+.nf
+\fBint getdents(unsigned int \fP\fIfd\fP\fB, struct linux_dirent *\fP\fIdirp\fP\fB,\fP
+\fB             unsigned int \fP\fIcount\fP\fB);\fP
+\fBint getdents64(unsigned int \fP\fIfd\fP\fB, struct linux_dirent64 *\fP\fIdirp\fP\fB,\fP
+\fB             unsigned int \fP\fIcount\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточных функций для этих системных вызовов;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Это не те функции, которые должны представлять для вас интерес. Смотрите
+описание функции \fBreaddir\fP(3), которая является интерфейсом библиотеки
+языка C, соответствующим стандарту POSIX. В этой странице описаны
+минимальные интерфейсы системных вызовов ядра.
+.SS getdents()
+Системный вызов \fBgetdents\fP() читает несколько структур \fIlinux_dirent\fP из
+каталога, на который указывает открытый файловый дескриптор \fIfd\fP, в буфер,
+указанный в \fIdirp\fP. В аргументе \fIcount\fP задаётся размер этого буфера.
+.PP
+Структура \fIlinux_dirent\fP определена следующим образом:
+.PP
+.in +4n
+.EX
+struct linux_dirent {
+    unsigned long  d_ino;     /* номер иноды */
+    unsigned long  d_off;     /* смещение до следующей \fIlinux_dirent\fP */
+    unsigned short d_reclen;  /* длина этой \fIlinux_dirent\fP */
+    char           d_name[];  /* имя файла (в конце null) */
+                      /* реальная длина (d_reclen \- 2 \-
+                         offsetof(struct linux_dirent, d_name)) */
+    /*
+    char           pad;       // нулевой байт заполнения
+    char           d_type;    // тип файла (только начиная с Linux
+                              // 2.6.4); смещение (d_reclen \- 1)
+    */
+}
+.EE
+.in
+.PP
+В \fId_ino\fP указан номер inode. В \fId_off\fP задаётся расстояние от начала
+каталога до начала следующей \fIlinux_dirent\fP. В \fId_reclen\fP указывается
+размер данного \fIlinux_dirent\fP целиком. В \fId_name\fP задаётся имя файла,
+завершающееся null.
+.PP
+\fId_type\fP \(em байт в конце структуры, которым определяется тип файла. В нём
+содержится одно из следующих значений (определённых в
+\fI<dirent.h>\fP):
+.TP  12
+\fBDT_BLK\fP
+Блочное устройство.
+.TP 
+\fBDT_CHR\fP
+Символьное устройство.
+.TP 
+\fBDT_DIR\fP
+Каталог.
+.TP 
+\fBDT_FIFO\fP
+Именованный канал (FIFO).
+.TP 
+\fBDT_LNK\fP
+Символическая ссылка.
+.TP 
+\fBDT_REG\fP
+Обычный файл.
+.TP 
+\fBDT_SOCK\fP
+Доменный сокет UNIX.
+.TP 
+\fBDT_UNKNOWN\fP
+Неизвестный тип.
+.PP
+Поле \fId_type\fP появилось начиная с Linux 2.6.4. Оно занимает пространство,
+которое раньше в структуре \fIlinux_dirent\fP было отведено для заполняющего
+байта с нулевым значением. Поэтому при работе с ядрами до версии 2.6.3
+включительно при чтении значения этого поля всегда возвращается 0
+(\fBDT_UNKNOWN\fP).
+.PP
+.\" kernel 2.6.27
+.\" The same sentence is in readdir.2
+В настоящее время, только файловые системы (среди которых: Btrfs, ext2, ext3
+и ext4) поддерживают возврат типа файла в \fId_type\fP. Все приложения должны
+правильно обрабатывать возвращаемое значение \fBDT_UNKNOWN\fP.
+.SS getdents64()
+Первоначальный системный вызов Linux \fBgetdents\fP() не работал с файловыми
+системами большого размера и большими смещениями файлов. В связи с этим, в
+Linux 2.4 была добавлен \fBgetdents64\fP(), с более широкими типами полей
+\fId_ino\fP и \fId_off\fP. Также \fBgetdents64\fP() поддерживает явно указанное поле
+\fId_type\fP.
+.PP
+Системный вызов \fBgetdents64\fP() подобен \fBgetdents\fP(), за исключением того,
+что второй аргумент является указателем на буфер, содержащий структуры
+следующего типа:
+.PP
+.EX
+.in +4n
+struct linux_dirent64 {
+    ino64_t        d_ino;    /* 64\-битный номер иноды */
+    off64_t        d_off;    /* 64\-битное смещение следующей структуры */
+    unsigned short d_reclen; /* размер этой dirent */
+    unsigned char  d_type;   /* тип файла */
+    char           d_name[]; /* имя файла (в конце null) */
+};
+.EE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При нормальном завершении работы возвращается количество прочитанных
+байт. При достижении конца каталога возвращается 0. В случае ошибки
+возвращается \-1 и значение \fIerrno\fP устанавливается соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Неверный файловый дескриптор \fIfd\fP.
+.TP 
+\fBEFAULT\fP
+Аргумент указывает за пределы адресного пространства вызывающего процесса.
+.TP 
+\fBEINVAL\fP
+Буфер результата слишком мал.
+.TP 
+\fBENOENT\fP
+Заданный каталог не существует.
+.TP 
+\fBENOTDIR\fP
+Файловый дескриптор указывает не на каталог.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents additional ENOLINK, EIO error conditions.
+SVr4.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данных системных вызовов; запускайте их с помощью
+\fBsyscall\fP(2). Структуру \fIlinux_dirent\fP или \fIlinux_dirent64\fP нужно
+определить самостоятельно. Однако лучше использовать \fBreaddir\fP(3).
+.PP
+Данные системные вызовы заместил \fBreaddir\fP(2).
+.SH ПРИМЕР
+.\" FIXME The example program needs to be revised, since it uses the older
+.\" getdents() system call and the structure with smaller field widths.
+В программе, показанной далее, демонстрируется использование
+\fBgetdents\fP(). В следующем выводе показан пример запуска этой программы с
+каталогом с ext2:
+.PP
+.in +4n
+.EX
+$\fB ./a.out /testfs/\fP
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\- nread=120 \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+inode#    file type  d_reclen  d_off   d_name
+       2  directory    16         12  .
+       2  directory    16         24  ..
+      11  directory    24         44  lost+found
+      12  regular      16         56  a
+  228929  directory    16         68  sub
+   16353  directory    16         80  sub2
+  130817  directory    16       4096  sub3
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <dirent.h>     /* Определяет константы DT_* */
+#include <fcntl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
+
+#define handle_error(msg) \e
+        do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+struct linux_dirent {
+    long           d_ino;
+    off_t          d_off;
+    unsigned short d_reclen;
+    char           d_name[];
+};
+
+#define BUF_SIZE 1024
+
+int
+main(int argc, char *argv[])
+{
+    int fd, nread;
+    char buf[BUF_SIZE];
+    struct linux_dirent *d;
+    int bpos;
+    char d_type;
+
+    fd = open(argc > 1 ? argv[1] : ".", O_RDONLY | O_DIRECTORY);
+    if (fd == \-1)
+        handle_error("open");
+
+    for ( ; ; ) {
+        nread = syscall(SYS_getdents, fd, buf, BUF_SIZE);
+        if (nread == \-1)
+            handle_error("getdents");
+
+        if (nread == 0)
+            break;
+
+        printf("\-\-\-\-\-\-\-\-\-\-\-\-\-\-\- nread=%d \-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\en", nread);
+        printf("inode#    file type  d_reclen  d_off   d_name\en");
+        for (bpos = 0; bpos < nread;) {
+            d = (struct linux_dirent *) (buf + bpos);
+            printf("%8ld  ", d\->d_ino);
+            d_type = *(buf + bpos + d\->d_reclen \- 1);
+            printf("%\-10s ", (d_type == DT_REG) ?  "regular" :
+                             (d_type == DT_DIR) ?  "directory" :
+                             (d_type == DT_FIFO) ? "FIFO" :
+                             (d_type == DT_SOCK) ? "socket" :
+                             (d_type == DT_LNK) ?  "symlink" :
+                             (d_type == DT_BLK) ?  "block dev" :
+                             (d_type == DT_CHR) ?  "char dev" : "???");
+            printf("%4d %10lld  %s\en", d\->d_reclen,
+                    (long long) d\->d_off, d\->d_name);
+            bpos += d\->d_reclen;
+        }
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBreaddir\fP(2), \fBreaddir\fP(3), \fBinode\fP(7)

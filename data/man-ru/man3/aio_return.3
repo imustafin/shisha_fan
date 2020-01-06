@@ -1,0 +1,81 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2003 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH AIO_RETURN 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+aio_return \- возвращает состояние операции асинхронного ввода\-вывода
+.SH ОБЗОР
+\fB#include <aio.h>\fP
+.PP
+\fBssize_t aio_return(struct aiocb *\fP\fIaiocbp\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.SH ОПИСАНИЕ
+Функция \fBaio_return\fP() возвращает окончательное значение завершения запроса
+асинхронного ввода\-вывода, задаваемого указателем на контрольный блок
+\fIaiocbp\fP (описание структуры \fIaiocb\fP смотрите в \fBaio\fP(7)).
+.PP
+Эта функция должна вызываться единожды для любого запроса в случае, если
+\fBaio_error\fP(3) возвращает результат, отличный от \fBEINPROGRESS\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если операция асинхронного ввода\-вывода завершена, данная функция возвращает
+значение, которое может быть возвращено в случае запроса синхронного вызова
+\fBread\fP(2), \fBwrite\fP(2), \fBfsync\fP(2) или \fBfdatasync\fP(2). При ошибке
+возвращается \-1 и \fIerrno\fP изменяется соответствующим образом.
+.PP
+Если асинхронная операция ввода\-вывода ещё не выполнена, то возвращаемое
+значение и действие \fBaio_return\fP() не определены.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+\fIaiocbp\fP не указывает на контрольный блок запроса асинхронного
+ввода\-вывода, значение результата которого ещё не получено.
+.TP 
+\fBENOSYS\fP
+Функция \fBaio_return\fP() не реализована.
+.SH ВЕРСИИ
+Функция \fBaio_return\fP() доступна в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBaio_return\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ПРИМЕР
+Смотрите \fBaio\fP(7).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaio_cancel\fP(3), \fBaio_error\fP(3), \fBaio_fsync\fP(3), \fBaio_read\fP(3),
+\fBaio_suspend\fP(3), \fBaio_write\fP(3), \fBlio_listio\fP(3), \fBaio\fP(7)

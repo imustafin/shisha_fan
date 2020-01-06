@@ -1,0 +1,97 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified 1993-07-24 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 2002-08-10 by Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH COPYSIGN 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+copysign, copysignf, copysignl \- копирует знак числа
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble copysign(double \fP\fIx\fP\fB, double \fP\fIy\fP\fB);\fP
+\fBfloat copysignf(float \fP\fIx\fP\fB, float \fP\fIy\fP\fB);\fP
+\fBlong double copysignl(long double \fP\fIx\fP\fB, long double \fP\fIy\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBcopysign\fP(), \fBcopysignf\fP(), \fBcopysignl\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Эти функции возвращают величину, чье абсолютное значение равно \fIx\fP, но знак
+которой соответствует знаку значения \fIy\fP.
+.PP
+Например, \fIcopysign(42.0,\ \-1.0)\fP и \fIcopysign(\-42.0, \-1.0)\fP вернут \-42.0.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные функции возвращают значение величиной как у
+\fIx\fP и знаком как у \fIy\fP.
+.PP
+Если \fIx\fP равно NaN, будет возвращено NaN со знаковым битом как у \fIy\fP.
+.SH ОШИБКИ
+Ошибки не возникают.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw36 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBcopysign\fP(),
+\fBcopysignf\fP(),
+\fBcopysignl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" 4.3BSD.
+C99, POSIX.1\-2001, POSIX.1\-2008. Эта функция определена в IEC 559 (и в
+приложении с рекомендуемыми функциями IEEE 754/IEEE 854).
+.SH ЗАМЕЧАНИЯ
+На архитектурах, у которых форматы чисел с плавающей запятой не совместимы с
+IEEE 754, эти функции могут считать отрицательный ноль как положительный.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsignbit\fP(3)

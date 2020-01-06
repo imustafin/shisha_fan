@@ -1,0 +1,72 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ISWXDIGIT 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+iswxdigit \- проверяет, является ли символ широким символом шестнадцатеричной
+цифры
+.SH ОБЗОР
+.nf
+\fB#include <wctype.h>\fP
+.PP
+\fBint iswxdigit(wint_t \fP\fIwc\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBiswxdigit\fP() является эквивалентом функции \fBisxdigit\fP(3), но для
+широких символов. Она проверяет, является ли \fIwc\fP широким символом,
+принадлежащим классу широких символов «xdigit».
+.PP
+Класс широких символов «xdigit» является подклассом класса широких символов
+«alnum» и, следовательно, подклассом класса широких символов «graph» и
+класса широких символов «print».
+.PP
+Будучи подклассом класса широких символов «print», «xdigit» не пересекается
+с классом широких символов «cntrl».
+.PP
+Будучи подклассом класса широких символов «graph», «xdigit» не пересекается
+с классом широких символов «space» и его подклассом «blank».
+.PP
+Будучи подклассом класса широких символов «alnum», «xdigit» не пересекается
+с классом широких символов «punct».
+.PP
+Класс широких символов «xdigit» всегда содержит (как минимум) буквы от «A»
+до «F», от «a» до «f» и цифры от «0» до «9».
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBiswxdigit\fP() возвращает ненулевое значение, если \fIwc\fP является
+широким символом, принадлежащим классу широких символов «xdigit». В других
+случаях возвращается 0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBiswxdigit\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBiswxdigit\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBiswctype\fP(3), \fBisxdigit\fP(3)

@@ -1,0 +1,90 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t -*- coding: UTF-8 -*-
+.\"
+.\" Copyright (C) 2014 Marko Myllynen <myllynen@redhat.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ICONVCONFIG 8 2018\-02\-02 GNU "Системное администрирование Linux"
+.SH ИМЯ
+iconvconfig \- создаёт кэш настроек модуля iconv
+.SH ОБЗОР
+\fBiconvconfig\fP [\fIпараметры\fP] [\fIкаталог\fP]…
+.SH ОПИСАНИЕ
+Функция \fBiconv\fP(3) использует модули \fIgconv\fP для преобразования между
+наборами символов. Файл настройки используется для определения необходимости
+модулей для преобразования. Загрузка и обработка такого файла настройки
+замедляла бы программу, использующую \fBiconv\fP(3), поэтому задействуется
+кэширующий механизм.
+.PP
+Программа \fBiconvconfig\fP читает файлы настройки модуля iconv и записывает
+быстро загружаемый файл кэша настроек модуля gconv.
+.PP
+Кроме модулей gconv, предоставляемых системой, пользователь может задавать
+свои каталоги модулей gconv в переменной окружения \fBGCONV_PATH\fP. Однако
+кэширование настроек модуля iconv используется только, если переменная
+окружения \fBGCONV_PATH\fP отсутствует.
+.SH ПАРАМЕТРЫ
+.TP 
+\fB\-\-nostdlib\fP
+Не искать в системном каталоге gconv по умолчанию, использовать только
+каталоги, заданные в командной строке.
+.TP 
+\fB\-o\fP\fI файл_результата\fP\fB, \-\-output=\fP\fIфайл_результата\fP
+Использовать \fIфайл_результата\fP для вывода вместо системного кэша по
+умолчанию.
+.TP 
+\fB\-\-prefix=\fP\fIпуть\fP
+Задать префикс, который ставится в начало системных путей. Смотрите ФАЙЛЫ
+далее. По умолчанию префикс отсутствует. Если в качестве префикса указать
+\fIfoo\fP, настройка модуля gconv будет читаться из
+\fIfoo/usr/lib/gconv/gconv\-modules\fP, а кэш будет записываться в
+\fIfoo/usr/lib/gconv/gconv\-modules.cache\fP.
+.TP 
+\fB\-?\fP, \fB\-\-help\fP
+Показать справку по использованию и завершить работу.
+.TP 
+\fB\-\-usage\fP
+Показать краткую справку по использованию и завершить работу.
+.TP 
+\fB\-V\fP, \fB\-\-version\fP
+Показать номер версии, лицензию и уведомление о гарантиях для \fBiconv\fP.
+.SH "КОД ВЫХОДА"
+При успешном выполнении возвращается 0, при ошибках возвращается ненулевое
+значение.
+.SH ФАЙЛЫ
+.TP 
+\fI/usr/lib/gconv\fP
+Обычный путь по умолчанию модуля gconv.
+.TP 
+\fI/usr/lib/gconv/gconv\-modules\fP
+Обычный файл настройки по умолчанию модуля gconv.
+.TP 
+\fI/usr/lib/gconv/gconv\-modules.cache\fP
+Обычный путь кэша настроек модуля gconv.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBiconv\fP(1), \fBiconv\fP(3)

@@ -1,0 +1,78 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Mitchum DSouza <m.dsouza@mrc-applied-psychology.cambridge.ac.uk>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Updated, aeb, 980809
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CATGETS 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+catgets \- получает сообщение из каталога сообщений
+.SH ОБЗОР
+.nf
+\fB#include <nl_types.h>\fP
+.PP
+\fBchar *catgets(nl_catd \fP\fIcatalog\fP\fB, int \fP\fIset_number\fP\fB, int \fP\fImessage_number\fP\fB,\fP
+\fB              const char *\fP\fImessage\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBcatgets\fP() читает сообщение номер \fImessage_number\fP в наборе
+номеров \fIset_number\fP, из каталога сообщений, обозначенного как \fIcatalog\fP,
+где \fIcatalog\fP — это дескриптор каталога, полученный ранее вызовом функции
+\fBcatopen\fP(3). Четвертый аргумент, \fBmessage\fP, является указателем на строку
+с сообщением по умолчанию, которую вернёт \fBcatgets\fP() в случае, если
+указанный каталог сообщений недоступен. Текст сообщений хранится во
+внутреннем буфере и должен быть скопирован приложением, если оно должно быть
+изменено или сохранено. Возвращаемая строка всегда заканчивается байтом null
+(\(aq\e0\(aq).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.PP
+При успешном выполнении \fBcatgets\fP() возвращает указатель на внутренний
+буфер, содержащий заканчивающуюся null строку с сообщением. Если сообщение
+не найдено, то \fBcatgets\fP() возвращает значение \fImessage\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBcatgets\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Функция \fBcatgets\fP() доступна только в libc.so.4.4.4c и более поздних
+версиях. В январе 1987 года в X/Open Portability Guide определены более
+точные сообщения об ошибках: \fImessage\fP возвращается, если каталог
+\fIcatalog\fP недоступен; если возвращена пустая строка, то каталог доступен,
+но не содержит данных о сообщении. Эти две возможные ситуации, похоже, не
+учтены в XSUSv2, и в случае ошибки всегда возвращается \fImessage\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcatopen\fP(3), \fBsetlocale\fP(3)

@@ -1,0 +1,176 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1998 Andries Brouwer (aeb@cwi.nl), 24 September 1998
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH REBOOT 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+reboot \- перезагружает систему и разрешает/запрещает использование
+комбинации Ctrl\-Alt\-Del
+.SH ОБЗОР
+/* Начиная с версии ядра 2.1.30 появились символьные имена LINUX_REBOOT_*
+   для констант и четвёртый аргумент вызова: */
+.PP
+\fB#include <unistd.h>\fP
+.br
+\fB#include <linux/reboot.h>\fP
+.PP
+\fBint reboot(int \fP\fImagic\fP\fB, int \fP\fImagic2\fP\fB, int \fP\fIcmd\fP\fB, void
+*\fP\fIarg\fP\fB);\fP
+
+/* В glibc и в большинстве альтернативных libc (включая uclibc,
+   deitlibc, musl и других) некоторым константам присвоены
+   символьные имена RB_*, а библиотечная функция является
+   обёрткой с одним аргументом вокруг системного вызова: */
+.PP
+\fB#include <unistd.h>\fP
+.br
+\fB#include <sys/reboot.h>\fP
+.PP
+\fBint reboot(int \fP\fIcmd\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBreboot\fP() перезагружает систему или разрешает/запрещает
+использование для перезагрузки специального сочетания клавиш (сокращённо
+CAD, от комбинации по умолчанию \(em Ctrl\-Alt\-Delete; может быть изменена с
+помощью \fBloadkeys\fP(1)).
+.PP
+Данный системный вызов завершается ошибкой (\fBEINVAL\fP), если \fImagic\fP не
+равен \fBLINUX_REBOOT_MAGIC1\fP (0xfee1dead) и \fImagic2\fP не равен
+\fBLINUX_REBOOT_MAGIC2\fP (672274793). Однако, начиная с 2.1.17 в \fImagic2\fP
+также можно использовать \fBLINUX_REBOOT_MAGIC2A\fP (85072278)  и начиная с
+2.1.97 — \fBLINUX_REBOOT_MAGIC2B\fP (369367448) и начиная с 2.5.71 —
+\fBLINUX_REBOOT_MAGIC2C\fP (537993216) (шестнадцатеричные значения этих
+констант говорят сами за себя).
+.PP
+Аргумент \fIcmd\fP может принимать следующие значения:
+.TP 
+\fBLINUX_REBOOT_CMD_CAD_OFF\fP
+(\fBRB_DISABLE_CAD\fP, 0). Запретить использование сочетания клавиш для
+перезагрузки системы (CAD). Это означает, что нажатие комбинации клавиш CAD
+приведёт к тому, что процессу init (с идентификатором 1) будет послан сигнал
+\fBSIGINT\fP, после чего этот процесс может сам решить какие действия выполнять
+(возможно, послать сигналы процессам, выполнить команду sync, reboot).
+.TP 
+\fBLINUX_REBOOT_CMD_CAD_ON\fP
+(\fBRB_ENABLE_CAD\fP, 0x89abcdef). Разрешить использование сочетания клавиш для
+перезагрузки (CAD). Это означает, что нажатие комбинации клавиш CAD приведёт
+к немедленному выполнению действия, связанного с
+\fBLINUX_REBOOT_CMD_RESTART\fP.
+.TP 
+\fBLINUX_REBOOT_CMD_HALT\fP
+(\fBRB_HALT_SYSTEM\fP, 0xcdef0123; начиная с Linux 1.1.76) Выводится сообщение
+«System halted.» и система останавливается. Управление передается монитору в
+ПЗУ, если таковой имеется. Если вызову этой функции не предшествует
+\fBsync\fP(2), то данные будут потеряны.
+.TP 
+\fBLINUX_REBOOT_CMD_KEXEC\fP
+(\fBRB_KEXEC\fP, 0x45584543, начиная с Linux 2.6.13) Выполняет ядро, которое
+было загружено ранее с помощью \fBkexec_load\fP(2). Этот параметр доступен
+только, если ядро собрано с параметром \fBCONFIG_KEXEC\fP.
+.TP 
+\fBLINUX_REBOOT_CMD_POWER_OFF\fP
+(\fBRB_POWER_OFF\fP, 0x4321fedc; начиная с Linux 2.1.30) Выводится сообщение
+«Power down.», система останавливается, и у системы отключаются все
+источники питания, если это возможно. Если вызову этой функции не
+предшествует \fBsync\fP(2), то данные будут потеряны.
+.TP 
+\fBLINUX_REBOOT_CMD_RESTART\fP
+(\fBRB_AUTOBOOT\fP, 0x1234567) Выводится сообщение «Restarting system.», и по
+умолчанию сразу выполняется перезагрузка системы. Если вызову этой функции
+не предшествует команда \fBsync\fP(2), то данные будут потеряны.
+.TP 
+\fBLINUX_REBOOT_CMD_RESTART2\fP
+(0xa1b2c3d4; начиная с Linux 2.1.30) Выводится сообщение «Restarting system
+with command \(aq%s\(aq» и немедленно выполняется перезагрузка системы (с
+использованием командной строки, заданной в \fIarg\fP). Если вызову этой
+функции не предшествует \fBsync\fP(2), то данные будут потеряны.
+.TP 
+\fBLINUX_REBOOT_CMD_SW_SUSPEND\fP
+(\fBRB_SW_SUSPEND\fP, 0xd000fce1; начиная с Linux 2.5.18) Система переводится в
+режим ожидания (suspended, hibernated) на диск. Этот параметр доступен
+только, если ядро собрано с параметром \fBCONFIG_HIBERNATION\fP.
+.PP
+Только суперпользователь может вызывать \fBreboot\fP().
+.PP
+.\"
+Конкретное действие описанных выше команд зависит от архитектуры
+системы. Что касается i386, то дополнительный аргумент в данное время ничего
+не даёт (2.1.122), а тип перезагрузки можно задать в командной строке ядра
+("reboot=..."), определив, будет ли перезагрузка "тёплой" или "холодной", а
+также аппаратной или посредством BIOS.
+.SS "Поведение внутри пространств имён PID"
+.\" commit cf3f89214ef6a33fad60856bc5ffd7bb2fc4709b
+.\" see also commit 923c7538236564c46ee80c253a416705321f13e3
+Начиная с Linux 3.4, если \fBreboot\fP() вызывается из пространства имён PID,
+отличающегося от начального пространства имён PID, и и значение \fIcmd\fP равно
+одному из перечисленных ниже, то выполняется «перезагрузка» в этом
+пространстве имён: процесс «init» пространства имён PID завершается
+немедленно, что приводит к результатам, описанным в \fBpid_namespaces\fP(7).
+.PP
+Возможные значения в этом случае, передаваемые в \fIcmd\fP при вызове
+\fBreboot\fP(), следующие:
+.TP 
+\fBLINUX_REBOOT_CMD_RESTART\fP, \fBLINUX_REBOOT_CMD_RESTART2\fP
+Процесс «init» завершается и \fBwait\fP(2) в родительском процессе возвращает,
+что поток завершился по сигналу \fBSIGHUP\fP.
+.TP 
+\fBLINUX_REBOOT_CMD_POWER_OFF\fP, \fBLINUX_REBOOT_CMD_HALT\fP
+Процесс «init» завершается и \fBwait\fP(2) в родительском процессе возвращает,
+что поток завершился по сигналу \fBSIGINT\fP.
+.PP
+При других значениях \fIcmd\fP вызов \fBreboot\fP() возвращает \-1 и \fIerrno\fP
+присваивается значение \fBEINVAL\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При значениях \fIcmd\fP, по которым система останавливается или
+перезагружается, в случае успешной работы \fBreboot\fP() ничего не
+возвращается. При других значений \fIcmd\fP в случае успешной работы
+возвращается ноль. При ошибке всегда возвращается \-1, а \fIerrno\fP
+устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Проблема получения данных пользовательского пространства при
+\fBLINUX_REBOOT_CMD_RESTART2\fP.
+.TP 
+\fBEINVAL\fP
+Неправильные идентификационные числа или \fIcmd\fP.
+.TP 
+\fBEPERM\fP
+Вызывающий процесс не имеет достаточно прав для вызова \fBreboot\fP();
+вызывающий должен иметь мандат \fBCAP_SETGID\fP в своём пользовательском
+пространстве имён.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBreboot\fP() есть только в Linux, и он не должен использоваться в
+переносимых программах.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsystemctl\fP(1), \fBsystemd\fP(1), \fBkexec_load\fP(2), \fBsync\fP(2),
+\fBbootparam\fP(7), \fBcapabilities\fP(7), \fBctrlaltdel\fP(8), \fBhalt\fP(8),
+\fBshutdown\fP(8)

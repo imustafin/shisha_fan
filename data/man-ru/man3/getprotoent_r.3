@@ -1,0 +1,220 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"	<mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETPROTOENT_R 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getprotoent_r, getprotobyname_r, getprotobynumber_r \- возвращают запись о
+протоколе (реентерабельные версии)
+.SH ОБЗОР
+.nf
+\fB#include <netdb.h>\fP
+.PP
+\fBint getprotoent_r(struct protoent *\fP\fIresult_buf\fP\fB, char *\fP\fIbuf\fP\fB,\fP
+\fB                size_t \fP\fIbuflen\fP\fB, struct protoent **\fP\fIresult\fP\fB);\fP
+.PP
+\fBint getprotobyname_r(const char *\fP\fIname\fP\fB,\fP
+\fB                struct protoent *\fP\fIresult_buf\fP\fB, char *\fP\fIbuf\fP\fB,\fP
+\fB                size_t \fP\fIbuflen\fP\fB, struct protoent **\fP\fIresult\fP\fB);\fP
+.PP
+\fBint getprotobynumber_r(int \fP\fIproto\fP\fB,\fP
+\fB                struct protoent *\fP\fIresult_buf\fP\fB, char *\fP\fIbuf\fP\fB,\fP
+\fB                size_t \fP\fIbuflen\fP\fB, struct protoent **\fP\fIresult\fP\fB);\fP
+.PP
+.fi
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.ad l
+.in
+.PP
+\fBgetprotoent_r\fP(),
+\fBgetprotobyname_r\fP(),
+\fBgetprotobynumber_r\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE || _SVID_SOURCE
+.ad b
+.SH ОПИСАНИЕ
+Функции \fBgetprotoent_r\fP(), \fBgetprotobyname_r\fP() и \fBgetprotobynumber_r\fP()
+являются реентерабельными эквивалентами  \fBgetprotoent\fP(3),
+\fBgetprotobyname\fP(3) и \fBgetprotobynumber\fP(3), соответственно. Они
+отличаются способом возврата структуры \fIprotoent\fP, списком параметров и
+типом возвращаемого значения. В этой справочной странице описаны только
+различия с нереентерабельными функциями.
+.PP
+Вместо возврата указателя на статически выделенную структуру \fIprotoent\fP в
+качестве результата эти функции копируют структуру в расположение, указанное
+\fIresult_buf\fP.
+.PP
+.\" I can find no information on the required/recommended buffer size;
+.\" the nonreentrant functions use a 1024 byte buffer.
+.\" The 1024 byte value is also what the Solaris man page suggests. -- mtk
+Массив \fIbuf\fP используется для хранения строковых полей из возвращаемой
+структуры \fIprotoent\fP (нереентерабельные функции выделяют эти строки из
+статического хранилища). Размер данного массива задаётся в \fIbuflen\fP. Если
+\fIbuf\fP слишком мал, то вызов завершается с ошибкой \fBERANGE\fP, вызывающий
+должен его повторить с большим буфером (для большинства приложений должно
+быть достаточно буфера длиной 1024 байт).
+.PP
+Если вызов получил запись о протоколе, то  \fI*result\fP указывает на
+\fIresult_buf\fP; в противном случае \fI*result\fP устанавливается в NULL.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0. При ошибке возвращается
+одно из положительных значений, перечисленных В разделе ОШИБКИ.
+.PP
+При ошибке, отсутствии записи (\fBgetprotobyname_r\fP(),
+\fBgetprotobynumber_r\fP()) или конце данных (\fBgetprotoent_r\fP()) значение
+\fIresult\fP равно NULL.
+.SH ОШИБКИ
+.TP 
+\fBENOENT\fP
+(\fBgetprotoent_r\fP()) Больше нет записей в базе данных.
+.TP 
+\fBERANGE\fP
+Размер \fIbuf\fP слишком мал. Попробуйте ещё раз с большим буфером (и
+увеличенным значением \fIbuflen\fP).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw20 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetprotoent_r\fP(),
+.br
+\fBgetprotobyname_r\fP(),
+.br
+\fBgetprotobynumber_r\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU. Функции с похожими именами есть и в
+других системах, хотя и с другим набором параметров.
+.SH ПРИМЕР
+Программа, представленная ниже, использует \fBgetprotobyname_r\fP() для
+получения записи о протоколе с именем, указанным в командной строке. Если
+задан второй параметр (целое), то он используется как начальное значение
+\fIbuflen\fP; если \fBgetprotobyname_r\fP() завершается с ошибкой \fBERANGE\fP, то
+программа повторяет попытки с большими значениями буфера. Пара примеров
+работы в сеансовой оболочке:
+.PP
+.in +4n
+.EX
+$\fB ./a.out tcp 1\fP
+ERANGE! Повтор с большим буфером
+результат getprotobyname_r(): 0 (успешно)  (buflen=78)
+p_name=tcp; p_proto=6; aliases=TCP
+$\fB ./a.out xxx 1\fP
+ERANGE! Повтор с большим буфером
+результат getprotobyname_r(): 0 (успешно)  (buflen=100)
+Ошибка вызова/запись не найдена
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <ctype.h>
+#include <netdb.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+
+#define MAX_BUF 10000
+
+int
+main(int argc, char *argv[])
+{
+    int buflen, erange_cnt, s;
+    struct protoent result_buf;
+    struct protoent *result;
+    char buf[MAX_BUF];
+    char **p;
+
+    if (argc < 2) {
+        printf("Использование: %s имя\-протокола [длина\-буф]\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    buflen = 1024;
+    if (argc > 2)
+        buflen = atoi(argv[2]);
+
+    if (buflen > MAX_BUF) {
+        printf("Превышен размер буфера (%d)\en", MAX_BUF);
+        exit(EXIT_FAILURE);
+    }
+
+    erange_cnt = 0;
+    do {
+        s = getprotobyname_r(argv[1], &result_buf,
+                     buf, buflen, &result);
+        if (s == ERANGE) {
+            if (erange_cnt == 0)
+                printf("ERANGE! Повтор с большим буфером\en");
+            erange_cnt++;
+
+            /* Увеличиваем по байту за раз для того, чтобы мы могли
+               точно узнать какой размер буфера требуется */
+
+            buflen++;
+
+            if (buflen > MAX_BUF) {
+                printf("Превышен размер буфера (%d)\en", MAX_BUF);
+                exit(EXIT_FAILURE);
+            }
+        }
+    } while (s == ERANGE);
+
+    printf("результат getprotobyname_r(): %s  (buflen=%d)\en",
+            (s == 0) ? "0 (успешно)" : (s == ENOENT) ? "ENOENT" :
+            strerror(s), buflen);
+
+    if (s != 0 || result == NULL) {
+        printf("Ошибка вызова/запись не найдена\en");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("p_name=%s; p_proto=%d; aliases=",
+                result_buf.p_name, result_buf.p_proto);
+    for (p = result_buf.p_aliases; *p != NULL; p++)
+        printf("%s ", *p);
+    printf("\en");
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetprotoent\fP(3), \fBprotocols\fP(5)

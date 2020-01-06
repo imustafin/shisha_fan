@@ -1,0 +1,179 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright (C) 2008, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 18:48:48 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 980310, aeb
+.\" Modified 990328, aeb
+.\" 2008-06-19, mtk, Added mkostemp(); various other changes
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MKSTEMP 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+mkstemp, mkostemp, mkstemps, mkostemps \- создаёт временный файл с уникальным
+именем
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint mkstemp(char *\fP\fItemplate\fP\fB);\fP
+.PP
+\fBint mkostemp(char *\fP\fItemplate\fP\fB, int \fP\fIflags\fP\fB);\fP
+.PP
+\fBint mkstemps(char *\fP\fItemplate\fP\fB, int \fP\fIsuffixlen\fP\fB);\fP
+.PP
+\fBint mkostemps(char *\fP\fItemplate\fP\fB, int \fP\fIsuffixlen\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc (смотрите
+\fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBmkstemp\fP():
+.ad l
+.RS 4
+.PD 0
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+    || /* версии glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.PD
+.RE
+.ad b
+.PP
+\fBmkostemp\fP(): _GNU_SOURCE
+.br
+\fBmkstemps\fP():
+    /* glibc начиная с 2.19: */ _DEFAULT_SOURCE
+        || /* версии glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.br
+\fBmkostemps\fP(): _GNU_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBmktemp\fP() генерирует на основе шаблона \fItemplate\fP уникальное имя
+для временного файла, создаёт и открывает файл, после чего возвращает
+дескриптор открытого файла.
+.PP
+Последние шесть символов \fItemplate\fP должны быть равны "XXXXXX", они будут
+заменены на строку, которая сделает имя файла уникальным. Так как
+\fItemplate\fP будет меняться, он должна быть объявлен не строковой константой,
+а массивом символов.
+.PP
+Файл создается с правами 0600, то есть читать и записывать в него может
+только владелец. Возвращаемый дескриптор файла предоставляет доступ к файлу
+как на чтение, так и на запись. Файл открывается с помощью \fBopen\fP(2) с
+флагом \fBO_EXCL\fP, что гарантирует, что вызывающий является процессом,
+создавшим файл.
+.PP
+.\" Reportedly, FreeBSD
+Функция \fBmkostemp\fP() подобна \fB mkstemp\fP(), но отличие в том, что следующие
+биты (с теми же значениями что и для \fBopen\fP(2)) могут быть указаны в
+\fIflags\fP: \fBO_APPEND\fP, \fBO_CLOEXEC\fP и \fBO_SYNC\fP. Заметим, что при создании
+файла \fBmkostemp\fP() включает значения \fBO_RDWR\fP, \fBO_CREAT\fP и \fBO_EXCL\fP в
+аргумент \fIflags\fP при вызове \fBopen\fP(2); добавлять эти значения в аргумент
+\fIflags\fP при вызове \fBmkostemp\fP() необязательно и это приводит к ошибках в
+некоторых системах.
+.PP
+Функция \fBmkstemps\fP() похожа на \fBmkstemp\fP(), за исключением строки в
+\fItemplate\fP, которая содержит символы суффикса \fIsuffixlen\fP. Таким образом,
+\fItemplate\fP будет приобретать вид \fIprefixXXXXXXsuffix\fP, а строка XXXXXX
+будет меняться так же, как и для \fBmkstemp\fP().
+.PP
+Функция \fBmkostemps\fP() является аналогом \fBmkstemps\fP(), подобно как
+\fBmkostemp\fP() является аналогом \fBmkstemp\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные функции возвращают дескриптор временного
+файла. В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEEXIST\fP
+Невозможно создать уникальное имя временного файла. Содержимое \fItemplate\fP
+теперь не определено.
+.TP 
+\fBEINVAL\fP
+Для \fBmkstemp\fP() и \fBmkostemp\fP(): последние шесть символов \fItemplate\fP не
+равны XXXXXX. \fItemplate\fP не изменён.
+.IP
+Для \fBmkstemps\fP() и \fBmkostemps\fP(): количество символов \fItemplate\fP меньше,
+чем \fI(6 + suffixlen)\fP или последние 6 символов до суффикса в \fItemplate\fP не
+равны XXXXXX.
+.PP
+Данные функции также могут завершиться ошибками, описанными в \fBopen\fP(2).
+.SH ВЕРСИИ
+\fBmkostemp\fP() впервые появилась в glibc 2.7. \fBmkstemps\fP() и \fBmkostemps\fP()
+доступны в glibc с версии 2.11.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw23 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmkstemp\fP(),
+\fBmkostemp\fP(),
+.br
+\fBmkstemps\fP(),
+\fBmkostemps\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBmkstemp\fP(): 4.3BSD, POSIX.1\-2001.
+.PP
+.\" mkstemps() appears to be at least on the BSDs, Mac OS X, Solaris,
+.\" and Tru64.
+\fBmkstemps\fP() не стандартизована, однако может присутствовать на некоторых
+системах.
+.PP
+\fBmkostemp\fP() и \fBmkstemp\fP(): являются расширениями glibc.
+.SH ЗАМЕЧАНИЯ
+В версиях glibc 2.06 и ниже файл создавался с правами 0666, то есть читать и
+записывать в него могли все пользователи. Это старое поведение может быть
+небезопасным, особенно когда в других UNIX используются права 0600, и кто\-то
+может не заметить это отличие при переносе программы. В POSIX.1\-2008
+добавлено требование, что файл должен создаваться с правами 0600.
+.PP
+.\"
+.\" The prototype for
+.\" .BR mkstemp ()
+.\" is in
+.\" .I <unistd.h>
+.\" for libc4, libc5, glibc1; glibc2 follows POSIX.1 and has the prototype in
+.\" .IR <stdlib.h> .
+В более общем смысле, в спецификации POSIX для \fBmkstemp\fP() ничего не
+сказано о правах на файл, поэтому программа должна сама проверить до вызова
+\fBmkstemp\fP()  (и \fBmkostemp\fP()), что маска создания файла (смотрите
+\fBumask\fP(2)) уставлена в правильное значение.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmkdtemp\fP(3), \fBmktemp\fP(3), \fBtempnam\fP(3), \fBtmpfile\fP(3), \fBtmpnam\fP(3)

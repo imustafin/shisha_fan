@@ -1,0 +1,90 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2001 Andries Brouwer <aeb@cwi.nl>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TIMEGM 3 2016\-12\-12 GNU "Руководство программиста Linux"
+.SH ИМЯ
+timegm, timelocal \- обратные gmtime и localtime функции
+.SH ОБЗОР
+.nf
+\fB#include <time.h>\fP
+.PP
+\fBtime_t timelocal(struct tm *\fP\fItm\fP\fB);\fP
+.PP
+\fBtime_t timegm(struct tm *\fP\fItm\fP\fB);\fP
+.PP
+.fi
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBtimelocal\fP(),
+\fBtimegm\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    glibc 2.19 и старее:
+        _BSD_SOURCE || _SVID_SOURCE
+.SH ОПИСАНИЕ
+\fBtimelocal\fP() и \fBtimegm\fP() являются обратными функциями по отношению к
+\fBlocaltime\fP(3) и \fBgmtime\fP(3). Обе функции принимают разделенное на
+составные части время и преобразуют его в календарное (измеряемое в секундах
+от начала Эпохи 1970\-01\-01 00:00:00 +0000, UTC). Различие между функциями
+заключается в том, что \fBtimelocal\fP() во время преобразования принимает во
+внимание локальный часовой пояс, когда как \fBtimegm\fP() во входном параметре
+использует Всемирное координированное время (Coordinated Universal Time,
+UTC).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают календарное время (количество
+секунд с начала эпохи), имеющее тип \fItime_t\fP. При ошибке возвращается
+значение \fI(time_t)\ \-1\fP, а \fIerrno\fP присваивается код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEOVERFLOW\fP
+Результат не может быть представлен.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBtimelocal\fP(),
+\fBtimegm\fP()
+T}	Безвредность в нитях	MT\-Safe env locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции являются нестандартными расширениями GNU, которые также
+присутствуют в BSD. Избегайте их использования.
+.SH ЗАМЕЧАНИЯ
+Функция \fBtimelocal\fP() эквивалентна стандартной функции POSIX
+\fBmktime\fP(3). Нет ни одной причины когда\-либо её использовать.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgmtime\fP(3), \fBlocaltime\fP(3), \fBmktime\fP(3), \fBtzset\fP(3)

@@ -1,0 +1,121 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETPID 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getpid, getppid \- получение идентификатора процесса
+.SH ОБЗОР
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <unistd.h>\fP
+.PP
+\fBpid_t getpid(void);\fP
+.br
+\fBpid_t getppid(void);\fP
+.SH ОПИСАНИЕ
+Вызов \fBgetpid\fP() возвращает идентификатор (PID) вызвавшего процесса (часто
+используется функциями, которые генерируют уникальные имена временных
+файлов).
+.PP
+Вызов \fBgetppid\fP() возвращает идентификатор процесса, являющегося
+родительским по отношению к вызвавшему процессу. Результат равен
+идентификатору процесса, который создал этот процесс с помощью \fBfork\fP(),
+или идентификатору процесса, который заместил родителя (или \fBinit\fP(1), или
+процесс «сборщик», определённый с помощью операции \fBPR_SET_CHILD_SUBREAPER\fP
+вызовом \fBprctl\fP(2)), если этот процесс уже завершён.
+.SH ОШИБКИ
+Функции всегда завершаются успешно.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.3BSD, SVr4.
+.SH ЗАМЕЧАНИЯ
+Если родитель вызывающего находит в другом пространстве имён PID (смотрите
+\fBpid_namespaces\fP(7)), то \fBgetppid\fP() возвращает 0.
+.PP
+.\"
+Со стороны ядра PID (одинаков у всех нитей в многонитевом процессе) иногда
+называют идентификатором группы нитей (TGID). Он отличается от
+идентификатора нити (TID), который является уникальным для каждой
+нити. Подробней смотрите в \fBgettid\fP(2) и описание флага \fBCLONE_THREAD\fP в
+\fBclone\fP(2).
+.SS "Отличия между библиотекой C и ядром"
+.\" The following program demonstrates this "feature":
+.\"
+.\" #define _GNU_SOURCE
+.\" #include <sys/syscall.h>
+.\" #include <sys/wait.h>
+.\" #include <stdio.h>
+.\" #include <stdlib.h>
+.\" #include <unistd.h>
+.\"
+.\" int
+.\" main(int argc, char *argv[])
+.\" {
+.\"    /* The following statement fills the getpid() cache */
+.\"
+.\"    printf("parent PID = %ld\n", (long) getpid());
+.\"
+.\"    if (syscall(SYS_fork) == 0) {
+.\"        if (getpid() != syscall(SYS_getpid))
+.\"            printf("child getpid() mismatch: getpid()=%ld; "
+.\"                    "syscall(SYS_getpid)=%ld\n",
+.\"                    (long) getpid(), (long) syscall(SYS_getpid));
+.\"        exit(EXIT_SUCCESS);
+.\"    }
+.\"    wait(NULL);
+.\"}
+В версиях glibc с 2.3.4 по 2.24 включительно обёрточная функция glibc для
+\fBgetpid\fP()  кэширует PID, чтобы не делать дополнительных системных вызовов,
+когда процесс систематически вызывает \fBgetpid\fP(). Обычно, это кэширование
+незаметно, но его корректность работы полагается на поддержку в обёрточных
+функциях для \fBfork\fP(2), \fBvfork\fP(2) и \fBclone\fP(2): если приложение не
+воспользуется обёртками glibc для этих системных вызовов, а вызовет из через
+\fBsyscall\fP(2), то вызов \fBgetpid\fP() в потомке вернёт неправильное значение
+(точнее, вернёт PID родительского процесса). Также, бывают случаи, когда
+\fBgetpid\fP() может вернуть неверное значение даже при вызове \fBclone\fP(2)
+через обёрточную функцию glibc (описание одного из них смотрите в разделе
+ДЕФЕКТЫ в \fBclone\fP(2)). Кроме того, сложность кэширующего кода была
+источником нескольких дефектов в glibc многие годы.
+.PP
+.\" commit c579f48edba88380635ab98cb612030e3ed8691e
+.\" https://sourceware.org/glibc/wiki/Release/2.25#pid_cache_removal
+.\" FIXME .
+.\" Review progress of https://bugzilla.redhat.com/show_bug.cgi?id=1469757
+Из\-за вышеперечисленных проблем начиная с glibc версии 2.25 кэширование PID
+было удалено: вызов \fBgetpid\fP() всегда вызывает реальный системный вызов, а
+не возвращает значение из кэша.
+.PP
+На Alpha вместо пары системных вызовов \fBgetpid\fP() и \fBgetppid\fP()
+предоставляется один \fBgetxpid\fP(), который возвращает пару PID и
+родительский PID. Обёрточные функции glibc \fBgetpid\fP() и \fBgetppid\fP()
+скрывают это. Подробности об отображении регистров смотрите в \fBsyscall\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclone\fP(2), \fBfork\fP(2), \fBgettid\fP(2), \fBkill\fP(2), \fBexec\fP(3),
+\fBmkstemp\fP(3), \fBtempnam\fP(3), \fBtmpfile\fP(3), \fBtmpnam\fP(3),
+\fBcredentials\fP(7), \fBpid_namespaces\fP(7)

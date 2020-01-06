@@ -1,0 +1,76 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCTYPE 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wctype \- классифицирует широкие символы
+.SH ОБЗОР
+.nf
+\fB#include <wctype.h>\fP
+.PP
+\fBwctype_t wctype(const char *\fP\fIname\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Тип \fIwctype_t\fP представляет собой свойство, которое может или не может быть
+у широкого символа. Другими словами, он представляет собой класс широкого
+символа. Структура этого типа зависит от её реализации, но специальное
+значение \fI(wctype_t) 0\fP указывает на неверное свойство. Ненулевое значение
+\fIwctype_t\fP может быть передано функции \fBiswctype\fP(3) для проверки, имеет
+ли широкий символ определённое свойство.
+.PP
+Функция \fBwctype\fP() возвращает свойство, обозначенное соответствующим
+именем. Множество корректных имен зависит от категории \fBLC_CTYPE\fP текущей
+локали, но следующие имена корректны для всех локалей:
+.PP
+.nf
+    «alnum» \- реализует функцию \fBisalnum\fP(3)
+    «alpha» \- реализует функцию \fBisalpha\fP(3)
+    «blank» \- реализует функцию \fBisblank\fP(3)
+    «cntrl» \- реализует функцию \fBiscntrl\fP(3)
+    «digit» \- реализует функцию \fBisdigit\fP(3)
+    «graph» \- реализует функцию \fBisgraph\fP(3)
+    «lower» \- реализует функцию \fBislower\fP(3)
+    «print» \- реализует функцию \fBisprint\fP(3)
+    «punct» \- реализует функцию \fBispunct\fP(3)
+    «space» \- реализует функцию \fBisspace\fP(3)
+    «upper» \- реализует функцию \fBisupper\fP(3)
+    «xdigit» \- реализует функцию \fBisxdigit\fP(3)
+.fi
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBwctype\fP() возвращает описатель свойства, если имя \fIname\fP
+корректно. Иначе возвращается \fI(wctype_t) 0\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwctype\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBwctype\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBiswctype\fP(3)

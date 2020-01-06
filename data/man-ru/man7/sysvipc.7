@@ -1,0 +1,273 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Giorgio Ciucci (giorgio@crcc.it)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" FIXME . There is now duplication of some of the information
+.\" below in semctl.2, msgctl.2, and shmctl.2 -- MTK, Nov 04
+.\"
+.\" FIXME . Ultimately, there should probably be
+.\" svmq_overview(7), svshm_overview(7), and svsem_overview(7)
+.\" that provide an overview of each System V IPC mechanism.
+.\" In that case:
+.\"   * Those files should add a discussion of the /proc/sysvipc
+.\"     interfaces.
+.\"   * Documentation of the various /proc interfaces should move into
+.\"     those files (from proc(5)), and references in the various *.2
+.\"     pages that refer to the /proc files should be adjusted.
+.\"   * The only part that uniquely belongs in sysvipc(7) is perhaps
+.\"     the discussion of ipc_perm.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SVIPC 7 2016\-03\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sysvipc \- механизмы межпроцессного взаимодействия System V
+.SH ОБЗОР
+.nf
+\fB#include <sys/msg.h>\fP
+\fB#include <sys/sem.h>\fP
+\fB#include <sys/shm.h>\fP
+.fi
+.SH ОПИСАНИЕ
+Данная справочная страница описывает реализацию механизмов межпроцессного
+взаимодействия (IPC) System V в Linux: очереди сообщений, наборы семафоров и
+сегменты разделяемой памяти.  В дальнейшем под словом  \fIресурс\fP будет
+подразумеваться экземпляр одного из этих механизмов.
+.SS "Права доступа к ресурсу"
+Для каждого ресурса система использует общую структуру типа \fIstruct
+ipc_perm\fP, хранящую необходимую информацию о правах для проведения
+IPC\-операции. Структура \fIipc_perm\fP включает следующие поля:
+.PP
+.in +4n
+.EX
+struct ipc_perm {
+    uid_t          cuid;   /* ID пользователя создателя */
+    gid_t          cgid;   /* ID группы создателя */
+    uid_t          uid;    /* ID пользователя владельца */
+    gid_t          gid;    /* ID группы владельца */
+    unsigned short mode;   /* права для чтения\-записи */
+};
+.EE
+.in
+.PP
+Поле \fImode\fP из структуры \fIipc_perm\fP определяет в нижних 9 битах права
+доступа к ресурсу для вызвавшего системный вызов IPC процесса. Права
+определены следующим образом:
+.PP
+.nf
+    0400    Чтение пользователем
+    0200    Запись пользователем
+    0040    Чтение группой
+    0020    Запись группой
+    0004    Чтение остальными
+    0002    Запись остальными
+.fi
+.PP
+Биты 0100, 0010 и 0001 (биты запуска) системой не используется. Кроме того,
+«запись» для набора семафоров на самом деле означает «изменение».
+.PP
+Тот же системный заголовочный файл определяет следующие символические
+константы:
+.TP  14
+\fBIPC_CREAT\fP
+Создать запись, если ключ не существует.
+.TP 
+\fBIPC_EXCL\fP
+Завершиться ошибкой, если ключ существует.
+.TP 
+\fBIPC_NOWAIT\fP
+Ошибка, если запрос должен ждать.
+.TP 
+\fBIPC_PRIVATE\fP
+Частный ключ.
+.TP 
+\fBIPC_RMID\fP
+Удалить ресурс.
+.TP 
+\fBIPC_SET\fP
+Установить параметры ресурса.
+.TP 
+\fBIPC_STAT\fP
+Получить параметры ресурса.
+.PP
+Заметьте, что \fBIPC_PRIVATE\fP является типом \fIkey_t\fP, когда как остальные
+символические константы являются флагами и могут быть объединены с помощью
+логического ИЛИ в переменную типа \fIint\fP.
+.SS "Очереди сообщений"
+Очередь сообщений уникально идентифицируется положительным целым (\fImsqid\fP)
+и имеет связанную структуру данных \fIstruct msqid_ds\fP, определенную в
+\fI<sys/msg.h>\fP и содержащую следующие поля:
+.PP
+.in +4n
+.EX
+struct msqid_ds {
+    struct ipc_perm msg_perm;
+    msgqnum_t       msg_qnum;    /* в очереди не сообщений */
+    msglen_t        msg_qbytes;  /* макс. байт в очереди */
+    pid_t           msg_lspid;   /* PID последнего вызова  msgsnd(2) */
+    pid_t           msg_lrpid;   /* PID последнего вызова msgrcv(2) */
+    time_t          msg_stime;   /* время последнего msgsnd(2) */
+    time_t          msg_rtime;   /* время последнего  msgrcv(2) */
+    time_t          msg_ctime;   /* последнее время изменения */
+};
+.EE
+.in
+.TP  11
+\fImsg_perm\fP
+Структура \fIipc_perm\fP, определяющая права доступа к очереди сообщений.
+.TP 
+\fImsg_qnum\fP
+Число сообщений, находящихся в данный момент в очереди сообщений.
+.TP 
+\fImsg_qbytes\fP
+Максимальная длина сообщения в байтах, разрешенная в очереди сообщений.
+.TP 
+\fImsg_lspid\fP
+ID процесса, выполнившего последний системный вызов \fBmsgsnd\fP(2).
+.TP 
+\fImsg_lrpid\fP
+ID процесса, выполнившего последний системный вызов \fBmsgrcv\fP(2).
+.TP 
+\fImsg_stime\fP
+Время последнего вызова \fBmsgsnd\fP(2).
+.TP 
+\fImsg_rtime\fP
+Время последнего вызова \fBmsgrcv\fP(2).
+.TP 
+\fImsg_ctime\fP
+Время последнего системного вызова, изменившего поля структуры \fImsgid_ds\fP.
+.SS "Наборы семафоров"
+Набор семафора уникально идентифицируется положительным целым (\fIsemid\fP) и
+имеет связанную структуру типа \fIstruct semid_ds\fP, определенную в
+\fI<sys/sem.h>\fP и содержащую следующие поля:
+.IP
+.in +4n
+.EX
+struct semid_ds {
+    struct ipc_perm sem_perm;
+    time_t          sem_otime;   /* время последней операции */
+    time_t          sem_ctime;   /* время последнего изменения */
+    unsigned long   sem_nsems;   /* число семафоров в наборе */
+};
+.EE
+.in
+.TP  11
+\fIsem_perm\fP
+Структура \fIipc_perm\fP, определяющая права доступа к набору семафоров.
+.TP 
+\fIsem_otime\fP
+Время последнего системного вызова \fBsemop\fP(2).
+.TP 
+\fIsem_ctime\fP
+Время последнего системного вызова \fBsemctl\fP(2), который изменил поле
+указанной структуры или один из семафоров, принадлежащих набору.
+.TP 
+\fIsem_nsems\fP
+Число семафоров в наборе. Каждый семафор описывается неотрицательным целым
+числом от  \fB0\fP до \fIsem_nsems\-1\fP.
+.PP
+Семафор является структурой данных типа \fIstruct sem\fP, содержащие следующие
+поля:
+.PP
+.in +4n
+.EX
+.\"    unsigned short semncnt; /* nr awaiting semval to increase */
+.\"    unsigned short semzcnt; /* nr awaiting semval = 0 */
+struct sem {
+    int semval;  /* значение семафора */
+    int sempid;  /* PID последнего изменившего процесса */
+};
+.EE
+.in
+.TP  11
+\fIsemval\fP
+Значение семафора, неотрицательное целое.
+.TP 
+\fIsempid\fP
+.\".TP
+.\".I semncnt
+.\"Number of processes suspended awaiting for
+.\".I semval
+.\"to increase.
+.\".TP
+.\".I semznt
+.\"Number of processes suspended awaiting for
+.\".I semval
+.\"to become zero.
+PID последнего процесса, изменившего значение данного семафора.
+.SS "Сегменты общей памяти"
+Сегмент общей памяти уникально идентифицируется положительным целым
+(\fIshmid\fP) и имеет связанную структуру данных  \fIstruct shmid_ds\fP,
+определённую в \fI<sys/shm.h>\fP и содержащую следующие поля:
+.PP
+.in +4n
+.EX
+struct shmid_ds {
+    struct ipc_perm shm_perm;
+    size_t          shm_segsz;   /* размер сегмента */
+    pid_t           shm_cpid;    /* PID создателя */
+    pid_t           shm_lpid;    /* PID последней операции */
+    shmatt_t        shm_nattch;  /* число текущих подключений */
+    time_t          shm_atime;   /* время последнего подключения */
+    time_t          shm_dtime;   /* время последнего отключения */
+    time_t          shm_ctime;   /* время последнего изменения */
+};
+.EE
+.in
+.TP  11
+\fIshm_perm\fP
+Структура \fIipc_perm\fP, описывающая права доступа к сегменту общей памяти.
+.TP 
+\fIshm_segsz\fP
+Размер в байтах сегмента общей памяти.
+.TP 
+\fIshm_cpid\fP
+ID процесса, создавшего сегмент общей памяти.
+.TP 
+\fIshm_lpid\fP
+ID последнего процесса, выполнившего системный вызов \fBshmat\fP(2) или
+\fBshmdt\fP(2).
+.TP 
+\fIshm_nattch\fP
+Количество текущих подключений для данного сегмента общей памяти.
+.TP 
+\fIshm_atime\fP
+Время последнего системного вызова \fBshmat\fP(2).
+.TP 
+\fIshm_dtime\fP
+Время последнего системного вызова \fBshmdt\fP(2).
+.TP 
+\fIshm_ctime\fP
+Время последнего системного вызова \fBshmctl\fP(2), изменившего \fIshmid_ds\fP.
+.SS "Пространства имён IPC"
+Обсуждение связи объектов System V IPC с пространствами IPC смотрите в
+\fBipc_namespaces\fP(7).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBipcmk\fP(1), \fBipcrm\fP(1), \fBipcs\fP(1), \fBlsipc\fP(1), \fBipc\fP(2), \fBmsgctl\fP(2),
+\fBmsgget\fP(2), \fBmsgrcv\fP(2), \fBmsgsnd\fP(2), \fBsemctl\fP(2), \fBsemget\fP(2),
+\fBsemop\fP(2), \fBshmat\fP(2), \fBshmctl\fP(2), \fBshmdt\fP(2), \fBshmget\fP(2),
+\fBftok\fP(3), \fBipc_namespaces\fP(7)

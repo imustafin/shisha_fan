@@ -1,0 +1,239 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2017, Yubin Ruan <ablacktshirt@gmail.com>
+.\" and Copyright (c) 2017, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_MUTEXATTR_SETROBUST 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_mutexattr_getrobust, pthread_mutexattr_setrobust \- возвращает и
+изменяет атрибут устойчивости в объекте мьютексных атрибутов
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_mutexattr_getrobust(const pthread_mutexattr_t *\fP\fIattr\fP\fB,\fP
+\fB                                int *\fP\fIrobustness\fP\fB);\fP
+\fBint pthread_mutexattr_setrobust(const pthread_mutexattr_t *\fP\fIattr\fP\fB,\fP
+\fB                                int \fP\fIrobustness\fP\fB);\fP
+.fi
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBpthread_mutexattr_getrobust\fP(), \fBpthread_mutexattr_setrobust\fP():
+.br
+.RS 4
+.ad l
+.\" FIXME .
+.\" But see https://sourceware.org/bugzilla/show_bug.cgi?id=22125
+_POSIX_C_SOURCE >= 200809L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBpthread_mutexattr_getrobust\fP() помещает значение атрибута
+устойчивости (robustness) из объекта мьютексных атрибутов, на который
+указывает \fIattr\fP, в \fI*robustness\fP. Функция
+\fBpthread_mutexattr_setrobust\fP() изменяет значение атрибута устойчивости в
+объекте мьютексных атрибутов, на который указывает \fIattr\fP, на значение,
+заданное в \fI*robustness\fP.
+.PP
+Атрибут устойчивости определяет поведение мьютекса после того как владеющая
+нить завершает работу, но не разблокировала мьютекс. Для \fIrobustness\fP
+возможны следующие значения:
+.TP 
+\fBPTHREAD_MUTEX_STALLED\fP
+Значение по умолчанию для объекта мьютексных атрибутов. Если мьютекс
+инициализирован с атрибутом \fBPTHREAD_MUTEX_STALLED\fP и его владелец
+завершает работу без его разблокировки, то после этого мьютекс остаётся
+заблокированным и все последующие попытки вызова \fBpthread_mutex_lock\fP(3)
+для этого мьютекса будут заблокированы навсегда.
+.TP 
+\fBPTHREAD_MUTEX_ROBUST\fP
+Если мьютекса инициализирован с атрибутом \fBPTHREAD_MUTEX_ROBUST\fP и и его
+владелец завершает работу без его разблокировки,то все последующие попытки
+вызова \fBpthread_mutex_lock\fP(3) для этого мьютекса будут успешно выполнены
+возвращается \fBEOWNERDEAD\fP, чтобы показать, что первоначальный владелец не
+существует и мьютекс находится в неопределенном состоянии. Обычно, после
+возврата \fBEOWNERDEAD\fP перед началом использования следующий владелец должен
+вызвать \fBpthread_mutex_consistent\fP(3) над полученным мьютексом, чтобы снова
+сделать его согласованным.
+.IP
+Если следующий владелец разблокирует мьютекс с помощью
+\fBpthread_mutex_unlock\fP(3) до того, как сделать его согласованным, мьютекс
+станет необратимо неработоспособен и последующие попытки заблокировать его с
+помощью \fBpthread_mutex_lock\fP(3) будут завершаться ошибкой
+\fBENOTRECOVERABLE\fP. Для такого мьютекса доступна только одна операция —
+\fBpthread_mutex_destroy\fP(3).
+.IP
+Если следующий владелец завершит работу до вызова
+\fBpthread_mutex_consistent\fP(3), то последующие операций
+\fBpthread_mutex_lock\fP(3) с этим мьютексом будут по прежнему возвращать
+\fBEOWNERDEAD\fP.
+.PP
+Заметим, что аргумент \fIattr\fP у \fBpthread_mutexattr_getrobust\fP() и
+\fBpthread_mutexattr_setrobust\fP() должен указывать на объект мьютексных
+атрибутов, который был инициализирован \fBpthread_mutexattr_init\fP(3), в
+противном случае поведение не определено.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0. При ошибке возвращается
+положительный номер ошибки.
+.PP
+В реализации glibc функция \fBpthread_mutexattr_getrobust\fP() всегда
+возвращает ноль.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Помимо \fBPTHREAD_MUTEX_STALLED\fP или \fBPTHREAD_MUTEX_ROBUST\fP в
+\fBpthread_mutexattr_setrobust\fP() передано что\-то ещё.
+.SH ВЕРСИИ
+Функции \fBpthread_mutexattr_getrobust\fP() и \fBpthread_mutexattr_setrobust\fP()
+добавлены в glibc версии 2.12.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.\" E.g., Solaris, according to its manual page
+В реализации Linux при использовании общих для процессов устойчивых
+мьютексов ожидающая нить также получает уведомление \fBEOWNERDEAD\fP, если
+владелец устойчивого мьютекса выполняет \fBexecve\fP(2) без предварительной
+разблокировки мьютекса. В POSIX.1 не указана данная подробность, но такое же
+поведение также встречается и в нескольких других реализациях.
+.PP
+До появления \fBpthread_mutexattr_getrobust\fP() и
+\fBpthread_mutexattr_setrobust\fP() в POSIX, в glibc определись следующие
+эквиваленты нестандартных функций, если определён \fB_GNU_SOURCE\fP:
+.PP
+.nf
+\fBint pthread_mutexattr_getrobust_np(const pthread_mutexattr_t *\fP\fIattr\fP\fB,\fP
+\fB                                   int *\fP\fIrobustness\fP\fB);\fP
+\fBint pthread_mutexattr_setrobust_np(const pthread_mutexattr_t *\fP\fIattr\fP\fB,\fP
+\fB                                   int \fP\fIrobustness\fP\fB);\fP
+.fi
+.PP
+Соответственно, также определены константы \fBPTHREAD_MUTEX_STALLED_NP\fP и
+\fBPTHREAD_MUTEX_ROBUST_NP\fP.
+.PP
+Данный имеющийся только в GNU программный интерфейс, впервые появившийся в
+glibc 2.4, в настоящее время устарел и не должен использоваться в новых
+программах.
+.SH ПРИМЕР
+.PP
+В программе, представленной далее, показывается использование атрибута
+устойчивости в объекте мьютексных атрибутов. В этой программе нить,
+удерживающая мьютекс, завершает работу без разблокировки мьютекса. После
+этого главная нить захватывает мьютекс и получает ошибку \fBEOWNERDEAD\fP,
+после чего делает мьютекс согласованным.
+.PP
+Пример сеанса работы с программой:
+.PP
+.in +4n
+.EX
+$ \fB./a.out\fP
+[первый владелец] Установка блокировки…
+[первый владелец] Готово. Теперь выходим без разблокировки.
+[главная нить] Пытаемся получить заблокировать устойчивый мьютекс.
+[главная нить] pthread_mutex_lock() вернула EOWNERDEAD
+[главная нить] Теперь делаем мьютекс согласованным
+[главная нить] Мьютекс согласован; разблокируем
+.EE
+.in
+.SS "Исходный код программы"
+.EX
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <errno.h>
+
+#define handle_error_en(en, msg) \e
+               do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
+
+static pthread_mutex_t mtx;
+
+static void *
+original_owner_thread(void *ptr)
+{
+    printf("[первый владелец] Установка блокировки…\en");
+    pthread_mutex_lock(&mtx);
+    printf("[original owner] Готово. Теперь выходим без разблокировки.\en");
+    pthread_exit(NULL);
+}
+
+int
+main(int argc, char *argv[])
+{
+    pthread_t thr;
+    pthread_mutexattr_t attr;
+    int s;
+
+    pthread_mutexattr_init(&attr);
+                                /* инициализируем объект атрибутов */
+    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);
+                               /* задаём устойчивость */
+
+    pthread_mutex_init(&mtx, &attr);   /* инициализируем мьютекс */
+
+    pthread_create(&thr, NULL, original_owner_thread, NULL);
+
+    sleep(2);
+
+    /* «нить_первый_владелец» к этому моменту должна завершиться */
+
+    printf("[главная нить] Пытаемся получить заблокировать устойчивый мьютекс.\en");
+    s = pthread_mutex_lock(&mtx);
+    if (s == EOWNERDEAD) {
+        printf("[главная нить] pthread_mutex_lock() вернула EOWNERDEAD\en");
+        printf("[главная нить] Теперь делаем мьютекс согласованным\en");
+        s = pthread_mutex_consistent(&mtx);
+        if (s != 0)
+            handle_error_en(s, "pthread_mutex_consistent");
+        printf("[главная нить] Мьютекс согласован; разблокируем\en");
+        s = pthread_mutex_unlock(&mtx);
+        if (s != 0)
+            handle_error_en(s, "pthread_mutex_unlock");
+
+        exit(EXIT_SUCCESS);
+    } else if (s == 0) {
+        printf("[главная нить] pthread_mutex_lock() неожиданно завершилась успешно\en");
+        exit(EXIT_FAILURE);
+    } else {
+        printf("[главная нить] pthread_mutex_lock() завершилась с ошибкой\en");
+        handle_error_en(s, "pthread_mutex_lock");
+    }
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBget_robust_list\fP(2), \fBset_robust_list\fP(2),
+\fBpthread_mutex_consistent\fP(3), \fBpthread_mutex_init\fP(3),
+\fBpthread_mutex_lock\fP(3), \fBpthreads\fP(7)

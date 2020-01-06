@@ -1,0 +1,178 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Michael Haardt, Ian Jackson.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 00:06:00 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Wed Jan 17 16:02:32 1996 by Michael Haardt
+.\"   <michael@cantor.informatik.rwth-aachen.de>
+.\" Modified Thu Apr 11 19:26:35 1996 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified Sun Jul 21 18:59:33 1996 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified Fri Jan 31 16:47:33 1997 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Sat Jul 12 20:45:39 1997 by Michael Haardt
+.\"   <michael@cantor.informatik.rwth-aachen.de>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH READ 2 2018\-02\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+read \- читает из файлового дескриптора
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBssize_t read(int \fP\fIfd\fP\fB, void *\fP\fIbuf\fP\fB, size_t \fP\fIcount\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBread\fP() пытается прочитать \fIcount\fP байт из файлового дескриптора
+\fIfd\fP в буфер, начинающийся по адресу \fIbuf\fP.
+.PP
+Для файлов, поддерживающих смещения, операция чтения начинается с файлового
+смещения, и файловое смещение увеличивается на количество прочитанных
+байт. Если файловое смещение находится за концом файла, то ничего не
+читается и \fBread\fP() возвращает ноль.
+.PP
+Если значение \fIcount\fP равно 0, то \fBread\fP() \fIможет\fP обнаружить ошибки,
+описанные далее. При отсутствии ошибок, или если \fBread\fP() не выполняет
+проверки, то \fBread\fP() с \fIcount\fP равным 0 возвращает 0 и ничего не меняет.
+.PP
+В соответствие с POSIX.1, если \fIcount\fP больше \fBSSIZE_MAX\fP, то результат
+зависит от реализации; смотрите ЗАМЕЧАНИЯ по верхнему пределу в Linux.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается количество прочитанных байт (ноль
+означает конец файла), а позиция в файле увеличивается на это значение. Если
+количество прочитанных байт меньше, чем количество запрошенных, то это не
+считается ошибкой: например, это могло произойти из\-за того, что прямо
+сейчас доступно меньшее количество байт (может быть из\-за того, что позиция
+ближе к концу файла, или потому что выполняется чтение из канала или
+терминала), или потому что работа \fBread\fP() была прервана
+сигналом. См. также ЗАМЕЧАНИЯ.
+.PP
+В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в
+соответствующее значение. В этом случае изменение позиции файла остаётся
+неопределённым (если это вообще происходило).
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Файловый дескриптор \fIfd\fP указывает на файл, не являющийся сокетом и
+помеченный как неблокирующий ввод/вывод (\fBO_NONBLOCK\fP), а чтение вызовет
+блокировку. См. \fBopen\fP(2) для дальнейшей информации по флагу \fBO_NONBLOCK\fP.
+.TP 
+\fBEAGAIN\fP или \fBEWOULDBLOCK\fP
+.\" Actually EAGAIN on Linux
+Файловый дескриптор \fIfd\fP указывает на сокет и он помечен как неблокирующий
+(\fBO_NONBLOCK\fP), а чтение вызвало бы блокировку. POSIX.1\-2001 позволяет
+вернуть любую ошибку в этом случае и не требует, чтобы эти константы имели
+одинаковое значение, поэтому переносимое приложение должно проверять обе эти
+возможности.
+.TP 
+\fBEBADF\fP
+\fIfd\fP не является допустимым файловым дескриптором или не открыт на чтение.
+.TP 
+\fBEFAULT\fP
+\fIbuf\fP находится за пределами доступного вам адресного пространства.
+.TP 
+\fBEINTR\fP
+Вызов был прерван сигналом до того как были прочитаны данные;
+см. \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+\fIfd\fP присоединён к объекту, который не подходит для чтения; или файл был
+открыт с указанием флага \fBO_DIRECT\fP, или неправильно выравнены адрес в
+\fIbuf\fP, значение \fIcount\fP или файловое смещение.
+.TP 
+\fBEINVAL\fP
+\fIfd\fP был создан вызовом \fBtimerfd_create\fP(2), а в \fBread\fP() был передан
+неверный размер буфера; подробней см. в \fBtimerfd_create\fP(2).
+.TP 
+\fBEIO\fP
+Ошибка ввода/вывода. Например, это происходит когда процесс, находящийся в
+фоновой группе процессов, пытается выполнить чтение из своего управляющего
+терминала, и игнорирует или блокирует сигнал \fBSIGTTIN\fP, или же его группа
+процессов осталась без родителя. Это также может случиться, если произошла
+низкоуровневая ошибка ввода\-вывода при чтении с диска или ленты. Также
+\fBEIO\fP может возникать у сетевых файловых систем, когда консультативная
+блокировка была убрана у дескриптора файла и потеряна. Подробности смотрите
+в абзаце \fIПотерянные блокировки\fP в \fBfcntl\fP(2).
+.TP 
+\fBEISDIR\fP
+\fIfd\fP указывает на каталог.
+.PP
+В зависимости от объекта, на который указывает \fIfd\fP, могут происходить и
+другие ошибки.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4, 4.3BSD, POSIX.1\-2001.
+.SH ЗАМЕЧАНИЯ
+Типы данных \fIsize_t\fP и \fIssize_t\fP представляющие собой, соответственно,
+беззнаковый и знаковый целочисленные типы, определены в POSIX.1.
+.PP
+.\" commit e28cc71572da38a5a12c1cfe4d7032017adccf69
+В Linux \fBread\fP() (и похожие системные вызовы) передаст не больше 0x7ffff000
+(2 147 479 552) байт, возвращая число байт, переданных на самом деле (это
+утверждение справедливо как к 32\-битным, так и к 64\-битным системам).
+.PP
+На файловых системах NFS чтение небольших порций данных обновляет отметки
+времени только в первый раз, последующие вызовы не делают этого. Это вызвано
+кэшированием атрибутов с клиентской стороны, потому что большинство (если не
+все) клиентов NFS предоставляют серверу обновлять \fIst_atime\fP (время
+последнего доступа), а запросы на чтение, которые удовлетворяются из
+клиентского кэша, не вызывают обновления \fIst_atime\fP, потому что данные не
+читаются с сервера. Семантика UNIX может быть достигнута запретом
+кэширования атрибутов на стороне клиента, но в большинстве случаев это
+увеличит нагрузку на сервер и снизит производительность.
+.SH ДЕФЕКТЫ
+Согласно POSIX.1\-2008/SUSv4 раздел XSI 2.9.7 («Thread Interactions with
+Regular File Operations»):
+.PP
+.RS 4
+Следующие функции должны выполняться атомарно по отношению друг к другу,
+чтобы работать с обычными файлами или символическими ссылками так, как
+указано в POSIX.1\-2008: …
+.RE
+.PP
+.\" http://thread.gmane.org/gmane.linux.kernel/1649458
+.\"    From: Michael Kerrisk (man-pages <mtk.manpages <at> gmail.com>
+.\"    Subject: Update of file offset on write() etc. is non-atomic with I/O
+.\"    Date: 2014-02-17 15:41:37 GMT
+.\"    Newsgroups: gmane.linux.kernel, gmane.linux.file-systems
+.\" commit 9c225f2655e36a470c4f58dbbc99244c5fc7f2d4
+.\"    Author: Linus Torvalds <torvalds@linux-foundation.org>
+.\"    Date:   Mon Mar 3 09:36:58 2014 -0800
+.\"
+.\"        vfs: atomic f_pos accesses as per POSIX
+Среди перечисленных в программном интерфейсе есть \fBread\fP() и \fBreadv\fP(2). И
+среди действий, которые должны выполняться атомарно между нитями (и
+процессами), если обновление файлового смещения. Однако в Linux до версии
+3.14 это было не так: если два процесса с общим открытым файловым описанием
+(смотрите \fBopen\fP(2)) выполняют \fBread\fP() (или \fBreadv\fP(2)) одновременно, то
+операции ввода\-вывода не атомарны при обновлении файлового смещения; в
+результате прочитанные двумя процессами блоки данных могут (некорректно)
+перекрываться. Эта ошибка исправлена в Linux 3.14.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclose\fP(2), \fBfcntl\fP(2), \fBioctl\fP(2), \fBlseek\fP(2), \fBopen\fP(2), \fBpread\fP(2),
+\fBreaddir\fP(2), \fBreadlink\fP(2), \fBreadv\fP(2), \fBselect\fP(2), \fBwrite\fP(2),
+\fBfread\fP(3)

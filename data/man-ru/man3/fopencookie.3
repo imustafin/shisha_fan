@@ -1,0 +1,375 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008, Linux Foundation, written by Michael Kerrisk
+.\"      <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FOPENCOOKIE 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+fopencookie \- открывает нестандартный поток
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+\fB#include <stdio.h>\fP
+.PP
+\fBFILE *fopencookie(void *\fP\fIcookie\fP\fB, const char *\fP\fImode\fP\fB,\fP
+\fB                  cookie_io_functions_t \fP\fIio_funcs\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBfopencookie\fP() позволяет программисту создать нестандартную
+реализацию стандартного потока ввода\-вывода. Эта реализация может хранить
+данные потока в расположении по своему выбору; например, \fBfopencookie\fP()
+используется для реализации функции \fBfmemopen\fP(3), которая предоставляет
+потоковый интерфейс для данных, хранящихся в буфере в памяти.
+.PP
+Для создания нестандартного потока программист должен:
+.IP * 3
+Реализовать четыре «обрабатывающих» (hook) функции, которые используются
+внутри стандартной библиотеки ввода\-вывода при операциях ввода\-вывода над
+потоком.
+.IP *
+Определить тип данных «cookie» — структуру для учёта информации (например,
+где хранятся данные), используемую вышеупомянутыми обрабатывающими
+функциями. Стандартный пакет ввода\-вывода ничего не знает о содержимом этого
+cookie (к нему обращаются как к \fIvoid\ *\fP при передаче в \fBfopencookie\fP()),
+но автоматически передаёт cookie в первом аргументе при вызове
+обрабатывающих функций.
+.IP *
+Вызвать \fBfopencookie\fP() для открытия нового потока и связывания cookie и
+обрабатывающими функциями с этим потоком.
+.PP
+Функция \fBfopencookie\fP() подобна \fBfopen\fP(3): она открывает новый поток и
+возвращает указатель на объект \fIFILE\fP, который используется для работы с
+потоком.
+.PP
+Аргумент \fIcookie\fP — это указатель на структуру cookie вызывающего, которая
+связывается с новым потоком. Данный указатель передаётся в первом аргументе
+в моменты, когда стандартная библиотека ввода\-вывода вызывает одну из
+обрабатывающих функций, описанных ниже.
+.PP
+Аргумент \fImode\fP служит той же цели что и для \fBfopen\fP(3). Поддерживаются
+следующие режимы: \fIr\fP, \fIw\fP, \fIa\fP, \fIr+\fP, \fIw+\fP и \fIa+\fP. Подробности
+смотрите в \fBfopen\fP(3).
+.PP
+Аргумент \fIio_funcs\fP — это структура, которая содержит четыре поля с
+задаваемыми программистом обрабатывающими функциями, которые используются
+для реализации этого потока. Структура определена как
+.PP
+.in +4n
+.EX
+typedef struct {
+    cookie_read_function_t  *read;
+    cookie_write_function_t *write;
+    cookie_seek_function_t  *seek;
+    cookie_close_function_t *close;
+} cookie_io_functions_t;
+.EE
+.in
+.PP
+Поля:
+.TP 
+\fIcookie_read_function_t *read\fP
+Эта функция реализует операции чтения из потока. Она вызывается с тремя
+аргументами:
+.IP
+    ssize_t read(void *cookie, char *buf, size_t size);
+.IP
+Аргументы \fIbuf\fP и \fIsize\fP — буфер для получаемых данных и его размер. В
+качестве результата функция \fIread\fP возвращает количество байт,
+скопированных в \fIbuf\fP, 0 — при окончании файла и \-1 при ошибке. Функция
+\fIread\fP обновляет смещение в потоке соответствующим образом.
+.IP
+Если значение \fI*read\fP равно null, то при чтении из нестандартного потока
+всегда возвращается конец файла.
+.TP 
+\fIcookie_write_function_t *write\fP
+Эта функция реализует операции записи в поток. Она вызывается с тремя
+аргументами:
+.IP
+    ssize_t write(void *cookie, const char *buf, size_t size);
+.IP
+Аргументы \fIbuf\fP и \fIsize\fP — буфер для выходных данных и его размер (данные,
+записываемые в поток). В качестве результата функция \fIwrite\fP возвращает
+количество байт, скопированных из \fIbuf\fP, и 0 при ошибке (функция не должна
+возвращать отрицательное значение). Функция \fIwrite\fP обновляет смещение в
+потоке соответствующим образом.
+.IP
+Если значение \fI*write\fP равно null, то вывод в поток отбрасывается.
+.TP 
+\fIcookie_seek_function_t *seek\fP
+Эта функция реализует операции смещения в потоке. Она вызывается с тремя
+аргументами:
+.IP
+    int seek(void *cookie, off64_t *offset, int whence);
+.IP
+В аргументе \fI*offset\fP указывается новое файловое смещение, зависящее от
+значения \fIwhence\fP:
+.RS
+.TP  10
+\fBSEEK_SET\fP
+Значение смещения приравнивается \fI*offset\fP байт от начала потока.
+.TP 
+\fBSEEK_CUR\fP
+Значение \fI*offset\fP должно быть добавлено к текущему смещению в потоке.
+.TP 
+\fBSEEK_END\fP
+Значение смещения приравнивается к размеру потока плюс \fI*offset\fP.
+.RE
+.IP
+Перед возвратом функция \fIseek\fP должна обновить \fI*offset\fP, чтобы показать
+новое смещение в потоке.
+.IP
+В качестве результата функция \fIseek\fP должна возвращать 0 при успешном
+выполнении и \-1 при ошибке.
+.IP
+Если значение \fI*seek\fP равно null, то операции смещения в потоке выполнить
+невозможно.
+.TP 
+\fIcookie_close_function_t *close\fP
+Эта функция закрывает поток. Обрабатывающая функция может выполнить такие
+операции как освобождение буферов, выделенных для потока. При вызове она
+принимает один аргумент:
+.IP
+    int close(void *cookie);
+.IP
+Аргумент \fIcookie\fP — это cookie, которую программист передал при вызове
+\fBfopencookie\fP().
+.IP
+В качестве результата функция \fIclose\fP должна возвращать 0 при успешном
+выполнении и \fBEOF\fP при ошибке.
+.IP
+Если значение \fI*close\fP равно NULL, то при закрытии потока не выполняется
+никаких действий.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.\" .SH ERRORS
+.\" It's not clear if errno ever gets set...
+При успешном выполнении \fBfopencookie\fP() возвращает указатель на новый
+поток. При ошибке возвращается NULL.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfopencookie\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является нестандартным расширением GNU.
+.SH ПРИМЕР
+Программа, представленная ниже, реализует нестандартный поток, свойства
+которого похожи (но не одинаковы) на свойство потока, получаемого от
+\fBfmemopen\fP(3). Она реализует поток, данные которого хранятся в буфере
+памяти. Программа записывает свои аргументы командной строки в поток, а
+затем перемещается по потоку, читая два из каждых пяти символов и записывая
+их в стандартный вывод. Сеанс оболочки, демонстрирующий использование
+программы:
+.PP
+.in +4n
+.EX
+$\fB ./a.out \(aqhello world\(aq\fP
+/he/
+/ w/
+/d/
+Достигнут конец файла
+.EE
+.in
+.PP
+Заметим, что представленную версию можно сильно улучшить, добавив обработку
+ошибок (например, открытие потока с cookie, которая уже имеет открытый
+поток; закрытие потока, который уже был закрыт).
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
+#define INIT_BUF_SIZE 4
+
+struct memfile_cookie {
+    char   *buf;        /* динамически изменяемый буфер для данных */
+    size_t  allocated;  /* размер буфера */
+    size_t  endpos;     /* количество символов в буфере */
+    off_t   offset;     /* текущее файловое смещение в буфере */
+};
+
+ssize_t
+memfile_write(void *c, const char *buf, size_t size)
+{
+    char *new_buff;
+    struct memfile_cookie *cookie = c;
+
+    /* Буфер мал? Удваиваем размер, пока не станет достаточным */
+
+    while (size + cookie\->offset > cookie\->allocated) {
+        new_buff = realloc(cookie\->buf, cookie\->allocated * 2);
+        if (new_buff == NULL) {
+            return \-1;
+        } else {
+            cookie\->allocated *= 2;
+            cookie\->buf = new_buff;
+        }
+    }
+
+    memcpy(cookie\->buf + cookie\->offset, buf, size);
+
+    cookie\->offset += size;
+    if (cookie\->offset > cookie\->endpos)
+        cookie\->endpos = cookie\->offset;
+
+    return size;
+}
+
+ssize_t
+memfile_read(void *c, char *buf, size_t size)
+{
+    ssize_t xbytes;
+    struct memfile_cookie *cookie = c;
+
+    /* Выбираем минимум запрашиваемых и доступных байт */
+
+    xbytes = size;
+    if (cookie\->offset + size > cookie\->endpos)
+        xbytes = cookie\->endpos \- cookie\->offset;
+    if (xbytes < 0)     /* смещение может быть за endpos */
+       xbytes = 0;
+
+    memcpy(buf, cookie\->buf + cookie\->offset, xbytes);
+
+    cookie\->offset += xbytes;
+    return xbytes;
+}
+
+int
+memfile_seek(void *c, off64_t *offset, int whence)
+{
+    off64_t new_offset;
+    struct memfile_cookie *cookie = c;
+
+    if (whence == SEEK_SET)
+        new_offset = *offset;
+    else if (whence == SEEK_END)
+        new_offset = cookie\->endpos + *offset;
+    else if (whence == SEEK_CUR)
+        new_offset = cookie\->offset + *offset;
+    else
+        return \-1;
+
+    if (new_offset < 0)
+        return \-1;
+
+    cookie\->offset = new_offset;
+    *offset = new_offset;
+    return 0;
+}
+
+int
+memfile_close(void *c)
+{
+    struct memfile_cookie *cookie = c;
+
+    free(cookie\->buf);
+    cookie\->allocated = 0;
+    cookie\->buf = NULL;
+
+    return 0;
+}
+
+int
+main(int argc, char *argv[])
+{
+    cookie_io_functions_t  memfile_func = {
+        .read  = memfile_read,
+        .write = memfile_write,
+        .seek  = memfile_seek,
+        .close = memfile_close
+    };
+    FILE *stream;
+    struct memfile_cookie mycookie;
+    ssize_t nread;
+    long p;
+    int j;
+    char buf[1000];
+
+    /* Устанавливаем cookie перед вызовом fopencookie() */
+
+    mycookie.buf = malloc(INIT_BUF_SIZE);
+    if (mycookie.buf == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+
+    mycookie.allocated = INIT_BUF_SIZE;
+    mycookie.offset = 0;
+    mycookie.endpos = 0;
+
+    stream = fopencookie(&mycookie,"w+", memfile_func);
+    if (stream == NULL) {
+        perror("fopencookie");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Записываем аргументы командной строки в файл */
+
+    for (j = 1; j < argc; j++)
+        if (fputs(argv[j], stream) == EOF) {
+            perror("fputs");
+            exit(EXIT_FAILURE);
+        }
+
+    /* Читаем два байта из пяти пока не получим EOF */
+
+    for (p = 0; ; p += 5) {
+        if (fseek(stream, p, SEEK_SET) == \-1) {
+            perror("fseek");
+            exit(EXIT_FAILURE);
+        }
+        nread = fread(buf, 1, 2, stream);
+        if (nread == \-1) {
+            perror("fread");
+            exit(EXIT_FAILURE);
+        }
+        if (nread == 0) {
+            printf("Достигнут конец файла\en");
+            break;
+        }
+
+        printf("/%.*s/\en", nread, buf);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfclose\fP(3), \fBfmemopen\fP(3), \fBfopen\fP(3), \fBfseek\fP(3)

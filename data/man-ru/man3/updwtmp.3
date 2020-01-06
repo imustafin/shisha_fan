@@ -1,0 +1,88 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1997 Nicolás Lichtmaier <nick@debian.org>
+.\" Created Wed Jul  2 23:27:34 ART 1997
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Added info on availability, aeb, 971207
+.\" Added -lutil remark, 030718
+.\" 2008-07-02, mtk, document updwtmpx()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UPDWTMP 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+updwtmp, logwtmp \- добавляет запись в файл wtmp
+.SH ОБЗОР
+.nf
+\fB#include <utmp.h>\fP
+.PP
+\fBvoid updwtmp(const char *\fP\fIwtmp_file\fP\fB, const struct utmp *\fP\fIut\fP\fB);\fP
+\fBvoid logwtmp(const char *\fP\fIline\fP\fB, const char *\fP\fIname\fP\fB, const char *\fP\fIhost\fP\fB);\fP
+.fi
+.PP
+Для \fBlogwtmp\fP(): компонуется при указании параметра \fI\-lutil\fP.
+.SH ОПИСАНИЕ
+Функция \fBupdwtmp\fP() добавляет структуру utmp \fIut\fP в файл wtmp.
+.PP
+Функция \fBlogwtmp\fP() создаёт структуру utmp из \fIline\fP, \fIname\fP, \fIhost\fP,
+текущего времени и текущего идентификатора процесса. После этого вызывается
+\fBupdwtmp\fP() для добавления структуры в файл wtmp.
+.SH ФАЙЛЫ
+.TP 
+\fI/var/log/wtmp\fP
+база данных предыдущих пользовательских входов в систему
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw24
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBupdwtmp\fP(),
+.br
+\fBlogwtmp\fP()
+T}	Безвредность в нитях	MT\-Unsafe sig:ALRM timer
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Отсутствует в POSIX.1. Имеется в Solaris, NetBSD и, возможно, в других
+системах.
+.SH ЗАМЕЧАНИЯ
+Для схожести с другими функциями «utmpx» (смотрите \fBgetutxent\fP(3)), в glibc
+(начиная с версии 2.1) имеется:
+.PP
+.in +4n
+.EX
+\fB#include <utmpx.h>\fP
+\fBvoid updwtmpx (const char *\fP\fIwtmpx_file\fP\fB, const struct utmpx *\fP\fIutx\fP\fB);\fP
+.EE
+.in
+.PP
+Эта функция выполняет ту же задачу что и \fBupdwtmp\fP(); отличие в том, что
+типом последнего аргумента является структура \fIutmpx\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetutxent\fP(3), \fBwtmp\fP(5)

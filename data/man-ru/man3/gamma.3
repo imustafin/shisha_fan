@@ -1,0 +1,97 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2003-11-18, aeb: historical remarks
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GAMMA 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+gamma, gammaf, gammal \- логарифм гамма\-функции
+.SH ОБЗОР
+\fB#include <math.h>\fP
+.PP
+\fBdouble gamma(double \fP\fIx\fP\fB);\fP
+.br
+\fBfloat gammaf(float \fP\fIx\fP\fB);\fP
+.br
+\fBlong double gammal(long double \fP\fIx\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBgamma\fP():
+.RS 4
+_XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+\fBgammaf\fP(), \fBgammal\fP():
+.RS 4
+_XOPEN_SOURCE >= 600 || (_XOPEN_SOURCE && _ISOC99_SOURCE)
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Данные функции устарели. Используйте вместо них, по возможности,
+\fBtgamma\fP(3) либо \fBlgamma\fP(3).
+.PP
+Определение гамма\-функции смотрите в \fBtgamma\fP(3).
+.SS "Версия *BSD"
+В libm из 4.4BSD и некоторых версиях FreeBSD имеется функция \fBgamma\fP(),
+которая вычисляет гамма\-функцию, как и ожидается.
+.SS "Версия glibc"
+В glibc есть функция \fBgamma\fP(), которая эквивалентна \fBlgamma\fP(3) и
+вычисляет натуральный логарифм гамма\-функции.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Смотрите \fBlgamma\fP(3).
+.SH ОШИБКИ
+Смотрите \fBlgamma\fP(3).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgamma\fP(),
+\fBgammaf\fP(),
+\fBgammal\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:signgam
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Из\-за различий в поведении в различных системах эта функция не попала ни в
+один современный стандарт. Она описана в SVID 2.
+.SH ЗАМЕЧАНИЯ
+.SS История
+В 4.2BSD функция \fBgamma\fP() вычисляет ln(|Gamma(|\fIx\fP|)|), записывая знак
+Gamma(|\fIx\fP|) во внешнее целое \fIsigngam\fP. В 4.3BSD было изменено имя на
+\fBlgamma\fP(3), и в справочной странице указано
+.PP
+.in +4n
+"Через некоторое время имя gamma было восстановлено и использовано для
+гаммы\-функции"
+.in
+.PP
+.\" The FreeBSD man page says about gamma() that it is like lgamma()
+.\" except that is does not set signgam.
+.\" Also, that 4.4BSD has a gamma() that computes the true gamma function.
+В действительности это произошло в 4.4BSD, где \fBgamma\fP() вычисляла
+гамма\-функцию (без влияния на \fIsigngam\fP). Однако, это случилось слишком
+поздно и теперь мы имеем \fBtgamma\fP(3), «настоящую» гамма\-функцию.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlgamma\fP(3), \fBsigngam\fP(3), \fBtgamma\fP(3)

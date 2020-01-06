@@ -1,0 +1,150 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt (michael@moria.de)
+.\" Modified Sat Jul 24 14:29:17 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 961203 and 001211 and 010326 by aeb@cwi.nl
+.\" Modified 001213 by Michael Haardt (michael@moria.de)
+.\" Modified 13 Jun 02, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Added note on nonstandard behavior when SIGCHLD is ignored.
+.\" Modified 2004-11-16, mtk, Noted that the nonconformance when
+.\"	SIGCHLD is being ignored is fixed in 2.6.9; other minor changes
+.\" Modified 2004-12-08, mtk, in 2.6 times() return value changed
+.\" 2005-04-13, mtk
+.\"	Added notes on nonstandard behavior: Linux allows 'buf' to
+.\"	be NULL, but POSIX.1 doesn't specify this and it's nonportable.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TIMES 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+times \- возвращает времена процесса
+.SH ОБЗОР
+\fB#include <sys/times.h>\fP
+.PP
+\fBclock_t times(struct tms *\fP\fIbuf\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBtimes\fP() сохраняет текущие времена процесса в \fIstruct tms\fP, на
+которую указывает \fIbuf\fP. Определение \fIstruct tms\fP содержится в
+\fI<sys/times.h>\fP:
+.PP
+.in +4n
+.EX
+struct tms {
+    clock_t tms_utime;  /* пользовательское время */
+    clock_t tms_stime;  /* системное время */
+    clock_t tms_cutime; /* пользовательское время потомков */
+    clock_t tms_cstime; /* системное время потомков */
+};
+.EE
+.in
+.PP
+В поле \fItms_utime\fP содержится время ЦП, потраченное для выполнения
+инструкций вызвавшего процесса. В поле \fItms_stime\fP содержится время ЦП,
+потраченное в ядре для выполнения задач вызвавшего процесса.
+.PP
+В поле \fItms_cutime\fP содержится сумма значений \fItms_utime\fP и \fItms_cutime\fP
+всех ожидающих завершения потомков. В поле \fItms_cstime\fP содержится сумма
+значений \fItms_stime\fP и \fItms_cstime\fP всех ожидающих завершения потомков.
+.PP
+Времена завершившихся потомков (и их потомков) добавляются в момент когда
+\fBwait\fP(2) или \fBwaitpid\fP(2) возвращают их ID процесса. При этом, времена
+внуков, которых потомки не ждали, никогда не добавляются.
+.PP
+Все времена считаются в тиках часов.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Вызов \fBtimes\fP() возвращает количество тиков часов, которое прошло с момента
+произвольной точки в прошлом. Возвращаемое значение может переполнить
+максимальную величину типа \fIclock_t\fP. При ошибке возвращается \fI(clock_t)\ \-1\fP, а в \fIerrno\fP записывается код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Значение \fItms\fP указывает за пределы адресного пространства процесса.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Количество тиков часов в секунду можно получить с помощью:
+.PP
+.in +4n
+.EX
+sysconf(_SC_CLK_TCK);
+.EE
+.in
+.PP
+В POSIX.1\-1996 символ \fBCLK_TCK\fP (определённый в \fI<time.h>\fP)
+упомянут как устаревающий. В настоящее время он точно устарел.
+.PP
+.\" See the description of times() in XSH, which says:
+.\"	The times of a terminated child process are included... when wait()
+.\"	or waitpid() returns the process ID of this terminated child.
+В ядрах Linux до версии 2.6.9, если обработчик \fBSIGCHLD\fP равен \fBSIG_IGN\fP,
+то времена завершившихся потомков автоматически включаются в поля
+\fItms_cstime\fP и \fItms_cutime\fP, хотя в POSIX.1\-2001 сказано, что это должно
+происходить только, если вызвавший процесс вызывал \fBwait\fP(2) для своих
+потомков. Это несоответствие устранено в Linux 2.6.9 и более новых.
+.PP
+В Linux значение аргумента \fIbuf\fP может быть равно NULL. В этом случае
+\fBtimes\fP() просто возвращает результат функции. Однако в POSIX не описано
+такое поведение, и для большинства других реализаций UNIX требуется не
+равное NULL значение \fIbuf\fP.
+.PP
+Заметим, что \fBclock\fP(3) также возвращает значение типа \fIclock_t\fP, но это
+значение измеряется в единицах \fBCLOCKS_PER_SEC\fP, а не в тиках часов как у
+\fBtimes\fP().
+.PP
+.\" .PP
+.\" On older systems the number of clock ticks per second is given
+.\" by the variable HZ.
+«Произвольная точка в прошлом», от которой отсчитывается возвращаемое
+значение \fBtimes\fP(), измеряется в разных в версиях ядра Linux по\-разному. В
+Linux 2.4 и старее этой точкой является момент загрузки системы. Начиная с
+Linux 2.6 эта точка равна \fI(2^32/HZ) \- 300\fP секунд до времени загрузки
+системы. Из\-за переменчивости в разных версиях ядер (и в реализациях UNIX) и
+с учётом того, что возвращаемое значение может выйти за пределы диапазона
+\fIclock_t\fP, в переносимом приложении не следует использовать это
+значение. Для подсчёта прошедшего времени используйте \fBclock_gettime\fP(2).
+.SS "Историческая справка"
+В SVr1\-3 результат имеет тип \fIlong\fP и члены структуры имеют тип \fItime_t\fP,
+хотя они хранят тики часов, а не секунды начиная с Эпохи. В V7 используется
+\fIlong\fP для членов структуры, так как тип \fItime_t\fP ещё не существовал.
+.SH ДЕФЕКТЫ
+.\" The problem is that a syscall return of -4095 to -1
+.\" is interpreted by glibc as an error, and the wrapper converts
+.\" the return value to -1.
+.\" http://marc.info/?l=linux-kernel&m=119447727031225&w=2
+.\" "compat_sys_times() bogus until jiffies >= 0"
+.\" November 2007
+Ограничение Linux в соглашениях системного вызова на некоторых архитектурах
+(в частности i386) приводит к тому, что в Linux 2.6 есть маленький временной
+интервал (41 секунда), в котором сразу после загрузки \fBtimes\fP() может
+вернуть \-1, ложно указывая на существование ошибки. Такая же проблема может
+возникнуть, когда возвращаемое значение становится больше максимального
+значения типа \fBclock_t\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBtime\fP(1), \fBgetrusage\fP(2), \fBwait\fP(2), \fBclock\fP(3), \fBsysconf\fP(3),
+\fBtime\fP(7)

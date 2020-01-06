@@ -1,0 +1,83 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 18:25:21 1993 by Rik Faith (faith@cs.unc.edu)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SEEKDIR 3 2016\-03\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+seekdir \- установить позицию для последующего вызова readdir() в потоке
+каталога.
+.SH ОБЗОР
+.nf
+\fB#include <dirent.h>\fP
+.PP
+\fBvoid seekdir(DIR *\fP\fIdirp\fP\fB, long \fP\fIloc\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBseekdir\fP():
+ _XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBseekdir\fP() устанавливает в потоке каталога позицию, с которой
+начнёт работу следующий вызов \fBreaddir\fP(2). Аргумент \fIloc\fP должен быть
+значением, которое возвращается ранее вызванной функцией \fBtelldir\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBseekdir\fP() не возвращает никаких значений.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBseekdir\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+В glibc до версии 2.1.1 тип аргумента \fIloc\fP был \fIoff_t\fP. В POSIX.1\-2001 он
+имеет тип \fIlong\fP, и это учтено в glibc начиная с версии 2.1.2. В
+\fBtelldir\fP(3) читайте почему нужно быть осторожным в своих предположениях о
+значении в этом аргументе.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlseek\fP(2), \fBclosedir\fP(3), \fBopendir\fP(3), \fBreaddir\fP(3), \fBrewinddir\fP(3),
+\fBscandir\fP(3), \fBtelldir\fP(3)

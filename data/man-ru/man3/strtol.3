@@ -1,0 +1,221 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sun Jul 25 10:53:39 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Added correction due to nsd@bbc.com (Nick Duffek) - aeb, 950610
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STRTOL 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+strtol, strtoll, strtoq \- преобразует строку в длинное целое число
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBlong int strtol(const char *\fP\fInptr\fP\fB, char **\fP\fIendptr\fP\fB, int \fP\fIbase\fP\fB);\fP
+.PP
+\fBlong long int strtoll(const char *\fP\fInptr\fP\fB, char **\fP\fIendptr\fP\fB, int \fP\fIbase\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBstrtoll\fP():
+.RS 4
+_ISOC99_SOURCE
+    || /* в версии glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBstrtol\fP() преобразует начальную часть строки \fInptr\fP в длинное
+целое число согласно системе счисления \fIbase\fP, значение которой может быть
+от 2 до 36 включительно или равно специальному значению 0.
+.PP
+Строка может начинаться с произвольного количества пробельных символов
+(определяемых при помощи \fBisspace\fP(3)), затем может быть указан знак «+»
+или «\-». Если \fIbase\fP равно 0 или 16, то строка может начинаться с приставки
+«0x» или «0X», что означает использование шестнадцатеричной системы
+исчисления; иначе, если \fIbase\fP равно нулю, то используется десятичная
+система счисления (кроме, когда последующий символ также равен «0»: в этом
+случае используется восьмеричная система исчисления).
+.PP
+Остаток строки преобразуется в число с типом \fIlong int\fP. Этот процесс
+останавливается, если в строке встречается некорректный символ для указанной
+системе счисления. В системах счисления больших 10, символ «A» в верхнем или
+нижнем регистре означает 10, «B» означает 11 и так далее до «Z», означающего
+35.
+.PP
+Если значение \fIendptr\fP не NULL, то \fBstrtol\fP() записывает адрес первого
+некорректного символа в \fI*endptr\fP. Если в строке вообще нет цифр, то
+\fBstrtoul\fP() сохраняет изначальное значение \fInptr\fP в \fI*endptr\fP (и
+возвращает 0). В частности, если \fI*nptr\fP не равно \(aq\e0\(aq, но
+\fI**endptr\fP равно \(aq\e0\(aq при возврате, то вся строка состоит из
+корректных символов.
+.PP
+Функция \fBstrtoll\fP() работает так же, как и \fBstrtol\fP(), но возвращает число
+с типом \fIlong long int\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBstrtol\fP() возвращает результат преобразования, если значение не
+возникают переполнения или исчерпания. Если возникает исчерпание, то
+\fBstrtol\fP() возвращает \fBLONG_MIN\fP. Если возникает переполнение, то
+\fBstrtoul\fP() возвращает \fBLONG_MAX\fP. В обоих случаях переменной \fIerrno\fP
+присваивается значение \fBERANGE\fP. То же самое относится к \fBstrtoll\fP(),
+только вместо \fBLONG_MIN\fP и \fBLONG_MAX\fP возвращается \fBLLONG_MIN\fP и
+\fBLLONG_MAX\fP.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+(нет в C99) Аргумент \fIbase\fP содержит неподдерживаемое значение.
+.TP 
+\fBERANGE\fP
+Полученное значение вне диапазона.
+.PP
+Реализация может также устанавливать \fIerrno\fP в \fBEINVAL\fP в случае, когда
+преобразование не было выполнено (не было встречено цифр и возвращён 0).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw29 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstrtol\fP(),
+\fBstrtoll\fP(),
+\fBstrtoq\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBstrtol\fP(): POSIX.1\-2001, POSIX.1\-2008, C89, C99 SVr4, 4.3BSD.
+.PP
+\fBstrtoll\fP(): POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Так как \fBstrtol\fP() может обоснованно вернуть 0, \fBLONG_MAX\fP или \fBLONG_MIN\fP
+(а \fBstrtoll\fP() — \fBLLONG_MAX\fP или \fBLLONG_MIN\fP) при успешном выполнении и
+ошибке, вызывающая программа до вызова должна присвоить \fIerrno\fP значение 0,
+а после вызова определить возникновение ошибки по ненулевому значению
+\fIerrno\fP.
+.PP
+Согласно POSIX.1, в локалях отличных от «C» и «POSIX», эти функции могут
+преобразовывать другие, определяемые реализацией, строки с числами.
+.PP
+В BSD также есть функция
+.PP
+.in +4n
+.EX
+\fBquad_t strtoq(const char *\fP\fInptr\fP\fB, char **\fP\fIendptr\fP\fB, int \fP\fIbase\fP\fB);\fP
+.EE
+.in
+.PP
+с полностью аналогичным определением. В зависимости от длины слова в текущей
+архитектуре, она может быть аналогом \fBstrtoll\fP() или \fBstrtol\fP().
+.SH ПРИМЕР
+Программа, представленная далее, показывает использование \fBstrtol\fP(). В
+первом аргументе командной строки указывается срока, из которой \fBstrtol\fP()
+должна извлечь число. Во втором (необязательном) аргументе указывается
+система счисления, используемая для преобразования (этот аргумент
+преобразуется в число с помощью \fBatoi\fP(3), функции, которая не учитывает
+ошибки и имеет более простой интерфейс по сравнению с \fBstrtol\fP()). Вот
+несколько результатов работы этой программы:
+.PP
+.in +4n
+.EX
+$\fB ./a.out 123\fP
+strtol() вернула 123
+$\fB ./a.out \(aq    123\(aq\fP
+strtol() вернула 123
+$\fB ./a.out 123abc\fP
+strtol() вернула 123
+Остальные символы после числа: abc
+$\fB ./a.out 123abc 55\fP
+strtol: некорректный аргумент
+$\fB ./a.out \(aq\(aq\fP
+Цифры отсутствуют
+$\fB ./a.out 4000000000\fP
+strtol: Числовой результат выходит за диапазон
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <stdlib.h>
+#include <limits.h>
+#include <stdio.h>
+#include <errno.h>
+
+int
+main(int argc, char *argv[])
+{
+    int base;
+    char *endptr, *str;
+    long val;
+
+    if (argc < 2) {
+        fprintf(stderr, "Использование: %s строка [система_счисления]\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    str = argv[1];
+    base = (argc > 2) ? atoi(argv[2]) : 10;
+
+    errno = 0;    /* чтобы выявить ошибку после вызова */
+    val = strtol(str, &endptr, base);
+
+    /* проверка возможных ошибок */
+
+    if ((errno == ERANGE && (val == LONG_MAX || val == LONG_MIN))
+            || (errno != 0 && val == 0)) {
+        perror("strtol");
+        exit(EXIT_FAILURE);
+    }
+
+    if (endptr == str) {
+        fprintf(stderr, "Цифры отсутствуют\en");
+        exit(EXIT_FAILURE);
+    }
+
+    /* если мы дошли сюда, то strtol() успешно преобразовала число */
+
+    printf("strtol() вернула %ld\en", val);
+
+    if (*endptr != \(aq\e0\(aq)        /* необязательно ошибка… */
+        printf("Остальные символы после числа: %s\en", endptr);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBatof\fP(3), \fBatoi\fP(3), \fBatol\fP(3), \fBstrtod\fP(3), \fBstrtoimax\fP(3)
+\fBstrtoul\fP(3),

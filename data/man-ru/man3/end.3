@@ -1,0 +1,100 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH END 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+etext, edata, end \- конец программных сегментов
+.SH ОБЗОР
+.nf
+\fBextern\fP\fI etext\fP\fB;\fP
+\fBextern\fP\fI edata\fP\fB;\fP
+\fBextern\fP\fI end\fP\fB;\fP
+.fi
+.SH ОПИСАНИЕ
+Адреса этих символов соответствуют концам различных программных сегментов:
+.TP 
+\fIetext\fP
+Первый адрес за концом сегмента текста (кода программы).
+.TP 
+\fIedata\fP
+Первый адрес за концом сегмента инициализированных данных.
+.TP 
+\fIend\fP
+Первый адрес за концом сегмента неинициализированных данных (сегмента BSS).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Хотя эти символы уже давно присутствуют в большинстве систем UNIX, они не
+стандартизованы. Используйте осторожно.
+.SH ЗАМЕЧАНИЯ
+Программа должна явно объявлять эти символы; они не определены в
+заголовочных файлах.
+.PP
+В некоторых системах имена этих символов начинаются с подчёркивания:
+\fI_etext\fP, \fI_edata\fP и \fI_end\fP. Эти символы также определены в программах,
+скомпонованных на Linux.
+.PP
+В начале выполнения программы, повреждение программы будет где\-нибудь рядом
+c \fI&end\fP (возможно, в начале следующей страницы). Однако, поломка изменяет
+память как при выделении с помощью \fBbrk\fP(2) или \fBmalloc\fP(3). Используйте
+\fBsbrk\fP(2) с аргументом 0 для поиска текущего значения поломки программы.
+.SH ПРИМЕР
+Нижеследующая программа выдает такие результаты:
+.PP
+.in +4n
+.EX
+$\fB ./a.out\fP
+First address past:
+    program text (etext)       0x8048568
+    initialized data (edata)   0x804a01c
+    uninitialized data (end)   0x804a024
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+
+extern char etext, edata, end; /* Символы должны иметь какой\-то тип,
+                                   иначе предупреждения от «gcc \-Wall» */
+
+int
+main(int argc, char *argv[])
+{
+    printf("First address past:\en");
+    printf("    program text (etext)      %10p\en", &etext);
+    printf("    initialized data (edata)  %10p\en", &edata);
+    printf("    uninitialized data (end)  %10p\en", &end);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBobjdump\fP(1), \fBreadelf\fP(1), \fBsbrk\fP(2), \fBelf\fP(5)

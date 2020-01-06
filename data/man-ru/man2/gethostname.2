@@ -1,0 +1,136 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1995-07-22 by Michael Chastain <mec@duracef.shout.net>:
+.\"   'gethostname' is real system call on Linux/Alpha.
+.\" Modified 1997-01-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2000-06-04, 2001-12-15 by aeb
+.\" Modified 2004-06-17 by mtk
+.\" Modified 2008-11-27 by mtk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETHOSTNAME 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+gethostname, sethostname \- получить/установить имя узла
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint gethostname(char *\fP\fIname\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.br
+\fBint sethostname(const char *\fP\fIname\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+.PD 0
+\fBgethostname\fP():
+.RS 4
+Начиная с glibc 2.12: _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.br
+|| /* начиная с glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.br
+\fBsethostname\fP():
+.nf
+.\"		commit 266865c0e7b79d4196e2cc393693463f03c90bd8
+    начиная с glibc 2.21:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и 2.20:
+        _DEFAULT_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+    до glibc 2.19, включительно:
+        _BSD_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+.fi
+.PD
+.ad
+.SH ОПИСАНИЕ
+Данные системные вызовы используются для получения или изменения имени узла
+системы. Точнее говоря, они работают с именем узла, связанным с
+пространством имён UTS вызывающего процесса.
+.PP
+Вызов \fBsethostname\fP() устанавливает имя узла равны значению, указанному в
+массиве символов \fIname\fP. Аргумент \fIlen\fP определяет количество байт в
+\fIname\fP. (Таким образом, \fIname\fP не требует наличия завершающего байта с
+null.)
+.PP
+\fBgethostname\fP() возвращает имя узла с null на конце в массиве символов
+\fIname\fP длиной \fIlen\fP байт. Если имя узла, оканчивающееся null, не
+помещается, то имя обрезается и ошибки не происходит (но смотрите ЗАМЕЧАНИЯ
+далее). В POSIX.1 сказано, что если обрезание произошло, то неясно, будет ли
+буфер содержать завершающий байт с null.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+\fIname\fP является неправильным адресом.
+.TP 
+\fBEINVAL\fP
+.\" Can't occur for gethostbyname() wrapper, since 'len' has an
+.\" unsigned type; can occur for the underlying system call.
+\fIlen\fP имеет отрицательное значение или для \fBsethostname\fP() длина \fIlen\fP
+больше, чем максимально допустимое значение.
+.TP 
+\fBENAMETOOLONG\fP
+(\fBgethostname\fP() из glibc) \fIlen\fP меньше чем реальный размер. (До версии
+2.1, glibc возвращала в этом случае \fBEINVAL\fP.)
+.TP 
+\fBEPERM\fP
+Для работы с \fBsethostname\fP() у вызывающего нет мандата \fBCAP_SYS_ADMIN\fP в
+пользовательском пространстве имён, связанном с его пространством имён UTS
+(смотрите \fBnamespaces\fP(7)).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4, 4.4BSD (данная функция впервые появилась в 4.2BSD). В POSIX.1\-2001 и
+POSIX.1\-2008 определена \fBgethostname\fP(), но нет \fBsethostname\fP().
+.SH ЗАМЕЧАНИЯ
+SUSv2 гарантирует, что «Длина имени узла ограничена 255\-ю байтами». POSIX.1
+гарантирует, что «Длина имени узла (не включая завершающий нулевой символ)
+ограничена \fBHOST_NAME_MAX\fP байтами».  В Linux значение \fBHOST_NAME_MAX\fP
+равно 64, которое было урезано начиная с Linux 1.0 (ранние версии имели
+предел в 8 байт).
+.SS "Отличия между библиотекой C и ядром"
+Библиотека GNU C library не использует системный вызов \fBgethostname\fP();
+вместо этого \fBgethostname\fP() в ней реализован в виде библиотечной функции,
+которая вызывает \fBuname\fP(2) и копирует до \fIlen\fP байт в \fIname\fP из
+возвращаемого поля \fInodename\fP. Выполнив копирование, функция проверяет, что
+длина \fInodename\fP не больше или равна \fIlen\fP, и если это обнаруживается, то
+функция возвращает \-1, устанавливая значение  \fIerrno\fP равным
+\fBENAMETOOLONG\fP; в этом случае в возвращаемое значение \fIname\fP завершающий
+null не добавляется.
+.PP
+.\" At least glibc 2.0 and 2.1, older versions not checked
+Версии glibc до 2.2 обрабатывали случай превышения длины \fInodename\fP по
+другому: ничего не копировалось в \fIname\fP и функция возвращала \-1,
+устанавливая \fIerrno\fP равным \fBENAMETOOLONG\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBhostname\fP(1), \fBgetdomainname\fP(2), \fBsetdomainname\fP(2), \fBuname\fP(2),
+\fButs_namespaces\fP(7)

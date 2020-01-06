@@ -1,0 +1,155 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2005 Michael Kerrisk
+.\" based on earlier work by faith@cs.unc.edu and
+.\" Mike Battersby <mib@deakin.edu.au>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2005-09-15, mtk, Created new page by splitting off from sigaction.2
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGPROCMASK 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sigprocmask, rt_sigprocmask \- проверка и изменение блокировки сигналов
+.SH ОБЗОР
+\fB#include <signal.h>\fP
+.PP
+.nf
+/* Прототип обёрточной функции glibc */
+\fBint sigprocmask(int \fP\fIhow\fP\fB, const sigset_t *\fP\fIset\fP\fB, sigset_t *\fP\fIoldset\fP\fB);\fP
+.PP
+/* Прототип используемого системного вызова */
+\fBint rt_sigprocmask(int \fP\fIhow\fP\fB, const kernel_sigset_t *\fP\fIset\fP\fB,\fP
+\fB                   kernel_sigset_t *\fP\fIoldset\fP\fB, size_t \fP\fIsigsetsize\fP\fB);\fP
+.PP
+/* Прототип устаревшего системного вызова */
+\fBint sigprocmask(int \fP\fIhow\fP\fB, const old_kernel_sigset_t *\fP\fIset\fP\fB,\fP
+\fB                old_kernel_sigset_t *\fP\fIoldset\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBsigprocmask\fP(): _POSIX_C_SOURCE
+.ad b
+.SH ОПИСАНИЕ
+Вызов \fBsigprocmask\fP() используется для выборки и/или изменения маски
+сигналов вызывающей нити. Маска сигналов представляет собой набор сигналов,
+чья доставка в настоящее время заблокирована вызывающим (подробнее об этом
+смотрите также в \fBsignal\fP(7)).
+.PP
+Работа вызова зависит от значения \fIhow\fP:
+.TP 
+\fBSIG_BLOCK\fP
+Набор блокируемых сигналов — объединение текущего набора и аргумента \fIset\fP.
+.TP 
+\fBSIG_UNBLOCK\fP
+Сигналы в \fIset\fP удаляются из списка блокируемых сигналов. Допускается
+разблокировать незаблокированные сигналы.
+.TP 
+\fBSIG_SETMASK\fP
+Набор блокируемых сигналов приравнивается к аргументу \fIset\fP.
+.PP
+Если значение \fIoldset\fP не равно NULL, то предыдущее значение маски сигналов
+записывается в \fIoldset\fP.
+.PP
+Если значение \fIset\fP равно NULL, то маска сигналов не изменяется (т.е.,
+значение \fIhow\fP игнорируется), но текущее значение маски сигналов всё же
+возвращается в \fIoldset\fP (если его значение не равно NULL).
+.PP
+Функции для изменения и получения переменных с типом  \fIsigset_t\fP («наборы
+сигналов») описаны в \fBsigsetops\fP(3).
+.PP
+Использование \fBsigprocmask\fP() в многонитевых процессах не определено;
+смотрите \fBpthread_sigmask\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBsigprocmask\fP() возвращает 0 и \-1 при
+ошибке. В случае ошибки в \fIerrno\fP указывается номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Аргумент \fIset\fP или \fIoldset\fP указывает за пределы выделенного адресного
+пространства процесса.
+.TP 
+\fBEINVAL\fP
+Значение \fIhow\fP некорректно или ядро не поддерживает размер, переданный в
+\fIsigsetsize\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Невозможно заблокировать \fBSIGKILL\fP или \fBSIGSTOP\fP. Попытка выполнить это
+просто игнорируется.
+.PP
+Каждая нить процесса имеют свою маску сигналов.
+.PP
+Потомок, создаваемый с помощью \fBfork\fP(2), наследует копию родительской
+маски сигналов; маска сигналов сохраняется при вызове \fBexecve\fP(2).
+.PP
+Если генерируется сигнал \fBSIGBUS\fP, \fBSIGFPE\fP, \fBSIGILL\fP или \fBSIGSEGV\fP, а
+он заблокирован, то результат не определён, если сигнал был сгенерирован не
+из \fBkill\fP(3), \fBsigqueue\fP(3) или \fBraise\fP(3).
+.PP
+Подробная информация о работе с наборами сигналов есть на странице
+\fBsigsetops\fP(3).
+.PP
+.\"
+Заметим, что разрешается (хотя не очень полезно) передавать в \fIset\fP и
+\fIoldset\fP значение NULL.
+.SS "Отличия между библиотекой C и ядром"
+.PP
+Определение ядра \fIsigset_t\fP отличается по размеру от используемого в
+библиотеке C. В данной справочной странице оно упоминается как
+\fIkernel_sigset_t\fP (хотя в исходном коде ядра оно называется \fIsigset_t\fP).
+.PP
+Обёрточная функция glibc для \fBsigprocmask\fP() просто игнорирует попытки
+блокирования двух сигналов реального времени, которые используются внутри
+реализации NPTL. Подробности смотрите в \fBnptl\fP(7).
+.PP
+.\" sizeof(kernel_sigset_t) == _NSIG / 8,
+.\" which equals to 8 on most architectures, but e.g. on MIPS it's 16.
+Изначально, системный вызов Linux назывался \fBsigprocmask\fP(). Однако из\-за
+добавления сигналов реального времени в Linux 2.2, 32\-битный тип \fIsigset_t\fP
+(который называется \fIold_kernel_sigset_t\fP в этой справочной странице)
+постоянного размера, поддерживаемый этим системным вызовом, перестал
+подходить для этой цели. В связи с этим был добавлен новый системный вызов
+\fBrt_sigprocmask\fP(), поддерживающий увеличенный тип \fIsigset_t\fP (который
+называется \fIkernel_sigset_t\fP в этой справочной странице). У нового
+системного вызова есть четвёртый аргумент, \fIsize_t sigsetsize\fP, которым
+задаётся размер набора сигналов (в байтах) в \fIset\fP и \fIoldset\fP. В настоящее
+время этот аргумент должен задаваться постоянным определяемым архитектурой
+значением (равен \fIsizeof(kernel_sigset_t)\fP).
+.PP
+.\"
+Обёрточная функция glibc \fBsigprocmask\fP() скрывает эти детали от нас,
+вызывая \fBrt_sigprocmask\fP(), если это необходимо ядру.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBpause\fP(2), \fBsigaction\fP(2), \fBsignal\fP(2), \fBsigpending\fP(2),
+\fBsigsuspend\fP(2), \fBpthread_sigmask\fP(3), \fBsigqueue\fP(3), \fBsigsetops\fP(3),
+\fBsignal\fP(7)

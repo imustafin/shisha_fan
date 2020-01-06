@@ -1,0 +1,57 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCSSTR 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wcsstr \- ищет подстроку в широкосимвольной строке
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBwchar_t *wcsstr(const wchar_t *\fP\fIhaystack\fP\fB, const wchar_t *\fP\fIneedle\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBwcsstr\fP() является эквивалентом функции \fBstrstr\fP(3) для широких
+символов. Она ищет положение первой широкосимвольной строки \fIneedle\fP (без
+завершающего широкого символа null (L\(aq\e0\(aq)) в широкосимвольной строке
+\fIhaystack\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBwcsstr\fP() возвращает указатель на первое появление подстроки
+\fIneedle\fP в \fIhaystack\fP. В том случае, если подстрока \fIneedle\fP не найдена в
+\fIhaystack\fP, функция возвращает NULL.
+.PP
+Заметим, что если \fIneedle\fP является пустой широкосимвольной строкой, то
+возвращаемое значение всегда будет равно \fIhaystack\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwcsstr\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBstrstr\fP(3), \fBwcschr\fP(3)

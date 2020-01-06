@@ -1,0 +1,122 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-21 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1995-04-15 by Michael Chastain <mec@shell.portal.com>:
+.\"   Added 'fchdir'. Fixed bugs in error section.
+.\" Modified 1996-10-21 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1997-08-21 by Joseph S. Myers <jsm28@cam.ac.uk>
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CHDIR 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+chdir, fchdir \- изменить рабочий каталог
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint chdir(const char *\fP\fIpath\fP\fB);\fP
+.br
+\fBint fchdir(int \fP\fIfd\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfchdir\fP():
+.PD 0
+.ad l
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+    || /* в glibc до версии 2.19 включительно: */ _BSD_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+\fBchdir\fP() изменяет текущий рабочий каталог вызвавшего процесса на каталог,
+указанный в \fIpath\fP.
+.PP
+\fBfchdir\fP() идентичен \fBchdir\fP(); разница в том, что каталог указывается в
+виде открытого файлового дескриптора.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+В зависимости от файловой системы могут также возвращаться другие
+ошибки. Общий набор ошибок \fBchdir\fP() перечислен ниже:
+.TP 
+\fBEACCES\fP
+В одном из каталогов префикса \fIpath\fP не разрешён поиск (cм. также
+\fBpath_resolution\fP(7)).
+.TP 
+\fBEFAULT\fP
+Аргумент \fIpath\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEIO\fP
+Произошла ошибка ввода\-вывода.
+.TP 
+\fBELOOP\fP
+Во время определения \fIpath\fP встретилось слишком много символьных ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+\fIpath\fP слишком длинен.
+.TP 
+\fBENOENT\fP
+Каталог, указанный в \fIpath\fP, не существует.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOTDIR\fP
+Компонент \fIpath\fP не является каталогом.
+.PP
+Наиболее распространённые ошибки \fBfchdir\fP():
+.TP 
+\fBEACCES\fP
+Запрещён поиск в каталоге, на который указывает \fIfd\fP.
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBENOTDIR\fP
+Значение \fIfd\fP не указывает на каталог.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.4BSD.
+.SH ЗАМЕЧАНИЯ
+При работе с относительными путями (те, которые не начинаются с \(aq/\(aq)
+за начало отсчёта принимается текущий рабочий каталог.
+.PP
+Дочерний процесс, созданный посредством \fBfork\fP(2), наследует текущий
+рабочий каталог родителя. Текущий рабочий каталог не меняется \fBexecve\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchroot\fP(2), \fBgetcwd\fP(3), \fBpath_resolution\fP(7)

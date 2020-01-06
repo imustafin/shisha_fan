@@ -1,0 +1,138 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2001 Andries Brouwer <aeb@cwi.nl>.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" FIXME . There are a lot of other process termination actions that
+.\" could be listed on this page. See, for example, the list in the
+.\" POSIX exit(3p) page.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH EXIT 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+exit \- вызывает нормальное завершение процесса
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBvoid exit(int \fP\fIstatus\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBexit\fP() выполняет нормальное завершение процесса и возвращает
+значение \fIstatus & 0377\fP породившему процессу (смотрите \fBwait\fP(2)).
+.PP
+Вызываются все функции, зарегистрированные с помощью \fBatexit\fP(3) и
+\fBon_exit\fP(3), в обратном по отношению к регистрации порядке (в этих
+функциях возможно использовать \fBatexit\fP(3) или \fBon_exit\fP(3) для
+регистрации дополнительной функции, которая будет также вызвана при выходе;
+при этом она добавляется в начало списка функций, которые осталось
+вызвать). Если из одной из функций не происходит возврат (например, она
+вызывает \fB_exit\fP(2) или завершает себя по сигналу), то оставшиеся функции
+не вызываются, и дальнейший процесс выхода прекращается (в частности, запись
+потоков \fBstdio\fP(3)). Если функция зарегистрирована с помощью \fBatexit\fP(3)
+или \fBon_exit\fP(3) несколько раз, то она вызывается столько раз, сколько
+зарегистрирована.
+.PP
+Все открытые потоки \fBstdio\fP(3) записываются и закрываются. Файлы, созданные
+\fBtmpfile\fP(3), удаляются.
+.PP
+В стандарте Си определены две константы, \fBEXIT_SUCCESS\fP и \fBEXIT_FAILURE\fP,
+которые можно передавать \fBexit\fP() для указания корректности или
+некорректности завершения, соответственно.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBexit\fP() не возвращает выполнение.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBexit\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:exit
+.TE
+.PP
+Функция \fBexit\fP() использует глобальную незащищённую переменную, поэтому
+функцию нельзя использовать в нескольких нитях одновременно.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+.PP
+Поведение не определено, если одна из функций, зарегистрированных с помощью
+\fBatexit\fP(3) и \fBon_exit\fP(3), вызовет \fBexit\fP() или \fBlongjmp\fP(3). Заметим,
+что вызов \fBexecve\fP(2) удаляет регистрацию функций, сделанную с помощью
+\fBatexit\fP(3) и \fBon_exit\fP(3).
+.PP
+Использование \fBEXIT_SUCCESS\fP и \fBEXIT_FAILURE\fP является более переносимым
+методом (в не\-UNIX окружения), чем указание 0 и какого\-то ненулевого
+значения (например, 1 или \-1). В частности, в VMS используется другое
+соглашение.
+.PP
+В BSD пытались стандартизовать коды завершения (которые также были взяты и
+другие библиотеки Си, например  GNU C); смотрите файл
+\fI<sysexits.h>\fP.
+.PP
+После \fBexit\fP() код выхода должен быть передан родительскому процессу. Есть
+три варианта:
+.IP \(bu 3
+Если родитель установил обработчик \fBSA_NOCLDWAIT\fP или \fBSIGCHLD\fP равным
+\fBSIG_IGN\fP, то код выхода отбрасывается и потомок завершается сразу.
+.IP \(bu
+Если родитель ожидает завершения потомка, то он получает код выхода и
+потомок сразу завершается.
+.IP \(bu
+Иначе потомок становится процессом «зомби»: большинство ресурсов процесс
+задействуется вторично, но слот с минимумом информации о процессе\-потомке
+(код завершения, статистика по использованию ресурсов) остаётся в таблице
+процессов. Это позволяет родителю в дальнейшем использовать \fBwaitpid\fP(2)
+(или подобный) для получения кода завершения потомка; после этого слот под
+процесс\-зомби освобождается.
+.PP
+.\"
+Если в реализации поддерживается сигнал \fBSIGCHLD\fP, то он посылается
+родителю. Если родитель установил флаг \fBSA_NOCLDWAIT\fP, то поведение при
+сигнале \fBSIGCHLD\fP не определено.
+.SS "Сигналы, посылаемые другим процессам"
+Если существующий процесс является лидером сеанса и управляющим терминала
+сеанса, то каждому процессу из группы фонового режима этого управляющего
+терминала посылается сигнал \fBSIGHUP\fP, и терминал отключается от сеанса,
+чтобы его можно было захватить новому управляющему процессу.
+.PP
+Если завершение процесса приводит к осиротению группы процессов, и если
+любой член только что осиротевшей группы останавливается, то каждому
+процессу этой группы после сигнала \fBSIGHUP\fP будет послан сигнал
+\fBSIGCONT\fP. Описание процесса осиротения группы смотрите в \fBsetpgid\fP(2).
+.PP
+За исключением описанные выше случаев, когда процессы, куда посылается
+сигнал, могут быть потомками завершающегося процесса, завершение процесса,
+обычно, \fIне\fP приводит к отправке сигнала потомкам этого процесса. Однако,
+процесс может вызвать \fBprctl\fP(2) с операцией \fBPR_SET_PDEATHSIG\fP, чтобы
+подготовиться к получению сигнала, если его родитель завершает работу.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fB_exit\fP(2), \fBget_robust_list\fP(2), \fBsetpgid\fP(2), \fBwait\fP(2), \fBatexit\fP(3),
+\fBon_exit\fP(3), \fBtmpfile\fP(3)

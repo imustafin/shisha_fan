@@ -1,0 +1,138 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) Andreas Gruenbacher, February 2001
+.\" Copyright (C) Silicon Graphics Inc, September 2001
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETXATTR 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+setxattr, lsetxattr, fsetxattr \- устанавливает расширенное значение
+атрибутов
+.SH ОБЗОР
+.fam C
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/xattr.h>\fP
+.PP
+\fBint setxattr(const char\ *\fP\fIpath\fP\fB, const char\ *\fP\fIname\fP\fB,\fP
+\fB              const void\ *\fP\fIvalue\fP\fB, size_t \fP\fIsize\fP\fB, int \fP\fIflags\fP\fB);\fP
+\fBint lsetxattr(const char\ *\fP\fIpath\fP\fB, const char\ *\fP\fIname\fP\fB,\fP
+\fB              const void\ *\fP\fIvalue\fP\fB, size_t \fP\fIsize\fP\fB, int \fP\fIflags\fP\fB);\fP
+\fBint fsetxattr(int \fP\fIfd\fP\fB, const char\ *\fP\fIname\fP\fB,\fP
+\fB              const void\ *\fP\fIvalue\fP\fB, size_t \fP\fIsize\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.fam T
+.SH ОПИСАНИЕ
+Расширенные атрибуты представляют собой пару \fIимя\fP:\fIзначение\fP и
+связываются с записями inode (файлы, каталоги, символьные ссылки и
+т.п.). Они являются расширениями к обычным атрибутам, связанным со всеми
+записями inode в системе (например, данные \fBstat\fP(2)). Полное описание
+модели расширенных атрибутов можно найти в \fBxattr\fP(7).
+.PP
+Вызов \fBsetxattr\fP() устанавливает значение \fIvalue\fP расширенного атрибута с
+именем, заданным в \fIname\fP и связанного с заданным \fIpath\fP в файловой
+системе. В аргументе \fIsize\fP задаётся размер (в байтах) \fIvalue\fP;
+допускается нулевой размер.
+.PP
+Вызов \fBlsetxattr\fP() идентичен \fBsetxattr\fP(), за исключением случая работы с
+символьными ссылками; он устанавливает расширенный атрибут на ссылке, а не
+на том файле, на который она указывает.
+.PP
+Вызов \fBfsetxattr\fP() идентичен \fBsetxattr\fP(), отличием является то, что
+расширенный атрибут устанавливается на открытом файле, на который указывает
+\fIfd\fP (возвращаемом \fBopen\fP(2)), а не на указанном в \fIpath\fP.
+.PP
+Имя расширенного атрибута представляет собой строку, заканчивающуюся
+null. Имя \fIname\fP включает префикс пространства имён; их может быть
+несколько, разрозненные пространства ассоциируются с разными
+inode. Значением \fIvalue\fP расширенного атрибута является произвольный кусок
+текстовых или двоичных данных определённой длины.
+.PP
+По умолчанию (т. е., значение \fIflags\fP равно), если расширенный атрибут
+отсутствует, то он создаётся, а если он существует, то заменяется его
+значение. Для изменения такой работы, в \fIflags\fP можно указать одно из
+следующих значений:
+.TP 
+\fBXATTR_CREATE\fP
+Выполнять только создание, если атрибут с таким именем существует —
+возвращать ошибку.
+.TP 
+\fBXATTR_REPLACE\fP
+Выполнять только замену, если атрибут с таким именем не существует —
+возвращать ошибку.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается ноль. В случае ошибки возвращается \-1,
+а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEDQUOT\fP
+Предел по дисковой квоте; не хватает пространства для сохранения
+расширенного атрибута.
+.TP 
+\fBEEXIST\fP
+Указан \fBXATTR_CREATE\fP, но атрибут уже существует.
+.TP 
+\fBENODATA\fP
+.\" .RB ( ENOATTR
+.\" is defined to be a synonym for
+.\" .BR ENODATA
+.\" in
+.\" .IR <attr/attributes.h> .)
+Указан \fBXATTR_REPLACE\fP, но атрибут не существует.
+.TP 
+\fBENOSPC\fP
+Не хватает пространства для сохранения расширенного атрибута.
+.TP 
+\fBENOTSUP\fP
+Неверный префикс пространства имён \fIname\fP.
+.TP 
+\fBENOTSUP\fP
+Расширенные атрибуты не поддерживаются файловой системой или отключены.
+.TP 
+\fBEPERM\fP
+Файл помечен как неизменяемый (immutable) или только для добавления
+(смотрите \fBioctl_iflags\fP(2)).
+.PP
+Также могут возникать ошибки, описанные в \fBstat\fP(2).
+.TP 
+\fBERANGE\fP
+Размер \fIname\fP или \fIvalue\fP превышает ограничение, задаваемое файловой
+системой.
+.SH ВЕРСИИ
+Данные системные вызовы доступны в Linux начиная с ядра версии 2.4;
+поддержка в glibc появилась в версии 2.3.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" .SH AUTHORS
+.\" Andreas Gruenbacher,
+.\" .RI < a.gruenbacher@computer.org >
+.\" and the SGI XFS development team,
+.\" .RI < linux-xfs@oss.sgi.com >.
+.\" Please send any bug reports or comments to these addresses.
+Данные системные вызовы есть только в Linux.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetfattr\fP(1), \fBsetfattr\fP(1), \fBgetxattr\fP(2), \fBlistxattr\fP(2), \fBopen\fP(2),
+\fBremovexattr\fP(2), \fBstat\fP(2), \fBsymlink\fP(7), \fBxattr\fP(7)

@@ -1,0 +1,104 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2008, Linux Foundation, written by Michael Kerrisk
+.\" <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SHM_OVERVIEW 7 2016\-12\-12 Linux "Руководство программиста Linux"
+.SH ИМЯ
+shm_overview \- обзор общей памяти POSIX
+.SH ОПИСАНИЕ
+API общей памяти POSIX позволяет процессам обмениваться информацией через
+общую область памяти.
+.PP
+Доступные интерфейсы:
+.TP  15
+\fBshm_open\fP(3)
+Создаёт и открывает новый объект, или открывает существующий объект. Аналог
+\fBopen\fP(2). Вызов возвращает файловый дескриптор, которые используется
+другими интерфейсами, описанными далее.
+.TP 
+\fBftruncate\fP(2)
+Назначает размер общего объекта памяти (размер создаваемого объекта общей
+памяти равен нулю).
+.TP 
+\fBmmap\fP(2)
+Отображает объект общей памяти в виртуальное адресное пространство
+вызвавшего процесса.
+.TP 
+\fBmunmap\fP(2)
+Удаляет отображение объекта общей памяти из виртуального адресного
+пространства вызвавшего процесса.
+.TP 
+\fBshm_unlink\fP(3)
+Удаляет объект общей памяти с заданным именем.
+.TP 
+\fBclose\fP(2)
+Закрывает файловый дескриптор (выделенный  \fBshm_open\fP(3)), когда он больше
+не требуется.
+.TP 
+\fBfstat\fP(2)
+Возвращает структуру \fIstat\fP, в которой описан объект общей
+памяти. Информация, возвращаемой этим вызовом: размер объекта (\fIst_size\fP),
+права (\fIst_mode\fP), владелец (\fIst_uid\fP) и группа (\fIst_gid\fP).
+.TP 
+\fBfchown\fP(2)
+Изменяет владельца объекта общей памяти.
+.TP 
+\fBfchmod\fP(2)
+Изменяет права на объект общей памяти.
+.SS Версии
+Общая память POSIX стала доступна начиная с Linux 2.4 и glibc 2.2.
+.SS Устойчивость
+Объекты общей памяти POSIX являются устойчивыми на уровне ядра. Объект будет
+существовать до самого отключения системы или до тех пор, пока все процессы
+не разорвут связь с объектом, после чего он может быть удален с помощью
+\fBshm_unlink\fP(3).
+.SS Компоновка
+Программы, в которых используется программный интерфейс общей памяти POSIX,
+для компоновки с библиотекой реального времени \fIlibrt\fP должны
+компилироваться с помощью \fIcc \-lrt\fP.
+.SS "Доступ к объектам общей памяти через файловую систему"
+В Linux объекты общей памяти создаются в виртуальной файловой системе
+(\fItmpfs\fP(5)), которая обычно монтируется в каталог \fI/dev/shm\fP. Начиная с
+ядра версии 2.6.19, в Linux поддерживается использование списков контроля
+доступа (ACL) для управления доступа к объектам в виртуальной файловой
+системе.
+.SH ЗАМЕЧАНИЯ
+Обычно процессы должны синхронизировать свой доступ к объекту общей памяти,
+например, с использованием семафоров POSIX.
+.PP
+Общая память System V (\fBshmget\fP(2), \fBshmop\fP(2) и так далее) является
+старым API. POSIX предоставляет более простой и лучше спроектированный
+интерфейс. С другой стороны, общая память POSIX в какой\-то мере менее
+распространена (особенно на старых системах), чем System V.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfchmod\fP(2), \fBfchown\fP(2), \fBfstat\fP(2), \fBftruncate\fP(2), \fBmmap\fP(2),
+\fBmprotect\fP(2), \fBmunmap\fP(2), \fBshmget\fP(2), \fBshmop\fP(2), \fBshm_open\fP(3),
+\fBshm_unlink\fP(3), \fBsem_overview\fP(7)

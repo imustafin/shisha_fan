@@ -1,0 +1,84 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1995 Yggdrasil Computing, Incorporated.
+.\" and Copyright 2015 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DLERROR 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+dlerror \- возвращает справку по ошибке для функций программного интерфейса
+dlopen
+.SH ОБЗОР
+\fB#include <dlfcn.h>\fP
+.PP
+\fBchar *dlerror(void);\fP
+.PP
+Компонуется при указании параметра \fI\-ldl\fP.
+.SH ОПИСАНИЕ
+Функция \fBdlerror\fP() возвращает понятную человеку, строку с null в конце,
+описывающую последнюю ошибку, которая произошла при вызове одной из функций
+программного интерфейса dlopen, произошедшего после последнего вызова
+\fBdlerror\fP(). Возвращаемая строка \fIне\fP содержит символа новой строки в
+конце.
+.PP
+Функция \fBdlerror\fP() возвращает NULL, если ошибок не было с начала
+инициализации или с момента её последнего вызова.
+.SH ВЕРСИИ
+Функция \fBdlerror\fP() есть в glibc 2.0 и новее.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBdlerror\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001.
+.SH ЗАМЕЧАНИЯ
+.\" .LP
+.\" The string returned by
+.\" .BR dlerror ()
+.\" should not be modified.
+.\" Some systems give the prototype as
+.\" .sp
+.\" .in +5
+.\" .B "const char *dlerror(void);"
+.\" .in
+Сообщение, возвращаемое \fBdlerror\fP(), может располагаться в статически
+выделяемом буфере, который перезаписывается последующими вызовами
+\fBdlerror\fP().
+.SS История
+Эта функция является частью программного интерфейса dlopen, возникшего в
+SunOS.
+.SH ПРИМЕР
+Смотрите \fBdlopen\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdladdr\fP(3), \fBdlinfo\fP(3), \fBdlopen\fP(3), \fBdlsym\fP(3)

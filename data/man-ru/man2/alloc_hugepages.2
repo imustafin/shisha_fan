@@ -1,0 +1,113 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2003 Andries E. Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ALLOC_HUGEPAGES 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+alloc_hugepages, free_hugepages \- выделяет или освобождает огромные страницы
+.SH ОБЗОР
+.nf
+.\" asmlinkage unsigned long sys_alloc_hugepages(int key, unsigned long addr,
+.\" unsigned long len, int prot, int flag);
+\fBvoid *alloc_hugepages(int \fP\fIkey\fP\fB, void *\fP\fIaddr\fP\fB, size_t \fP\fIlen\fP\fB,\fP
+\fB                      int \fP\fIprot\fP\fB, int \fP\fIflag\fP\fB);\fP
+.PP
+.\" asmlinkage int sys_free_hugepages(unsigned long addr);
+\fBint free_hugepages(void *\fP\fIaddr\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системные вызовы \fBalloc_hugepages\fP() и \fBfree_hugepages\fP() появились в
+Linux 2.5.36 и удалены в 2.5.54. Они существовали только на архитектурах
+i386 и ia64 (при сборке с параметром \fBCONFIG_HUGETLB_PAGE\fP). В Linux 2.4.20
+такие номера системных вызовов остались, но сами вызовы завершаются с
+ошибкой \fBENOSYS\fP.
+.PP
+На i386 аппаратура управления памятью умеет работать с обычными страницами
+(4\ КиБ) и огромными страницами (2 или 4\ МиБ). Подобно этому, ia64 умеет
+работать с огромными страницами разных размеров. Эти системные вызовы служат
+для отображения огромных страниц в память процесса или её
+освобождения. Огромные страницы блокируются в памяти и не могут быть
+вытеснены в пространство подкачки.
+.PP
+Аргумент \fIkey\fP служит идентификатором. При нулевом значении страницы
+считаются частными и не наследуются потомками. При положительном значении
+страницы совместно используются несколькими приложениями посредством
+одинакового \fIkey\fP и наследуются процессами\-потомками.
+.PP
+Аргумент \fIaddr\fP в \fBfree_hugepages\fP() указывает какую страницу нужно
+освободить: его значением является результат вызова
+\fBalloc_hugepages\fP(). (Память, на самом деле, освобождается только когда все
+пользователи её освободят.) Аргумент \fIaddr\fP в \fBalloc_hugepages\fP() \(em это
+подсказка, которой ядро может и не воспользоваться. Адреса должны быть
+выровнены соответствующим образом.
+.PP
+Аргумент \fIlen\fP задаёт длину требуемого сегмент. Он должен быть кратен
+размеру огромной страницы.
+.PP
+Аргумент \fIprot\fP определяет тип защиты сегмента памяти. Может быть указано
+одно из значений: \fBPROT_READ\fP, \fBPROT_WRITE\fP, \fBPROT_EXEC\fP.
+.PP
+Аргумент \fIflag\fP игнорируется, если \fIkey\fP не является положительным. В этом
+случае, если \fIflag\fP \(em \fBIPC_CREAT\fP, то создаётся новый сегмент огромной
+страницы, если не существует ни один из указанных идентификаторов. Если флаг
+не задан, то возвращается \fBENOENT\fP, если не существует сегмента с заданным
+идентификатором.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBalloc_hugepages\fP() возвращает выделенный
+виртуальный адрес, а \fBfree_hugepages\fP() возвращает ноль. При ошибке
+возвращается \-1, а \fIerrno\fP устанавливается соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBENOSYS\fP
+Системный вызов не поддерживается данным ядром.
+.SH ФАЙЛЫ
+.TP 
+\fI/proc/sys/vm/nr_hugepages\fP
+Количество настроенных страниц hugetlb. Доступен для чтения и записи.
+.TP 
+\fI/proc/meminfo\fP
+Выдаёт информацию о числе настроенных страниц hugetlb и их размере в трёх
+переменных: HugePages_Total, HugePages_Free, Hugepagesize.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти вызовы есть только в Linux для процессоров Intel и не должны
+использоваться в переносимых программах.
+.SH ЗАМЕЧАНИЯ
+Данные системные вызовы были удалены; они существуют только в ядрах Linux
+версий с 2.5.36 по 2.5.54. Вместо них теперь можно использовать файловую
+систему hugetlbfs. Память, поддерживаемая огромными страницами (если есть
+поддержка в ЦП), получается с помощью \fBmmap\fP(2) в отображаемые файлы этой
+виртуальной файловой системе.
+.PP
+Максимальное число огромных страниц можно задать в параметре загрузки ядра
+\fBhugepages=\fP.
+.PP
+.\" requires CONFIG_HUGETLB_PAGE (under "Processor type and features")
+.\" and CONFIG_HUGETLBFS (under "Filesystems").
+.\" mount -t hugetlbfs hugetlbfs /huge
+.\" SHM_HUGETLB

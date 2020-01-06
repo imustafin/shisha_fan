@@ -1,0 +1,184 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MQ_GETATTR 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+mq_getattr, mq_setattr \- возвращает/изменяет атрибуты очереди сообщений
+.SH ОБЗОР
+.nf
+\fB#include <mqueue.h>\fP
+.PP
+\fBint mq_getattr(mqd_t \fP\fImqdes\fP\fB, struct mq_attr *\fP\fIattr\fP\fB);\fP
+.PP
+\fBint mq_setattr(mqd_t \fP\fImqdes\fP\fB, const struct mq_attr *\fP\fInewattr\fP\fB,\fP
+\fB                 struct mq_attr *\fP\fIoldattr\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.SH ОПИСАНИЕ
+Функция \fBmq_getattr\fP() и \fBmq_setattr\fP(), соответственно, возвращает и
+изменяет атрибуты очереди сообщений, на которую ссылается дескриптор очереди
+сообщений \fImqdes\fP.
+.PP
+Функция \fBmq_getattr\fP() возвращает структуру \fImq_attr\fP в буфер, указанный в
+\fIattr\fP. Эта структура определена следующим образом:
+.PP
+.in +4n
+.EX
+struct mq_attr {
+    long mq_flags;       /* флаги: 0 или O_NONBLOCK */
+    long mq_maxmsg;      /* макс. кол\-во сообщений в очереди */
+    long mq_msgsize;     /* макс. размер сообщения (в байтах) */
+    long mq_curmsgs;     /* кол\-во сообщений в очереди в данный момент */
+};
+.EE
+.in
+.PP
+В поле \fImq_flags\fP содержатся флаги, связанные с открытым описанием очереди
+сообщений. Это поле инициализируется при создании очереди с помощью
+\fBmq_open\fP(3). В этом поле может содержаться только флаг \fBO_NONBLOCK\fP.
+.PP
+Поля \fImq_maxmsg\fP и \fImq_msgsize\fP заполняются при создании очереди сообщений
+с помощью \fBmq_open\fP(3). В поле \fImq_maxmsg\fP содержится верхний предел на
+количество сообщений, которое может поместиться в очереди с помощью
+\fBmq_send\fP(3). В поле  \fImq_msgsize\fP содержится верхний предел на размер
+сообщений, которые могут помещаться в очередь. Значение обоих полей должно
+быть больше нуля. Два файла в \fI/proc\fP, в которых размещаются значения этих
+полей, описаны в \fBmq_overview\fP(7).
+.PP
+В поле \fImq_curmsgs\fP возвращается количество сообщений в очереди в текущей
+момент времени.
+.PP
+Функция \fBmq_setattr\fP() изменяет атрибуты очереди согласно информации из
+передаваемой структуры \fImq_attr\fP, на которую указывает
+\fInewattr\fP. Единственным атрибутом, который можно изменить, является флаг
+\fBO_NONBLOCK\fP в \fImq_flags\fP. Остальные поля в \fInewattr\fP игнорируются. Если
+поле \fIoldattr\fP не равно NULL, то буфер, на который оно указывает,
+используется для возврата структуры \fImq_attr\fP, с той же информацией как
+после вызова \fBmq_getattr\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении  \fBmq_getattr\fP() и \fBmq_setattr\fP()  возвращается 0;
+при ошибке возвращается \-1, а в \fIerrno\fP помещается код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+В \fImqdes\fP размещён некорректный дескриптор очереди сообщений.
+.TP 
+\fBEINVAL\fP
+В \fInewattr\->mq_flags\fP содержится набор битов, отличный от
+\fBO_NONBLOCK\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw26 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmq_getattr\fP(),
+\fBmq_setattr\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В Linux, \fBmq_getattr\fP() и \fBmq_setattr\fP()  является библиотечными
+функциями, реализованными на основе системного вызова \fBmq_getsetattr\fP(2).
+.SH ПРИМЕР
+Программу, представленную ниже, можно использовать для просмотра значений по
+умолчанию \fImq_maxmsg\fP и \fImq_msgsize\fP, которые назначаются очереди
+сообщений, создаваемой вызовом \fBmq_open\fP(3) с аргументом \fIattr\fP, равным
+NULL. Пример работы программы:
+.PP
+.in +4n
+.EX
+$ \fB./a.out /testq\fP
+Максимальное количество сообщений в очереди:   10
+Максимальный размер сообщения:             8192
+.EE
+.in
+.PP
+Начиная с Linux 3.5 для управления значениями по умолчанию можно
+использовать следующие файлы в \fI/proc\fP (описаны в \fBmq_overview\fP(7)):
+.PP
+.in +4n
+.EX
+$ \fBuname \-sr\fP
+Linux 3.8.0
+$ \fBcat /proc/sys/fs/mqueue/msg_default\fP
+10
+$ \fBcat /proc/sys/fs/mqueue/msgsize_default\fP
+8192
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <mqueue.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    mqd_t mqd;
+    struct mq_attr attr;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s mq\-name\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    mqd = mq_open(argv[1], O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, NULL);
+    if (mqd == (mqd_t) \-1)
+        errExit("mq_open");
+
+    if (mq_getattr(mqd, &attr) == \-1)
+        errExit("mq_getattr");
+
+    printf("Максимальное количество сообщений в очереди:   %ld\en", attr.mq_maxmsg);
+    printf("Максимальный размер сообщения:             %ld\en", attr.mq_msgsize);
+
+    if (mq_unlink(argv[1]) == \-1)
+        errExit("mq_unlink");
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmq_close\fP(3), \fBmq_notify\fP(3), \fBmq_open\fP(3), \fBmq_receive\fP(3),
+\fBmq_send\fP(3), \fBmq_unlink\fP(3), \fBmq_overview\fP(7)

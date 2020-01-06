@@ -1,0 +1,95 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) 2010 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH AIO_INIT 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+aio_init \- инициализирует асинхронный ввод\-вывод
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+\fB#include <aio.h>\fP
+.PP
+\fBvoid aio_init(const struct aioinit *\fP\fIinit\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.SH ОПИСАНИЕ
+Имеющаяся только в GNU функция \fBaio_init\fP() позволяет вызывающему указать
+подстроечные подсказки реализации glibc POSIX AIO. Использовать данную
+функцию необязательно, но для эффективности её нужно вызвать перед вызовом
+какой\-либо функции программного интерфейса POSIX AIO.
+.PP
+Подстроечная информация передаётся в буфере, на который указывает параметр
+\fIinit\fP. Данный буфер представляет собой следующую структуру:
+.PP
+.in +4n
+.EX
+struct aioinit {
+    int aio_threads;    /* максимальное количество нитей */
+    int aio_num;        /* количество ожидаемых одновременных
+                           запросов */
+    int aio_locks;      /* не используется */
+    int aio_usedba;     /* не используется */
+    int aio_debug;      /* не используется */
+    int aio_numusers;   /* не используется */
+    int aio_idle_time;  /* количество секунд перед завершением
+                           незанятой нити (начиная с glibc 2.2) */
+    int aio_reserved;
+};
+.EE
+.in
+.PP
+В структуре \fIaioinit\fP используются следующие поля:
+.TP  15
+\fIaio_threads\fP
+В этом поле задаётся максимальное количество обрабатывающих (worker) нитей,
+которые могут использоваться в реализации. Если количество ожидающих
+операций ввода\-вывода превышает это значение, то лишние операции будут в
+очереди до тех пор, пока не освободится обрабатывающая нить. Если значение
+поля меньше 1, то используется значение 1. Значение по умолчанию равно 20.
+.TP 
+\fIaio_num\fP
+.\" FIXME . But, if aio_num > 32, the behavior looks strange. See
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=12083
+В этом поле задаётся максимальное количество одновременных запросов
+ввода\-вывода, которое вызывающий хочет видеть в очереди. Если значение поля
+меньше 32, то оно округляется до 32. Значение по умолчанию равно 64.
+.TP 
+\fIaio_idle_time\fP
+В этом поле задаётся период времени в секундах, который обрабатывающая нить
+должна ждать следующего запроса перед своим уничтожением, отсчитывая от
+окончания выполнения предыдущего запроса. Значение по умолчанию равно 1.
+.SH ВЕРСИИ
+Функция \fBaio_init\fP() доступна в glibc начиная с версии 2.1.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является расширением GNU.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaio\fP(7)

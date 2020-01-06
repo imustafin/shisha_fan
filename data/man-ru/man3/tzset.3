@@ -1,0 +1,223 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sun Jul 25 11:01:58 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 2001-11-13, aeb
+.\" Modified 2004-12-01 mtk and Martin Schulze <joey@infodrom.org>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TZSET 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+tzset, tzname, timezone, daylight \- инициализирует информацию о
+преобразованиях времени
+.SH ОБЗОР
+.nf
+\fB#include <time.h>\fP
+.PP
+\fBvoid tzset (void);\fP
+.PP
+\fBextern char *\fP\fItzname\fP\fB[2];\fP
+\fBextern long \fP\fItimezone\fP\fB;\fP
+\fBextern int \fP\fIdaylight\fP\fB;\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBtzset\fP(): _POSIX_C_SOURCE
+.br
+\fItzname\fP: _POSIX_C_SOURCE
+.br
+\fItimezone\fP,
+\fIdaylight\fP:
+_XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версиях glibc <= 2.19: */ _SVID_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBtzset\fP() инициализирует переменную \fItzname\fP из значения
+переменной окружения \fBTZ\fP. Данная функция автоматически вызывается другими
+функциями преобразования времени, которые зависят от часового пояса. В
+системах, совместимых с System V, она также устанавливает переменные
+\fItimezone\fP (секунд западнее UTC) и \fIdaylight\fP (0, если в часовом поясе не
+используется переход на летнее время, в противном случае ненулевое значение,
+если есть времена в прошлом, настоящем или будущем, когда применялись
+правила перехода).
+.PP
+Если переменной \fBTZ\fP в окружении не существует, то используется системный
+часовой пояс. Системный часовой пояс настраивается копированием или
+созданием ссылки на файл в формате \fBtzfile\fP(5) в \fI/etc/localtime\fP. База
+данных часовых поясов с такими файлами может находиться в системном каталоге
+часовых поясов (смотрите далее раздел \fBФАЙЛЫ\fP).
+.PP
+Если переменная \fBTZ\fP в окружении существует, но имеет пустое значение или
+её величина не может быть представлена ни в одном из перечисленных ниже
+форматов, то используется UTC (Coordinated Universal Time, всемирное
+координированное время).
+.PP
+Значение \fBTZ\fP может быть представлено в одном из двух форматов. Первый
+формат — строка символов, которые явно описывают используемый часовой пояс:
+.PP
+.in +4n
+.EX
+\fIstd offset\fP[\fIdst\fP[\fIoffset\fP][,\fIstart\fP[\fI/time\fP],\fIend\fP[\fI/time\fP]]]
+.EE
+.in
+.PP
+В спецификации нет пробелов. Строка \fIstd\fP определяет аббревиатуру часового
+пояса и должна содержать три или более символа алфавита. Если она заключена
+между знаками "меньше" (<) и "больше" (>), набор символов
+расширяется за счет добавления знаков "плюс" (+), "минус" (\-) и цифр. Строка
+\fIoffset\fP, следующая непосредственно за \fIstd\fP, обозначает время, которое
+необходимо добавить к локальному, чтобы получить Всемирное координированное
+время (UTC). Значение \fIoffset\fP положительно, если локальный часовой пояс
+находится западнее Гринвичского меридиана, и отрицательна, если
+восточнее. Количество часов колеблется от 0 до 24, а минут и секунд — от 00
+до 59:
+.PP
+.in +4n
+.EX
+[\fI+\fP|\fI\-\fP]\fIчч\fP[\fI:мм\fP[\fI:сс\fP]]
+.EE
+.in
+.PP
+Пробелов быть не должно. Строки \fIdst\fP и \fIoffset\fP задают название и
+смещение соответствующего часового пояса по летнему времени. Если \fIoffset\fP
+не указано, то по умолчанию используется значение на час больше поясного
+времени.
+.PP
+Полем \fIstart\fP определяется начало периода летнего времени, а полем \fIend\fP
+определяется момент перехода обратно на поясное время. Эти поля могут быть
+представлены в следующих форматах:
+.TP 
+J\fIn\fP
+Номер \fIn\fP — это день по Юлианскому календарю (от 1 до 365). Високосный день
+не учитывается. В этом формате 29 февраля не может быть представлено; 28
+февраля — это 59 день, а 1 марта всегда 60 день.
+.TP 
+\fIn\fP
+Номер \fIn\fP — это день по Юлианскому календарю (от 1 до 365). 29 февраля в
+високосном году учитывается.
+.TP 
+M\fIm\fP.\fIw\fP.\fId\fP
+Номер \fId\fP — это день (0 <= \fId\fP <= 6) в неделе \fIw\fP (1 <= \fIw\fP
+<= 5)  и месяце \fIm\fP (1 <= \fIm\fP <= 12). Неделя номер 1 — это
+первая неделя, в которой есть день \fId\fP, а неделя номер 5 — это последняя
+неделя, в которой есть день \fId\fP. День номер 0 — это воскресенье.
+.PP
+В поле \fItime\fP задаётся, когда по действующему времени наступает переход на
+другое время. Если не указано, то по умолчанию равно 02:00:00.
+.PP
+Вот пример для Новой Зеландии, где поясное (standard) время (NZST) на 12
+часов опережает UTC, а летнее (daylight saving) время (NZDT) на 13 часов
+опережает UTC, которое действует с первого воскресенья октября по третье
+воскресенье марта, и меняется обратно в 02:00:00 (как значение по
+умолчанию):
+.in +4n
+.EX
+TZ="NZST\-12:00:00NZDT\-13:00:00,M10.1.0,M3.3.0"
+.EE
+.in
+.PP
+Второй формат используется, если информация о часовом поясе должна быть
+получена из файла:
+.PP
+.in +4n
+.EX
+:[filespec]
+.EE
+.in
+.PP
+Если указание файла \fIfilespec\fP опущено или его значение не может быть
+понято, то используется всемирное координированное время (UTC). Если
+значение \fIfilespec\fP не пусто, то оно определяет другой файл формата
+\fBtzfile\fP(5), из которого будет получена информация о часовых поясах. Если
+значение \fIfilespec\fP не начинается с символа «/», то этот файл находится в
+системном каталоге часовых поясов. Если отсутствует двоеточие, то будет
+опробован каждый из представленных выше форматов \fBTZ\fP.
+.PP
+Вот ещё один пример для Новой Зеландии:
+.PP
+.in +4n
+.EX
+TZ=":Pacific/Auckland"
+.EE
+.in
+.SH ОКРУЖЕНИЕ
+.TP 
+\fBTZ\fP
+Если эта переменная установлена, то её значение имеет приоритет над
+настроенным системным часовым поясом.
+.TP 
+\fBTZDIR\fP
+Если эта переменная установлена, то её значение имеет приоритет над путём
+базы данных системных часовых поясов.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/localtime\fP
+Файл системного часового пояса.
+.TP 
+\fI/usr/share/zoneinfo/\fP
+Системный каталог базы данных часовых поясов.
+.TP 
+\fI/usr/share/zoneinfo/posixrules\fP
+Когда строка TZ содержит часовой пояс dst и больше ничего, то из этого файла
+берутся начальные/конечные правила. Его формат совпадает с \fBtzfile\fP(5). По
+умолчанию Makefile из zoneinfo создаёт его как жёсткую ссылку на tz\-файл
+\fIAmerica/New_York\fP.
+.PP
+Показанные файлы выше — текущие стандартные расположения файлов, но они
+могут быть изменены при компиляции glibc.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBtzset\fP()
+T}	Безвредность в нитях	MT\-Safe env locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+.PP
+В 4.3BSD имелась функция \fBchar *timezone(\fP\fIzone\fP\fB, \fP\fIdst\fP\fB)\fP, которая
+возвращала имя часового пояса, соответствующее первому аргументу (минуты
+западнее UTC). Если второй аргумент равнялся 0, то использовалось поясное
+имя, иначе использовалась версия для летнего времени.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdate\fP(1), \fBgettimeofday\fP(2), \fBtime\fP(2), \fBctime\fP(3), \fBgetenv\fP(3),
+\fBtzfile\fP(5)

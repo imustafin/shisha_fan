@@ -1,0 +1,102 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1995, Thomas K. Dyas <tdyas@eden.rutgers.edu>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Created  1995-08-09 Thomas K. Dyas <tdyas@eden.rutgers.edu>
+.\" Modified 1997-01-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2001-03-22 by aeb
+.\" Modified 2003-08-04 by aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH USTAT 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ustat \- получить статистику по файловой системе
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <unistd.h>\fP    /* libc[45] */
+\fB#include <ustat.h>\fP     /* glibc2 */
+.PP
+\fBint ustat(dev_t \fP\fIdev\fP\fB, struct ustat *\fP\fIubuf\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fBustat\fP() возвращает информацию о смонтированной файловой системе. В \fIdev\fP
+указывается номер, который идентифицирует устройство, содержащее нужную
+файловую систему. Аргумент \fIubuf\fP является указателем на структуру
+\fIustat\fP, которая имеет следующий вид:
+.PP
+.in +4n
+.EX
+daddr_t f_tfree;      /* всего свободных блоков */
+ino_t   f_tinode;     /* количество свободных индексных дескрипторов */
+char    f_fname[6];   /* имя Filsys */
+char    f_fpack[6];   /* имя Filsys pack */
+.EE
+.in
+.PP
+Обработка последних двух полей, \fIf_fname\fP и \fIf_fpack\fP, не реализована, и
+они всегда будут заполнены нулевыми символами (\(aq\e0\(aq).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае успешного завершения возвращается ноль и структура \fIustat\fP, на
+которую указывает \fIubuf\fP, будет заполнена значениями. В случае ошибки
+возвращается \-1, а значение \fIerrno\fP устанавливается соответствующим
+образом.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+\fIubuf\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+\fIdev\fP не указывает на устройство, содержащее смонтированную файловую
+систему.
+.TP 
+\fBENOSYS\fP
+Смонтированная файловая система, на которую ссылается \fIdev\fP, не
+поддерживает данную операцию или версия Linux меньше, чем 1.3.16.
+.SH ВЕРСИИ
+Начиная с версии 2.28, в glibc удалена обёрточная функция этого устаревшего
+системного вызова.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents additional error conditions ENOLINK, ECOMM, and EINTR
+.\" but has no ENOSYS condition.
+SVr4.
+.SH ЗАМЕЧАНИЯ
+Вызов \fBustat\fP() устарел и предоставляется только для совместимости. Во всех
+новых программах вместо него нужно использовать вызов \fBstatfs\fP(2).
+.SS "Замечания, касающиеся HP\-UX"
+.\" Some software tries to use this in order to test whether the
+.\" underlying filesystem is NFS.
+Версия структуры \fIustat\fP в HP\-UX содержит дополнительное поле \fIf_blksize\fP,
+которого в других версиях нет. HP предупреждает: в некоторых файловых
+системах количество свободных индексных дескрипторов (inodes) не
+изменяется. Для таких файловых систем в поле \fIf_tinode\fP возвращается
+значение \-1. В некоторых файловых системах индексные дескрипторы выделяются
+динамически. Для таких файловых систем будет возвращено текущее количество
+свободных индексных дескрипторов.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBstat\fP(2), \fBstatfs\fP(2)

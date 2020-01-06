@@ -1,0 +1,284 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2007 Silicon Graphics, Inc. All Rights Reserved
+.\" Written by Dave Chinner <dgc@sgi.com>
+.\"
+.\" %%%LICENSE_START(GPLv2_ONELINE)
+.\" May be distributed as per GNU General Public License version 2.
+.\" %%%LICENSE_END
+.\"
+.\" 2011-09-19: Added FALLOC_FL_PUNCH_HOLE
+.\" 2011-09-19: Substantial restructuring of the page
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FALLOCATE 2 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+fallocate \- управление пространством файла
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <fcntl.h>\fP
+.PP
+\fBint fallocate(int \fP\fIfd\fP\fB, int \fP\fImode\fP\fB, off_t \fP\fIoffset\fP\fB, off_t \fP\fIlen\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Это непереносимый системный вызов, существующий только в Linux. В POSIX.1
+есть переносимый метод, обеспечивающий выделение пространства под файл
+(смотрите \fBposix_fallocate\fP(3)).
+.PP
+Вызов \fBfallocate\fP() позволяет вызывающему напрямую управлять выделением
+дискового пространства под файл, на который указывает \fIfd\fP, для байтового
+диапазона, начинающегося с \fIoffset\fP и имеющего длину \fIlen\fP байт.
+.PP
+В аргументе \fImode\fP задаётся операция, выполняемая над указанным
+диапазоном. Детали о поддерживаемых операциях представлены в подразделах
+далее.
+.SS "Выделение дискового пространства"
+По умолчанию (т. е. значение \fImode\fP равно нулю) \fBfallocate\fP() выделяет
+место на диске в диапазоне, задаваемом \fIoffset\fP и \fIlen\fP. Размер файла
+(получаемый через \fBstat\fP(2)) будет изменён, если \fIoffset\fP+\fIlen\fP больше
+чем размер файла. Любая подобласть внутри диапазона, заданного \fIoffset\fP и
+\fIlen\fP, которая не содержала данных до вызова, будет заполнена нулями. Такое
+поведение по умолчанию очень напоминает поведение библиотечной функции
+\fBposix_fallocate\fP(3), и было введено для оптимальной реализации этой
+функции.
+.PP
+После успешного выполнения вызова последующие операции записи в диапазон,
+указанный \fIoffset\fP и \fIlen\fP, гарантированно не завершатся с ошибкой из\-за
+нехватки места на диске.
+.PP
+Если в \fImode\fP указан флаг \fBFALLOC_FL_KEEP_SIZE\fP, то поведение по умолчанию
+почти то же, но размер файла не будет изменён даже, если \fIoffset\fP+\fIlen\fP
+больше чем размер файла. Это полезно для предварительного выделения блоков с
+нулями за концом файла для оптимизации загруженности при добавлении.
+.PP
+Если в \fImode\fPуказан флаг \fBFALLOC_FL_UNSHARE\fP, то общие файловые
+extent\-данные будут сделаны частными для файла, чтобы гарантировать, что
+последующая запись не завершится ошибкой из\-за нехватки места. Обычно, это
+выполняется с помощью операции копирования при записи для всех общих данных
+файла. Данный флаг может поддерживаться не во всех файловых системах.
+.PP
+Так как выделение выполняется кусками размером с блок, \fBfallocate\fP() может
+выделить больший диапазон дискового пространства, чем было указано.
+.SS "Освобождение файлового пространства"
+Указание флага \fBFALLOC_FL_PUNCH_HOLE\fP (доступен, начиная с Linux 2.6.38) в
+\fImode\fP освобождает пространство (т.е., создаёт дыру) в диапазоне начиная с
+\fIoffset\fP и до \fIlen\fP байт. Внутри заданного диапазона неполные блоки
+файловой системы заполняются нулями, а полные блоки файловой системы
+удаляются из файла. После успешного выполнения вызова, последующие операции
+чтения из этого диапазона вернут нули.
+.PP
+Флаг \fBFALLOC_FL_PUNCH_HOLE\fP должен быть логически добавлен к флагу
+\fBFALLOC_FL_KEEP_SIZE\fP в \fImode\fP; другими словами, даже когда пробивание
+(punching) выходит за конец файла, размер файла (получаемый с помощью
+\fBstat\fP(2)) остаётся неизменным.
+.PP
+Не все файловые системы поддерживают \fBFALLOC_FL_PUNCH_HOLE\fP; если файловая
+система не поддерживает эту операцию, то возвращается ошибка. Операция
+поддерживается, как минимум, следующими файловыми системами:
+.IP * 3
+XFS (начиная с Linux 2.6.38)
+.IP *
+.\" commit a4bb6b64e39abc0e41ca077725f2a72c868e7622
+ext4 (начиная с Linux 3.0)
+.IP *
+Btrfs (начиная с Linux 3.7)
+.IP *
+.\" commit 83e4fa9c16e4af7122e31be3eca5d57881d236fe
+\fBtmpfs\fP(5)  (начиная с Linux 3.5)"
+.SS "Сворачивание (Collapsing) файлового пространства"
+.\" commit 00f5e61998dd17f5375d9dfc01331f104b83f841
+Задание флага \fBFALLOC_FL_COLLAPSE_RANGE\fP (доступен, начиная с Linux 3.15) в
+\fImode\fP приводит к удалению байтового диапазона из файла без создания
+дыры. Сворачиваемый диапазон байт начинается с \fIoffset\fP и длится \fIlen\fP
+байт. По завершению операции, содержимое файла, начиная с \fIoffset+len\fP,
+будет добавлено в расположение \fIoffset\fP, и файл будет на \fIlen\fP байт
+меньше.
+.PP
+У файловой системы могут быть ограничения на детализацию операции, для
+большей эффективности реализации. Обычно, значения \fIoffset\fP и \fIlen\fP должны
+быть кратны размеру логического блока файловой системы, различающемуся в
+разных файловых системах и зависящему от настроек. Если файловая система
+содержит такое требование и оно нарушено, то \fBfallocate\fP() завершается
+ошибкой \fBEINVAL\fP.
+.PP
+Если область, заданная \fIoffset\fP плюс \fIlen\fP достигает или выходит за конец
+файла, то возвращается ошибка; вместо этого используйте \fBftruncate\fP(2) для
+обрезания файла.
+.PP
+Вместе с \fBFALLOC_FL_COLLAPSE_RANGE\fP другие флаги в \fImode\fP указывать
+нельзя.
+.PP
+.\" commit 9eb79482a97152930b113b51dff530aba9e28c8e
+.\" commit e1d8fb88a64c1f8094b9f6c3b6d2d9e6719c970d
+В Linux 3.15 флаг \fBFALLOC_FL_COLLAPSE_RANGE\fP поддерживается в ext4 (только
+для файлов на основе extent) и XFS.
+.SS "Зануление файлового пространства"
+.\" commit 409332b65d3ed8cfa7a8030f1e9d52f372219642
+Задание флага \fBFALLOC_FL_ZERO_RANGE\fP (доступен, начиная с Linux 3.15) в
+\fImode\fP приводит к обнулению байтового диапазона, начиная с \fIoffset\fP и
+размером \fIlen\fP байт. Внутри указанного диапазона блоки выделяются заранее
+для областей, которые попадают в дыры в файле. После успешного выполнения
+вызова последующие операции чтения из этого диапазона будут возвращать нули.
+.PP
+Зануление, желательно, выполнять внутри файловой системы, преобразуя
+диапазон в незаписываемые extents. Этот подход означает, что указанный
+диапазон на устройстве в действительности не будет содержать нули на
+физическом уровне (за исключением неполных блоков в одном из концов
+диапазона), и ввод\-вывод требуется только для обновления метаданных.
+.PP
+Если в \fImode\fP также указан флаг \fBFALLOC_FL_KEEP_SIZE\fP, то поведение вызова
+похоже, но размер файла не будет изменён даже, если \fIoffset\fP+\fIlen\fP больше
+размера файла. Такое поведение совпадает с предварительным выделением
+пространства с помощью указания флага \fBFALLOC_FL_KEEP_SIZE\fP.
+.PP
+Не все файловые системы поддерживают \fBFALLOC_FL_ZERO_RANGE\fP; если файловая
+система не поддерживает эту операцию, то возвращается ошибка. Операция
+поддерживается, как минимум, следующими файловыми системами:
+.IP * 3
+.\" commit 376ba313147b4172f3e8cf620b9fb591f3e8cdfa
+XFS (начиная с Linux 3.15)
+.IP *
+.\" commit b8a8684502a0fc852afa0056c6bb2a9273f6fcc0
+ext4, для файлов на основе extent (начиная с Linux 3.15)
+.IP *
+.\" commit 30175628bf7f521e9ee31ac98fa6d6fe7441a556
+SMB3 (начиная с Linux 3.17)
+.IP *
+.\" commit f27451f229966874a8793995b8e6b74326d125df
+Btrfs (начиная с Linux 4.16)
+.SS "Увеличение файлового пространства"
+.\" commit dd46c787788d5bf5b974729d43e4c405814a4c7d
+Задание флага \fBFALLOC_FL_INSERT_RANGE\fP (доступен начиная с Linux 4.1) в
+\fImode\fP увеличивает файловое пространство посредством вставки дыры (hole) в
+размер файла без перезаписывания существующих данных. Дыра начинается с
+\fIoffset\fP и продолжается \fIlen\fP байт. При вставки дыры внутрь файла
+содержимое файла, начинающееся с \fIoffset\fP, будет сдвинуто вперёд (т. е.,
+станет доступно по большему смещению в файле) на \fIlen\fP байт. Вставка дыры
+внутрь файла увеличивает размер файла на \fIlen\fP байт.
+.PP
+Данный режим имеет те же ограничения что и \fBFALLOC_FL_COLLAPSE_RANGE\fP,
+независимо от детализации операции Если требования детализации не
+удовлетворяются, то \fBfallocate\fP() завершается ошибкой \fBEINVAL\fP. Если
+\fIoffset\fP больше или равно концу файла, то возвращается ошибка. Для таких
+операций (т. е., вставка дыры в конец файла) нужно использовать
+\fBftruncate\fP(2).
+.PP
+Вместе с \fBFALLOC_FL_INSERT_RANGE\fP другие флаги в \fImode\fP указывать нельзя.
+.PP
+.\" commit a904b1ca5751faf5ece8600e18cd3b674afcca1b
+.\" commit 331573febb6a224bc50322e3670da326cb7f4cfc
+.\" f2fs also has support since Linux 4.2
+.\"     commit f62185d0e283e9d311e3ac1020f159d95f0aab39
+Для работы \fBFALLOC_FL_INSERT_RANGE\fP требуется поддержка в файловой системе;
+сейчас это XFS (начиная с Linux 4.1)  и ext4 (начиная с Linux 4.2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBfallocate\fP() возвращается 0; при ошибке
+возвращается \-1, а в \fIerrno\fP содержится код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является допустимым файловым дескриптором или он не открыт
+на запись.
+.TP 
+\fBEFBIG\fP
+Сумма \fIoffset\fP+\fIlen\fP превышает максимальный размер файла.
+.TP 
+\fBEFBIG\fP
+В \fImode\fP указан \fBFALLOC_FL_INSERT_RANGE\fP, и текущий размер файла+\fIlen\fP
+превышает максимальный файловый размер.
+.TP 
+\fBEINTR\fP
+При выполнении поступил сигнал; смотрите \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+.\" FIXME . (raise a kernel bug) Probably the len==0 case should be
+.\" a no-op, rather than an error. That would be consistent with
+.\" similar APIs for the len==0 case.
+.\" See "Re: [PATCH] fallocate.2: add FALLOC_FL_PUNCH_HOLE flag definition"
+.\" 21 Sep 2012
+.\" http://thread.gmane.org/gmane.linux.file-systems/48331/focus=1193526
+Значение \fIoffset\fP меньше 0, или \fIlen\fP меньше или равно 0.
+.TP 
+\fBEINVAL\fP
+Значение \fImode\fP равно \fBFALLOC_FL_COLLAPSE_RANGE\fP, но диапазон, указанный в
+\fIoffset\fP плюс \fIlen\fP, достиг или перешагнул за конец файла.
+.TP 
+\fBEINVAL\fP
+Значение \fImode\fP равно \fBFALLOC_FL_INSERT_RANGE\fP, но диапазон, указанный в
+\fIoffset\fP, достиг или перешагнул за конец файла.
+.TP 
+\fBEINVAL\fP
+Значение \fImode\fP равно \fBFALLOC_FL_COLLAPSE_RANGE\fP или
+\fBFALLOC_FL_INSERT_RANGE\fP, но значение \fIoffset\fP или \fIlen\fP не кратно
+размеру блока файловой системы.
+.TP 
+\fBEINVAL\fP
+Значение \fImode\fP содержит \fBFALLOC_FL_COLLAPSE_RANGE\fP или
+\fBFALLOC_FL_INSERT_RANGE\fP, а также другие флаги; но с
+\fBFALLOC_FL_COLLAPSE_RANGE\fP или \fBFALLOC_FL_INSERT_RANGE\fP другие флаги
+указывать нельзя.
+.TP 
+\fBEINVAL\fP
+.\" There was an inconsistency in 3.15-rc1, that should be resolved so that all
+.\" filesystems use this error for this case. (Tytso says ex4 will change.)
+.\" http://thread.gmane.org/gmane.comp.file-systems.xfs.general/60485/focus=5521
+.\" From: Michael Kerrisk (man-pages <mtk.manpages@...>
+.\" Subject: Re: [PATCH v5 10/10] manpage: update FALLOC_FL_COLLAPSE_RANGE flag in fallocate
+.\" Newsgroups: gmane.linux.man, gmane.linux.file-systems
+.\" Date: 2014-04-17 13:40:05 GMT
+Значение \fImode\fP равно \fBFALLOC_FL_COLLAPSE_RANGE\fP, \fBFALLOC_FL_ZERO_RANGE\fP
+или \fBFALLOC_FL_INSERT_RANGE\fP, но файл, на который указывает \fIfd\fP, не
+является обычным файлом.
+.TP 
+\fBEIO\fP
+При чтении или записи в файловую систему произошла ошибка ввода\-вывода.
+.TP 
+\fBENODEV\fP
+Значение \fIfd\fP не указывает на обычный файл или каталог (если \fIfd\fP — канал
+или FIFO, то возникнет другая ошибка).
+.TP 
+\fBENOSPC\fP
+Недостаточно дискового пространства на устройстве, на котором расположен
+файл, указанный в \fIfd\fP.
+.TP 
+\fBENOSYS\fP
+В данном ядре вызов \fBfallocate\fP() не реализован.
+.TP 
+\fBEOPNOTSUPP\fP
+Файловая система с файлом, на который указывает \fIfd\fP, не поддерживает
+данную операцию; или значение \fImode\fP не поддерживается файловой системой, в
+которой находится файл, на который указывает \fIfd\fP.
+.TP 
+\fBEPERM\fP
+Файл, на который указывает \fIfd\fP, помечен как неизменяемый (immutable)
+(смотрите \fBchattr\fP(1)).
+.TP 
+\fBEPERM\fP
+Значение \fImode\fP равно \fBFALLOC_FL_PUNCH_HOLE\fP, \fBFALLOC_FL_COLLAPSE_RANGE\fP
+или \fBFALLOC_FL_INSERT_RANGE\fP и файл, на который указывает \fIfd\fP, помечен
+как только для добавления (смотрите \fBchattr\fP(1)).
+.TP 
+\fBEPERM\fP
+Выполнение операции предотвращено опечатыванием (file seal); смотрите
+\fBfcntl\fP(2).
+.TP 
+\fBESPIPE\fP
+Значение \fIfd\fP указывает на канал или FIFO.
+.TP 
+\fBETXTBSY\fP
+Значение \fImode\fP равно \fBFALLOC_FL_COLLAPSE_RANGE\fP или
+\fBFALLOC_FL_INSERT_RANGE\fP, но файл, на который указывает \fIfd\fP, в данный
+момент выполняется.
+.SH ВЕРСИИ
+.\" See http://sourceware.org/bugzilla/show_bug.cgi?id=14964
+Вызов \fBfallocate\fP() доступен в Linux начиная с ядра 2.6.23. Поддержка в
+glibc добавлена в версии 2.10. Флаги \fBFALLOC_FL_*\fP определены в
+заголовочных файлах glibc только начиная с версии 2.18.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBfallocate\fP() есть только в Linux.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfallocate\fP(1), \fBftruncate\fP(2), \fBposix_fadvise\fP(3), \fBposix_fallocate\fP(3)

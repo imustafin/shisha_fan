@@ -1,0 +1,346 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2013,  Heinrich Schuchardt <xypron.glpk@gmx.de>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume.
+.\" no responsibility for errors or omissions, or for damages resulting.
+.\" from the use of the information contained herein.  The author(s) may.
+.\" not have taken the same level of care in the production of this.
+.\" manual, which is licensed free of charge, as they might when working.
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FANOTIFY_MARK 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+fanotify_mark \- добавляет, удаляет или изменяет метку fanotify для объекта
+файловой системы
+.SH ОБЗОР
+.nf
+\fB#include <sys/fanotify.h>\fP
+.PP
+\fBint fanotify_mark(int \fP\fIfanotify_fd\fP\fB, unsigned int \fP\fIflags\fP\fB,\fP
+\fB                  uint64_t \fP\fImask\fP\fB, int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Обзор программного интерфейса fanotify смотрите в \fBfanotify\fP(7).
+.PP
+Системный вызов \fBfanotify_mark\fP() добавляет, удаляет или изменяет метку
+fanotify для объекта файловой системы. Вызывающий должен иметь право на
+чтение помеченного объекта файловой системы.
+.PP
+Аргумент \fIfanotify_fd\fP — файловый дескриптор, возвращаемый
+\fBfanotify_init\fP(2).
+.PP
+Аргумент \fIflags\fP — битовая маска, описывающая выполняемое изменение. Она
+должна содержать только одно значение из:
+.TP 
+\fBFAN_MARK_ADD\fP
+События в \fImask\fP будут добавлены в маску меток (или в маску
+игнорирования). Если значение \fImask\fP пусто, то возвращается ошибка
+\fBEINVAL\fP.
+.TP 
+\fBFAN_MARK_REMOVE\fP
+События в \fImask\fP будут удалены из маски меток (или маски
+игнорирования). Если значение \fImask\fP пусто, то возвращается ошибка
+\fBEINVAL\fP.
+.TP 
+\fBFAN_MARK_FLUSH\fP
+Удалить все метки файловых систем, все метки монтирований или все метки
+каталогов и файлов из группы fanotify. Если в \fIflags\fP содержится
+\fBFAN_MARK_MOUNT\fP, то все метки монтирований удаляются из группы. Если в
+\fIflags\fP содержится \fBFAN_MARK_FILESYSTEM\fP, то все метки файловых систем
+удаляются из группы. В противном случае удаляются все метки и каталогов и
+файлов. Вместе с \fBFAN_MARK_FLUSH\fP может быть указан только либо
+\fBFAN_MARK_MOUNT\fP, либо \fBFAN_MARK_FILESYSTEM\fP.Значение \fImask\fP
+игнорируется.
+.PP
+Если не задано ни одно из этих значений, или указано больше одного, то вызов
+завершается с ошибкой \fBEINVAL\fP.
+.PP
+Кроме этого в \fIflags\fP могут быть указаны (побитовым сложением):
+.TP 
+\fBFAN_MARK_DONT_FOLLOW\fP
+Если \fIpathname\fP — символьная ссылка, то помечается сама ссылка, а не файл,
+на который она ссылается (по умолчанию \fBfanotify_mark\fP() разыменовывает
+\fIpathname\fP, если это символьная ссылка).
+.TP 
+\fBFAN_MARK_ONLYDIR\fP
+Если объект файловой системы для пометки не является каталогом, то
+возвращается ошибка \fBENOTDIR\fP.
+.TP 
+\fBFAN_MARK_MOUNT\fP
+Пометить точку монтирования, заданную в \fIpathname\fP. Если само значение
+\fIpathname\fP не является точкой монтирования, то будет помечена точка
+монтирования, которая содержит \fIpathname\fP. Будут отслеживаться все
+каталоги, подкаталоги и содержащиеся в точке монтирования файлы. Это
+значение нельзя использовать, если файловый дескриптор \fIfanotify_fd\fP
+инициализирован с флагом \fBFAN_REPORT_FID\fP или если в качестве маски \fImask\fP
+указано любое событие изменения нового каталога. Результатом попытки это
+сделать будет возврат ошибки \fBEINVAL\fP.
+.TP 
+\fBFAN_MARK_FILESYSTEM\fP (начиная с Linux 4.20)
+.\" commit d54f4fba889b205e9cd8239182ca5d27d0ac3bc2
+Пометить файловую систему, заданную в \fIpathname\fP. Будет помечена файловая
+система, содержащая \fIpathname\fP. Будут отслеживаться все файлы и каталоги
+файловой системы любой точки монтирования.
+.TP 
+\fBFAN_MARK_IGNORED_MASK\fP
+События в \fImask\fP должны быть добавлены или удалены из маски игнорирования.
+.TP 
+\fBFAN_MARK_IGNORED_SURV_MODIFY\fP
+Маска игнорирования должна остаться неизменной при событиях изменения. Если
+этот флаг не указан, то маска игнорирования очищается при появлении событий
+изменения игнорируемого файла или каталога.
+.PP
+В \fImask\fP указывается какие события должны прослушиваться (или
+игнорироваться). Данная битовая маска состоит из следующих значений:
+.TP 
+\fBFAN_ACCESS\fP
+Создать событие при доступе (для чтения) к файлу или каталогу (но смотрите
+ДЕФЕКТЫ).
+.TP 
+\fBFAN_MODIFY\fP
+Создать событие при изменении (при записи) файла.
+.TP 
+\fBFAN_CLOSE_WRITE\fP
+Создать событие при закрытии файла, открытого на запись.
+.TP 
+\fBFAN_CLOSE_NOWRITE\fP
+Создать событие при закрытии файла или каталога, открытого только для
+чтения.
+.TP 
+\fBFAN_OPEN\fP
+Создать событие при открытии файла или каталога.
+.TP 
+\fBFAN_OPEN_EXEC\fP (начиная с Linux 5.0)
+.\" commit 9b076f1c0f4869b838a1b7aa0edb5664d47ec8aa
+Создать событие при открытии файла для начала выполнения. Подробней об этом
+в ЗАМЕЧАНИЯХ.
+.TP 
+\fBFAN_ATTRIB\fP (начиная с Linux 5.1)
+.\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
+Создать событие при изменении метаданных файла или каталога.
+.TP 
+\fBFAN_CREATE\fP (начиная с Linux 5.1)
+.\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
+Создать событие при создании файла или каталога в помеченном родительском
+каталоге.
+.TP 
+\fBFAN_DELETE\fP (начиная с Linux 5.1)
+.\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
+Создать событие при удалении файла или каталога в помеченном родительском
+каталоге.
+.TP 
+\fBFAN_DELETE_SELF\fP (начиная с Linux 5.1)
+.\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
+Создать событие при удалении самого помеченного файла или каталога.
+.TP 
+\fBFAN_MOVED_FROM\fP (начиная с Linux 5.1)
+.\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
+Создать событие при перемещении файла или каталога из помеченного
+родительского каталога.
+.TP 
+\fBFAN_MOVED_TO\fP (начиная с Linux 5.1)
+.\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
+Создать событие при перемещении файла или каталога в помеченный родительский
+каталог.
+.TP 
+\fBFAN_MOVE_SELF\fP (начиная с Linux 5.1)
+.\" commit 235328d1fa4251c6dcb32351219bb553a58838d2
+Создать событие при перемещении самого помеченного файла или каталога.
+.TP 
+\fBFAN_Q_OVERFLOW\fP
+Создать событие при переполнении очереди сообщений. Размер очереди сообщений
+ограничен 16384 элементами, если в \fBfanotify_init\fP(2) не указан
+\fBFAN_UNLIMITED_QUEUE\fP.
+.TP 
+\fBFAN_OPEN_PERM\fP
+Создать событие при запросе открытия файла или каталога. Требуется файловый
+дескриптор fanotify, созданный с \fBFAN_CLASS_PRE_CONTENT\fP или
+\fBFAN_CLASS_CONTENT\fP.
+.TP 
+\fBFAN_OPEN_EXEC_PERM\fP (начиная с Linux 5.0)
+.\" commit 66917a3130f218dcef9eeab4fd11a71cd00cd7c9
+Создать событие при запросе открытия файла или каталога на
+выполнение. Требуется файловый дескриптор fanotify, созданный с
+\fBFAN_CLASS_PRE_CONTENT\fP или \fBFAN_CLASS_CONTENT\fP. Дополнительная информация
+представлена в ЗАМЕЧАНИЯХ.
+.TP 
+\fBFAN_ACCESS_PERM\fP
+Создать событие при запросе чтения файла или каталога. Требуется файловый
+дескриптор fanotify, созданный с \fBFAN_CLASS_PRE_CONTENT\fP или
+\fBFAN_CLASS_CONTENT\fP.
+.TP 
+\fBFAN_ONDIR\fP
+Создать события для каталогов, например, когда вызывается \fBopendir\fP(3),
+\fBreaddir\fP(3) (но смотрите ДЕФЕКТЫ) и \fBclosedir\fP(3). Без этого флага
+события создаются только для файлов. Флаг \fBFAN_ONDIR\fP возвращается в маске
+событий только, если файловый дескриптор \fIfanotify_fd\fP инициализирован с
+флагом \fBFAN_REPORT_FID\fP. В контексте события элементов каталога, например
+таких как \fBFAN_CREATE\fP, \fBFAN_DELETE\fP, \fBFAN_MOVED_FROM\fPи \fBFAN_MOVED_TO\fP,
+требуется задавать флаг \fBFAN_ONDIR\fP для создания событий, когда изменяются
+элементы подкаталогов (т. е., \fBmkdir\fP(2)/ \fBrmdir\fP(2)). События изменения
+элемента подкаталога никогда не будут объединены с с событиями изменений
+элементов не подкаталога. Этот флаг никогда не возвращается один в событии и
+всегда задаётся вместе с другим типом события.
+.TP 
+\fBFAN_EVENT_ON_CHILD\fP
+Должны создаваться события для прямых потомков помеченных каталогов. Флаг не
+влияет на помеченные точки монтирования и файловые системы. Заметим, что
+события не генерируются для потомков подкаталогов помеченных каталогов. Для
+слежения за всем деревом каталогов нужно пометить соответствующую точку
+монтирования.
+.PP
+Определены следующие составные значения:
+.TP 
+\fBFAN_CLOSE\fP
+Файл закрыт (\fBFAN_CLOSE_WRITE\fP|\fBFAN_CLOSE_NOWRITE\fP).
+.TP 
+\fBFAN_MOVE\fP
+Файл или каталог был перемещён (\fBFAN_MOVED_FROM\fP|\fBFAN_MOVED_TO\fP).
+.PP
+Объект файловой системы для пометки задаётся файловым дескриптором \fIdirfd\fP
+и путём, указанным в \fIpathname\fP:
+.IP * 3
+Если значение \fIpathname\fP равно NULL, то в \fIdirfd\fP указан объект файловой
+системы для пометки.
+.IP *
+Если значение \fIpathname\fP равно NULL и \fIdirfd\fP равно специальному значению
+\fBAT_FDCWD\fP, то помечается текущий рабочий каталог.
+.IP *
+Если в \fIpathname\fP задан абсолютный путь, то им определяется объект файловой
+системы для пометки, а \fIdirfd\fP игнорируется.
+.IP *
+Если в \fIpathname\fP задан относительный путь и \fIdirfd\fP не равно \fBAT_FDCWD\fP,
+то помечаемый объект файловой системы определяется из \fIpathname\fP
+относительно каталога, заданного в \fIdirfd\fP.
+.IP *
+Если в \fIpathname\fP задан относительный путь и \fIdirfd\fP равно \fBAT_FDCWD\fP, то
+помечаемый объект файловой системы определяется из \fIpathname\fP относительно
+текущего рабочего каталога.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBfanotify_mark\fP() возвращает 0; при ошибке
+возвращается \-1, а в \fIerrno\fP задаётся причина ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+В \fIfanotify_fd\fP передан некорректный файловый дескриптор.
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP или \fImask\fP указано некорректное значение, или в \fIfanotify_fd\fP
+не файловый дескриптор fanotify.
+.TP 
+\fBEINVAL\fP
+Файловый дескриптор fanotify был открыт с \fBFAN_CLASS_NOTIF\fP или
+\fBFAN_REPORT_FID\fP и маска содержит флаг для событий доступа
+(\fBFAN_OPEN_PERM\fP или \fBFAN_ACCESS_PERM\fP).
+.TP 
+\fBENODEV\fP
+Объект файловой системы, указанный в \fIpathname\fP, не связан с файловой
+системой, которая поддерживает \fIfsid\fP (например, \fBtmpfs\fP(5)). Эта ошибка
+может вернуться только, когда файловый дескриптор fanotify, возвращаемый
+\fBfanotify_init\fP(2), был создан с  флагом \fBFAN_REPORT_FID\fP.
+.TP 
+\fBENOENT\fP
+Объект файловой системы, указанный в \fIdirfd\fP и \fIpathname\fP, не
+существует. Эта ошибка также возникает при попытке удаления метки с не
+помеченного объекта.
+.TP 
+\fBENOMEM\fP
+Невозможно выделить необходимую память.
+.TP 
+\fBENOSPC\fP
+Количество меток превышает ограничение в 8192 и флаг \fBFAN_UNLIMITED_MARKS\fP
+не был указан при создании файлового дескриптора fanotify с помощью
+\fBfanotify_init\fP(2).
+.TP 
+\fBENOSYS\fP
+В этом ядре не реализован \fBfanotify_mark\fP(). Программный интерфейс fanotify
+доступен только, если ядро было собрано с параметром \fBCONFIG_FANOTIFY\fP.
+.TP 
+\fBENOTDIR\fP
+В значении \fIflags\fP содержится \fBFAN_MARK_ONLYDIR\fP, а в \fIdirfd\fP и
+\fIpathname\fP указан не каталог.
+.TP 
+\fBEOPNOTSUPP\fP
+Объект, указанный в \fIpathname\fP, связан с файловой системой, которая не
+поддерживает кодирование файловых описателей. Эта ошибка может вернуться
+только, когда файловый дескриптор fanotify, возвращаемый
+\fBfanotify_init\fP(2), был создан с  флагом \fBFAN_REPORT_FID\fP.
+.TP 
+\fBEXDEV\fP
+Объект файловой системы, указанный в \fIpathname\fP, располагается в подтоме
+файловой системы (например, \fBbtrfs\fP(5)), которая использует \fIfsid\fP
+отличный от используемого в её корневом суперблоке. Эта ошибка может
+вернуться только, когда файловый дескриптор fanotify, возвращаемый
+\fBfanotify_init\fP(2), был создан с  флагом \fBFAN_REPORT_FID\fP.
+.SH ВЕРСИИ
+Вызов \fBfanotify_mark\fP() появился в версии 2.6.36 ядра Linux и был включён в
+версии 2.6.37.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный системный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+.SS "FAN_OPEN_EXEC и FAN_OPEN_EXEC_PERM"
+При использовании \fBFAN_OPEN_EXEC\fP или \fBFAN_OPEN_EXEC_PERM\fP в \fImask\fP
+события этих типов будут возвращаться только, когда происходит
+непосредственное выполнение программы. Точнее говоря, события этих типов
+будут сгенерированы для файлов, которые открываются с помощью \fBexecve\fP(2),
+\fBexecveat\fP(2) или \fBuselib\fP(2). События данных типов не будут возникать в
+ситуации, когда интерпретатору передаётся (или он читает) файл
+интерпретируемого сценария.
+.PP
+Также, если метка помещается на динамический компоновщик Linux, то
+пользователь должен также ожидать приём сообщения, когда он открывает объект
+ELF с помощью \fBexecve\fP(2) или \fBexecveat\fP(2).
+.PP
+Например, если вызывается следующий двоичный ELF и меткой \fBFAN_OPEN_EXEC\fP
+отмечен /:
+.PP
+.in +4n
+.EX
+$ /bin/echo foo
+.EE
+.in
+.PP
+Слушающее приложение в этом случае получило бы события \fBFAN_OPEN_EXEC\fP для
+исполняемого файла ELF и интерпретатора, соответственно:
+.PP
+.in +4n
+.EX
+/bin/echo
+/lib64/ld\-linux\-x86\-64.so.2
+.EE
+.in
+.SH ДЕФЕКТЫ
+В ядрах Linux до версии 3.16 существуют следующие дефекты:
+.IP * 3
+.\" Fixed by commit 0a8dd2db579f7a0ac7033d6b857c3d5dbaa77563
+Если \fIflags\fP содержит \fBFAN_MARK_FLUSH\fP, то \fIdirfd\fP и \fIpathname\fP должны
+задавать корректный объект файловой системы, даже если этот объект не
+используется.
+.IP *
+.\" Fixed by commit d4c7cf6cffb1bc711a833b5e304ba5bcfe76398b
+Вызов \fBreaddir\fP(2) не генерирует событие \fBFAN_ACCESS\fP.
+.IP *
+.\" Fixed by commit cc299a98eb13a9853675a9cbb90b30b4011e1406
+Если \fBfanotify_mark\fP() вызван с \fBFAN_MARK_FLUSH\fP, то значение \fIflags\fP не
+проверяется на корректность.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfanotify_init\fP(2), \fBfanotify\fP(7)

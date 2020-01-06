@@ -1,0 +1,93 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 21:29:05 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Thu Jul 26 14:06:20 2001 by Andries Brouwer (aeb@cwi.nl)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BYTEORDER 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+htonl, htons, ntohl, ntohs \- переводят данные из узлового порядка
+расположения байтов в сетевой и наоборот
+.SH ОБЗОР
+.nf
+\fB#include <arpa/inet.h>\fP
+.PP
+\fBuint32_t htonl(uint32_t \fP\fIhostlong\fP\fB);\fP
+.PP
+\fBuint16_t htons(uint16_t \fP\fIhostshort\fP\fB);\fP
+.PP
+\fBuint32_t ntohl(uint32_t \fP\fInetlong\fP\fB);\fP
+.PP
+\fBuint16_t ntohs(uint16_t \fP\fInetshort\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBhtonl\fP() преобразует значение беззнакового целого \fIhostlong\fP из
+узлового порядка расположения байтов в сетевой порядок расположения байтов.
+.PP
+Функция \fBhtons\fP() преобразует значение короткого беззнакового целого
+\fIhostshort\fP из узлового порядка расположения байтов в сетевой порядок
+расположения байтов.
+.PP
+Функция \fBntohl\fP() преобразует значение беззнакового целого \fInetlong\fP из
+сетевого порядка расположения байтов в узловой порядок расположения байтов.
+.PP
+Функция \fBntohs\fP() преобразует значение короткого беззнакового целого
+\fInetshort\fP из сетевого порядка расположения байтов в узловой порядок
+расположения байтов.
+.PP
+В архитектуре i386 используется узловой порядок расположения байтов —
+последний значимый байт стоит в начале числа (Least Significant Byte), в то
+время как сетевым порядком байт, используемым в интернет, считается Most
+Significant Byte (в начале числа стоит последний значимый байт).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw34 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBhtonl\fP(),
+\fBhtons\fP(),
+\fBntohl\fP(),
+\fBntohs\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.PP
+В некоторых ОС требуется включать \fI<netinet/in.h>\fP вместо
+\fI<arpa/inet.h>\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbswap\fP(3), \fBendian\fP(3), \fBgethostbyname\fP(3), \fBgetservent\fP(3)

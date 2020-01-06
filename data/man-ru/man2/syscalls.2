@@ -1,0 +1,973 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2007 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" with some input from Stepan Kasal <kasal@ucw.cz>
+.\"
+.\" Some content retained from an earlier version of this page:
+.\" Copyright (C) 1998 Andries Brouwer (aeb@cwi.nl)
+.\" Modifications for 2.2 and 2.4 Copyright (C) 2002 Ian Redfern
+.\" <redferni@logica.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSCALLS 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+syscalls \- системные вызовы Linux
+.SH ОБЗОР
+Системные вызовы Linux.
+.SH ОПИСАНИЕ
+Системный вызов \(em это основной интерфейс между приложением и ядром Linux.
+.SS "Системные вызовы и обёрточные библиотечные функции"
+Обычно, системные вызовы не вызываются напрямую, это делается через
+обёрточную функцию из glibc (или другой библиотеки). Подробней о
+непосредственном вызове системного вызова, смотрите \fBintro\fP(2). Часто, но
+не всегда, имя обёрточной функции совпадает с именем системного вызова,
+который она вызывает. Например, в glibc есть функция \fBchdir\fP(), которая
+вызывает делающий всё работу системный вызов «chdir».
+.PP
+Часто, обёрточная функция glibc очень маленькая, она просто копирует
+аргументы в нужные регистры перед запуском системного вызова, а затем
+присваивает переменной \fIerrno\fP значение, которое было возвращено системным
+вызовом. (Эти те же шаги выполняет \fBsyscall\fP(2), её можно использовать для
+осуществления системных вызовов, для которых нет обёрточных функций.)
+Замечание: системные вызовы указывают, что произошла ошибка возвращая
+отрицательное целое число вызывающей стороне (если в архитектуре нет
+отдельного регистра/флага ошибки, смотрите \fBsyscall\fP(2)); когда это
+происходит, обёрточная функция меняет знак у возвращённого значения (на
+положительный), копирует его в \fIerrno\fP и возвращает \-1 вызвавшей обёртку
+функции.
+.PP
+Иногда, однако, обёрточная функция производит дополнительную работу до
+осуществления системного вызова. Например, в настоящее время существует (по
+причинам, описанным далее) два похожих системных вызова \(em \fBtruncate\fP(2)
+и \fBtruncate64\fP(2); обёрточная функция glibc \fBtruncate\fP() проверяет какой
+из системных вызовов предоставляет ядро и решает какой нужно задействовать.
+.SS "Список системных вызовов"
+Далее приведён список список системных вызовов Linux. В колонке \fIЯдро\fP
+указана версия ядра для системных вызовов, которые появились в Linux 2.2, и
+с какой именно версии. Также заметим следующее:
+.IP * 3
+Если версия ядра не указана, то системный вызов появился в ядре 1.0 или
+более раннем.
+.IP *
+Системные вызовы, помеченные "1.2", скорее всего появились в в версиях ядра
+1.1.x, и впервые появились в стабильном ядре 1.2. (Разработка ядра 1.2
+началась с ответвления от ядра 1.0.6 и прошла несколько выпусков ядер
+1.1.x.)
+.IP *
+.\" Was kernel 2.0 started from a branch of 1.2.10?
+.\" At least from the timestamps of the tarballs of
+.\" of 1.2.10 and 1.3.0, that's how it looks, but in
+.\" fact the diff doesn't seem very clear, the
+.\" 1.3.0 .tar.bz is much bigger (2.0 MB) than the
+.\" 1.2.10 .tar.bz2 (1.8 MB), and AEB points out the
+.\" timestamps of some files in 1.3.0 seem to be older
+.\" than those in 1.2.10.  All of this suggests
+.\" that there might not have been a clean branch point.
+Системные вызовы, помеченные "1.2", скорее всего появились в в версиях ядра
+1.3.x, и впервые появились в стабильном ядре 2.0. (Разработка ядра 2.0
+началась с ответвления от ядра 1.2.x, начиная, приблизительно, с 1.2.10, и
+прошла несколько выпусков ядер 1.3.x.)
+.IP *
+Системные вызовы, помеченные "2.2", скорее всего появились в в версиях ядра
+2.1.x, и впервые появились в стабильном ядре 2.2.0. (Разработка ядра 2.2
+началась с ответвления от ядра 2.0.21, и прошла несколько выпусков ядер
+2.1.x.)
+.IP *
+Системные вызовы, помеченные "2.4", скорее всего появились в в версиях ядра
+2.3.x, и впервые появились в стабильном ядре 2.4.0. (Разработка ядра 2.4
+началась с ответвления от ядра 2.2.8, и прошла несколько выпусков ядер
+2.3.x.)
+.IP *
+Системные вызовы, помеченные "2.6", скорее всего появились в в версиях ядра
+2.5.x, и впервые появились в стабильном ядре 2.6.0. (Разработка ядра 2.6
+началась с ответвления от ядра 2.4.15, и прошла несколько выпусков ядер
+2.5.x.)
+.IP *
+Начиная с ядра 2.6.0 порядок разработки был изменён, и новые системные
+вызовы могут появляться в каждом выпуске 2.6.x. В этом случае для системного
+вызова указан точный номер версии. 2.6.39. Это соглашение продолжает
+действовать и в ядрах серии 3.x, которая началась с ядра 2.6.39, и в ядрах
+серии 4.х, которая началась с ядра 3.19.
+.IP *
+Иногда системный вызов, добавленный в текущую на тот момент стабильную ветвь
+ядра, переносился в предыдущие стабильные ветви ядра. Например, некоторые
+системные вызовы, которые появились в в 2.6.x были перенесены и в выпуски
+2.4.x, начиная с 2.4.15. Если это производилось, будут показаны основные
+версии обеих ветвей ядра.
+.PP
+.\"
+.\" Looking at scripts/checksyscalls.sh in the kernel source is
+.\" instructive about x86 specifics.
+.\"
+Список системных вызовов, доступных в ядре версии 4.19 (или, в некоторых
+случаях, только в более старых ядрах):
+.ad l
+.TS
+l2 le l
+---
+l l l.
+\fBSystem call\fP	\fBKernel\fP	\fBNotes\fP
+
+\fB_llseek\fP(2)	1.2
+\fB_newselect\fP(2)	2.0
+\fB_sysctl\fP(2)	2.0
+\fBaccept\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBaccept4\fP(2)	2.6.28
+\fBaccess\fP(2)	1.0
+\fBacct\fP(2)	1.0
+\fBadd_key\fP(2)	2.6.10
+\fBadjtimex\fP(2)	1.0
+\fBalarm\fP(2)	1.0
+\fBalloc_hugepages\fP(2)	2.5.36	удалён из Linux 2.5.44
+.\" 4adeefe161a74369e44cc8e663f240ece0470dc3
+\fBarc_gettls\fP(2)	3.9	только на ARC
+\fBarc_settls\fP(2)	3.9	только на ARC
+.\" 91e040a79df73d371f70792f30380d4e44805250
+\fBarc_usr_cmpxchg\fP(2)	4.9	только на ARC
+.\" x86: 79170fda313ed5be2394f87aa2a00d597f8ed4a1
+\fBarch_prctl\fP(2)	2.6	x86_64, x86 начиная с 4.12
+.\" 9674cdc74d63f346870943ef966a034f8c71ee57
+\fBatomic_barrier\fP(2)	2.6.34	только на m68k
+\fBatomic_cmpxchg_32\fP(2)	2.6.34	только на m68k
+\fBbdflush\fP(2)	1.2	T{
+устарел (ничего не делает)
+.br
+начиная с 2.6
+T}
+\fBbfin_spinlock\fP(2)	2.6.22	T{
+только на Blackfin (перенос удалён
+.br
+в Linux 4.17)
+T}
+\fBbind\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBbpf\fP(2)	3.18
+\fBbrk\fP(2)	1.0
+\fBbreakpoint\fP(2)	2.2	T{
+только в ARM OABI, определён с
+.br
+префиксом \fB__ARM_NR\fP
+T}
+\fBcacheflush\fP(2)	1.2	не для x86
+\fBcapget\fP(2)	2.2
+\fBcapset\fP(2)	2.2
+\fBchdir\fP(2)	1.0
+\fBchmod\fP(2)	1.0
+\fBchown\fP(2)	2.2	T{
+смотрите в \fBchown\fP(2)
+.br
+подробности о версии
+T}
+\fBchown32\fP(2)	2.4
+\fBchroot\fP(2)	1.0
+\fBclock_adjtime\fP(2)	2.6.39
+\fBclock_getres\fP(2)	2.6
+\fBclock_gettime\fP(2)	2.6
+\fBclock_nanosleep\fP(2)	2.6
+\fBclock_settime\fP(2)	2.6
+\fBclone2\fP(2)	2.4	только на IA\-64
+\fBclone\fP(2)	1.0
+\fBclone3\fP(2)	5.3
+\fBclose\fP(2)	1.0
+.\" .\" dcef1f634657dabe7905af3ccda12cf7f0b6fcc1
+.\" .\" cc20d42986d5807cbe4f5c7c8e3dab2e59ea0db3
+.\" .\" db695c0509d6ec9046ee5e4c520a19fa17d9fce2
+.\" \fBcmpxchg\fP(2)	2.6.12	T{
+.\" ARM, syscall constant never was
+.\" .br
+.\" exposed to userspace, in-kernel
+.\" .br
+.\" definition had \fB__ARM_NR\fP prefix,
+.\" .br
+.\" removed in 4.4
+.\" T}
+.\" 867e359b97c970a60626d5d76bbe2a8fadbf38fb
+.\" bb9d812643d8a121df7d614a2b9c60193a92deb0
+\fBcmpxchg_badaddr\fP(2)	2.6.36	T{
+только на Tile (перенос удалён
+.br
+в Linux 4.17)
+T}
+\fBconnect\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBcopy_file_range\fP(2)	4.5
+\fBcreat\fP(2)	1.0
+\fBcreate_module\fP(2)	1.0	удалён из Linux 2.6
+\fBdelete_module\fP(2)	1.0
+.\" 1394f03221790a988afc3e4b3cb79f2e477246a9
+.\" 4ba66a9760722ccbb691b8f7116cad2f791cca7b
+\fBdma_memcpy\fP(2)	2.6.22	T{
+только на Blackfin (перенос удалён
+.br
+в Linux 4.17)
+T}
+\fBdup\fP(2)	1.0
+\fBdup2\fP(2)	1.0
+\fBdup3\fP(2)	2.6.27
+\fBepoll_create\fP(2)	2.6
+\fBepoll_create1\fP(2)	2.6.27
+\fBepoll_ctl\fP(2)	2.6
+\fBepoll_pwait\fP(2)	2.6.19
+\fBepoll_wait\fP(2)	2.6
+\fBeventfd\fP(2)	2.6.22
+\fBeventfd2\fP(2)	2.6.27
+\fBexecv\fP(2)	2.0	T{
+только на SPARC/SPARC64, для
+.br
+совместимости с SunOS
+T}
+\fBexecve\fP(2)	1.0
+\fBexecveat\fP(2)	3.19
+\fBexit\fP(2)	1.0
+\fBexit_group\fP(2)	2.6
+\fBfaccessat\fP(2)	2.6.16
+\fBfadvise64\fP(2)	2.6
+.\" Implements \fBposix_fadvise\fP(2)
+\fBfadvise64_64\fP(2)	2.6
+\fBfallocate\fP(2)	2.6.23
+\fBfanotify_init\fP(2)	2.6.37
+\fBfanotify_mark\fP(2)	2.6.37
+.\" The fanotify calls were added in Linux 2.6.36,
+.\" but disabled while the API was finalized.
+\fBfchdir\fP(2)	1.0
+\fBfchmod\fP(2)	1.0
+\fBfchmodat\fP(2)	2.6.16
+\fBfchown\fP(2)	1.0
+\fBfchown32\fP(2)	2.4
+\fBfchownat\fP(2)	2.6.16
+\fBfcntl\fP(2)	1.0
+\fBfcntl64\fP(2)	2.4
+\fBfdatasync\fP(2)	2.0
+\fBfgetxattr\fP(2)	2.6; 2.4.18
+\fBfinit_module\fP(2)	3.8
+\fBflistxattr\fP(2)	2.6; 2.4.18
+\fBflock\fP(2)	2.0
+\fBfork\fP(2)	1.0
+\fBfree_hugepages\fP(2)	2.5.36	удалён из Linux 2.5.44
+\fBfremovexattr\fP(2)	2.6; 2.4.18
+\fBfsconfig\fP(2)	5.2
+\fBfsetxattr\fP(2)	2.6; 2.4.18
+\fBfsmount\fP(2)	5.2
+\fBfsopen\fP(2)	5.2
+\fBfspick\fP(2)	5.2
+\fBfstat\fP(2)	1.0
+\fBfstat64\fP(2)	2.4
+\fBfstatat64\fP(2)	2.6.16
+\fBfstatfs\fP(2)	1.0
+\fBfstatfs64\fP(2)	2.6
+\fBfsync\fP(2)	1.0
+\fBftruncate\fP(2)	1.0
+\fBftruncate64\fP(2)	2.4
+\fBfutex\fP(2)	2.6
+\fBfutimesat\fP(2)	2.6.16
+\fBget_kernel_syms\fP(2)	1.0	удалён из Linux 2.6
+\fBget_mempolicy\fP(2)	2.6.6
+\fBget_robust_list\fP(2)	2.6.17
+\fBget_thread_area\fP(2)	2.6
+.\" 8fcd6c45f5a65621ec809b7866a3623e9a01d4ed
+\fBget_tls\fP(2)	4.15	T{
+только в ARM OABI, есть
+.br
+префиксом \fB__ARM_NR\fP
+T}
+\fBgetcpu\fP(2)	2.6.19
+\fBgetcwd\fP(2)	2.2
+\fBgetdents\fP(2)	2.0
+\fBgetdents64\fP(2)	2.4
+.\" parisc: 863722e856e64dae0e252b6bb546737c6c5626ce
+\fBgetdomainname\fP(2)	2.2	T{
+SPARC, SPARC64; доступен
+.br
+как \fBosf_getdomainname\fP(2)
+.br
+на Alpha начиная с Linux 2.0
+T}
+.\" ec98c6b9b47df6df1c1fa6cf3d427414f8c2cf16
+\fBgetdtablesize\fP(2)	2.0	T{
+SPARC (удалён в 2.6.26),
+.br
+доступен начиная с Linux 2.0 на Alpha как
+\fBosf_getdtablesize\fP(2)
+T}
+\fBgetegid\fP(2)	1.0
+\fBgetegid32\fP(2)	2.4
+\fBgeteuid\fP(2)	1.0
+\fBgeteuid32\fP(2)	2.4
+\fBgetgid\fP(2)	1.0
+\fBgetgid32\fP(2)	2.4
+\fBgetgroups\fP(2)	1.0
+\fBgetgroups32\fP(2)	2.4
+.\" SPARC removal: ec98c6b9b47df6df1c1fa6cf3d427414f8c2cf16
+\fBgethostname\fP(2)	2.0	T{
+Alpha, был доступен на
+.br
+SPARC до Linux 2.6.26
+T}
+\fBgetitimer\fP(2)	1.0
+\fBgetpeername\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBgetpagesize\fP(2)	2.0	не для x86
+\fBgetpgid\fP(2)	1.0
+\fBgetpgrp\fP(2)	1.0
+\fBgetpid\fP(2)	1.0
+\fBgetppid\fP(2)	1.0
+\fBgetpriority\fP(2)	1.0
+\fBgetrandom\fP(2)	3.17
+\fBgetresgid\fP(2)	2.2
+\fBgetresgid32\fP(2)	2.4
+\fBgetresuid\fP(2)	2.2
+\fBgetresuid32\fP(2)	2.4
+\fBgetrlimit\fP(2)	1.0
+\fBgetrusage\fP(2)	1.0
+\fBgetsid\fP(2)	2.0
+\fBgetsockname\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBgetsockopt\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBgettid\fP(2)	2.4.11
+\fBgettimeofday\fP(2)	1.0
+\fBgetuid\fP(2)	1.0
+\fBgetuid32\fP(2)	2.4
+\fBgetunwind\fP(2)	2.4.8	только IA\-64; устарел
+\fBgetxattr\fP(2)	2.6; 2.4.18
+\fBgetxgid\fP(2)	2.0	только на Alpha; смотрите ЗАМЕЧАНИЯ
+\fBgetxpid\fP(2)	2.0	только на Alpha; смотрите ЗАМЕЧАНИЯ
+\fBgetxuid\fP(2)	2.0	только на Alpha; смотрите ЗАМЕЧАНИЯ
+\fBinit_module\fP(2)	1.0
+\fBinotify_add_watch\fP(2)	2.6.13
+\fBinotify_init\fP(2)	2.6.13
+\fBinotify_init1\fP(2)	2.6.27
+\fBinotify_rm_watch\fP(2)	2.6.13
+\fBio_cancel\fP(2)	2.6
+\fBio_destroy\fP(2)	2.6
+\fBio_getevents\fP(2)	2.6
+\fBio_pgetevents\fP(2)	4.18
+\fBio_setup\fP(2)	2.6
+\fBio_submit\fP(2)	2.6
+\fBio_uring_enter\fP(2)	5.1
+\fBio_uring_register\fP(2)	5.1
+\fBio_uring_setup\fP(2)	5.1
+\fBioctl\fP(2)	1.0
+\fBioperm\fP(2)	1.0
+\fBiopl\fP(2)	1.0
+\fBioprio_get\fP(2)	2.6.13
+\fBioprio_set\fP(2)	2.6.13
+\fBipc\fP(2)	1.0
+.\" Implements System V IPC calls
+\fBkcmp\fP(2)	3.5
+\fBkern_features\fP(2)	3.7	только на SPARC64
+.\" FIXME . document kern_features():
+.\" commit 517ffce4e1a03aea979fe3a18a3dd1761a24fafb
+\fBkexec_file_load\fP(2)	3.17
+\fBkexec_load\fP(2)	2.6.13
+.\" The entry in the syscall table was reserved starting in 2.6.7
+.\" Was named sys_kexec_load() from 2.6.7 to 2.6.16
+\fBkeyctl\fP(2)	2.6.10
+\fBkill\fP(2)	1.0
+\fBlchown\fP(2)	1.0	T{
+смотрите в \fBchown\fP(2)
+.br
+подробности о версии
+T}
+\fBlchown32\fP(2)	2.4
+\fBlgetxattr\fP(2)	2.6; 2.4.18
+\fBlink\fP(2)	1.0
+\fBlinkat\fP(2)	2.6.16
+\fBlisten\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBlistxattr\fP(2)	2.6; 2.4.18
+\fBllistxattr\fP(2)	2.6; 2.4.18
+\fBlookup_dcookie\fP(2)	2.6
+\fBlremovexattr\fP(2)	2.6; 2.4.18
+\fBlseek\fP(2)	1.0
+\fBlsetxattr\fP(2)	2.6; 2.4.18
+\fBlstat\fP(2)	1.0
+\fBlstat64\fP(2)	2.4
+\fBmadvise\fP(2)	2.4
+\fBmbind\fP(2)	2.6.6
+\fBmemory_ordering\fP(2)	2.2	только на SPARC64
+.\" 26025bbfbba33a9425be1b89eccb4664ea4c17b6
+.\" bb6fb6dfcc17cddac11ac295861f7608194447a7
+\fBmetag_get_tls\fP(2)	3.9	T{
+только на Metag (перенос удалён
+.br
+в Linux 4.17)
+T}
+\fBmetag_set_fpu_flags\fP(2)	3.9	T{
+только на Metag (перенос удалён
+.br
+в Linux 4.17)
+T}
+\fBmetag_set_tls\fP(2)	3.9	T{
+только на Metag (перенос удалён
+.br
+в Linux 4.17)
+T}
+\fBmetag_setglobalbit\fP(2)	3.9	T{
+только на Metag (перенос удалён
+.br
+в Linux 4.17)
+T}
+\fBmembarrier\fP(2)	3.17
+\fBmemfd_create\fP(2)	3.17
+\fBmigrate_pages\fP(2)	2.6.16
+\fBmincore\fP(2)	2.4
+\fBmkdir\fP(2)	1.0
+\fBmkdirat\fP(2)	2.6.16
+\fBmknod\fP(2)	1.0
+\fBmknodat\fP(2)	2.6.16
+\fBmlock\fP(2)	2.0
+\fBmlock2\fP(2)	4.4
+\fBmlockall\fP(2)	2.0
+\fBmmap\fP(2)	1.0
+\fBmmap2\fP(2)	2.4
+\fBmodify_ldt\fP(2)	1.0
+\fBmount\fP(2)	1.0
+\fBmove_mount\fP(2)	5.2
+\fBmove_pages\fP(2)	2.6.18
+\fBmprotect\fP(2)	1.0
+\fBmq_getsetattr\fP(2)	2.6.6
+.\" Implements \fBmq_getattr\fP(3) and \fBmq_setattr\fP(3)
+\fBmq_notify\fP(2)	2.6.6
+\fBmq_open\fP(2)	2.6.6
+\fBmq_timedreceive\fP(2)	2.6.6
+\fBmq_timedsend\fP(2)	2.6.6
+\fBmq_unlink\fP(2)	2.6.6
+\fBmremap\fP(2)	2.0
+\fBmsgctl\fP(2)	2.0	смотрите замечания по \fBipc\fP(2)
+\fBmsgget\fP(2)	2.0	смотрите замечания по \fBipc\fP(2)
+\fBmsgrcv\fP(2)	2.0	смотрите замечания по \fBipc\fP(2)
+\fBmsgsnd\fP(2)	2.0	смотрите замечания по \fBipc\fP(2)
+\fBmsync\fP(2)	2.0
+.\" \fBmultiplexer\fP(2)	??	__NR_multiplexer reserved on
+.\"		PowerPC, but unimplemented?
+\fBmunlock\fP(2)	2.0
+\fBmunlockall\fP(2)	2.0
+\fBmunmap\fP(2)	1.0
+\fBname_to_handle_at\fP(2)	2.6.39
+\fBnanosleep\fP(2)	2.0
+.\" 5590ff0d5528b60153c0b4e7b771472b5a95e297
+\fBnewfstatat\fP(2)	2.6.16	смотрите \fBstat\fP(2)
+\fBnfsservctl\fP(2)	2.2	удалён из Linux 3.1
+\fBnice\fP(2)	1.0
+\fBold_adjtimex\fP(2)	2.0	только на Alpha; смотрите ЗАМЕЧАНИЯ
+\fBold_getrlimit\fP(2)	2.4	T{
+старый вариант \fBgetrlimit\fP(2),
+.br
+использующий другое значение
+.br
+для \fBRLIM_INFINITY\fP
+T}
+\fBoldfstat\fP(2)	1.0
+\fBoldlstat\fP(2)	1.0
+\fBoldolduname\fP(2)	1.0
+\fBoldstat\fP(2)	1.0
+\fBoldumount\fP(2)	2.4.116	T{
+название старого \fBumount\fP(2)
+.br
+syscall на Alpha
+T}
+\fBolduname\fP(2)	1.0
+\fBopen\fP(2)	1.0
+\fBopen_by_handle_at\fP(2)	2.6.39
+\fBopen_tree\fP(2)	5.2
+\fBopenat\fP(2)	2.6.16
+.\" 9d02a4283e9ce4e9ca11ff00615bdacdb0515a1a
+\fBor1k_atomic\fP(2)	3.1	только на OpenRISC 1000
+\fBpause\fP(2)	1.0
+\fBpciconfig_iobase\fP(2)	2.2.15; 2.4	не для x86
+.\" Alpha, PowerPC, ARM; not x86
+\fBpciconfig_read\fP(2)	2.0.26; 2.2	не для x86
+.\" , PowerPC, ARM; not x86
+\fBpciconfig_write\fP(2)	2.0.26; 2.2	не для x86
+.\" , PowerPC, ARM; not x86
+\fBperf_event_open\fP(2)	2.6.31	T{
+был perf_counter_open() в
+.br
+2.6.31; переименован в 2.6.32
+T}
+\fBpersonality\fP(2)	1.2
+\fBperfctr\fP(2)	2.2	только на SPARC; удалён в 2.6.34
+.\"	commit c7d5a0050773e98d1094eaa9f2a1a793fafac300 removed perfctr()
+\fBperfmonctl\fP(2)	2.4	только на IA\-64
+\fBpidfd_send_signal\fP(2)	5.1
+\fBpidfd_open\fP(2)	5.3
+\fBpipe\fP(2)	1.0
+\fBpipe2\fP(2)	2.6.27
+\fBpivot_root\fP(2)	2.4
+\fBpkey_alloc\fP(2)	4.8
+\fBpkey_free\fP(2)	4.8
+\fBpkey_mprotect\fP(2)	4.8
+\fBpoll\fP(2)	2.0.36; 2.2
+\fBppoll\fP(2)	2.6.16
+\fBprctl\fP(2)	2.2
+\fBpread\fP(2)		T{
+используется для \fBpread64\fP(2) на AVR32
+.br
+(перенос удалён в Linux 4.12)
+.br
+и Blackfin (перенос удалён
+.br
+в Linux 4.17)
+T}
+\fBpread64\fP(2)		T{
+добавлен под именем «pread» в 2.2
+.br
+переименован в «pread64» в 2.6
+T}
+\fBpreadv\fP(2)	2.6.30
+\fBpreadv2\fP(2)	4.6
+\fBprlimit64\fP(2)	2.6.36
+\fBprocess_vm_readv\fP(2)	3.2
+\fBprocess_vm_writev\fP(2)	3.2
+\fBpselect6\fP(2)	2.6.16
+.\" Implements \fBpselect\fP(2)
+\fBptrace\fP(2)	1.0
+\fBpwrite\fP(2)		T{
+используется для \fBpwrite64\fP(2) на AVR32
+(перенос удалён в Linux 4.12)
+и Blackfin (перенос удалён
+в Linux 4.17)
+T}
+\fBpwrite64\fP(2)		T{
+добавлен под именем «pwrite» в 2.2
+.br
+переименован в «pwrite64» в 2.6
+T}
+\fBpwritev\fP(2)	2.6.30
+\fBpwritev2\fP(2)	4.6
+\fBquery_module\fP(2)	2.2	удалён из Linux 2.6
+\fBquotactl\fP(2)	1.0
+\fBread\fP(2)	1.0
+\fBreadahead\fP(2)	2.4.13
+\fBreaddir\fP(2)	1.0
+.\" Supersedes \fBgetdents\fP(2)
+\fBreadlink\fP(2)	1.0
+\fBreadlinkat\fP(2)	2.6.16
+\fBreadv\fP(2)	2.0
+\fBreboot\fP(2)	1.0
+\fBrecv\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBrecvfrom\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBrecvmsg\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBrecvmmsg\fP(2)	2.6.33
+\fBremap_file_pages\fP(2)	2.6	устарел начиная с 3.16
+\fBremovexattr\fP(2)	2.6; 2.4.18
+\fBrename\fP(2)	1.0
+\fBrenameat\fP(2)	2.6.16
+\fBrenameat2\fP(2)	3.15
+\fBrequest_key\fP(2)	2.6.10
+\fBrestart_syscall\fP(2)	2.6
+.\" 921ebd8f2c081b3cf6c3b29ef4103eef3ff26054
+\fBriscv_flush_icache\fP(2)	4.15	только на RISC\-V
+\fBrmdir\fP(2)	1.0
+\fBrseq\fP(2)	4.18
+\fBrt_sigaction\fP(2)	2.2
+\fBrt_sigpending\fP(2)	2.2
+\fBrt_sigprocmask\fP(2)	2.2
+\fBrt_sigqueueinfo\fP(2)	2.2
+\fBrt_sigreturn\fP(2)	2.2
+\fBrt_sigsuspend\fP(2)	2.2
+\fBrt_sigtimedwait\fP(2)	2.2
+\fBrt_tgsigqueueinfo\fP(2)	2.6.31
+\fBrtas\fP(2)	2.6.2	только на PowerPC/PowerPC64
+\fBs390_runtime_instr\fP(2)	3.7	только для s390
+\fBs390_pci_mmio_read\fP(2)	3.19	только для s390
+\fBs390_pci_mmio_write\fP(2)	3.19	только для s390
+\fBs390_sthyi\fP(2)	4.15	только для s390
+\fBs390_guarded_storage\fP(2)	4.12	только для s390
+\fBsched_get_affinity\fP(2)	2.6	T{
+название \fBsched_getaffinity\fP(2)
+.br
+на SPARC и SPARC64
+T}
+\fBsched_get_priority_max\fP(2)	2.0
+\fBsched_get_priority_min\fP(2)	2.0
+\fBsched_getaffinity\fP(2)	2.6
+\fBsched_getattr\fP(2)	3.14
+\fBsched_getparam\fP(2)	2.0
+\fBsched_getscheduler\fP(2)	2.0
+\fBsched_rr_get_interval\fP(2)	2.0
+\fBsched_set_affinity\fP(2)	2.6	T{
+название \fBsched_setaffinity\fP(2)
+.br
+на SPARC и SPARC64
+T}
+\fBsched_setaffinity\fP(2)	2.6
+\fBsched_setattr\fP(2)	3.14
+\fBsched_setparam\fP(2)	2.0
+\fBsched_setscheduler\fP(2)	2.0
+\fBsched_yield\fP(2)	2.0
+\fBseccomp\fP(2)	3.17
+\fBselect\fP(2)	1.0
+\fBsemctl\fP(2)	2.0	смотрите замечания по \fBipc\fP(2)
+\fBsemget\fP(2)	2.0	смотрите замечания по \fBipc\fP(2)
+\fBsemop\fP(2)	2.0	смотрите замечания по \fBipc\fP(2)
+\fBsemtimedop\fP(2)	2.6; 2.4.22
+\fBsend\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBsendfile\fP(2)	2.2
+\fBsendfile64\fP(2)	2.6; 2.4.19
+\fBsendmmsg\fP(2)	3.0
+\fBsendmsg\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBsendto\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBset_mempolicy\fP(2)	2.6.6
+\fBset_robust_list\fP(2)	2.6.17
+\fBset_thread_area\fP(2)	2.6
+\fBset_tid_address\fP(2)	2.6
+\fBset_tls\fP(2)	2.6.11	T{
+только в ARM OABI/EABI (константа
+.br
+с префиксом \fB__ARM_NR\fP)
+T}
+.\" \fBsetaltroot\fP(2)	2.6.10	T{
+.\" Removed in 2.6.11, exposed one
+.\" of implementation details of
+.\" \fBpersonality\fP(2) (creating an
+.\" alternative root, precursor of
+.\" mount namespaces) to user space.
+.\" T}
+.\" See http://lkml.org/lkml/2005/8/1/83
+.\" "[PATCH] remove sys_set_zone_reclaim()"
+\fBsetdomainname\fP(2)	1.0
+\fBsetfsgid\fP(2)	1.2
+\fBsetfsgid32\fP(2)	2.4
+\fBsetfsuid\fP(2)	1.2
+\fBsetfsuid32\fP(2)	2.4
+\fBsetgid\fP(2)	1.0
+\fBsetgid32\fP(2)	2.4
+\fBsetgroups\fP(2)	1.0
+\fBsetgroups32\fP(2)	2.4
+.\" arch/alpha/include/asm/core_lca.h
+\fBsethae\fP(2)	2.0	только на Alpha; смотрите ЗАМЕЧАНИЯ
+\fBsethostname\fP(2)	1.0
+\fBsetitimer\fP(2)	1.0
+\fBsetns\fP(2)	3.0
+\fBsetpgid\fP(2)	1.0
+\fBsetpgrp\fP(2)	2.0	T{
+дополнительное имя для
+.br
+\fBsetpgid\fP(2) на Alpha
+T}
+\fBsetpriority\fP(2)	1.0
+\fBsetregid\fP(2)	1.0
+\fBsetregid32\fP(2)	2.4
+\fBsetresgid\fP(2)	2.2
+\fBsetresgid32\fP(2)	2.4
+\fBsetresuid\fP(2)	2.2
+\fBsetresuid32\fP(2)	2.4
+\fBsetreuid\fP(2)	1.0
+\fBsetreuid32\fP(2)	2.4
+\fBsetrlimit\fP(2)	1.0
+\fBsetsid\fP(2)	1.0
+\fBsetsockopt\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBsettimeofday\fP(2)	1.0
+\fBsetuid\fP(2)	1.0
+\fBsetuid32\fP(2)	2.4
+\fBsetup\fP(2)	1.0	удалён в 2.2
+\fBsetxattr\fP(2)	2.6; 2.4.18
+\fBsgetmask\fP(2)	1.0
+\fBshmat\fP(2)	2.0	смотрите замечания по \fBipc\fP(2)
+\fBshmctl\fP(2)	2.0	смотрите замечания по \fBipc\fP(2)
+\fBshmdt\fP(2)	2.0	смотрите замечания по \fBipc\fP(2)
+\fBshmget\fP(2)	2.0	смотрите замечания по \fBipc\fP(2)
+\fBshutdown\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBsigaction\fP(2)	1.0
+\fBsigaltstack\fP(2)	2.2
+\fBsignal\fP(2)	1.0
+\fBsignalfd\fP(2)	2.6.22
+\fBsignalfd4\fP(2)	2.6.27
+\fBsigpending\fP(2)	1.0
+\fBsigprocmask\fP(2)	1.0
+\fBsigreturn\fP(2)	1.0
+\fBsigsuspend\fP(2)	1.0
+\fBsocket\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+\fBsocketcall\fP(2)	1.0
+.\" Implements BSD socket calls
+\fBsocketpair\fP(2)	2.0	смотрите замечания по \fBsocketcall\fP(2)
+.\" 5a0015d62668e64c8b6e02e360fbbea121bfd5e6
+\fBspill\fP(2)	2.6.13	только на Xtensa
+\fBsplice\fP(2)	2.6.17
+\fBspu_create\fP(2)	2.6.16	только на PowerPC/PowerPC64
+\fBspu_run\fP(2)	2.6.16	только на PowerPC/PowerPC64
+\fBsram_alloc\fP(2)	2.6.22	T{
+Blackfin (перенос удалён
+.br
+в Linux 4.17)
+T}
+\fBsram_free\fP(2)	2.6.22	T{
+Blackfin (перенос удалён
+.br
+в Linux 4.17)
+T}
+\fBssetmask\fP(2)	1.0
+\fBstat\fP(2)	1.0
+\fBstat64\fP(2)	2.4
+\fBstatfs\fP(2)	1.0
+\fBstatfs64\fP(2)	2.6
+\fBstatx\fP(2)	4.11
+\fBstime\fP(2)	1.0
+\fBsubpage_prot\fP(2)	2.6.25	только на PowerPC/PowerPC64
+\fBswapcontext\fP(2)	2.6.3	только на PowerPC/PowerPC64
+.\" 529d235a0e190ded1d21ccc80a73e625ebcad09b
+\fBswitch_endian\fP(2)	4.1	только для PowerPC64
+\fBswapcontext\fP(2)	2.6.3	только для PowerPC 
+\fBswapoff\fP(2)	1.0
+\fBswapon\fP(2)	1.0
+\fBsymlink\fP(2)	1.0
+\fBsymlinkat\fP(2)	2.6.16
+\fBsync\fP(2)	1.0
+\fBsync_file_range\fP(2)	2.6.17
+\fBsync_file_range2\fP(2)	2.6.22
+.\" PowerPC, ARM, tile
+.\" First appeared on ARM, as arm_sync_file_range(), but later renamed
+.\" \fBsys_debug_setcontext\fP(2)	???	PowerPC if CONFIG_PPC32
+\fBsyncfs\fP(2)	2.6.39
+\fBsys_debug_setcontext\fP(2)	2.6.11	только для PowerPC 
+\fBsyscall\fP(2)	1.0	T{
+ещё доступен в ARM OABI
+.br
+и MIPS O32 ABI
+T}
+\fBsysfs\fP(2)	1.2
+\fBsysinfo\fP(2)	1.0
+\fBsyslog\fP(2)	1.0
+.\" glibc interface is \fBklogctl\fP(3)
+\fBsysmips\fP(2)	2.6.0	только на MIPS
+\fBtee\fP(2)	2.6.17
+\fBtgkill\fP(2)	2.6
+\fBtime\fP(2)	1.0
+\fBtimer_create\fP(2)	2.6
+\fBtimer_delete\fP(2)	2.6
+\fBtimer_getoverrun\fP(2)	2.6
+\fBtimer_gettime\fP(2)	2.6
+\fBtimer_settime\fP(2)	2.6
+.\" .\" b215e283992899650c4271e7385c79e26fb9a88e
+.\" .\" 4d672e7ac79b5ec5cdc90e450823441e20464691
+.\" \fBtimerfd\fP(2)	2.6.22	T{
+.\" Old timerfd interface,
+.\" removed in 2.6.25
+.\" T}
+\fBtimerfd_create\fP(2)	2.6.25
+\fBtimerfd_gettime\fP(2)	2.6.25
+\fBtimerfd_settime\fP(2)	2.6.25
+\fBtimes\fP(2)	1.0
+\fBtkill\fP(2)	2.6; 2.4.22
+\fBtruncate\fP(2)	1.0
+\fBtruncate64\fP(2)	2.4
+\fBugetrlimit\fP(2)	2.4
+\fBumask\fP(2)	1.0
+\fBumount\fP(2)	1.0
+.\" sys_oldumount() -- __NR_umount
+\fBumount2\fP(2)	2.2
+.\" sys_umount() -- __NR_umount2
+\fBuname\fP(2)	1.0
+\fBunlink\fP(2)	1.0
+\fBunlinkat\fP(2)	2.6.16
+\fBunshare\fP(2)	2.6.16
+\fBuselib\fP(2)	1.0
+\fBustat\fP(2)	1.0
+\fBuserfaultfd\fP(2)	4.3
+\fBusr26\fP(2)	2.4.8.1	только в ARM OABI
+\fBusr32\fP(2)	2.4.8.1	только в ARM OABI
+\fButime\fP(2)	1.0
+\fButimensat\fP(2)	2.6.22
+\fButimes\fP(2)	2.2
+\fButrap_install\fP(2)	2.2	только на SPARC64
+.\" FIXME . document utrap_install()
+.\" There's a man page for Solaris 5.11
+\fBvfork\fP(2)	2.2
+\fBvhangup\fP(2)	1.0
+\fBvm86old\fP(2)	1.0	T{
+ранее «vm86»; переименован в
+2.0.28/2.2
+T}
+\fBvm86\fP(2)	2.0.28; 2.2
+\fBvmsplice\fP(2)	2.6.17
+\fBwait4\fP(2)	1.0
+\fBwaitid\fP(2)	2.6.10
+\fBwaitpid\fP(2)	1.0
+\fBwrite\fP(2)	1.0
+\fBwritev\fP(2)	2.0
+.\" 5a0015d62668e64c8b6e02e360fbbea121bfd5e6
+\fBxtensa\fP(2)	2.6.13	только на Xtensa
+.TE
+.ad
+.PP
+Для многих платформ, включая x86\-32, все сокетные вызовы мультиплексируются
+(с помощью обёрточных функций glibc) через \fBsocketcall\fP(2), а подобные IPC
+вызовы System\ V мультиплексируются через \fBipc\fP(2).
+.PP
+.\" __NR_afs_syscall is 53 on Linux 2.6.22/i386
+.\" __NR_break is 17 on Linux 2.6.22/i386
+.\" __NR_ftime is 35 on Linux 2.6.22/i386
+.\" __NR_getpmsg is 188 on Linux 2.6.22/i386
+.\" __NR_gtty is 32 on Linux 2.6.22/i386
+.\" __NR_idle is 112 on Linux 2.6.22/i386
+.\" __NR_lock is 53 on Linux 2.6.22/i386
+.\" __NR_madvise1 is 219 on Linux 2.6.22/i386
+.\" __NR_mpx is 66 on Linux 2.6.22/i386
+.\" Slot has been reused
+.\" __NR_prof is 44 on Linux 2.6.22/i386
+.\" __NR_profil is 98 on Linux 2.6.22/i386
+.\" __NR_putpmsg is 189 on Linux 2.6.22/i386
+.\" __NR_security is 223 on Linux 2.4/i386
+.\" __NR_security is 223 on Linux 2.4/i386; absent on 2.6/i386, present
+.\" on a couple of 2.6 architectures
+.\" __NR_stty is 31 on Linux 2.6.22/i386
+.\" The security call is for future use.
+.\" __NR_tuxcall is 184 on x86_64, also on PPC and alpha
+.\" __NR_ulimit is 58 on Linux 2.6.22/i386
+.\" __NR_vserver is 273 on Linux 2.6.22/i386
+Хотя для них и зарезервированы места в таблице системных вызовов, следующие
+системные вызовы не реализованы в стандартном ядре: \fBafs_syscall\fP(2),
+\fBbreak\fP(2), \fBftime\fP(2), \fBgetpmsg\fP(2), \fBgtty\fP(2), \fBidle\fP(2), \fBlock\fP(2),
+\fBmadvise1\fP(2), \fBmpx\fP(2), \fBphys\fP(2), \fBprof\fP(2), \fBprofil\fP(2),
+\fBputpmsg\fP(2), \fBsecurity\fP(2), \fBstty\fP(2), \fBtuxcall\fP(2), \fBulimit\fP(2) и
+\fBvserver\fP(2) (см. также \fBunimplemented\fP(2)). Однако \fBftime\fP(3),
+\fBprofil\fP(3) и \fBulimit\fP(3) есть среди библиотечных функций. Место для
+\fBphys\fP(2) занято начиная с ядра 2.1.116 под \fBumount\fP(2); \fBphys\fP(2)
+никогда не будет реализован. Вызовы \fBgetpmsg\fP(2) и \fBputpmsg\fP(2) есть в
+ядрах с заплатами, обеспечивающими поддержку STREAMS, и могут никогда не
+появиться в стандартном ядре.
+.PP
+На короткое время появлялся \fBset_zone_reclaim\fP(2), добавленный в Linux
+2.6.13 и удалённый в 2.6.16; данный системный вызов никогда не был доступен
+из пользовательского пространства.
+.SH ЗАМЕЧАНИЯ
+.PP
+Чаще всего, код системного вызова с номером __NR_xxx, определённого в
+\fI/usr/include/asm/unistdh\fP, можно найти в исходном коде ядра Linux в
+функции \fIsys_xxx\fP(). Есть много исключений из этого правила, в основном
+из\-за того, что большинство старых системных вызовов заменена на новые, при
+чём без всякой системы. На платформах с эмуляцией собственнических ОС, таких
+как sparc, sparc64 и alpha, существует много дополнительных системных
+вызовов; для mips64 также есть полный набор 32\-битных системных вызовов.
+.PP
+С течением времени при необходимости происходили изменения в интерфейсе
+некоторых системных вызовов. Одной из причин таких изменений была
+необходимость увеличения размера структур или скалярных значений
+передаваемых системному вызову. Из\-за этих изменений на некоторых
+архитектурах (а именно на старых 32\-битных i386) появились различные группы
+похожих системных вызовов (например, \fBtruncate\fP(2) и \fBtruncate64\fP(2)),
+которые выполняют одинаковые задачи, но отличаются размером своих
+аргументов. (Как уже отмечалось, на приложения это не влияет: обёрточные
+функции glibc выполняют некоторые действия по запуску правильного системного
+вызова, и это обеспечивает совместимость по ABI для старых двоичных файлов.)
+Примеры системных вызовов, у которых есть несколько версий:
+.IP * 3
+.\" e.g., on 2.6.22/i386: __NR_oldstat 18, __NR_stat 106, __NR_stat64 195
+.\" The stat system calls deal with three different data structures,
+.\" defined in include/asm-i386/stat.h: __old_kernel_stat, stat, stat64
+В настоящее время есть три различные версии \fBstat\fP(2): \fIsys_stat\fP() (место
+\fI__NR_oldstat\fP), \fIsys_newstat\fP() (место \fI__NR_stat\fP) и \fIsys_stat64\fP()
+(место \fI__NR_stat64\fP), последняя используется в в данный момент. Похожая
+ситуация с \fBlstat\fP(2) и \fBfstat\fP(2).
+.IP *
+Похожим образом определены \fI__NR_oldolduname\fP, \fI__NR_olduname\fP и
+\fI__NR_uname\fP для вызовов \fIsys_olduname\fP(), \fIsys_uname\fP() и
+\fIsys_newuname\fP().
+.IP *
+В Linux 2.0 появилась новая версия \fBvm86\fP(2), новая и старая версии ядерных
+процедур называются \fIsys_vm86old\fP() и \fIsys_vm86\fP().
+.IP *
+В Linux 2.4 появилась новая версия \fBgetrlimit\fP(2) новая и старая версии
+ядерных процедур называются \fIsys_old_getrlimit\fP() (место \fI__NR_getrlimit\fP)
+и \fIsys_getrlimit\fP() (место \fI__NR_ugetrlimit\fP).
+.IP *
+.\" 64-bit off_t changes: ftruncate64, *stat64,
+.\" fcntl64 (because of the flock structure), getdents64, *statfs64
+В Linux 2.4 увеличено размер поля ID пользователей и групп с 16 до 32
+бит. Для поддержки этого изменения добавлено несколько системных вызовов
+(например, \fBchown32\fP(2), \fBgetuid32\fP(2), \fBgetgroups32\fP(2),
+\fBsetresuid32\fP(2)), упраздняющих ранние вызовы с теми же именами, но без
+суффикса "32".
+.IP *
+В Linux 2.4 добавлена поддержка доступа к большим файлам (у которых размеры
+и смещения не умещаются в 32 бита) в приложениях на 32\-битных
+архитектурах. Для этого потребовалось внести изменения в системные вызовы,
+работающие с размерами и смещениями по файлам. Были добавлены следующие
+системные вызовы: \fBfcntl64\fP(2), \fBgetdents64\fP(2), \fBstat64\fP(2),
+\fBstatfs64\fP(2), \fBtruncate64\fP(2) и их аналоги, которые обрабатывают файловые
+дескрипторы или символьные ссылки. Эти системные вызовы упраздняют старые
+системные вызовы, которые, за исключением вызовов «stat», называются также,
+но не имеют суффикса «64».
+.IP
+На новых платформах, имеющих только 64\-битный доступ к файлам и 32\-битные
+UID/GID (например, alpha, ia64, s390x, x86\-64), есть только одна версия
+системных вызовов для UID/GID и файлового доступа. На платформах (обычно это
+32\-битные платформы) где имеются *64 и *32 вызовы, другие версии устарели.
+.IP *
+Вызовы \fIrt_sig*\fP добавлены в ядро 2.2 для поддержки дополнительных сигналов
+реального времени (см. \fBsignal\fP(7)). Эти системные вызовы упраздняют старые
+системные вызовы с теми же именами, но без префикса "rt_".
+.IP *
+.\" (used by libc 6)
+.\" .PP
+.\" Two system call numbers,
+.\" .IR __NR__llseek
+.\" and
+.\" .IR __NR__sysctl
+.\" have an additional underscore absent in
+.\" .IR sys_llseek ()
+.\" and
+.\" .IR sys_sysctl ().
+.\"
+.\" In kernel 2.1.81,
+.\" .BR lchown (2)
+.\" and
+.\" .BR chown (2)
+.\" were swapped; that is,
+.\" .BR lchown (2)
+.\" was added with the semantics that were then current for
+.\" .BR chown (2),
+.\" and the semantics of the latter call were changed to what
+.\" they are today.
+.\"
+.\"
+В системных вызовах \fBselect\fP(2) и \fBmmap\fP(2) используется пять или более
+аргументов, что вызывало проблемы определения способа передачи аргументов на
+i386(). В следствии этого, тогда как на других архитектурах вызовы
+\fIsys_select\fP() и \fIsys_mmap\fP() соответствуют \fI__NR_select\fP и \fI__NR_mmap\fP,
+на i386 они соответствуют \fIold_select\fP() и \fIold_mmap\fP() (процедуры,
+использующие указатель на блок аргументов). В настоящее время больше нет
+проблемы с передачей более пяти аргументов и есть \fI__NR__newselect\fP,
+который соответствует именно \fIsys_select\fP() и тоже самое с
+\fI__NR_mmap2\fP. На s390x только 64\-битная архитектура имеет \fIold_mmap\fP.
+.SS "Специфика некоторых архитектур: Alpha"
+.IP * 3
+Вызов \fBgetxgid\fP(2) возвращает пару GID и эффективный GID через регистры
+\fBr0\fP и \fBr20\fP; он предоставляется как замена \fBgetgid\fP(2) и \fBgetegid\fP(2).
+.IP *
+Вызов \fBgetxpid\fP(2) возвращает пару PID и эффективный PID через регистры
+\fBr0\fP и \fBr20\fP; он предоставляется как замена \fBgetpid\fP(2) и \fBgetppid\fP(2).
+.IP *
+Вызов \fBold_adjtimex\fP(2) является вариантом \fBadjtimex\fP(2), в котором
+используется \fIstruct timeval32\fP (для совместимости с OSF/1).
+.IP *
+Вызов \fBgetxuid\fP(2) возвращает пару GID и эффективный GID через регистры
+\fBr0\fP и \fBr20\fP; он предоставляется как замена \fBgetuid\fP(2) и \fBgeteuid\fP(2).
+.IP *
+Вызов \fBsethae\fP(2) используется для настройки регистра Host Address
+Extension в бюджетных Alpha, чтобы получить доступ к адресному пространству
+за границу первых 27 бит.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBintro\fP(2), \fBsyscall\fP(2), \fBunimplemented\fP(2), \fBerrno\fP(3), \fBlibc\fP(7),
+\fBvdso\fP(7)

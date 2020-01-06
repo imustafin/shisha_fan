@@ -1,0 +1,84 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCSTOMBS 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wcstombs \- преобразует широкосимвольную строку в многобайтовую строку
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBsize_t wcstombs(char *\fP\fIdest\fP\fB, const wchar_t *\fP\fIsrc\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Если значение \fIdest\fP не равно NULL, то функция \fBwcstombs\fP() преобразует
+широкосимвольную строку \fIsrc\fP в многобайтовую строку, начинающуюся с
+\fIdest\fP. В \fIdest\fP будет записано не более \fIn\fP байт. Последовательность
+символов, помещённая в \fIdest\fP, начинается с первоначальным состоянием
+сдвига. Преобразование может прекратиться по трём причинам:
+.IP 1. 3
+Встретившийся широкий символ нельзя представить в виде многобайтовой
+последовательности (в соответствии с текущей системной локалью). В этом
+случае возвращается \fI(size_t)\ \-1\fP.
+.IP 2.
+Достигнут предел по длине. В этом случае возвращается количество байтов,
+записанных в \fIdest\fP, но состояние текущего смещения в строке теряется.
+.IP 3.
+Широкосимвольная строка была полностью преобразована, включая завершающий
+широкий символ null (L\(aq\e0\(aq). В этом случае преобразование
+заканчивается в первоначальном состоянии сдвига. Возвращается количество
+записанных в \fIdest\fP байт, не считая завершающий байт null (\(aq\e0\(aq).
+.PP
+Программист должен быть уверен, что в \fIdest\fP достаточно места для, по
+крайней мере, \fIn\fP байт.
+.PP
+Если значение \fIdest\fP равно NULL, то \fIn\fP игнорируется и преобразование
+выполняется как описано выше, исключая то, что преобразованные байты не
+записываются в память и нет ограничения по длине.
+.PP
+Для того, чтобы избежать ограничения пункта 2, программист должен
+удостовериться, что значение \fIn\fP больше или равно
+\fIwcstombs(NULL,src,0)+1\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBwcstombs\fP() возвращает количество байт в полученной многобайтовой
+последовательности, не включая завершающий байт null. Если встречается
+широкий символ, который невозможно преобразовать, возвращается \fI(size_t)\ \-1\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwcstombs\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBwcstombs\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.PP
+Функция \fBwcsrtombs\fP(3) предоставляет лучший интерфейс с теми же
+возможностями.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmblen\fP(3), \fBmbstowcs\fP(3), \fBmbtowc\fP(3), \fBwcsrtombs\fP(3)  \fBwctomb\fP(3)

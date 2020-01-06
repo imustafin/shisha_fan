@@ -1,0 +1,474 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2008 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_3_PARA)
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" FIXME Linux 3.0: timerfd_settime() adds a TFD_TIMER_CANCEL_ON_SET flag;
+.\" This flag needs to documented.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TIMERFD_CREATE 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+timerfd_create, timerfd_settime, timerfd_gettime \- таймеры, уведомляющие
+через файловые дескрипторы
+.SH ОБЗОР
+.nf
+\fB#include <sys/timerfd.h>\fP
+.PP
+\fBint timerfd_create(int \fP\fIclockid\fP\fB, int \fP\fIflags\fP\fB);\fP
+.PP
+\fBint timerfd_settime(int \fP\fIfd\fP\fB, int \fP\fIflags\fP\fB,\fP
+\fB                    const struct itimerspec *\fP\fInew_value\fP\fB,\fP
+\fB                    struct itimerspec *\fP\fIold_value\fP\fB);\fP
+.PP
+\fBint timerfd_gettime(int \fP\fIfd\fP\fB, struct itimerspec *\fP\fIcurr_value\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Эти системные вызовы создают и работают с таймером, доставляя уведомления о
+срабатывании через файловый дескриптор. Они предоставляют альтернативу
+\fBsetitimer\fP(2) или \fBtimer_create\fP(2); их преимущество в том, что за
+файловым дескриптором можно следить с помощью \fBselect\fP(2), \fBpoll\fP(2) и
+\fBepoll\fP(7).
+.PP
+.\"
+Использование данных трёх системных вызовов аналогично \fBtimer_create\fP(2),
+\fBtimer_settime\fP(2) и \fBtimer_gettime\fP(2) (аналога \fBtimer_getoverrun\fP(2)
+нет, так как его возможности предоставляет \fBread\fP(2) как описано ниже).
+.SS timerfd_create()
+Вызов \fBtimerfd_create\fP() создаёт новый объект таймера и возвращает файловый
+дескриптор, который ссылается на этот таймер. В аргументе \fIclockid\fP
+задаются часы, которые используются для хода таймера; значением должно быть
+одно из следующих:
+.TP 
+\fBCLOCK_REALTIME\fP
+Настраиваемые системные часы реального времени.
+.TP 
+\fBCLOCK_MONOTONIC\fP
+Ненастраиваемые, постоянно идущие вперёд часы, отсчитывающие время с
+некоторой неопределённой точки в прошлом, которая не изменяется с момент
+запуска системы.
+.TP 
+\fBCLOCK_BOOTTIME\fP (начиная с Linux 3.15)
+.\"    commit 4a2378a943f09907fb1ae35c15de917f60289c14
+Подобно \fBCLOCK_MONOTONIC\fP, представляет монотонно растущие часы. Однако,
+если часы \fBCLOCK_MONOTONIC\fP не отсчитывают время когда система находится в
+состоянии ожидания (suspended), а часы \fBCLOCK_BOOTTIME\fP учитывают время в
+таком состоянии системы. Это полезно приложениям, которым необходимо
+учитывать состояние ожидания. \fBCLOCK_REALTIME\fP не подходят для таких
+приложений, так как эти часы подвержены скачкообразным изменениям системных
+часов.
+.TP 
+\fBCLOCK_REALTIME_ALARM\fP (начиная с Linux 3.11)
+.\" commit 11ffa9d6065f344a9bd769a2452f26f2f671e5f8
+Эти часы подобны \fBCLOCK_REALTIME\fP, но разбудят систему, если она находится
+с состоянии ожидания. Для установки таймера по этим часам вызывающий должен
+иметь мандат \fBCAP_WAKE_ALARM\fP.
+.TP 
+\fBCLOCK_BOOTTIME_ALARM\fP (начиная с Linux 3.11)
+.\" commit 11ffa9d6065f344a9bd769a2452f26f2f671e5f8
+Эти часы подобны \fBCLOCK_BOOTTIME\fP, но разбудят систему, если она находится
+с состоянии ожидания. Для установки таймера по этим часам вызывающий должен
+иметь мандат \fBCAP_WAKE_ALARM\fP.
+.PP
+Текущее значение каждого из этих часов можно получить с помощью
+\fBclock_gettime\fP(2).
+.PP
+Начиная с Linux 2.6.27, для изменения поведения \fBtimerfd_create\fP() можно
+использовать следующие значения \fIflags\fP (через OR):
+.TP  14
+\fBTFD_NONBLOCK\fP
+Устанавливает флаг состояния файла \fBO_NONBLOCK\fP для нового открытого
+файлового описания (смотрите \fBopen\fP(2)), на которое ссылается новый
+файловый дескриптор. Использование данного флага делает ненужными
+дополнительные вызовы \fBfcntl\fP(2) для достижения того же результата.
+.TP 
+\fBTFD_CLOEXEC\fP
+Устанавливает флаг close\-on\-exec (\fBFD_CLOEXEC\fP) для нового открытого
+файлового дескриптора. Смотрите описание флага \fBO_CLOEXEC\fP в \fBopen\fP(2) для
+того, чтобы узнать как это может пригодиться.
+.PP
+До Linux 2.6.26 включительно аргумент \fIflags\fP должен быть равен нулю.
+.SS timerfd_settime()
+Вызов \fBtimerfd_settime\fP() запускает или останавливает таймер, на который
+ссылается файловый дескриптор \fIfd\fP.
+.PP
+В аргументе \fInew_value\fP задаётся начальное срабатывание и интервал
+таймера. Для этого аргумента используется структура \fIitimerspec\fP,
+содержащая два поля, каждое из которых, в свою очередь, является структурой
+\fItimespec\fP:
+.PP
+.in +4n
+.EX
+struct timespec {
+    time_t tv_sec;                /* секунды */
+    long   tv_nsec;               /* наносекунды */
+};
+
+struct itimerspec {
+    struct timespec it_interval;  /* интервал для периодического
+                                     таймера */
+    struct timespec it_value;     /* первое срабатывание */
+};
+.EE
+.in
+.PP
+В \fInew_value.it_value\fP задаётся первое срабатывание таймера, в секундах и
+наносекундах. Установка любого из полей \fInew_value.it_value\fP в ненулевое
+значение включает таймер. Установка обоих полей \fInew_value.it_value\fP в ноль
+выключает таймер.
+.PP
+Установка одного или обоих полей \fInew_value.it_interval\fP в ненулевое
+значение задаёт период, в секундах и наносекундах, периодического
+срабатывания таймера после первого срабатывания. Если оба поля
+\fInew_value.it_interval\fP равны нулю, то таймер срабатывает только один раз,
+во время, указанное в \fInew_value.it_value\fP.
+.PP
+По умолчанию, начальное время срабатывания, задаваемое в \fInew_value\fP,
+считается относительно текущего времени часов таймера на момент вызова
+(т. е., в \fInew_value.it_value\fP задаётся время относительно текущего
+значения часов, заданных в \fIclockid\fP). Использование абсолютной задержки
+можно включить через аргумент \fIflags\fP.
+.PP
+Аргумент \fIflags\fP является битовой маской, которая может включать следующие
+значения:
+.TP 
+\fBTFD_TIMER_ABSTIME\fP
+Считать \fInew_value.it_value\fP абсолютным значением часов таймера. Таймер
+сработает, когда значение часов таймера достигнет значения, указанного в
+\fInew_value.it_value\fP.
+.TP 
+\fBTFD_TIMER_CANCEL_ON_SET\fP
+Если этот флаг указан вместе с \fBTFD_TIMER_ABSTIME\fP и часами этого таймера
+являются \fBCLOCK_REALTIME\fP или \fBCLOCK_REALTIME_ALARM\fP, то помечать этот
+таймер как отменяемый, если часы реального времени подвергнуться
+скачкообразному изменению (\fBsettimeofday\fP(2), \fBclock_settime\fP(2) или
+подобными). Когда такие изменения происходят, текущий или будущий вызова
+\fBread\fP(2) для файлового дескриптора завершается с ошибкой \fBECANCELED\fP.
+.PP
+.\"
+Если \fIold_value\fP не равно NULL, то это указатель на структуру
+\fIitimerspec\fP, и он будет использоваться для возврата текущих на момент
+вызова настроек таймера; смотрите описание \fBtimerfd_gettime\fP() далее.
+.SS timerfd_gettime()
+Вызов \fBtimerfd_gettime\fP() возвращает в \fIcurr_value\fP, которое указывает на
+структуру \fIitimerspec\fP, текущие настройки таймера, на который ссылается
+файловый дескриптор \fIfd\fP.
+.PP
+В поле \fIit_value\fP возвращается время до следующего срабатывания
+таймера. Если оба поля этой структуры равны нулю, то таймер в данный момент
+не запущен. Это поле всегда содержит относительное значение, независимо от
+того, был ли указан флаг \fBTFD_TIMER_ABSTIME\fP при настройке таймера.
+.PP
+В поле \fIit_interval\fP возвращается интервал таймера. Если оба поля этой
+структуры равны нулю, то таймер настроен на однократное срабатывание, на
+время, заданное в \fIcurr_value.it_value\fP.
+.SS "Работа с файловым дескриптором таймера"
+Файловый дескриптор, возвращаемый \fBtimerfd_create\fP(), поддерживает
+следующие операции:
+.TP 
+\fBread\fP(2)
+Если таймер уже сработал один или более раз с момента настройки с помощью
+\fBtimerfd_settime\fP(), или после последнего успешного \fBread\fP(2), то в буфер,
+указанный в \fBread\fP(2), будет возвращено беззнаковое 8\-байтное целое
+(\fIuint64_t\fP), содержащее количество произошедших срабатываний (возвращаемое
+значение хранится в порядке байт узла, то есть родном порядке для целых
+чисел машины выполнения).
+.IP
+Если таймер ещё не срабатывал до вызова \fBread\fP(2), то вызов блокирует
+выполнение до следующего срабатывания таймера, или завершается с ошибкой
+\fBEAGAIN\fP, если файловый дескриптор был создан неблокирующим (с помощью
+вызова \fBfcntl\fP(2) и операции \fBF_SETFL\fP с флагом \fBO_NONBLOCK\fP).
+.IP
+Вызов \fBread\fP(2) завершается ошибкой \fBEINVAL\fP, если размер указанного
+буфера будет меньше 8 байт.
+.IP
+Если используются часы \fBCLOCK_REALTIME\fP или \fBCLOCK_REALTIME_ALARM\fP, таймер
+является абсолютным (\fBTFD_TIMER_ABSTIME\fP) и при вызове \fBtimerfd_settime\fP()
+указан флаг \fBTFD_TIMER_CANCEL_ON_SET\fP, то \fBread\fP(2) завершается ошибкой
+\fBECANCELED\fP, если часы реального времени подвергнуться скачкообразному
+изменению (это позволяет читающему приложению обнаружить такие
+скачкообразные изменения часов).
+.TP 
+\fBpoll\fP(2), \fBselect\fP(2) (и подобные)
+Файловый дескриптор доступен для чтения (в \fBselect\fP(2) аргумент \fIreadfds\fP;
+в \fBpoll\fP(2) флаг \fBPOLLIN\fP), если произошло одно или более срабатываний
+таймера.
+.IP
+Файловый дескриптор также поддерживает другие мультиплексные вызовы:
+\fBpselect\fP(2), \fBppoll\fP(2) и \fBepoll\fP(7).
+.TP 
+\fBioctl\fP(2)
+Поддерживается следующая команда, относящаяся к timerfd:
+.RS
+.TP 
+\fBTFD_IOC_SET_TICKS\fP (начиная с Linux 3.17)
+.\" commit 5442e9fbd7c23172a1c9bc736629cd123a9923f0
+Корректирует количество истечений таймера, которые произошли. Аргументом
+является указатель на ненулевое 8\-байтовое целое (\fIuint64_t\fP*), содержащее
+новое количество истечений. После установки количества, все ожидающие
+таймера пробуждаются. Единственная цель данной команды — восстановить
+истечений для отсечки/восстановления. Данная операция доступна только, если
+ядро собрано с параметром \fBCONFIG_CHECKPOINT_RESTORE\fP.
+.RE
+.TP 
+\fBclose\fP(2)
+.\"
+Если файловый дескриптор больше не требуется, его нужно закрыть. Когда все
+файловые дескрипторы, связанные с одним объектом таймера, будут закрыты,
+таймер выключается и ядро освобождает его ресурсы.
+.SS "Поведение при fork(2)"
+.\"
+После \fBfork\fP(2) потомки наследуют копию файлового дескриптора, созданного
+\fBtimerfd_create\fP(). Файловый дескриптор потомка ссылается на тот же объект
+таймера, что и файловый дескриптор его родителя, и операция \fBread\fP(2) в
+потомке будет возвращать информацию о срабатываниях таймера.
+.SS "Поведение при execve(2)"
+Файловый дескриптор, созданный \fBtimerfd_create\fP(), сохраняется при
+\fBexecve\fP(2), и продолжает генерировать срабатывания таймера, если он
+включён.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBtimerfd_create\fP() возвращает новый файловый
+дескриптор. При ошибке возвращается \-1, и \fIerrno\fP устанавливается в
+соответствующее значение.
+.PP
+При успешном выполнении \fBtimerfd_settime\fP() и \fBtimerfd_gettime\fP()
+возвращают 0; в случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в
+соответствующее значение ошибки.
+.SH ОШИБКИ
+Вызов \fBtimerfd_create\fP() может завершиться со следующими ошибками:
+.TP 
+\fBEINVAL\fP
+Аргумент \fIclockid\fP не равен \fBCLOCK_MONOTONIC\fP или \fBCLOCK_REALTIME\fP;
+.TP 
+\fBEINVAL\fP
+Неправильное значение \fIflags\fP или, для Linux 2.6.26 и старее, \fIflags\fP не
+равно 0.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENODEV\fP
+Не удалось смонтировать (внутреннее) безымянное устройство inode.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти ядра для создания таймера.
+.PP
+Вызовы \fBtimerfd_settime\fP() и \fBtimerfd_gettime\fP() могут завершаться со
+следующими ошибками:
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEFAULT\fP
+Указатели \fInew_value\fP, \fIold_value\fP или \fIcurr_value\fP являются
+некорректными.
+.TP 
+\fBEINVAL\fP
+Значение \fIfd\fP не является правильным файловым дескриптором timerfd.
+.PP
+Вызов \fBtimerfd_settime\fP() также может завершиться со следующими ошибками:
+.TP 
+\fBEINVAL\fP
+Значение \fInew_value\fP некорректно инициализировано (одно из \fItv_nsec\fP вне
+диапазона от 0 до 999999999).
+.TP 
+\fBEINVAL\fP
+.\" This case only checked since 2.6.29, and 2.2.2[78].some-stable-version.
+.\" In older kernel versions, no check was made for invalid flags.
+Значение \fIflags\fP неверно.
+.SH ВЕРСИИ
+Данные системные вызовы доступны в Linux начиная с ядра версии
+2.6.25. Поддержка в библиотеке glibc появилась в версии 2.8.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные системные вызовы есть только в Linux.
+.SH ДЕФЕКТЫ
+.\" 2.6.29
+В настоящее время \fBtimerfd_create\fP() поддерживает только несколько типов
+идентификаторов часов, поддерживаемых \fBtimer_create\fP(2).
+.SH ПРИМЕР
+Следующая программа создаёт таймер и затем следит за его работой. Программа
+получает до трёх аргументов из командной строки. В первом аргументе задаётся
+количество секунд до первого срабатывания таймера. Во втором аргументе
+задаётся интервал таймера в секундах. В третьем аргументе задаётся сколько
+программа должна позволить сработать таймеру до завершения. Второй и третий
+аргументы необязательны.
+.PP
+Следующий сеанс работы в оболочке показывает использование программы:
+.PP
+.in +4n
+.EX
+$\fB a.out 3 1 100\fP
+0.000: таймер запущен
+3.000: read: 1; всего=1
+4.000: read: 1; всего=2
+\fB^Z \fP                 # нажато control\-Z для приостанова программы
+[1]+  Stopped                 ./timerfd3_demo 3 1 100
+$ \fBfg\fP                # возобновление выполнения после нескольких
+                       #секунд
+a.out 3 1 100
+9.660: read: 5; всего=7
+10.000: read: 1; всего=8
+11.000: read: 1; всего=9
+\fB^C \fP                 # нажато control\-C для приостанова программы
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+.\" The commented out code here is what we currently need until
+.\" the required stuff is in glibc
+.\"
+.\"
+.\"/* Link with -lrt */
+.\"#define _GNU_SOURCE
+.\"#include <sys/syscall.h>
+.\"#include <unistd.h>
+.\"#include <time.h>
+.\"#if defined(__i386__)
+.\"#define __NR_timerfd_create 322
+.\"#define __NR_timerfd_settime 325
+.\"#define __NR_timerfd_gettime 326
+.\"#endif
+.\"
+.\"static int
+.\"timerfd_create(int clockid, int flags)
+.\"{
+.\"    return syscall(__NR_timerfd_create, clockid, flags);
+.\"}
+.\"
+.\"static int
+.\"timerfd_settime(int fd, int flags, struct itimerspec *new_value,
+.\"        struct itimerspec *curr_value)
+.\"{
+.\"    return syscall(__NR_timerfd_settime, fd, flags, new_value,
+.\"                   curr_value);
+.\"}
+.\"
+.\"static int
+.\"timerfd_gettime(int fd, struct itimerspec *curr_value)
+.\"{
+.\"    return syscall(__NR_timerfd_gettime, fd, curr_value);
+.\"}
+.\"
+.\"#define TFD_TIMER_ABSTIME (1 << 0)
+.\"
+.\"////////////////////////////////////////////////////////////
+#include <sys/timerfd.h>
+#include <time.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>        /* определение uint64_t */
+
+#define handle_error(msg) \e
+        do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+static void
+print_elapsed_time(void)
+{
+    static struct timespec start;
+    struct timespec curr;
+    static int first_call = 1;
+    int secs, nsecs;
+
+    if (first_call) {
+        first_call = 0;
+        if (clock_gettime(CLOCK_MONOTONIC, &start) == \-1)
+            handle_error("clock_gettime");
+    }
+
+    if (clock_gettime(CLOCK_MONOTONIC, &curr) == \-1)
+        handle_error("clock_gettime");
+
+    secs = curr.tv_sec \- start.tv_sec;
+    nsecs = curr.tv_nsec \- start.tv_nsec;
+    if (nsecs < 0) {
+        secs\-\-;
+        nsecs += 1000000000;
+    }
+    printf("%d.%03d: ", secs, (nsecs + 500000) / 1000000);
+}
+
+int
+main(int argc, char *argv[])
+{
+    struct itimerspec new_value;
+    int max_exp, fd;
+    struct timespec now;
+    uint64_t exp, tot_exp;
+    ssize_t s;
+
+    if ((argc != 2) && (argc != 4)) {
+        fprintf(stderr, "%s нач\-сек [интервал макс\-сраб]\en",
+                argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    if (clock_gettime(CLOCK_REALTIME, &now) == \-1)
+        handle_error("clock_gettime");
+
+    /* создаём абсолютный таймер CLOCK_REALTIME с начальным
+       срабатыванием и интервалом, заданными из командной строки */
+
+    new_value.it_value.tv_sec = now.tv_sec + atoi(argv[1]);
+    new_value.it_value.tv_nsec = now.tv_nsec;
+    if (argc == 2) {
+        new_value.it_interval.tv_sec = 0;
+        max_exp = 1;
+    } else {
+        new_value.it_interval.tv_sec = atoi(argv[2]);
+        max_exp = atoi(argv[3]);
+    }
+    new_value.it_interval.tv_nsec = 0;
+
+    fd = timerfd_create(CLOCK_REALTIME, 0);
+    if (fd == \-1)
+        handle_error("timerfd_create");
+
+    if (timerfd_settime(fd, TFD_TIMER_ABSTIME, &new_value, NULL) == \-1)
+        handle_error("timerfd_settime");
+
+    print_elapsed_time();
+    printf("таймер запущен\en");
+
+    for (tot_exp = 0; tot_exp < max_exp;) {
+        s = read(fd, &exp, sizeof(uint64_t));
+        if (s != sizeof(uint64_t))
+            handle_error("read");
+
+        tot_exp += exp;
+        print_elapsed_time();
+        printf("read: %llu; всего=%llu\en",
+                (unsigned long long) exp,
+                (unsigned long long) tot_exp);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBeventfd\fP(2), \fBpoll\fP(2), \fBread\fP(2), \fBselect\fP(2), \fBsetitimer\fP(2),
+\fBsignalfd\fP(2), \fBtimer_create\fP(2), \fBtimer_gettime\fP(2),
+\fBtimer_settime\fP(2), \fBepoll\fP(7), \fBtime\fP(7)

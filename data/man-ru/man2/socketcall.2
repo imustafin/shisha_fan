@@ -1,0 +1,173 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1995 Michael Chastain (mec@shell.portal.com), 15 April 1995.
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Tue Oct 22 22:11:53 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SOCKETCALL 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+socketcall \- системные вызовы сокетов
+.SH ОБЗОР
+\fB#include <linux/net.h>\fP
+.PP
+\fBint socketcall(int \fP\fIcall\fP\fB, unsigned long *\fP\fIargs\fP\fB);\fP
+.SH ОПИСАНИЕ
+\fBsocketcall\fP() \(em это общая точка входа в ядро всех системных вызовов
+сокетов. В аргументе \fIcall\fP задаётся функция сокета, которая будет
+вызвана. Аргумент \fIargs\fP указывает на блок параметров функции, которые
+передаются соответствующему вызову.
+.PP
+Пользовательские программы должны оперировать обычными функциями, имеющими
+стандартные имена. О существовании \fBsocketcall\fP() необходимо знать лишь
+создателям стандартных библиотек и ядра.
+.PP
+.TS
+tab(:);
+l l.
+\fIВызов\fP:Справочная страница
+T{
+\fBSYS_SOCKET\fP
+T}:T{
+\fBsocket\fP(2)
+T}
+T{
+\fBSYS_BIND\fP
+T}:T{
+\fBbind\fP(2)
+T}
+T{
+\fBSYS_CONNECT\fP
+T}:T{
+\fBconnect\fP(2)
+T}
+T{
+\fBSYS_LISTEN\fP
+T}:T{
+\fBlisten\fP(2)
+T}
+T{
+\fBSYS_ACCEPT\fP
+T}:T{
+\fBaccept\fP(2)
+T}
+T{
+\fBSYS_GETSOCKNAME\fP
+T}:T{
+\fBgetsockname\fP(2)
+T}
+T{
+\fBSYS_GETPEERNAME\fP
+T}:T{
+\fBgetpeername\fP(2)
+T}
+T{
+\fBSYS_SOCKETPAIR\fP
+T}:T{
+\fBsocketpair\fP(2)
+T}
+T{
+\fBSYS_SEND\fP
+T}:T{
+\fBsend\fP(2)
+T}
+T{
+\fBSYS_RECV\fP
+T}:T{
+\fBrecv\fP(2)
+T}
+T{
+\fBSYS_SENDTO\fP
+T}:T{
+\fBsendto\fP(2)
+T}
+T{
+\fBSYS_RECVFROM\fP
+T}:T{
+\fBrecvfrom\fP(2)
+T}
+T{
+\fBSYS_SHUTDOWN\fP
+T}:T{
+\fBshutdown\fP(2)
+T}
+T{
+\fBSYS_SETSOCKOPT\fP
+T}:T{
+\fBsetsockopt\fP(2)
+T}
+T{
+\fBSYS_GETSOCKOPT\fP
+T}:T{
+\fBgetsockopt\fP(2)
+T}
+T{
+\fBSYS_SENDMSG\fP
+T}:T{
+\fBsendmsg\fP(2)
+T}
+T{
+\fBSYS_RECVMSG\fP
+T}:T{
+\fBrecvmsg\fP(2)
+T}
+T{
+\fBSYS_ACCEPT4\fP
+T}:T{
+\fBaccept4\fP(2)
+T}
+T{
+\fBSYS_RECVMMSG\fP
+T}:T{
+\fBrecvmmsg\fP(2)
+T}
+T{
+\fBSYS_SENDMMSG\fP
+T}:T{
+\fBsendmmsg\fP(2)
+T}
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция есть только в Linux, и она не должна использоваться в
+переносимых программах.
+.SH ЗАМЕЧАНИЯ
+На некоторых архитектурах, например x86\-64 и ARM, нет системного вызова
+\fBsocketcall\fP(); вместо него реализованы системные вызовы \fBsocket\fP(2),
+\fBaccept\fP(2), \fBbind\fP(2) и т.д.
+.PP
+.\" commit 9dea5dc921b5f4045a18c63eb92e84dc274d17eb
+Для архитектуры x86\-32, \fBsocketcall\fP() исторически имел только одну точку
+входа в программном интерфейсе сокетов. Однако начиная с Linux 4.3, для
+x86\-32 появились прямые системные вызовы в программном интерфейсе
+сокетов. for the sockets API. Это упрощает создание фильтров \fBseccomp\fP(2),
+которые отбирают системные вызовы сокетов (для новых пользовательских
+исполняемых файлов, которые компилируются с использованием новых точек
+входа), а также улучшают (совсем немного) производительность.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaccept\fP(2), \fBbind\fP(2), \fBconnect\fP(2), \fBgetpeername\fP(2),
+\fBgetsockname\fP(2), \fBgetsockopt\fP(2), \fBlisten\fP(2), \fBrecv\fP(2),
+\fBrecvfrom\fP(2), \fBrecvmsg\fP(2), \fBsend\fP(2), \fBsendmsg\fP(2), \fBsendto\fP(2),
+\fBsetsockopt\fP(2), \fBshutdown\fP(2), \fBsocket\fP(2), \fBsocketpair\fP(2)

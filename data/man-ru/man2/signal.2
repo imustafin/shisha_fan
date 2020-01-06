@@ -1,0 +1,187 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2000 Andries Brouwer <aeb@cwi.nl>
+.\" and Copyright (c) 2007 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" and Copyright (c) 2008, Linux Foundation, written by Michael Kerrisk
+.\"      <mtk.manpages@gmail.com>
+.\" based on work by Rik Faith <faith@cs.unc.edu>
+.\" and Mike Battersby <mike@starbug.apana.org.au>.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2004-11-19, mtk:
+.\" added pointer to sigaction.2 for details of ignoring SIGCHLD
+.\" 2007-06-03, mtk: strengthened portability warning, and rewrote
+.\"     various sections.
+.\" 2008-07-11, mtk: rewrote and expanded portability discussion.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGNAL 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+signal \- работа с сигналами ANSI C
+.SH ОБЗОР
+\fB#include <signal.h>\fP
+.PP
+\fBtypedef void (*sighandler_t)(int);\fP
+.PP
+\fBsighandler_t signal(int \fP\fIsignum\fP\fB, sighandler_t \fP\fIhandler\fP\fB);\fP
+.SH ОПИСАНИЕ
+Работа вызова \fBsignal\fP() различается в различных версиях UNIX, и такая же
+ситуация исторически сложилась и в различных версиях Linux. \fBНе используйте
+его\fP: используйте вместо него \fBsigaction\fP(2). Смотрите абзац
+\fIПереносимость\fP далее.
+.PP
+Вызов \fBsignal\fP() устанавливает обработчик сигнала с номером \fIsignum\fP в
+соответствии с параметром \fIhandler\fP, который может быть равен \fBSIG_IGN\fP,
+\fBSIG_DFL\fP или адресу функции пользователя ("обработчик сигнала").
+.PP
+Если сигнал \fIsignum\fP доставляется процессу, то происходит следующее:
+.TP  3
+*
+Если значение обработчика равно \fBSIG_IGN\fP, то сигнал игнорируется.
+.TP 
+*
+Если значение обработчика равно \fBSIG_DFL\fP, то выполняется стандартное
+действие, связанное с сигналом (см. \fBsignal\fP(7)).
+.TP 
+*
+Если значение обработчика равно адресу функции, то сначала значение
+обработчика сбрасывается в \fBSIG_DFL\fP или сигнал блокируется
+(см. \fIПереносимость\fP далее), а затем вызывается функция \fIhandler\fP с
+аргументом \fIsignum\fP. Если вызов обработчика приводит к блокировке сигнала,
+то сигнал разблокируется после возврата из обработчика.
+.PP
+Сигналы \fBSIGKILL\fP и \fBSIGSTOP\fP не могут быть перехвачены или игнорированы.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Вызов \fBsignal\fP() возвращает предыдущее значение обработчика сигнала или
+\fBSIG_ERR\fP при ошибке. В случае ошибки в \fIerrno\fP указывается номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Неверное значение \fIsignum\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99.
+.SH ЗАМЕЧАНИЯ
+Результат работы \fBsignal\fP() в многонитевом процессе не регламентирован.
+.PP
+В соответствии с POSIX поведение процесса после игнорирования сигнала
+\fBSIGFPE\fP, \fBSIGILL\fP или \fBSIGSEGV\fP не определено, если эти сигналы не были
+посланы при помощи функций \fBkill\fP(2) или \fBraise\fP(3). Деление целого числа
+на ноль имеет непредсказуемый результат. В некоторых архитектурах это
+приводит к появлению сигнала \fBSIGFPE\fP. (Также, деление самого большого по
+модулю отрицательного числа на \-1 тоже может приводить к \fBSIGFPE\fP.)
+Игнорирование этого сигнала может привести к появлению бесконечного цикла.
+.PP
+О том, что происходит когда обработчик \fBSIGCHLD\fP приравнивается к
+\fBSIG_IGN\fP, смотрите на странице \fBsigaction\fP(2).
+.PP
+Список асинхронных функций работы с сигналами, которые можно безопасно
+вызывать из обработчика сигналов, смотрите на странице \fBsignal\-safety\fP(7).
+.PP
+.\" libc4 and libc5 define
+.\" .IR SignalHandler ;
+Используемый \fIsighandler_t\fP является расширением GNU, который определён,
+если существует макрос \fB_GNU_SOURCE\fP; в glibc также есть \fIsig_t\fP, если
+определён \fB_BSD_SOURCE\fP (glibc 2.19 и старее) или \fB_DEFAULT_SOURCE\fP (glibc
+2.19 и новее). Без использования этого типа объявление \fBsignal\fP() сложнее
+читать:
+.PP
+.in +4n
+.EX
+\fBvoid ( *\fP\fIsignal\fP\fB(int \fP\fIsignum\fP\fB, void (*\fP\fIhandler\fP\fB)(int)) ) (int);\fP
+.EE
+.in
+.SS Переносимость
+Вызов \fBsignal\fP() считается переносимым, если обработчик сигнала равен
+\fBSIG_DFL\fP или \fBSIG_IGN\fP. Семантика при использовании \fBsignal\fP() для
+установки обработчика сигнала отличается в различных системах (и в POSIX.1
+явно разрешена такая перемена); \fBне используйте данный вызов для этой
+цели.\fP
+.PP
+В POSIX.1 проблема переносимости решена введением \fBsigaction\fP(2), который
+предоставляет явное управление семантикой при вызове обработчика сигнала;
+используйте этот интерфейс вместо \fBsignal\fP().
+.PP
+В первых системах UNIX, когда обработчик, установленный с помощью
+\fBsignal\fP(), вызывался по получению сигнала, обработчик сигнала был бы
+сброшен в \fBSIG_DFL\fP, и система не заблокировала бы доставку этого сигнала в
+последующие экземпляры.
+.PP
+.EX
+    sa.sa_flags = SA_RESETHAND | SA_NODEFER;
+.EE
+.PP
+System\ V также предоставляет эту семантику \fBsignal\fP(). Это плохо, так как
+сигнал может быть доставлен снова, до того как обработчик сможет получить
+шанс его переустановить. Кроме того, скоростные доставки одного сигнала
+приводили к рекурсивным вызовам обработчика.
+.PP
+В BSD улучшили эту ситуацию, но, к сожалению, изменили существующую
+семантику для установки обработчика с помощью \fBsignal\fP(). В BSD при вызове
+обработчика сигнала обработчик сигнала не сбрасывается, и дальнейшие
+экземпляры сигнала блокируются и не доставляются пока выполняется
+обработчик. Кроме этого, некоторые блокирующие системные вызовы
+автоматически перезапускаются при прерывании обработчиком сигнала (смотрите
+\fBsignal\fP(7)). Семантика BSD эквивалентна вызову \fBsigaction\fP(2) со
+следующими флагами:
+.PP
+.EX
+    sa.sa_flags = SA_RESTART;
+.EE
+.PP
+Ситуация в Linux:
+.IP * 2
+Системный вызов ядра \fBsignal\fP() предоставляет семантику System\ V.
+.IP *
+.\"
+.\" System V semantics are also provided if one uses the separate
+.\" .BR sysv_signal (3)
+.\" function.
+.\" .IP *
+.\" The
+.\" .BR signal ()
+.\" function in Linux libc4 and libc5 provide System\ V semantics.
+.\" If one on a libc5 system includes
+.\" .I <bsd/signal.h>
+.\" instead of
+.\" .IR <signal.h> ,
+.\" then
+.\" .BR signal ()
+.\" provides BSD semantics.
+По умолчанию в glibc 2 и новее обёрточная функция \fBsignal\fP() не вызывает
+системный вызов ядра. Вместо этого она вызывает \fBsigaction\fP(2) с флагами,
+которые активируют семантику BSD. Такое поведение по умолчанию
+устанавливается, если определён макрос тестирования свойств \fB_BSD_SOURCE\fP в
+glibc 2.19 и старее или \fB_DEFAULT_SOURCE\fP в glibc 2.19 и новее (по
+умолчанию эти макросы определены; подробности смотрите в
+\fBfeature_test_macros\fP(7)) . Если этот макрос тестирования свойств не
+определён, \fBsignal\fP() работает согласно семантики System\ V.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(1), \fBalarm\fP(2), \fBkill\fP(2), \fBpause\fP(2), \fBsigaction\fP(2),
+\fBsignalfd\fP(2), \fBsigpending\fP(2), \fBsigprocmask\fP(2), \fBsigsuspend\fP(2),
+\fBbsd_signal\fP(3), \fBkillpg\fP(3), \fBraise\fP(3), \fBsiginterrupt\fP(3),
+\fBsigqueue\fP(3), \fBsigsetops\fP(3), \fBsigvec\fP(3), \fBsysv_signal\fP(3),
+\fBsignal\fP(7)

@@ -1,0 +1,153 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2017 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IOCTL_IFLAGS 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ioctl_iflags \- операции ioctl() для флагов иноды
+.SH ОПИСАНИЕ
+Различные файловые системы Linux поддерживают \fIфлаги иноды\fP — атрибуты,
+которые изменяют смысл файлов и каталогов. Эти флаги можно запросить и
+изменить с помощью двух операций \fBioctl\fP(2):
+.PP
+.in +4n
+.EX
+int attr;
+fd = open("pathname", ...);
+
+ioctl(fd, FS_IOC_GETFLAGS, &attr);  /* помещает текущие флаги
+                                       в \(aqattr\(aq */
+attr |= FS_NOATIME_FL;              /* изменяет полученную битовую маску */
+ioctl(fd, FS_IOC_SETFLAGS, &attr);  /* обновляет флаги иноды,
+                                       на которую указывает \(aqfd\(aq */
+.EE
+.in
+.PP
+Команды оболочки \fBlsattr\fP(1) и \fBchattr\fP(1) предоставляют интерфейс к этим
+двум операциям, позволяя пользователю просматривать и изменять флаги иноды,
+связанной с файлом.
+.PP
+Поддерживаются следующие флаги (показаны вместе с соответствующей буквой,
+которой обозначается флаг в \fBlsattr\fP(1) и \fBchattr\fP(1)):
+.TP 
+\fBFS_APPEND_FL\fP \(aqa\(aq
+Файл можно открыть только с флагом \fBO_APPEND\fP (это ограничение не обойти
+даже суперпользователю). Только привилегированный процесс
+(\fBCAP_LINUX_IMMUTABLE\fP) может установить или сбросить этот атрибут.
+.TP 
+\fBFS_COMPR_FL\fP \(aqc\(aq
+Хранить файл на диске в сжатом виде. Этот флаг \fIне\fP поддерживается
+реализациями большинства основных файловых систем; исключением является
+\fBbtrfs\fP(5).
+.TP 
+\fBFS_DIRSYNC_FL\fP \(aqD\(aq (начиная с Linux 2.6.0)
+.\" .TP
+.\" .BR FS_EXTENT_FL " \(aqe\(aq"
+.\" FIXME Some support on ext4? (EXT4_EXTENTS_FL)
+Синхронно записывать изменения каталога на диск. Этот флаг предоставляет
+эквивалент параметра \fBMS_DIRSYNC\fP вызова \fBmount\fP(2), но для каталога. Этот
+флаг применим только для каталогов.
+.TP 
+\fBFS_IMMUTABLE_FL\fP \(aqi\(aq
+Файл постоянный (immutable): не допускает изменение содержимого и метаданных
+(прав, меток времени, владельцев, счётчика ссылок и т. п.) (это ограничение
+не обойти даже суперпользователю). Только привилегированный процесс
+(\fBCAP_LINUX_IMMUTABLE\fP) может установить или сбросить этот атрибут.
+.TP 
+\fBFS_JOURNAL_DATA_FL\fP \(aqj\(aq
+Включение журналирования данных файла в файловых системах \fBext3\fP(5) и
+\fBext4\fP(5). В файловой системе с журналиванием в режиме \fIordered\fP или
+\fIwriteback\fP привилегированный (\fBCAP_SYS_RESOURCE\fP) процесс может
+установить этот флаг для включения журналирования изменения данных
+пофайлово.
+.TP 
+\fBFS_NOATIME_FL\fP \(aqA\(aq
+.\" .TP
+.\" .BR FS_NOCOMP_FL " \(aq\(aq"
+.\" FIXME Support for FS_NOCOMP_FL on Btrfs?
+Не изменять время последнего доступа к файлу при доступе. Это может
+увеличить произвольность ввода\-вывода в приложениях, которым не нужна
+точность этой метки времени. Данный флаг предоставляет функциональность
+флага \fBMS_NOATIME\fP вызова \fBmount\fP(2), но пофайлово.
+.TP 
+\fBFS_NOCOW_FL\fP \(aqC\(aq (начиная с Linux 2.6.39)
+Файл не будет подвергаться обновлениям копирования\-при\-записи. Этот флаг
+работает только в файловых системах с поддержкой копирования\-при\-записи,
+таких как Btrfs. Смотрите \fBchattr\fP(1) и \fBbtrfs\fP(5).
+.TP 
+\fBFS_NODUMP_FL\fP \(aqd\(aq
+Не включать этот файл в резервную копию, создаваемую \fBdump\fP(8).
+.TP 
+\fBFS_NOTAIL_FL\fP \(aqt\(aq
+Этот флаг поддерживается только в Reiserfs. Он отключает свойство Reiserfs
+упаковки хвостов, которая пытается упаковывать маленькие файлы (и конечные
+фрагменты больших файлов) в в дисковые блоки метаданных файла.
+.TP 
+\fBFS_PROJINHERIT_FL\fP \(aqP\(aq (начиная с Linux 4.5)
+.\" commit 040cb3786d9b25293b8b0b05b90da0f871e1eb9b
+.\" Flag name was added in Linux 4.4
+.\" FIXME Not currently supported because not in FS_FL_USER_MODIFIABLE?
+Наследовать ID квоты проекта. Файлы и подкаталоги будут наследовать ID
+проекта каталога. Этот флаг можно применять только для каталогов.
+.TP 
+\fBFS_SECRM_FL\fP \(aqs\(aq
+Помечать файл для безопасного удаления. Это свойство не реализовано во всех
+файловых системах, так как задача безопасного стирания файла с хранящего
+носителя на удивление сложна.
+.TP 
+\fBFS_SYNC_FL\fP \(aqS\(aq
+Выполнять обновления файла синхронно. Для файлов, это приводит к выполнению
+синхронной записи (как если бы все файлы открывались с флагом
+\fBO_SYNC\fP). Для каталогов, это приводит к тому эффекту что и флаг
+\fBFS_DIRSYNC_FL\fP.
+.TP 
+\fBFS_TOPDIR_FL\fP \(aqT\(aq
+Пометить каталог для специальной обработки по стратегии выделения блоков
+Орлова. Подробности смотрите в \fBchattr\fP(1). Этот флаг можно применять
+только к каталогам и он действует только в ext2, ext3 и ext4.
+.TP 
+\fBFS_UNRM_FL\fP \(aqu\(aq
+Разрешить файлу быть не удалённым, если он удалён. Это свойство реализовано
+во всех файловых системах, так как возможно реализовать механизм
+восстановления файла вне ядра.
+.PP
+В большинстве случаев, когда какой\-либо из флагов установлен на каталоге,
+этот флаг наследуется  файлами и подкаталогами, созданными внутри
+каталога. Исключением является \fBFS_TOPDIR_FL\fP, который не наследуется и
+\fBFS_DIRSYNC_FL\fP, который наследуется только подкаталогами.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Флаги иноды являются нестандартным расширением Linux.
+.SH ЗАМЕЧАНИЯ
+Для изменения флагов иноды файла используется операция \fBFS_IOC_SETFLAGS\fP;
+эффективный идентификатор пользователя вызывающего должен совпадать с
+владельцем файла или вызывающий должен иметь мандат \fBCAP_FOWNER\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchattr\fP(1), \fBlsattr\fP(1), \fBmount\fP(2), \fBbtrfs\fP(5), \fBext4\fP(5), \fBxfs\fP(5),
+\fBxattr\fP(7), \fBmount\fP(8)

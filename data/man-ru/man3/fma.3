@@ -1,0 +1,126 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2004-11-15, Added further text on FLT_ROUNDS
+.\" 	as suggested by AEB and Fabian Kreutz
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FMA 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+fma, fmaf, fmal \- умножение и сложение чисел с плавающей запятой
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble fma(double \fP\fIx\fP\fB, double \fP\fIy\fP\fB, double \fP\fIz\fP\fB);\fP
+\fBfloat fmaf(float \fP\fIx\fP\fB, float \fP\fIy\fP\fB, float \fP\fIz\fP\fB);\fP
+\fBlong double fmal(long double \fP\fIx\fP\fB, long double \fP\fIy\fP\fB, long double \fP\fIz\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBfma\fP(), \fBfmaf\fP(), \fBfmal\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Эти функции вычисляют \fIx\fP * \fIy\fP + \fIz\fP. Результат округляется как единая
+тернарная операция согласно текущему режиму округления (смотрите
+\fBfenv\fP(3)).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Данные функции возвращают результат \fIx\fP * \fIy\fP + \fIz\fP, округлённый как для
+единой тернарной операции.
+.PP
+Если \fIx\fP или \fIy\fP равно NaN, то будет возвращено NaN.
+.PP
+Если \fIx\fP умноженное на \fIy\fP стремится к бесконечности и значение \fIz\fP равно
+минус бесконечности, то будет сгенерирована ошибка выхода за пределы
+области, а в качестве результата будет возвращено NaN.
+.PP
+.\" POSIX.1-2008 allows some possible differences for the following two
+.\" domain error cases, but on Linux they are treated the same (AFAICS).
+.\" Nevertheless, we'll mirror POSIX.1 and describe the two cases
+.\" separately.
+.\" POSIX.1 says that a NaN or an implementation-defined value shall
+.\" be returned for this case.
+Если \fIx\fP или \fIy\fP равно бесконечности, не равно 0 и \fIz\fP не равно NaN, то
+будет сгенерирована ошибка выхода за пределы области, а в качестве
+результата будет возвращено NaN.
+.PP
+.\" POSIX.1 makes the domain error optional for this case.
+Если \fIx\fP или \fIy\fP равно бесконечности, не равно 0, а \fIz\fP равно NaN, то
+будет сгенерирована ошибка выхода за пределы области, а в качестве
+результата будет возвращено NaN.
+.PP
+Если \fIx\fP умноженное на \fIy\fP не равно бесконечности умноженной на 0 (или
+наоборот) и значение \fIz\fP равно NaN, то будет возвращено NaN.
+.PP
+Если происходит переполнение результата, возникает ошибка диапазона, и
+возвращается бесконечность с математически правильным знаком.
+.PP
+Если в результате исчерпана степень числа, возникает ошибка диапазона и
+возвращается 0 со знаком.
+.SH ОШИБКИ
+Смотрите \fBmath_error\fP(7), чтобы определить, какие ошибки могут возникать
+при вызове этих функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка области: \fIx\fP * \fIy\fP + \fIz\fP или \fIx\fP * \fIy\fP некорректно и \fIz\fP не равно NaN
+.\" .I errno
+.\" is set to
+.\" .BR EDOM .
+Возникает исключение неправильной плавающей запятой (\fBFE_INVALID\fP).
+.TP 
+Ошибка диапазона: результат превысил разрядность
+.\" .I errno
+.\" is set to
+.\" .BR ERANGE .
+Вызывается исключение переполнения плавающей точки (\fBFE_OVERFLOW\fP).
+.TP 
+Ошибка диапазона: результат исчерпал степень
+.\" .I errno
+.\" is set to
+.\" .BR ERANGE .
+Возникает исключение исчерпания степени чисел с плавающей запятой
+(\fBFE_UNDERFLOW\fP).
+.PP
+.\" FIXME . Is it intentional that these functions do not set errno?
+.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6801
+Эти функции не изменяют \fIerrno\fP.
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfma\fP(),
+\fBfmaf\fP(),
+\fBfmal\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBremainder\fP(3), \fBremquo\fP(3)

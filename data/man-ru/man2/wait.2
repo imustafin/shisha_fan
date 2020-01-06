@@ -1,0 +1,485 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig <ig25@rz.uni-karlsruhe.de>
+.\" and Copyright (c) 2004 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 13:30:06 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sun Aug 21 17:42:42 1994 by Rik Faith <faith@cs.unc.edu>
+.\"          (Thanks to Koen Holtman <koen@win.tue.nl>)
+.\" Modified Wed May 17 15:54:12 1995 by Rik Faith <faith@cs.unc.edu>
+.\"           To remove *'s from status in macros (Thanks to Michael Shields).
+.\" Modified as suggested by Nick Duffek <nsd@bbc.com>, aeb, 960426
+.\" Modified Mon Jun 23 14:09:52 1997 by aeb - add EINTR.
+.\" Modified Thu Nov 26 02:12:45 1998 by aeb - add SIGCHLD stuff.
+.\" Modified Mon Jul 24 21:37:38 2000 by David A. Wheeler
+.\"          <dwheeler@dwheeler.com> - noted thread issues.
+.\" Modified 26 Jun 01 by Michael Kerrisk
+.\"          Added __WCLONE, __WALL, and __WNOTHREAD descriptions
+.\" Modified 2001-09-25, aeb
+.\" Modified 26 Jun 01 by Michael Kerrisk, <mtk.manpages@gmail.com>
+.\"	Updated notes on setting disposition of SIGCHLD to SIG_IGN
+.\" 2004-11-11, mtk
+.\"	Added waitid(2); added WCONTINUED and WIFCONTINUED()
+.\"	Added text on SA_NOCLDSTOP
+.\"	Updated discussion of SA_NOCLDWAIT to reflect 2.6 behavior
+.\"	Much other text rewritten
+.\" 2005-05-10, mtk, __W* flags can't be used with waitid()
+.\" 2008-07-04, mtk, removed erroneous text about SA_NOCLDSTOP
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WAIT 2 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+wait, waitpid, waitid \- ожидает смену состояния процесса
+.SH ОБЗОР
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <sys/wait.h>\fP
+.PP
+\fBpid_t wait(int *\fP\fIwstatus\fP\fB);\fP
+.PP
+\fBpid_t waitpid(pid_t \fP\fIpid\fP\fB, int *\fP\fIwstatus\fP\fB, int \fP\fIoptions\fP\fB);\fP
+.PP
+\fBint waitid(idtype_t \fP\fIidtype\fP\fB, id_t \fP\fIid\fP\fB, siginfo_t *\fP\fIinfop\fP\fB, int \fP\fIoptions\fP\fB);\fP
+                /* Это интерфейс glibc и POSIX; информацию по
+                   системному вызову ядра смотрите в ЗАМЕЧАНИЯ. */
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+.PD 0
+\fBwaitid\fP():
+.RS 4
+.\"    (_XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED)
+начиная с glibc 2.26:
+_XOPEN_SOURCE >= 500 ||
+    _POSIX_C_SOURCE\ >=\ 200809L
+.br
+в glibc 2.25 и старее:
+    _XOPEN_SOURCE
+        || /* начиная с glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+        || /* в версиях glibc <= 2.19: */ _BSD_SOURCE
+.RE
+.PD
+.ad
+.SH ОПИСАНИЕ
+Данные системные вызовы используются для ожидания изменения состояния
+процесса\-потомка вызвавшего процесса и получения информации о потомке, чьё
+состояние изменилось. Сменой состояния считается: прекращение работы
+потомка, останов потомка по сигналу, продолжение работы потомка по
+сигналу. Ожидание прекращения работы потомка позволяет системе освободить
+ресурсы, использовавшиеся потомком; если ожидание не выполняется, то
+прекративший работу потомок остаётся в системе в состоянии "зомби (zombie)"
+(см. ЗАМЕЧАНИЯ далее).
+.PP
+Если состояние потомка уже изменилось, то вызов сразу возвращает
+результат. В противном случае, работа приостанавливается до тех пор, пока не
+произойдёт изменение состояния потомка или обработчик сигналов не прервёт
+вызов (предполагается, что системные вызовы не перезапускаются автоматически
+из\-за указания флага \fBSA_RESTART\fP в \fBsigaction\fP(2)). В оставшейся части
+страницы потомок, чьё состояние ещё не было получено одним из этих системных
+вызовов, называется \fIожидаемым (waitable)\fP.
+.SS "wait() и waitpid()"
+Системный вызов \fBwait\fP() приостанавливает выполнение вызвавшей нити до тех
+пор, пока не прекратит выполнение один из её потомков. Вызов
+\fIwait(&wstatus)\fP эквивалентен:
+.PP
+.in +4n
+.EX
+waitpid(\-1, &wstatus, 0);
+.EE
+.in
+.PP
+Системный вызов \fBwaitpid\fP() приостанавливает выполнение вызвавшей нити до
+тех пор, пока не изменится состояние потомка, заданного аргументом
+\fIpid\fP. По умолчанию \fBwaitpid\fP() ожидает только прекращения работы потомка,
+но это можно изменить через аргумент \fIoptions\fP как описано далее.
+.PP
+Значением \fIpid\fP может быть:
+.IP "< \-1"
+означает, что нужно ждать любого потомка, чей идентификатор группы процессов
+равен абсолютному значению \fIpid\fP.
+.IP \-1
+означает, что нужно ждать любого потомка.
+.IP 0
+означает, что нужно ждать любого потомка, чей идентификатор группы процессов
+равен таковому у вызвавшего процесса.
+.IP "> 0"
+означает, что нужно ждать любого потомка, чей идентификатор процесса равен
+\fIpid\fP.
+.PP
+Значение \fIoptions\fP создаётся путем битовой операции ИЛИ над следующими
+константами:
+.TP  12
+\fBWNOHANG\fP
+означает немедленный возврат, если ни один потомок не завершил выполнение.
+.TP 
+\fBWUNTRACED\fP
+также возвращаться, если есть остановленный потомок (но не трассируемый
+через \fBptrace\fP(2)). Состояние \fIтрассируемого\fP остановленного потомка
+предоставляется даже если этот аргумент не указан.
+.TP 
+\fBWCONTINUED\fP (начиная с Linux 2.6.10)
+также возвращаться, если работа остановленного потомка возобновилась из\-за
+получения сигнала \fBSIGCONT\fP.
+.PP
+(Аргументы, имеющиеся только в Linux, см. далее.)
+.PP
+Если \fIwstatus\fP не равен NULL, то \fBwait\fP() и \fBwaitpid\fP() сохраняют
+информацию о состоянии в переменной типа \fIint\fP, на которую указывает
+\fIwstatus\fP. Это целое число можно исследовать с помощью следующих макросов
+(они принимают в качестве аргумента само целое, а не указатель на него как
+\fBwait\fP() и \fBwaitpid\fP()!):
+.TP 
+\fBWIFEXITED(\fP\fIwstatus\fP\fB)\fP
+возвращает истинное значение, если потомок нормально завершился, то есть
+вызвал \fBexit\fP(3) или \fB_exit\fP(2), или вернулся из функции main().
+.TP 
+\fBWEXITSTATUS(\fP\fIwstatus\fP\fB)\fP
+возвращает код завершения потомка. Он состоит из восьми младших бит
+аргумента \fIstatus\fP, который потомок указал при вызове \fBexit\fP(3) или
+\fB_exit\fP(2) или в аргументе оператора return в функции main(). Этот макрос
+можно использовать, только если \fBWIFEXITED\fP вернул истинное значение.
+.TP 
+\fBWIFSIGNALED(\fP\fIwstatus\fP\fB)\fP
+возвращает истинное значение, если потомок завершился из\-за сигнала.
+.TP 
+\fBWTERMSIG(\fP\fIwstatus\fP\fB)\fP
+возвращает номер сигнала, который привел к завершению потомка. Этот макрос
+можно использовать, только если \fBWIFSIGNALED\fP вернул истинное значение.
+.TP 
+\fBWCOREDUMP(\fP\fIwstatus\fP\fB)\fP
+возвращает истину, если потомок создал дамп памяти (смотрите
+\fBcore\fP(5)). Этот макрос можно использовать только, если при \fBWIFSIGNALED\fP
+возвращается истинное значение.
+.IP
+Данный макрос не описан в POSIX.1\-2001 и недоступен в некоторых реализациях
+UNIX (например, AIX, SunOS). Поэтому указывайте его внутри \fI#ifdef
+WCOREDUMP ... #endif\fP.
+.TP 
+\fBWIFSTOPPED(\fP\fIwstatus\fP\fB)\fP
+возвращает истинное значение, если потомок остановлен по сигналу; это
+возможно только, если при вызове был указан флаг \fBWUNTRACED\fP или если над
+потомком выполняется трассировка (см. \fBptrace\fP(2)).
+.TP 
+\fBWSTOPSIG(\fP\fIwstatus\fP\fB)\fP
+возвращает номер сигнала, из\-за которого потомок был остановлен. Этот макрос
+можно использовать только, если при \fBWIFSTOPPED\fP возвращается истинное
+значение.
+.TP 
+\fBWIFCONTINUED(\fP\fIwstatus\fP\fB)\fP
+(начиная с Linux 2.6.10) возвращает истинное значение, если потомок
+продолжил работу, получив сигнал \fBSIGCONT\fP.
+.SS waitid()
+Системный вызов \fBwaitid\fP() (доступен, начиная с Linux 2.6.9) предоставляет
+более полный контроль над тем, какого изменения состояния нужно ждать у
+потомка.
+.PP
+Аргументы \fIidtype\fP и \fIid\fP определяют какого(их) потомков ждать:
+.IP "\fIidtype\fP == \fBP_PID\fP"
+Ждать потомка, чей ID процесса совпадает с \fIid\fP.
+.IP "\fIidtype\fP == \fBP_PGID\fP"
+Ждать любого потомка, чей ID группы процессов совпадает с \fIid\fP.
+.IP "\fIidtype\fP == \fBP_ALL\fP"
+Ждать любого потомка; значение \fIid\fP игнорируется.
+.PP
+Ожидаемые изменения состояния потомков задаются следующими флагами в
+\fIoptions\fP (объединяются через OR):
+.TP  12
+\fBWEXITED\fP
+Ждать завершения потомков.
+.TP 
+\fBWSTOPPED\fP
+Ждать потомков, которые завершатся по получению сигнала.
+.TP 
+\fBWCONTINUED\fP
+Ждать возобновления работы потомков (ранее остановленных) при получении
+сигнала \fBSIGCONT\fP.
+.PP
+Дополнительно с помощью OR в \fIoptions\fP могут задаваться следующие флаги:
+.TP  12
+\fBWNOHANG\fP
+Как в \fBwaitpid\fP().
+.TP 
+\fBWNOWAIT\fP
+Оставить потомка в состоянии ожидания; последующий вызов wait сможет снова
+получить информацию о состоянии потомка.
+.PP
+При успешном возврате, \fBwaitid\fP() заполняет следующие поля в структуре
+\fIsiginfo_t\fP, указываемой из \fIinfop\fP:
+.TP  12
+\fIsi_pid\fP
+ID процесса потомка.
+.TP 
+\fIsi_uid\fP
+Реальный пользовательский ID потомка. (Это поле не заполняется в большинстве
+других реализаций.)
+.TP 
+\fIsi_signo\fP
+Всегда устанавливается в \fBSIGCHLD\fP.
+.TP 
+\fIsi_status\fP
+Заполняется кодом завершения потомка, заданном в \fB_exit\fP(2) (или в
+\fBexit\fP(3)), или номером сигнала, который прервал, остановил или продолжил
+работу потомка. Что записано в данном поле можно определить по значению поля
+\fIsi_code\fP.
+.TP 
+\fIsi_code\fP
+Устанавливается в одно из: \fBCLD_EXITED\fP (потомок вызвал \fB_exit\fP(2));
+\fBCLD_KILLED\fP (потомок завершил работу по сигналу); \fBCLD_DUMPED\fP (потомок
+завершил работу по сигналу и был создан дамп памяти); \fBCLD_STOPPED\fP
+(потомок приостановлен по сигналу); \fBCLD_TRAPPED\fP (трассируемый потомок был
+захвачен); или \fBCLD_CONTINUED\fP (потомок продолжил работу по сигналу
+\fBSIGCONT\fP).
+.PP
+Если в \fIoptions\fP указан флаг \fBWNOHANG\fP и нет потомков в состоянии
+ожидания, то \fBwaitid\fP() сразу возвращает 0, а состояние структуры
+\fIsiginfo_t\fP, на которую указывает \fIinfop\fP, зависит от реализации. Чтобы
+(точно) отличать этот случай от того, что потомок был в ожидаемом состоянии,
+обнулите поле \fIsi_pid\fP перед вызовом и проверьте ненулевое значение в этом
+поле после отработки вызова.
+.PP
+.\" POSIX.1-2001 leaves this possibility unspecified; most
+.\" implementations (including Linux) zero out the structure
+.\" in this case, but at least one implementation (AIX 5.1)
+.\" does not -- MTK Nov 04
+В POSIX.1\-2008 Technical Corrigendum 1 (2013) добавлено требование, что при
+указании \fBWNOHANG\fP в \fIoptions\fP и нет потомков в состоянии ожидания, то
+вызов \fBwaitid\fP() должен возвращать в структуре обнулённые поля \fIsi_pid\fP и
+\fIsi_signo\fP. В Linux и других реализациях придерживаются этого требования,
+поэтому не нужно обнулять поле \fIsi_pid\fP перед вызовом \fBwaitid\fP(). Однако в
+этом не все реализации следуют POSIX.1.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае успешного выполнения \fBwait\fP() возвращает ID процесса
+завершившегося потомка; при ошибке возвращается \-1.
+.PP
+В случае успешного выполнения \fBwaitpid\fP() возвращает ID процесса потомка,
+чьё состояние изменилось; если задан флаг \fBWNOHANG\fP и существует один или
+более потомков, заданных в \fIpid\fP, без изменённого состояния, то
+возвращается 0. При ошибке возвращается \-1.
+.PP
+.\" FIXME As reported by Vegard Nossum, if infop is NULL, then waitid()
+.\" returns the PID of the child.  Either this is a bug, or it is intended
+.\" behavior that needs to be documented.  See my Jan 2009 LKML mail
+.\" "waitid() return value strangeness when infop is NULL".
+Вызов \fBwaitid\fP() возвращает 0 в случае успешного выполнения или если задан
+флаг \fBWNOHANG\fP и пока не существует потомка(ов), указанного в \fIpid\fP,с
+изменённым состоянием. При ошибке возвращается \-1.
+.PP
+Каждый из этих вызовов записывает в \fIerrno\fP соответствующую причину ошибки.
+.SH ОШИБКИ
+.TP 
+\fBECHILD\fP
+(для \fBwait\fP()) У вызвавшего процесса нет ожидающих потомков.
+.TP 
+\fBECHILD\fP
+(для \fBwaitpid\fP() или \fBwaitid\fP()) Процесс, заданный \fIpid\fP (\fBwaitpid\fP())
+или \fIidtype\fP и \fIid\fP (\fBwaitid\fP()), не существует или не является потомком
+вызвавшего процесса. (Это может случиться для своего потомка, если действие
+для \fBSIGCHLD\fP установлено в \fBSIG_IGN\fP. См. также раздел \fILinux Notes\fP о
+нитях.)
+.TP 
+\fBEINTR\fP
+Флаг \fBWNOHANG\fP не задан и был пойман неблокируемый сигнал или \fBSIGCHLD\fP;
+см. \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Недопустимое значение \fIoptions\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4, 4.3BSD, POSIX.1\-2001.
+.SH ЗАМЕЧАНИЯ
+Потомок, который завершился, но которого не ждали, становится «зомби»
+(zombie). Ядро поддерживает минимальный набор информации о процессах зомби
+(PID, состояние завершения, использованные ресурсы), чтобы позже позволить
+родителю выполнить процесс ожидания для получения информации о потомке. До
+тех пор, пока зомби не будет удалён из системы через процесс ожидания
+(wait), он занимает пространство (slot) в таблице процессов ядра, и если
+таблица заполнится, станет невозможно создавать новые процессы. Если
+родительский процесс завершает работу, то его потомки «зомби» (если есть)
+усыновляются процессом \fBinit\fP(1) (или ближайшим «сборщиком», определённым
+посредством вызова \fBprctl\fP(2)с операцией \fBPR_SET_CHILD_SUBREAPER\fP);
+\fBinit\fP(1) автоматически выполняет процедуру ожидания для удаления зомби.
+.PP
+В POSIX.1\-2001 указано, что если для \fBSIGCHLD\fP указан флаг \fBSIG_IGN\fP или
+\fBSA_NOCLDWAIT\fP (смотрите \fBsigaction\fP(2)), то завершающиеся потомки не
+становятся зомби, а вызов \fBwait\fP() или \fBwaitpid\fP() заблокирует выполнение
+до тех пор, пока все потомки не завершат работу, и затем завершится с
+ошибкой \fIerrno\fP, равной \fBECHILD\fP (в оригинальном стандарте POSIX такое
+значение настройки \fBSIGCHLD\fP в \fBSIG_IGN\fP не определено. Заметим, что хотя
+поведение \fBSIGCHLD\fP по умолчанию является «игнорирование», явная установка
+в \fBSIG_IGN\fP приводит другому обращению с потомками зомби).
+.PP
+Linux 2.6 соответствует данной спецификации. Однако, Linux 2.4 (и ранее) не
+соответствует: если вызов \fBwait\fP() или \fBwaitpid\fP() сделан при
+игнорировании \fBSIGCHLD\fP, вызов работает как если бы \fBSIGCHLD\fP не
+игнорировался, то есть, вызов блокирует работу до тех пор, пока следующий
+потомок не завершит работу и затем возвращает ID процесса и состояние этого
+потомка.
+.SS "Замечания, касающиеся Linux"
+В ядре Linux нити, управляемые ядром, устройством не отличаются от
+процесса. Нить \(em это просто процесс, который создан уникальным
+(существующим только в Linux) системным вызовом \fBclone\fP(2); другие
+процедуры, такие как переносимая версия \fBpthread_create\fP(3), также
+реализованы с помощью \fBclone\fP(2). До Linux 2.4, нить представляла собой
+специализированный вариант процесса, и, как следствие, нить не могла ждать
+потомков другой нити, даже когда последняя принадлежала той же группе
+нитей. Однако, в POSIX вписали такую функциональность, и, начиная с Linux
+2.4, нить может, и по умолчанию будет ждать потомков других нитей в той же
+группе нитей.
+.PP
+.\" commit 91c4e8ea8f05916df0c8a6f383508ac7c9e10dba
+Следующие значения \fIoptions\fP, присущие только Linux, используются для
+потомков, созданных с помощью \fBclone\fP(2); начиная с Linux 4.7, они также
+могут использоваться с \fBwaitid\fP():
+.TP 
+\fB__WCLONE\fP
+.\" since 0.99pl10
+Ждать только «клонированных (clone)» потомков. Если не указано, то ожидаются
+только «не клонированные» потомки («клонированным» считается потомок,
+который не доставляет сигнал, или сигнал, отличный от \fBSIGCHLD\fP, своему
+родителю при завершении). Этот аргумент игнорируется, если также указано
+\fB__WALL\fP.
+.TP 
+\fB__WALL\fP (начиная с Linux 2.4)
+.\" since patch-2.3.48
+Ждать всех потомков независимо от типа ("клонированный" или
+"неклонированный").
+.TP 
+\fB__WNOTHREAD\fP (начиная с Linux 2.4)
+.\" since patch-2.4.0-test8
+Не ждать потомков других нитей в той же группе нитей. Это поведение по
+умолчанию до Linux 2.4.
+.PP
+.\" commit bf959931ddb88c4e4366e96dd22e68fa0db9527c
+.\" prevents cases where an unreapable zombie is created if
+.\" /sbin/init doesn't use __WALL.
+Начиная с Linux 4.7, в случае, когда потомок был вызван с помощью ptrace,
+флаг \fB__WALL\fP назначается автоматически.
+.SS "Отличия между библиотекой C и ядром"
+В действительности, \fBwait\fP() — библиотечная функция, которая (в glibc)
+реализована через вызов \fBwait4\fP(2).
+.PP
+.\" e.g., i386 has the system call, but not x86-64
+Для некоторых архитектур нет системного вызова \fBwaitpid\fP(); его заменяет
+интерфейс, реализованный через обёрточную функцию библиотеки C, которая
+вызывает \fBwait4\fP(2).
+.PP
+Системный вызов ядра \fBwaitid\fP() имеет пятый аргумент с типом \fIstruct
+rusage\ *\fP. Если его значение не равно NULL, то он используется для возврата
+информации по используемым ресурсам в потомке, в том же виде что и
+\fBwait4\fP(2). Подробности смотрите в \fBgetrusage\fP(2).
+.SH ДЕФЕКТЫ
+Согласно POSIX.1\-2008, приложение, вызывающее \fBwaitid\fP(), должно убедиться,
+что \fIinfop\fP указывает на структуру \fIsiginfo_t\fP (т. е., что это указатель
+не равен null). В Linux, если \fIinfop\fP равно NULL, то \fBwaitid\fP()
+выполняется успешно и возвращает ID процесса ожидавшегося
+потомка. Приложения не должны полагаться на это несогласованное,
+нестандартное и ненужное свойство.
+.SH ПРИМЕР
+.\" fork.2 refers to this example program.
+В следующей программе показано использование \fBfork\fP(2) и
+\fBwaitpid\fP(). Программа создаёт процесс потомок. Если программа запущена без
+параметров, то потомок приостанавливает выполнение с помощью \fBpause\fP(2),
+чтобы позволить пользователю послать сигнал потомку. Иначе, если в командной
+строке задан параметр, то потомок завершает работу сразу, используя
+переданное в параметре командной строки целое число как код
+завершения. Процесс родитель работает в цикле, следя за потомком с помощью
+\fBwaitpid\fP(), и использует макросы W*(), описанные ранее, для анализа
+значения состояния ожидания.
+.PP
+Следующий сеанс работы в оболочке показывает работу с программой:
+.PP
+.in +4n
+.EX
+$\fB ./a.out &\fP
+Child PID is 32360
+[1] 32359
+$\fB kill \-STOP 32360\fP
+stopped by signal 19
+$\fB kill \-CONT 32360\fP
+continued
+$\fB kill \-TERM 32360\fP
+killed by signal 15
+[1]+  Done                    ./a.out
+$
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <sys/wait.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+    pid_t cpid, w;
+    int wstatus;
+
+    cpid = fork();
+    if (cpid == \-1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (cpid == 0) {            /* Код, выполняемый потомком */
+        printf("Child PID is %ld\en", (long) getpid());
+        if (argc == 1)
+            pause();                    /* Ожидание сигналов */
+        _exit(atoi(argv[1]));
+
+    } else {                    /* Код, выполняемый родителем */
+        do {
+            w = waitpid(cpid, &wstatus, WUNTRACED | WCONTINUED);
+            if (w == \-1) {
+                perror("waitpid");
+                exit(EXIT_FAILURE);
+            }
+
+            if (WIFEXITED(wstatus)) {
+                printf("exited, status=%d\en", WEXITSTATUS(wstatus));
+            } else if (WIFSIGNALED(wstatus)) {
+                printf("killed by signal %d\en", WTERMSIG(wstatus));
+            } else if (WIFSTOPPED(wstatus)) {
+                printf("stopped by signal %d\en", WSTOPSIG(wstatus));
+            } else if (WIFCONTINUED(wstatus)) {
+                printf("continued\en");
+            }
+        } while (!WIFEXITED(wstatus) && !WIFSIGNALED(wstatus));
+        exit(EXIT_SUCCESS);
+    }
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fB_exit\fP(2), \fBclone\fP(2), \fBfork\fP(2), \fBkill\fP(2), \fBptrace\fP(2),
+\fBsigaction\fP(2), \fBsignal\fP(2), \fBwait4\fP(2), \fBpthread_create\fP(3),
+\fBcore\fP(5), \fBcredentials\fP(7), \fBsignal\fP(7)

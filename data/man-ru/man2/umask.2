@@ -1,0 +1,118 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2006, 2008, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" (A few fragments remain from an earlier (1992) version written in
+.\" 1992 by Drew Eckhardt <drew@cs.colorado.edu>.)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified Sat Jul 24 12:51:53 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Oct 22 22:39:04 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Thu May  1 06:05:54 UTC 1997 by Nicolás Lichtmaier
+.\"  <nick@debian.com> with Lars Wirzenius <liw@iki.fi> suggestion
+.\" 2006-05-13, mtk, substantial rewrite of description of 'mask'
+.\" 2008-01-09, mtk, a few rewrites and additions.
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UMASK 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+umask \- устанавливает маску создания режима доступа к файлу
+.SH ОБЗОР
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <sys/stat.h>\fP
+.PP
+\fBmode_t umask(mode_t \fP\fImask\fP\fB);\fP
+.SH ОПИСАНИЕ
+\fBumask\fP() устанавливает в вызывающем процессе значение маски (umask)
+создания режима доступа к файлу равным \fImask\fP & 0777 (т.е. из \fImask\fP
+используются только биты прав доступа к файлу) и возвращает предыдущее
+значение маски.
+.PP
+.\" e.g., mkfifo(), creat(), mknod(), sem_open(), mq_open(), shm_open()
+.\" but NOT the System V IPC *get() calls
+Значение umask используется в \fBopen\fP(2), \fBmkdir\fP(2) и других системных
+вызовах, которые создают файлы, для изменения прав, назначаемых на
+создаваемые файлы или каталоги. В частности, права в umask исключаются из
+аргумента \fImode\fP у вызовов \fBopen\fP(2) и \fBmkdir\fP(2).
+.PP
+Также, если у родительского каталога указан ACL по умолчанию (смотрите
+\fBacl\fP(5)), то umask игнорируется, выполняется наследование ACL по
+умолчанию, бита прав назначаются согласно унаследованному ACL, а биты прав,
+отсутствующие в аргументе \fImode\fP, выключаются. Например, следующий ACL по
+умолчанию эквивалентен umask 022:
+.PP
+    u::rwx,g::r\-x,o::r\-x
+.PP
+Объединение эффекта этого ACL по умолчанию с аргументом \fImode\fP 0666
+(rw\-rw\-rw\-) приводит установке прав на файл 0644 (rw\-r\-\-r\-\-).
+.PP
+Константы, которые нужно использовать в \fImask\fP, описаны в \fBinode\fP(7).
+.PP
+Типичным значением umask в процессе является \fIS_IWGRP\ |\ S_IWOTH\fP
+(восьмеричное 022). Обычно, когда аргумент \fImode\fP у \fBopen\fP(2) задаётся
+как:
+.PP
+.in +4n
+.EX
+S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH
+.EE
+.in
+.PP
+(восьмеричное 0666) при создании файла, права получившегося файла будут:
+.PP
+.in +4n
+.EX
+S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH
+.EE
+.in
+.PP
+(так как 0666 & ~022 = 0644; т.е., rw\-r\-\-r\-\-).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Данный системный вызов всегда выполняется успешно и возвращает предыдущее
+значение маски.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Дочерний процесс, созданный с помощью \fBfork\fP(2), наследует umask
+родителя. Значение umask не изменяется при вызове \fBexecve\fP(2).
+.PP
+Невозможно использовать \fBumask\fP() для получения umask процесса без её
+изменения. Для восстановления umask требуется второй вызов
+\fBumask\fP(). Неатомарность этих двух шагов приводит к появлению
+состязательности в многонитевых программах.
+.PP
+Начиная с Linux 4.7 значение umask любого процесса доступно в поле \fIUmask\fP
+файла \fI/proc/[pid]/status\fP. Просмотр этого поля в \fI/proc/self/status\fP
+позволяет процессу узнать свою umask без её изменения.
+.PP
+Настройка umask также влияет на права, назначаемые IPC\-объектам POSIX
+(\fBmq_open\fP(3), \fBsem_open\fP(3), \fBshm_open\fP(3)), FIFO (\fBmkfifo\fP(3)) и
+доменным сокетам UNIX (\fBunix\fP(7)), создаваемых процессом. Значение umask не
+влияет на права, назначаемые IPC\-объектам System\ V, создаваемых процессом
+(с помощью \fBmsgget\fP(2), \fBsemget\fP(2), \fBshmget\fP(2)).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchmod\fP(2), \fBmkdir\fP(2), \fBopen\fP(2), \fBstat\fP(2), \fBacl\fP(5)

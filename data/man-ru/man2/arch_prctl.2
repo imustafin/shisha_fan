@@ -1,0 +1,110 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2003 Andi Kleen
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ARCH_PRCTL 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+arch_prctl \- настроить состояние нити (зависит от архитектуры)
+.SH ОБЗОР
+.nf
+\fB#include <asm/prctl.h>\fP
+\fB#include <sys/prctl.h>\fP
+.PP
+\fBint arch_prctl(int \fP\fIcode\fP\fB, unsigned long \fP\fIaddr\fP\fB);\fP
+\fBint arch_prctl(int \fP\fIcode\fP\fB, unsigned long *\fP\fIaddr\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBarch_prctl\fP() задаёт состояние процесса или нити, зависящие от
+архитектуры. В аргументе \fIcode\fP задаётся подфункция и ей передаётся
+значение \fIaddr\fP; параметр \fIaddr\fP рассматривается либо как \fIunsigned long\fP
+при операциях «установки» (set), либо как \fIunsigned long\ *\fP при операциях
+«получения» (get).
+.PP
+Подфункции для x86\-64:
+.TP 
+\fBARCH_SET_FS\fP
+Установить 64\-битную базу для регистра \fIFS\fP равной \fIaddr\fP.
+.TP 
+\fBARCH_GET_FS\fP
+Вернуть значение 64\-битной базы для регистра \fIFS\fP текущей нити в ячейку
+длинной \fIunsigned long\fP, заданную адресом \fIaddr\fP.
+.TP 
+\fBARCH_SET_GS\fP
+Установить 64\-битную базу для регистра \fIGS\fP равной \fIaddr\fP.
+.TP 
+\fBARCH_GET_GS\fP
+Вернуть значение 64\-битной базы для регистра \fIGS\fP текущей нити в ячейку
+длинной \fIunsigned long\fP, заданную адресом \fIaddr\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBarch_prctl\fP() возвращает 0; при ошибке \(em \-1, а
+в \fIerrno\fP задаётся причина ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+В \fIaddr\fP задан не выделенный адрес или вне адресного пространства процесса.
+.TP 
+\fBEINVAL\fP
+\fIcode\fP не является допустимой подкомандой.
+.TP 
+\fBEPERM\fP
+.\" .SH AUTHOR
+.\" Man page written by Andi Kleen.
+\fIaddr\fP лежит вне адресного пространства процесса.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBarch_prctl\fP() является расширением Linux/x86\-64 и не должна использоваться
+в переносимых программах.
+.SH ЗАМЕЧАНИЯ
+В настоящее время \fBarch_prctl\fP() поддерживается только на Linux/x86\-64 для
+64\-битных программ.
+.PP
+64\-битная база изменяется при загрузке нового 32\-битного сегментного
+селектора.
+.PP
+\fBARCH_SET_GS\fP выключена в некоторых ядрах.
+.PP
+Переключение контекстов для 64\-битных сегментных баз — довольно затратная
+операция. В качестве оптимизации, если используется 3\-битные базовые адреса
+TLS, \fBarch_prctl\fP() может использовать реальную запись TLS, как при вызове
+\fBset_thread_area\fP(2), а не изменять сегментный базовый регистр
+напрямую. Память в первых 2\ ГБ адресного пространства может быть выделена
+через \fBmmap\fP(2) с флагом \fBMAP_32BIT\fP.
+.PP
+Из\-за вышеупомянутой оптимизации, использование \fBarch_prctl\fP() и
+\fBset_thread_area\fP(2) в той же нити опасно, так как они могут перезаписать
+TLS\-записи друг друга.
+.PP
+В glibc версии 2.7 нет прототипа для \fBarch_prctl\fP(). Вам нужно объявлять
+его самостоятельно. Это может быть исправлено в новых версиях glibc.
+.PP
+\fIFS\fP уже может использоваться библиотекой нитей. Программы, в которых
+используется \fBARCH_SET_FS\fP напрямую, весьма вероятно завершаться с ошибкой.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmmap\fP(2), \fBmodify_ldt\fP(2), \fBprctl\fP(2), \fBset_thread_area\fP(2)
+.PP
+Руководство программиста для AMD X86\-64

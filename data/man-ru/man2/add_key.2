@@ -1,0 +1,223 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Red Hat, Inc. All Rights Reserved.
+.\"     Written by David Howells (dhowells@redhat.com)
+.\" and Copyright (C) 2016 Michael Kerrisk <mtk.man-pages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_ONEPARA)
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version
+.\" 2 of the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ADD_KEY 2 2019\-03\-06 Linux "Вызовы системы управления ключами Linux"
+.SH ИМЯ
+add_key \- добавить ключ в систему управления ключами ядра
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <keyutils.h>\fP
+.PP
+\fBkey_serial_t add_key(const char *\fP\fItype\fP\fB, const char *\fP\fIdescription\fP\fB,\fP
+\fB                     const void *\fP\fIpayload\fP\fB, size_t \fP\fIplen\fP\fB,\fP
+\fB                     key_serial_t \fP\fIkeyring\fP\fB);\fP
+.fi
+.PP
+В glibc нет обёрточной функции для данного системного вызова; смотрите
+ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Вызов \fBadd_key\fP() создаёт или обновляет ключ заданного типа \fItype\fP с
+описанием \fIdescription\fP, конструирует его с полезными данными \fIpayload\fP и
+длиной \fIplen\fP, присоединяет его к заданной связке ключей \fIkeyring\fP и
+возвращает его серийный номер.
+.PP
+Ключ может быть отклонён, если его данные представлены в неправильном
+формате или возникла другая ошибка.
+.PP
+.\" FIXME The aforementioned phrases begs the question:
+.\" which key types support this?
+.\" FIXME Perhaps elaborate the implications here? Namely, the new
+.\" key will have a new ID, and if the old key was a keyring that
+.\" is consequently unlinked, then keys that it was anchoring
+.\" will have their reference count decreased by one (and may
+.\" consequently be garbage collected). Is this all correct?
+Если в указываемой связке ключей \fIkeyring\fP уже есть ключ с таким же \fItype\fP
+и \fIdescription\fP то, если тип ключа это поддерживает, ключ будет обновлён, а
+не создан заново; если нет, то будет создан новый ключ (с другим
+идентификатором) и он вытеснит ссылку на существующий ключ из связки.
+.PP
+.\" FIXME . Perhaps have a separate page describing special keyring IDs?
+Связка ключей \fIkeyring\fP может задаваться серийным номером действующей
+связки ключей, для которой у вызывающего есть права на \fIзапись\fP. Или же это
+может быть один из следующих специальных идентификаторов связок ключей:
+.TP 
+\fBKEY_SPEC_THREAD_KEYRING\fP
+Связка ключей вызывающей нити (\fBthread\-keyring\fP(7)).
+.TP 
+\fBKEY_SPEC_PROCESS_KEYRING\fP
+Связка ключей вызывающего процесса (\fBprocess\-keyring\fP(7)).
+.TP 
+\fBKEY_SPEC_SESSION_KEYRING\fP
+Связка ключей сеанса вызывающего (\fBsession\-keyring\fP(7)).
+.TP 
+\fBKEY_SPEC_USER_KEYRING\fP
+Связка ключей по UID вызывающего (\fBuser\-keyring\fP(7)).
+.TP 
+\fBKEY_SPEC_USER_SESSION_KEYRING\fP
+Связка ключей по UID сеанса вызывающего (\fBuser\-session\-keyring\fP(7)).
+.SS "Типы ключей"
+Значение \fItype\fP ключа представляет собой строку, которой определяется тип
+ключа. Внутри ядра определено несколько типов ключей, которые доступны в
+ядре кода управления ключами. В пользовательском пространстве в аргументе
+\fItype\fP при вызове \fBadd_key\fP() можно использовать следующие значения:
+.TP 
+\fI"keyring"\fP
+Связки ключей — это специальные типы ключей, которые могут содержать ссылки
+на цепочки других ключей любого типа. Если данный интерфейс используется для
+создания связки ключей, то значение \fIpayload\fP должно быть равно NULL, а
+\fIplen\fP должно быть равно нулю.
+.TP 
+\fI"user"\fP
+Тип ключа общего назначения, чьи полезные данные можно читать и обновлять из
+пользовательских программ. Ключ полностью хранится в памяти ядра. Полезные
+данные ключей этого типа представляют собой данные произвольной структуры
+(blob) размером до 32767 байт.
+.TP 
+\fI"logon"\fP (начиная с Linux 3.3)
+.\" commit 9f6ed2ca257fa8650b876377833e6f14e272848b
+Данный тип ключа подобен \fI"user"\fP, но не позволяет читать ключ. Этот тип
+подходит для хранения полезных данных, которые вам не нужно читать из
+пользовательского пространства.
+.PP
+Для данного типа ключа значение \fIdescription\fP должно уточняться префиксом
+«service», который в \fIdescription\fP отделяется символом «:» от остальных
+символов.
+.TP 
+\fI"big_key"\fP (начиная с Linux 3.13)
+.\" commit ab3c3587f8cda9083209a61dbe3a4407d3cada10
+Данный тип ключа подобен \fI"user"\fP, но может содержать полезные данные
+размером до 1\ МиБ. Если полезной нагрузки много, то её можно хранить
+зашифрованной в tmpfs (может вытесняться из памяти), а не в памяти ядра.
+.PP
+Дополнительную информацию об этих типах ключей смотрите в \fBkeyrings\fP(7).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBadd_key\fP() возвращается серийный номер созданного
+или изменённого ключа. При ошибке возвращается \-1, а в \fIerrno\fP содержится
+код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Изменение связки ключей пользователю недоступно.
+.TP 
+\fBEDQUOT\fP
+Квота на ключи для данного пользователя была бы превышена, если бы этот ключ
+создался или был бы прицеплен в связку ключей.
+.TP 
+\fBEFAULT\fP
+Значение одного или нескольких полей из \fItype\fP, \fIdescription\fP и \fIpayload\fP
+указывают вне доступного адресного пространства процесса.
+.TP 
+\fBEINVAL\fP
+Размер строки (включая конечный байт null), указанной в \fItype\fP или
+\fIdescription\fP, превышает ограничение (32 байта и 4096 байт,
+соответственно).
+.TP 
+\fBEINVAL\fP
+Некорректное значение полезных данных.
+.TP 
+\fBEINVAL\fP
+Значение \fItype\fP равно \fI"logon"\fP, но значение \fIdescription\fP не начинается
+строкой\-префиксом в виде \fI"service:"\fP.
+.TP 
+\fBEKEYEXPIRED\fP
+Срок службы связки ключей истёк.
+.TP 
+\fBEKEYREVOKED\fP
+Связка ключей отозвана.
+.TP 
+\fBENOKEY\fP
+Связка ключей не существует.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для создания ключа.
+.TP 
+\fBEPERM\fP
+Значение \fItype\fP начинается с точки (\(aq.\(aq). Типы ключей, начинающиеся с
+точки, зарезервированы для использования в реализации.
+.TP 
+\fBEPERM\fP
+Значение \fItype\fP равно \fI"keyring"\fP и \fIdescription\fP начинается с точки
+(\(aq.\(aq). Связки ключей с описаниями (именами), которые начинаются с
+точки, зарезервированы для использования реализацией.
+.SH ВЕРСИИ
+Этот системный вызов впервые появился в Linux 2.6.10.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Этот системный вызов является нестандартным расширением Linux.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёрточной функции для этого системного вызова. Такая функция
+предоставляется пакетом \fIlibkeyutils\fP. Для работы с функцией подключите
+библиотеку с помощью \fI\-lkeyutils\fP.
+.SH ПРИМЕР
+Программа, представленная ниже, создаёт ключ с типом, описанием и полезными
+данными, указанными в аргументах командной строки, и и цепляет этот ключ в
+связку ключей сеанса. Пример работы программы:
+.PP
+.in +4n
+.EX
+$ \fB./a.out user mykey "Some payload"\fP
+ID ключа = 64a4dca
+$ \fBgrep \(aq64a4dca\(aq /proc/keys\fP
+064a4dca I\-\-Q\-\-\-    1 perm 3f010000  1000  1000 user    mykey: 12
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <sys/types.h>
+#include <keyutils.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int
+main(int argc, char *argv[])
+{
+    key_serial_t key;
+
+    if (argc != 4) {
+        fprintf(stderr, "Использование: %s тип описание полезные_данные\en",
+                argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    key = add_key(argv[1], argv[2], argv[3], strlen(argv[3]),
+                KEY_SPEC_SESSION_KEYRING);
+    if (key == \-1) {
+        perror("add_key");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("ID ключа = %lx\en", (long) key);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBkeyctl\fP(1), \fBkeyctl\fP(2), \fBrequest_key\fP(2), \fBkeyctl\fP(3), \fBkeyrings\fP(7),
+\fBkeyutils\fP(7), \fBpersistent\-keyring\fP(7), \fBprocess\-keyring\fP(7),
+\fBsession\-keyring\fP(7), \fBthread\-keyring\fP(7), \fBuser\-keyring\fP(7),
+\fBuser\-session\-keyring\fP(7)
+.PP
+.\" commit b68101a1e8f0263dbc7b8375d2a7c57c6216fb76
+.\" commit 3db38ed76890565772fcca3279cc8d454ea6176b
+Файлы исходного кода ядра \fIDocumentation/security/keys/core.rst\fP и
+\fIDocumentation/keys/request\-key.rst\fP (или, до Linux 4.13, файлы
+\fIDocumentation/security/keys.txt\fP и
+\fIDocumentation/security/keys\-request\-key.txt\fP).

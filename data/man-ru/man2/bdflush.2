@@ -1,0 +1,97 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1995 Michael Chastain (mec@shell.portal.com), 15 April 1995.
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1997-01-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2004-06-17 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BDFLUSH 2 2016\-10\-08 Linux "Руководство программиста Linux"
+.SH ИМЯ
+bdflush \- запускает, сбрасывает на диск или настраивает службу записи
+буферов кэша
+.SH ОБЗОР
+.nf
+\fB#include <sys/kdaemon.h>\fP
+.PP
+\fBint bdflush(int \fP\fIfunc\fP\fB, long *\fP\fIaddress\fP\fB);\fP
+\fBint bdflush(int \fP\fIfunc\fP\fB, long \fP\fIdata\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+.\" As noted in a changes in the 2.5.12 source
+\fIЗамечание\fP: Начиная с Linux 2.6, данный системный вызов считается
+устаревшим и ничего не делает. Вероятно, он будет удалён в будущих версиях
+ядра. Сейчас задачу \fBbdflush\fP() выполняет нить ядра \fIpdflush\fP.
+.PP
+\fBbdflush\fP() запускает, сбрасывает на диск или настраивает службу записи
+буферов кэша. Только процесс с определёнными правами (с мандатом
+\fBCAP_SYS_ADMIN\fP) может вызвать \fBbdflush\fP().
+.PP
+Если значение \fIfunc\fP отрицательно или 0, и служба не запущена, то
+\fBbdflush\fP() запускает службу и не возвращает управление.
+.PP
+Если значение \fIfunc\fP равно 1, то некоторые «грязные» (dirty) буферы
+записываются на диск.
+.PP
+Если значение \fIfunc\fP равно 2 или более и чётно (младший бит равен 0), то в
+\fIaddress\fP задаётся адрес ячейки размером с длинное слово, и по этому адресу
+возвращается для вызывающего процесса параметр настройки с номером
+(\fIfunc\fP\-2)/2.
+.PP
+Если значение \fIfunc\fP равно 3 или более и не чётно (младший бит равен 1), то
+аргумент \fIdata\fP является длинным словом, и ядро устанавливает в это
+значение параметр настройки с номером (\fIfunc\fP\-3)/2.
+.PP
+Набор параметров и разрешённых диапазонов их значений определён в файле
+\fIfs/buffer.c\fP исходного кода ядра Linux.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если аргумент \fIfunc\fP отрицателен или равен нулю, и служба запускается
+успешно, то \fBbdflush\fP() не возвращает управление. В противном случае при
+успешном запуске возвращается ноль, и \-1 в случае ошибки, при этом \fIerrno\fP
+устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBUSY\fP
+Попытка запустить службу, которая уже запущена.
+.TP 
+\fBEFAULT\fP
+\fIaddress\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+Попытка прочитать или записать параметр с неверным номером, или записать
+неверное значение.
+.TP 
+\fBEPERM\fP
+Вызывающий процесс не имеет мандата \fBCAP_SYS_ADMIN\fP.
+.SH ВЕРСИИ
+Начиная с версии 2.23, в glibc удалена поддержка этого устаревшего
+системного вызова.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBbdflush\fP() присутствует только в Linux и не должен использоваться в
+переносимых программах.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsync\fP(1), \fBfsync\fP(2), \fBsync\fP(2)

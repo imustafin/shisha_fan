@@ -1,0 +1,204 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2001 Andreas Dilger (adilger@turbolinux.com)
+.\" and Copyright (c) 2017 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SLABINFO 5 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+slabinfo \- сводная таблица использования блоков кэша (slab) ядра
+.SH ОБЗОР
+\fBcat /proc/slabinfo\fP
+.SH ОПИСАНИЕ
+Часто используемые объекты в ядре Linux (заголовки буферов, иноды, элементы
+dentry и тп.) имеют свои собственные кэши. В файле \fI/proc/slabinfo\fP
+отражена статистика их работы. Пример (отредактированный) содержимого этого
+файла:
+.PP
+.in 0
+.EX
+$ \fBsudo cat /proc/slabinfo\fP
+slabinfo \- version: 2.1
+# name    <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab> ...
+sigqueue      100  100  160   25  1 : tunables  0  0  0 : slabdata   4   4  0
+sighand_cache 355   405 2112  15  8 : tunables  0  0  0 : slabdata  27  27  0
+kmalloc\-8192   96   96  8192   4  8 : tunables  0  0  0 : slabdata  24  24  0
+\&...
+.EE
+.in
+.PP
+В первой строке содержится номер версии, который позволяет приложению,
+читающему файл, определить формат файла (смотрите ВЕРСИИ ниже). В следующей
+строке перечисляются имена столбцов в оставшихся строках.
+.PP
+В каждой оставшейся строке выводится информация об определённом кэше. После
+имени данные каждого кэша делятся на три компонента:
+.IP * 3
+статистика
+.IP *
+регулировки (tunables)
+.IP *
+slabdata
+.PP
+Поля статистики:
+.TP 
+\fIactive_objs\fP
+Количество активных (т. е., использующихся) в данный момент объектов.
+.TP 
+\fInum_objs\fP
+Общее количество выделенных объектов (т. е., используемых и не используемых
+объектов).
+.TP 
+\fIobjsize\fP
+Размер объектов в этом кэше (slab), в байтах.
+.TP 
+\fIobjperslab\fP
+Количество объектов, хранящихся в каждом кэше (slab).
+.TP 
+\fIpagesperslab\fP
+Количество страниц, выделенных для каждого кэша (slab).
+.PP
+Элементы \fIрегулировок\fP в каждой строке содержат подстроечные параметры
+соответствующего кэша. При использовании выделителя по умолчанию SLUB они
+отсутствуют, файл \fI/proc/slabinfo\fP недоступен для записи и в этих полях
+показываются значения 0. При использовании старого выделителя SLAB
+регулировки определённого кэша можно изменять посредством записи строк в
+формате \fI/proc/slabinfo\fP:
+.PP
+.in +4n
+.EX
+# \fBecho 'name limit batchcount sharedfactor' > /proc/slabinfo\fP
+.EE
+.in
+.PP
+Здесь \fIname\fP — имя кэша, \fIlimit\fP, \fIbatchcount\fP и \fIsharedfactor\fP — целые
+числа, задающие новые значения соответствующих регулировок. Значение
+\fIlimit\fP должно быть положительным, \fIbatchcount\fP должно быть положительным
+числом меньшим или равным \fIlimit\fP, а \fIsharedfactor\fP должно быть
+неотрицательным. Если одно из значений некорректно, то настройки кэша не
+изменяются.
+.PP
+Записи \fIрегулировок\fP в каждой строке имеют следующие поля:
+.TP 
+\fIlimit\fP
+.\" https://lwn.net/Articles/56360/
+.\"     This is the limit on the number of free objects that can be stored
+.\"     in the per-CPU free list for this slab cache.
+Максимальное количество объектов, которые будут кэшироваться.
+.TP 
+\fIbatchcount\fP
+.\" https://lwn.net/Articles/56360/
+.\"     On SMP systems, when we refill the available object list, instead
+.\"     of doing one object at a time, we do batch-count objects at a time.
+Для многопроцессорных систем здесь задаётся количество объектов передаваемых
+одновременно, происходит наполнение списка доступных объектов.
+.TP 
+\fIsharedfactor\fP
+.\"
+[Будет описано]
+.PP
+Записи \fIslabdata\fP в каждой строке имеют следующие поля:
+.TP 
+\fIactive_slabs\fP
+Количество активных кэшей (slabs).
+.TP 
+\fInums_slabs\fP
+Общее количество активных кэшей (slabs).
+.TP 
+\fIsharedavail\fP
+[Будет описано]
+.PP
+Заметим, что из\-за выравнивания объектов и заголовков блоков кэша объекты
+обычно не упакованы ровно по страницам. Страницы даже с единственным
+используемым объектом уже сами считаются используемыми и не могут быть
+высвобождены.
+.PP
+.\"
+.\" SMP systems will also have "(SMP)" in the first line of
+.\" output, and will have two additional columns for each slab,
+.\" reporting the slab allocation policy for the CPU-local
+.\" cache (to reduce the need for inter-CPU synchronization
+.\" when allocating objects from the cache).
+.\" The first column is the per-CPU limit: the maximum number of objects that
+.\" will be cached for each CPU.
+.\" The second column is the
+.\" batchcount: the maximum number of free objects in the
+.\" global cache that will be transferred to the per-CPU cache
+.\" if it is empty, or the number of objects to be returned
+.\" to the global cache if the per-CPU cache is full.
+.\"
+.\" If both slab cache statistics and SMP are defined, there
+.\" will be four additional columns, reporting the per-CPU
+.\" cache statistics.
+.\" The first two are the per-CPU cache
+.\" allocation hit and miss counts: the number of times an
+.\" object was or was not available in the per-CPU cache
+.\" for allocation.
+.\" The next two are the per-CPU cache free
+.\" hit and miss counts: the number of times a freed object
+.\" could or could not fit within the per-CPU cache limit,
+.\" before flushing objects to the global cache.
+Ядра с включённым параметром \fBCONFIG_DEBUG_SLAB\fP также будут выдавать в
+каждой дополнительные поля статистики, а в первой строке файла будет слово
+«(statistics)». Поля статистики: максимальная отметка по активным объектам,
+количество раз, когда был выделен объект, количество раз, когда кэш рос (в
+этот кэш добавлялись новые страницы), количество раз, когда кэш урезался (из
+этого кэша удалялись неиспользуемые страницы), количество раз, когда
+возникала ошибка при выделении новых страниц для кэша.
+.SH ВЕРСИИ
+Фай \fI/proc/slabinfo\fP впервые появился в Linux 2.1.23. Файл содержит номер
+версии, которых было создано несколько с разными форматами:
+.TP 
+1.0
+В ядрах Linux 2.2.x.
+.TP 
+1.1
+.\" First appeared in 2.4.0-test3
+В ядрах Linux 2.4.x.
+.TP 
+1.2
+.\" from 2.5.45 to 2.5.70
+Формат, существовавший короткое время в разрабатываемых версиях Linux 2.5.
+.TP 
+2.0
+.\" First appeared in 2.5.71
+В ядрах Linux 2.6.x по Linux 2.6.9, включительно.
+.TP 
+2.1
+Текущий формат, появился в Linux 2.6.10.
+.SH ЗАМЕЧАНИЯ
+Только суперпользователь может читать и (если ядро собрано с \fBCONFIG_SLAB\fP)
+изменять файл \fI/proc/slabinfo\fP.
+.PP
+Общее количество памяти, выделенное под кэш SLAB/SLUB, показано в поле
+\fISlab\fP файла \fI/proc/meminfo\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBslabtop\fP(1)
+.PP
+Файл из дерева исходного кода ядра \fIDocumentation/vm/slub.txt\fP и
+\fItools/vm/slabinfo.c\fP.

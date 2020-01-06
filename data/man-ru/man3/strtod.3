@@ -1,0 +1,168 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1990, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" This code is derived from software contributed to Berkeley by
+.\" the American National Standards Committee X3, on Information
+.\" Processing Systems.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)strtod.3	5.3 (Berkeley) 6/29/91
+.\"
+.\" Modified Sun Aug 21 17:16:22 1994 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Sat May 04 19:34:31 MET DST 1996 by Michael Haardt
+.\"   (michael@cantor.informatik.rwth-aachen.de)
+.\" Added strof, strtold, aeb, 2001-06-07
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STRTOD 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+strtod, strtof, strtold \- преобразует строку ASCII в число с плавающей
+точкой
+.SH ОБЗОР
+\fB#include <stdlib.h>\fP
+.PP
+\fBdouble strtod(const char *\fP\fInptr\fP\fB, char **\fP\fIendptr\fP\fB);\fP
+.br
+\fBfloat strtof(const char *\fP\fInptr\fP\fB, char **\fP\fIendptr\fP\fB);\fP
+.br
+\fBlong double strtold(const char *\fP\fInptr\fP\fB, char **\fP\fIendptr\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.ad l
+.PP
+\fBstrtof\fP(), \fBstrtold\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функции \fBstrtod\fP(), \fBstrtof\fP() и \fBstrtold\fP() преобразуют начальную часть
+строки, на которую указывает \fInptr\fP, в числа типа \fIdouble\fP, \fIfloat\fP, и
+\fIlong double\fP, соответственно.
+.PP
+Ожидаемый вид строки (её начальная часть) — это начальные пробельные символы
+(необязательно), распознаваемые функцией \fBisspace\fP(3), возможно знаки плюс
+(\(aq+\(aq) или минус (\(aq\-\(aq), а затем либо (а) десятичное число, либо
+(б) шестнадцатеричное число, либо (в) бесконечность, либо (г) NAN
+(not\-a\-number, нечисловое значение).
+.PP
+\fIДесятичное число\fP состоит из не пустой последовательности десятичных цифр
+от 0 до 9, возможно содержащей символ дробного разделителя (десятичная
+точка, зависит от настройки локали; обычно это символ точки \(aq.\(aq),
+возможно с последующей десятичной экспонентой. Десятичная экспонента состоит
+из символа \(aqE\(aq или \(aqe\(aq, далее возможен знак плюс или минус, а
+затем непустая последовательность десятичных цифр, означающая умножение всей
+начальной части на 10 в указанной степени.
+.PP
+\fIШестнадцатеричное число\fP состоит из символов «0x» или «0X» с последующей
+непустой последовательностью из шестнадцатеричных цифр, возможно содержащей
+символ дробного разделителя, далее может следовать двоичная
+экспонента. Двоичная экспонента состоит из символа \(aqP\(aq или \(aqp\(aq,
+далее, возможно, знака плюс или минус, и непустой последовательности
+десятичных цифр, обозначающих умножение всего начального числа на 2 в
+указанной степени. По меньшей мере должен быть указан либо символ дробного
+разделителя либо двоичная экспонента.
+.PP
+\fIБесконечность\fP — это либо значение «INF» либо «INFINITY», регистр символов
+не учитывается.
+.PP
+Нечисловое значение (\fINAN\fP) — это значение «NAN» (регистр символов не
+учитывается) возможно сопровождаемое \fI(последовательность n символов)\fP, где
+\fIпоследовательность n символов\fP, определяет тип нечислового значения в
+зависимости от текущего представления NAN в системе (смотрите ЗАМЕЧАНИЯ).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции возвращают преобразованное значение, если таковое существует.
+.PP
+Если \fIendptr\fP не равно NULL, то указатель на символ, следующий за последним
+обработанным символом, сохраняется в место, указываемое \fIendptr\fP.
+.PP
+Если никаких преобразований не производилось, то возвращается ноль, а
+значение \fInptr\fP сохраняется в той позиции, на которую ссылается \fIendptr\fP
+(если \fIendptr\fP не равно null).
+.PP
+Если правильное значение вызвало бы переполнение, то возвращается
+\fBHUGE_VAL\fP (\fBHUGE_VALF\fP, \fBHUGE_VALL\fP)  (в зависимости от знака величины),
+а \fBERANGE\fP записывается в переменную \fIerrno\fP. Если правильное значение
+было исчерпанным, то возвращается ноль, а переменной \fIerrno\fP присваивается
+значение \fIERANGE\fP.
+.SH ОШИБКИ
+.TP 
+\fBERANGE\fP
+Величина оказалась слишком большой или очень маленькой.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw29 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstrtod\fP(),
+\fBstrtof\fP(),
+\fBstrtold\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.PP
+\fBstrtod\fP() была также описана в C89.
+.SH ЗАМЕЧАНИЯ
+Так как возвращаемым значением может быть 0 при успешном выполнении и
+ошибке, вызывающая программа должна присвоить \fIerrno\fP значение 0 до вызова,
+а после вызова определить возникновение ошибки по ненулевому значению
+\fIerrno\fP.
+.PP
+.\" From glibc 2.8's stdlib/strtod_l.c:
+.\"     We expect it to be a number which is put in the
+.\"     mantissa of the number.
+.\" It looks as though at least FreeBSD (according to the manual) does
+.\" something similar.
+.\" C11 says: "An implementation may use the n-char sequence to determine
+.\"	extra information to be represented in the NaN's significant."
+В реализации glibc \fIпоследовательность n символов\fP, которая может
+появляться после «NAN», рассматривается как целое число (с необязательным
+префиксом «0» или «0x» для указания системы счисления 8 или 16), которое
+будет помещено в мантиссу возвращаемого значения.
+.SH ПРИМЕР
+Пример можно найти в справочной странице \fBstrtol\fP(3); в ней показано
+использование похожих функций.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBatof\fP(3), \fBatoi\fP(3), \fBatol\fP(3), \fBnan\fP(3), \fBnanf\fP(3), \fBnanl\fP(3),
+\fBstrfromd\fP(3), \fBstrtol\fP(3), \fBstrtoul\fP(3)

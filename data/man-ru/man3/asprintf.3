@@ -1,0 +1,75 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2001 Andries Brouwer <aeb@cwi.nl>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Text fragments inspired by Martin Schulze <joey@infodrom.org>.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ASPRINTF 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+asprintf, vasprintf \- выводит данные в строку, выделенную в памяти
+.SH ОБЗОР
+\fB#define _GNU_SOURCE\fP /* смотрите feature_test_macros(7) */
+.br
+\fB#include <stdio.h>\fP
+.PP
+\fBint asprintf(char **\fP\fIstrp\fP\fB, const char *\fP\fIfmt\fP\fB, ...);\fP
+.PP
+\fBint vasprintf(char **\fP\fIstrp\fP\fB, const char *\fP\fIfmt\fP\fB, va_list
+\fP\fIap\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функции \fBasprintf\fP и \fBvasprintf\fP являются аналогами \fBsprintf\fP(3) и
+\fBvsprintf\fP(3), отличаясь только тем, что они выделяют в памяти строку,
+достаточную для размещения результата, включая конечный байт null
+(\(aq\e0\(aq), и возвращают указатель на эту строку через первый
+аргумент. Для высвобождения выделенной памяти указатель должен быть передан
+функции \fBfree\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции, подобно \fBsprintf\fP(3), возвращают
+количество выведенных байтов. Если выделить память не удалось или произошла
+какая\-либо другая ошибка, то эти функции возвращают \-1. При этом содержимое
+\fIstrp\fP не определено.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw23 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBasprintf\fP(),
+\fBvasprintf\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU, они отсутствуют в C и POSIX. Также
+они доступны в *BSD. В FreeBSD при ошибке \fIstrp\fP присваивается значение
+NULL.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfree\fP(3), \fBmalloc\fP(3), \fBprintf\fP(3)

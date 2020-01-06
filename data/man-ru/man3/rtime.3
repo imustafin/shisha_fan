@@ -1,0 +1,129 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2003 walter harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2003-04-04 Walter Harms
+.\" <walter.harms@informatik.uni-oldenburg.de>
+.\"
+.\" Slightly polished, aeb, 2003-04-06
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RTIME 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+rtime \- получение времени с удалённого узла
+.SH ОБЗОР
+.nf
+\fB#include <rpc/auth_des.h>\fP
+.PP
+\fBint rtime(struct sockaddr_in *\fP\fIaddrp\fP\fB, struct rpc_timeval *\fP\fItimep\fP\fB,\fP
+\fB          struct rpc_timeval *\fP\fItimeout\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Для получения времени с удалённого компьютера функция использует протокол
+Time Server Protocol, описанный в RFC\ 868.
+.PP
+Time Server Protocol возвращает время в секундах начиная с 1 января 1900
+года 00:00:00 UTC. Данная функция самостоятельно вычитает подходящую
+константу для того, чтобы преобразовать результат в секундах от начала Эпохи
+\(em 1970\-01\-01 00:00:00 +0000 (UTC).
+.PP
+Если \fItimeout\fP не равно NULL, то будет использоваться сокет udp/time (порт
+37), иначе \(em сокет tcp/time (порт 37).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0, а полученное 32\-битное значение
+времени сохраняется в \fItimep\->tv_sec\fP. В случае ошибки возвращается \-1,
+а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+Могут возникнуть все ошибки задействованных в работе функций (\fBsendto\fP(2),
+\fBpoll\fP(2), \fBrecvfrom\fP(2), \fBconnect\fP(2), \fBread\fP(2)), а также:
+.TP 
+\fBEIO\fP
+Количество возвращённых байт не равно 4.
+.TP 
+\fBETIMEDOUT\fP
+Время ожидания, указанное в таймауте, превышено.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBrtime\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH ЗАМЕЧАНИЯ
+Поддерживается только IPv4.
+.PP
+Некоторые версии \fIin.timed\fP поддерживают только TCP. Попробуйте пример
+программы с установленной в 1 значением \fIuse_tcp\fP.
+.PP
+В libc5 используется прототип
+.PP
+.nf
+    int rtime(struct sockaddr_in *, struct timeval *, struct timeval *);
+.fi
+.PP
+для которого требуется \fI<sys/time.h>\fP вместо
+\fI<rpc/auth_des.h>\fP.
+.SH ДЕФЕКТЫ
+\fBrtime\fP() в glibc 2.2.5 и ниже на 64\-битных компьютерах работает
+некорректно.
+.SH ПРИМЕР
+Для этого примера требуется поднятие и открытие порта 37. Вы можете
+проверить это, убедившись в том, что в файле \fI/etc/inetd.conf\fP запись time
+раскомментирована.
+.PP
+Программа подключается к компьютеру с именем «linux». Использование
+«localhost» не сработает. В качестве результата будет возвращено локальное
+время компьютера «linux».
+.PP
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <time.h>
+#include <rpc/auth_des.h>
+#include <netdb.h>
+
+static int use_tcp = 0;
+static char *servername = "linux";
+
+int
+main(void)
+{
+    struct sockaddr_in name;
+    struct rpc_timeval time1 = {0,0};
+    struct rpc_timeval timeout = {1,0};
+    struct hostent *hent;
+    int ret;
+
+    memset(&name, 0, sizeof(name));
+    sethostent(1);
+    hent = gethostbyname(servername);
+    memcpy(&name.sin_addr, hent\->h_addr, hent\->h_length);
+
+    ret = rtime(&name, &time1, use_tcp ? NULL : &timeout);
+    if (ret < 0)
+        perror("ошибка rtime");
+    else {
+        time_t t = time1.tv_sec;
+        printf("%s\en", ctime(&t));
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.\" .BR netdate (1),
+.\" .BR rdate (1),
+\fBntpdate\fP(1), \fBinetd\fP(8)

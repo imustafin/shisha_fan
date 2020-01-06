@@ -1,0 +1,312 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2017 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IOCTL_NS 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ioctl_ns \- операции ioctl() для пространств имён Linux
+.SH ОПИСАНИЕ
+.\" ============================================================
+.\"
+.SS "Определение отношений между пространствами имён"
+Следующие операции \fBioctl\fP(2) позволяют определить порядок отношений между
+пространствами имён (смотрите \fBuser_namespaces\fP(7) и
+\fBpid_namespaces\fP(7)). Форма вызовов:
+.PP
+.in +4n
+.EX
+new_fd = ioctl(fd, request);
+.EE
+.in
+.PP
+Здесь в каждом случае \fIfd\fP ссылается на файл \fI/proc/[pid]/ns/*\fP. При
+успешном выполнении обе операции возвращают новый файловый дескриптор.
+.TP 
+\fBNS_GET_USERNS\fP (начиная с Linux 4.9)
+.\" commit bcac25a58bfc6bd79191ac5d7afb49bea96da8c9
+.\" commit 6786741dbf99e44fb0c0ed85a37582b8a26f1c3b
+Возвращает файловый дескриптор, ссылающийся на пространство имён
+пользователя, которое владеет пространством имён, на которое ссылается
+\fIfd\fP.
+.TP 
+\fBNS_GET_PARENT\fP (начиная с Linux 4.9)
+.\" commit a7306ed8d94af729ecef8b6e37506a1c6fc14788
+Возвращает файловый дескриптор, который ссылается на родительское
+пространство имён для пространства имён, на которое ссылается \fIfd\fP. Эта
+операция допускается только, для иерархических пространств имён (т. е., PID
+и пространства имён пользователя). Для пространств имён пользователя
+\fBNS_GET_PARENT\fP является синонимом \fBNS_GET_USERNS\fP.
+.PP
+Новый файловый дескриптор, возвращаемый этими операциями, открывается с
+флагами \fBO_RDONLY\fP и \fBO_CLOEXEC\fP (close\-on\-exec; смотрите \fBfcntl\fP(2)).
+.PP
+Применив \fBfstat\fP(2) к возвращаемому файловому дескриптору, можно получить
+структуру \fIstat\fP, в которой поля \fIst_dev\fP (подлежащее устройство) и
+\fIst_ino\fP (номер иноды) вместе отождествляют владельческое/родительское
+пространство имён. Этот номер иноды можно сравнить с номером иноды другого
+файла \fI/proc/[pid]/ns/{pid,user}\fP, чтобы определить то же ли это
+владельческое/родительское пространство имён.
+.PP
+Эти операции \fBioctl\fP(2) могут завершаться со следующими ошибками:
+.TP 
+\fBEPERM\fP
+Запрошенное пространство имён лежит вне области пространств имён
+вызывающего. Эта ошибка может случиться, если, например, владельческое
+пространство имён является предком текущего пространства имён пользователя
+вызывающего. Также она может возникнуть при попытке получить родителя
+первоначального пространства имён пользователя или PID.
+.TP 
+\fBENOTTY\fP
+Операция не поддерживается в этой версии ядра.
+.PP
+Также, операция \fBNS_GET_PARENT\fP может завершиться со следующей ошибкой:
+.TP 
+\fBEINVAL\fP
+Значение \fIfd\fP ссылается на не иерархическое пространство имён.
+.PP
+.\" ============================================================
+.\"
+Использование этих операций смотрите в разделе ПРИМЕРЫ.
+.SS "Определение типа пространства имён"
+.\" commit e5ff5ce6e20ee22511398bb31fb912466cf82a36
+Операция \fBNS_GET_NSTYPE\fP (доступна, начиная с Linux 4.11) позволяет
+определять тип пространства имён, на которое ссылается файловый дескриптор
+\fIfd\fP:
+.PP
+.in +4n
+.EX
+nstype = ioctl(fd, NS_GET_NSTYPE);
+.EE
+.in
+.PP
+Значение \fIfd\fP ссылается на файл \fI/proc/[pid]/ns/*\fP.
+.PP
+.\" ============================================================
+.\"
+Возвращаемым значением является одно из \fBCLONE_NEW*\fP, которое может
+указываться \fBclone\fP(2) или \fBunshare\fP(2) для создания пространства имён.
+.SS "Определение владельца пространства имён пользователя"
+.\" commit 015bb305b8ebe8d601a238ab70ebdc394c7a19ba
+Операция \fBNS_GET_OWNER_UID\fP (доступна, начиная с Linux 4.11) позволяет
+определять пользовательский ID владельца пространства имён пользователя
+(т. е., эффективный пользовательский ID процесса, который создал
+пространство имён пользователя). Формат вызова:
+.PP
+.in +4n
+.EX
+uid_t uid;
+ioctl(fd, NS_GET_OWNER_UID, &uid);
+.EE
+.in
+.PP
+Значение \fIfd\fP ссылается на файл \fI/proc/[pid]/ns/user\fP.
+.PP
+Возвращаемый пользовательский ID владельца находится в третьем аргументе с
+типом \fIuid_t\fP.
+.PP
+Данная операция может завершиться со следующей ошибкой:
+.TP 
+\fBEINVAL\fP
+Значение \fIfd\fP не ссылается на пространство имён пользователя.
+.SH ОШИБКИ
+Любая из этих операций \fBioctl\fP() может завершаться со следующими ошибками:
+.TP 
+\fBENOTTY\fP
+Значение \fIfd\fP не ссылается на файл \fI/proc/[pid]/ns/*\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Пространства имён и операции, описанные здесь, есть только в Linux.
+.SH ПРИМЕР
+В примере, показанном ниже, используются описанные выше операции
+\fBioctl\fP(2), с помощью которых определяются отношения между пространствами
+имён. Далее показаны сценарии запуска этой программы.
+.PP
+Попытка определить родителя изначального пространства имён пользователя
+завершается ошибкой, так как родителя нет:
+.PP
+.in +4n
+.EX
+$ \fB./ns_show /proc/self/ns/user p\fP
+Родительское пространство имён находится вне области вашего пространства имён
+.EE
+.in
+.PP
+Создаётся процесс, выполняющий \fBsleep\fP(1), который располагается в новом
+пространстве имён пользователя и UTS, и показывается, что новое пространство
+имён UTS связано с новым пространством имён пользователя:
+.PP
+.in +4n
+.EX
+$ \fBunshare \-Uu sleep 1000 &\fP
+[1] 23235
+$ \fB./ns_show /proc/23235/ns/uts u\fP
+Устройство/инода, владеющая пространством имён пользователя: [0,3] / 4026532448
+$ \fBreadlink /proc/23235/ns/user \fP
+user:[4026532448]
+.EE
+.in
+.PP
+Теперь покажем, что родителем нового пространства имён пользователя из
+предыдущего примера является начальное пространство имён пользователя:
+.PP
+.in +4n
+.EX
+$ \fBreadlink /proc/self/ns/user\fP
+user:[4026531837]
+$ \fB./ns_show /proc/23235/ns/user p\fP
+Устройство/инода родительского пространства имён: [0,3] / 4026531837
+.EE
+.in
+.PP
+Запустим оболочку в новом пространстве имён пользователя и покажем, что
+внутри оболочки родительское пространство имён пользователя невозможно
+определить. Также невозможно определить пространство имён UTS (которое
+связано с изначальным пространством имён пользователя).
+.PP
+.in +4n
+.EX
+$ \fBPS1="sh2$ " unshare \-U bash\fP
+sh2$ \fB./ns_show /proc/self/ns/user p\fP
+Родительское пространство имён находится вне области вашего пространства имён
+sh2$ \fB./ns_show /proc/self/ns/uts u\fP
+Владеющее пространство имён пользователя находится вне области вашего пространства имён
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+/* ns_show.c
+
+   Лицензируется под GNU General Public License v2 или новее.
+*/
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <errno.h>
+#include <sys/sysmacros.h>
+
+#ifndef NS_GET_USERNS
+#define NSIO    0xb7
+#define NS_GET_USERNS   _IO(NSIO, 0x1)
+#define NS_GET_PARENT   _IO(NSIO, 0x2)
+#endif
+
+int
+main(int argc, char *argv[])
+{
+    int fd, userns_fd, parent_fd;
+    struct stat sb;
+
+    if (argc < 2) {
+        fprintf(stderr, "Использование: %s /proc/[pid]/ns/[файл] [p|u]\en",
+                argv[0]);
+        fprintf(stderr, "\enПоказывает результат одной или обеих"
+                "операций NS_GET_USERNS (u) и NS_GET_PARENT (p)\en"
+                "для заданного /proc/[pid]/ns/[файла]. Если не указано"
+                "\(aqp\(aq или \(aqu\(aq, то\en"
+                "используется NS_GET_USERNS.\en");
+        exit(EXIT_FAILURE);
+    }
+
+    /* получаем файловый дескриптор для файла \(aqns\(aq, указанного
+       в argv[1] */
+
+    fd = open(argv[1], O_RDONLY);
+    if (fd == \-1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    /* получаем файловый дескриптор владельческого пространства
+       имён пользователя и затем показываем номер иноды
+       этого пространства имён */
+
+    if (argc < 3 || strchr(argv[2], \(aqu\(aq)) {
+        userns_fd = ioctl(fd, NS_GET_USERNS);
+
+        if (userns_fd == \-1) {
+            if (errno == EPERM)
+                printf("Родительское пространство имён находится "
+                        "вне области вашего пространства имён\en");
+            else
+               perror("ioctl\-NS_GET_USERNS");
+            exit(EXIT_FAILURE);
+         }
+
+        if (fstat(userns_fd, &sb) == \-1) {
+            perror("fstat\-userns");
+            exit(EXIT_FAILURE);
+        }
+        printf("Устройство/инода, владеющая пространством имён пользователя: "
+                "[%lx,%lx] / %ld\en",
+                (long) major(sb.st_dev), (long) minor(sb.st_dev),
+                (long) sb.st_ino);
+
+        close(userns_fd);
+    }
+
+    /* получаем файловый дескриптор родительского пространства
+       имён пользователя и затем показываем номер иноды
+       этого пространства имён */
+
+    if (argc > 2 && strchr(argv[2], \(aqp\(aq)) {
+        parent_fd = ioctl(fd, NS_GET_PARENT);
+
+        if (parent_fd == \-1) {
+            if (errno == EINVAL)
+                printf("Невозможно получить родительское пространство имён"
+                        "не иерархического пространства имён\en");
+            else if (errno == EPERM)
+                printf("Родительское пространство имён находится"
+                        "вне области вашего пространства имён\en");
+            else
+                perror("ioctl\-NS_GET_PARENT");
+            exit(EXIT_FAILURE);
+        }
+
+        if (fstat(parent_fd, &sb) == \-1) {
+            perror("fstat\-parentns");
+            exit(EXIT_FAILURE);
+        }
+        printf("Устройство/инода родительского пространства имён: [%lx,%lx] / %ld\en",
+                (long) major(sb.st_dev), (long) minor(sb.st_dev),
+                (long) sb.st_ino);
+
+        close(parent_fd);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfstat\fP(2), \fBioctl\fP(2), \fBproc\fP(5), \fBnamespaces\fP(7)

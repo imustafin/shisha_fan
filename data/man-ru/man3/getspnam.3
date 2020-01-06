@@ -1,0 +1,254 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2003 Andries Brouwer (aeb@cwi.nl) and
+.\" Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETSPNAM 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getspnam, getspnam_r, getspent, getspent_r, setspent, endspent, fgetspent,
+fgetspent_r, sgetspent, sgetspent_r, putspent, lckpwdf, ulckpwdf \- получение
+записи из теневого файла паролей
+.SH ОБЗОР
+.nf
+/* Основной API теневого файла паролей */
+\fB#include <shadow.h>\fP
+.PP
+\fBstruct spwd *getspnam(const char *\fP\fIname\fP\fB);\fP
+.PP
+\fBstruct spwd *getspent(void);\fP
+.PP
+\fBvoid setspent(void);\fP
+.PP
+\fBvoid endspent(void);\fP
+.PP
+\fBstruct spwd *fgetspent(FILE *\fP\fIstream\fP\fB);\fP
+.PP
+\fBstruct spwd *sgetspent(const char *\fP\fIs\fP\fB);\fP
+.PP
+\fBint putspent(const struct spwd *\fP\fIp\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.PP
+\fBint lckpwdf(void);\fP
+.PP
+\fBint ulckpwdf(void);\fP
+
+/* Расширение GNU */
+\fB#include <shadow.h>\fP
+.PP
+\fBint getspent_r(struct spwd *\fP\fIspbuf\fP\fB,\fP
+\fB        char *\fP\fIbuf\fP\fB, size_t \fP\fIbuflen\fP\fB, struct spwd **\fP\fIspbufp\fP\fB);\fP
+.PP
+\fBint getspnam_r(const char *\fP\fIname\fP\fB, struct spwd *\fP\fIspbuf\fP\fB,\fP
+\fB        char *\fP\fIbuf\fP\fB, size_t \fP\fIbuflen\fP\fB, struct spwd **\fP\fIspbufp\fP\fB);\fP
+.PP
+\fBint fgetspent_r(FILE *\fP\fIstream\fP\fB, struct spwd *\fP\fIspbuf\fP\fB,\fP
+\fB        char *\fP\fIbuf\fP\fB, size_t \fP\fIbuflen\fP\fB, struct spwd **\fP\fIspbufp\fP\fB);\fP
+.PP
+\fBint sgetspent_r(const char *\fP\fIs\fP\fB, struct spwd *\fP\fIspbuf\fP\fB,\fP
+\fB        char *\fP\fIbuf\fP\fB, size_t \fP\fIbuflen\fP\fB, struct spwd **\fP\fIspbufp\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBgetspent_r\fP(),
+\fBgetspnam_r\fP(),
+\fBfgetspent_r\fP(),
+\fBsgetspent_r\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE || _SVID_SOURCE
+.ad b
+.SH ОПИСАНИЕ
+В давние времена считалось, что хранить зашифрованные пароли в открытом
+доступе достаточно безопасно. Со временем компьютеры стали быстрее, а люди \-
+более обеспокоенными проблемами безопасности, и данный подход стал
+неприемлемым. Джулиан Франс Хог (Julianne Frances Haugh) реализовал набор
+программ для теневых паролей, который хранит зашифрованные пароли в базе
+данных теневых паролей (например в локальном файле теневых паролей
+\fI/etc/shadow\fP, NIS или LDAP), доступной для чтения только root.
+.PP
+.\" FIXME . I've commented out the following for the
+.\" moment.  The relationship between PAM and nsswitch.conf needs
+.\" to be clearly documented in one place, which is pointed to by
+.\" the pages for the user, group, and shadow password functions.
+.\" (Jul 2005, mtk)
+.\"
+.\" This shadow password setup has been superseded by PAM
+.\" (pluggable authentication modules), and the file
+.\" .I /etc/nsswitch.conf
+.\" now describes the sources to be used.
+Описанные ниже функции соответствуют аналогами для традиционной базы паролей
+(см. \fBgetpwnam\fP(3) and \fBgetpwent\fP(3)).
+.PP
+Функция \fBgetspnam\fP() возвращает указатель на структуру, содержащую
+разделённую на поля запись из базы данных теневых паролей, которая
+соответствует имени пользователя \fIname\fP.
+.PP
+.\" some systems require a call of setspent() before the first getspent()
+.\" glibc does not
+Функция \fBgetspent\fP() возвращает указатель на следующую запись в базе данных
+теневых паролей. Положение во входном потоке инициализируется с помощью
+\fBsetspent\fP(). После выполнения чтения программа может вызвать \fBendspent\fP()
+для освобождения ресурсов.
+.PP
+Функция \fBfgetspent\fP() подобна \fBgetspent\fP() но использует заданный поток
+вместо неявного открытия с помощью \fBsetspent\fP().
+.PP
+Функция \fBsgetspent\fP() разбирает передаваемую строку \fIs\fP в структуру
+\fIspwd\fP.
+.PP
+Функция \fBputspent\fP() записывает в \fIstream\fP содержимое передаваемой
+структуры \fIspwd\fP \fI*p\fP в виде текстовой строки в формате файла теневых
+паролей. Строковые записи со значением NULL и числовые записи со значением
+\-1 записываются как пустые строки.
+.PP
+Функция \fBlckpwdf\fP() предназначена для защиты базы данных теневых паролей
+при одновременном многочисленном доступе. Она пытается захватить блокировку
+и возвращает 0 при успешном выполнении и \-1 при ошибке (блокировка не
+получена в течении 15 секунд). Функция \fBulckpwdf\fP() освобождает
+блокировку. Заметим, что это не защищает при прямом доступе к файлу теневых
+паролей. О блокировке будут уведомлены только программы, использующие
+\fBlckpwdf\fP().
+.PP
+.\" Also in libc5
+.\" SUN doesn't have sgetspent()
+Эти функции возникли в исходном программном интерфейсе. Они широко
+используются.
+.SS "Реентерабельные версии"
+По аналогии с реентерабельными функциями для базы данных паролей, в glibc
+также есть реентерабельные функции для базы данных теневых паролей. Функция
+\fBgetspnam_r\fP() подобна \fBgetspnam\fP(), но хранит выбранную структуру
+теневого пароля в пространстве, на которое указывает \fIspbuf\fP. Данная
+структура теневого пароля содержит указатели на строки и эти строки хранятся
+в буфере \fIbuf\fP размером \fIbuflen\fP. Указатель на результат (при успешном
+выполнении) или NULL (в случае отсутствия записи или ошибки) сохраняется в
+\fI*spbufp\fP.
+.PP
+Функции \fBgetspent_r\fP(), \fBfgetspent_r\fP() и \fBsgetspent_r\fP() подобны их
+нереентерабельным аналогам.
+.PP
+.\" SUN doesn't have sgetspent_r()
+Некоторые не\-glibc системы также содержат функции с такими именами, но, чаще
+всего, с другими прототипами.
+.SS Структура
+Структура теневого пароля определена в \fI<shadow.h>\fP:
+.PP
+.in +4n
+.EX
+struct spwd {
+    char *sp_namp;     /* имя пользователя */
+    char *sp_pwdp;     /* зашифрованный пароль */
+    long  sp_lstchg;   /* дата последнего изменения
+                      в днях начиная с 1970\-01\-01 00:00:00 +0000 (UTC)) */
+    long  sp_min;      /* мин. кол\-во дней между сменой */
+    long  sp_max;      /* макс. кол\-во дней между сменой */
+    long  sp_warn;     /* кол\-во дней до истечения срока действия пароля
+                          для предупреждения пользователя */
+    long  sp_inact;    /* кол\-во дней до истечения срока действия пароля,
+                          после запись блокируется */
+    long  sp_expire;   /* дата устаревания учётной записи
+                      в днях начиная с 1970\-01\-01 00:00:00 +0000 (UTC)) */
+    unsigned long sp_flag;  /* зарезервировано */
+};
+.EE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции, которые возвращают указатель, возвращают NULL, если элементы
+закончились или произошла ошибка во время обработки. Функции, которые
+возвращают значение с типом \fIint\fP, возвращают 0 при успешном выполнении и
+\-1 при ошибке, записывая в \fIerrno\fP причину ошибки.
+.PP
+У нереентерабельных функций возвращаемое значение может указывать на
+статическую область и может быть перезаписано последующими вызовами этих
+функций.
+.PP
+При успешном выполнении реентерабельные функции возвращают 0. В случае
+ошибки возвращается номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Вызывающий не имеет прав доступа к файлу теневых паролей.
+.TP 
+\fBERANGE\fP
+Указанный буфер слишком мал.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/shadow\fP
+файл, содержащий базу локальных теневых паролей
+.TP 
+\fI/etc/.pwd.lock\fP
+файл блокировки
+.PP
+При включении файла \fI<paths.h>\fP определяется константа
+\fB_PATH_SHADOW\fP, в которой хранится путь к файлу теневых паролей.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw13 lb lbw30
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetspnam\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:getspnam locale
+T}
+T{
+\fBgetspent\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:getspent
+.br
+race:spentbuf locale
+T}
+T{
+\fBsetspent\fP(),
+.br
+\fBendspent\fP(),
+.br
+\fBgetspent_r\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:getspent locale
+T}
+T{
+\fBfgetspent\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:fgetspent
+T{
+\fBsgetspent\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:sgetspent
+T{
+\fBputspent\fP(),
+.br
+\fBgetspnam_r\fP(),
+.br
+\fBsgetspent_r\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+T{
+\fBlckpwdf\fP(),
+.br
+\fBulckpwdf\fP(),
+.br
+\fBfgetspent_r\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+В приведённой выше таблице \fIgetspent\fP в \fIrace:getspent\fP означает, что если
+в нескольких нитях программы одновременно используются функции
+\fBsetspent\fP(), \fBgetspent\fP(), \fBgetspent_r\fP() или \fBendspent\fP(), то может
+возникнуть состязательность по данным.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+База данных теневых паролей и её программный интерфейс не описаны в
+POSIX.1. Однако, во многих системах есть похожий программный интерфейс.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetgrnam\fP(3), \fBgetpwnam\fP(3), \fBgetpwnam_r\fP(3), \fBshadow\fP(5)

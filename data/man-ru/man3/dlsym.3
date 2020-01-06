@@ -1,0 +1,127 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1995 Yggdrasil Computing, Incorporated.
+.\" and Copyright 2003, 2015 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DLSYM 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+dlsym, dlvsym \- возвращает адрес символа из общего объекта или исполняемого
+файла
+.SH ОБЗОР
+\fB#include <dlfcn.h>\fP
+.PP
+\fBvoid *dlsym(void *\fP\fIhandle\fP\fB, const char *\fP\fIsymbol\fP\fB);\fP
+.PP
+\fB#define _GNU_SOURCE\fP
+.br
+\fB#include <dlfcn.h>\fP
+.PP
+\fBvoid *dlvsym(void *\fP\fIhandle\fP\fB, char *\fP\fIsymbol\fP\fB, char
+*\fP\fIversion\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-ldl\fP.
+.SH ОПИСАНИЕ
+Функции \fBdlsym\fP() передаётся «описатель» динамически загруженного объекта,
+возвращаемого \fBdlopen\fP(3) и имя символа (с null в конце). В результате
+функция возвращает адрес, по которому символ расположен в памяти. Если
+символ не найден в указанном объекте или во всех общих объектах, которые
+были автоматически загружены \fBdlopen\fP(3) на момент загрузки объекта, то
+\fBdlsym\fP() возвращает NULL (поиск, выполняемый \fBdlsym\fP(), охватывает всё
+дерево зависимостей этих общих объектов).
+.PP
+В нестандартных ситуациях (смотрите ЗАМЕЧАНИЯ) в действительности значение
+символа может быть NULL. Поэтому NULL, возвращаемый \fBdlsym\fP(), ненужно
+считать ошибкой. Правильным способом определения ошибки, если символ равен
+NULL, является вызов \fBdlerror\fP(3) для сброса старого состояния ошибки, а
+затем вызов \fBdlsym\fP(), и повторный вызов \fBdlerror\fP(3), сохранение
+полученного значения в переменную и проверка этого значения на NULL.
+.PP
+Существует два специальных псевдо\-описателя, которые можно указать в
+\fIhandle\fP:
+.TP 
+\fBRTLD_DEFAULT\fP
+Найти первое появление нужного символа, используя порядок поиска по
+умолчанию для общего объекта. Поиск выполняется среди глобальных символов
+исполняемого файла и его зависимостям, а также по символам в общих объектах,
+которые были динамически загружены с флагом \fBRTLD_GLOBAL\fP.
+.TP 
+\fBRTLD_NEXT\fP
+Найти следующее появление нужного символа, начиная поиск с текущего
+объекта. Это позволяет предоставить обёрточную функцию в другой общем
+объекте, таким образом, что например, определение функции в предварительно
+загружаемом общем объекте (смотрите \fBLD_PRELOAD\fP в \fBld.so\fP(8)) может найти
+и вызвать «реальную» функцию, предоставленную в другом общем объекте (или,
+что важно, «следующее» определение функции в случаях, когда есть несколько
+уровней предварительной загрузки).
+.PP
+Чтобы получить определения \fBRTLD_DEFAULT\fP и \fBRTLD_NEXT\fP из
+\fI<dlfcn.h>\fP, нужно задать макрос тестирования свойств
+\fB_GNU_SOURCE\fP.
+.PP
+.PP
+Функция \fBdlvsym\fP() делает то же самое что и \fBdlsym\fP(), но в качестве
+дополнительного аргумента ожидает строку версии.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают адрес, связанный с
+\fIsymbol\fP. При ошибке возвращается NULL; причину ошибки можно определить с
+помощью \fBdlerror\fP(3).
+.SH ВЕРСИИ
+Функция \fBdlsym\fP() есть в glibc 2.0 и новее. Функция \fBdlvsym\fP() впервые
+появилась в glibc 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBdlsym\fP(),
+\fBdlvsym\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+В POSIX.1\-2001 есть описание \fBdlsym\fP(). Функция \fBdlvsym\fP() является
+расширением GNU.
+.SH ЗАМЕЧАНИЯ
+.\"
+Значение символа, возвращаемое \fBdlsym\fP(), никогда не будет равно NULL, если
+общий объект является результатом нормальной компиляции, так как глобальный
+символ никогда не размещается по адресу NULL. Тем не менее, есть ситуации,
+при которых поиск с помощью \fBdlsym\fP() может дать NULL в качестве значения
+символа. Например, значение символа может быть результатом неявной
+определительной функции GNU (IFUNC), которая возвращает NULL в качестве
+определённого значения.
+.SS История
+Функция \fBdlsym\fP() является частью программного интерфейса dlopen,
+возникшего в SunOS. В этой системе нет \fBdlvsym\fP().
+.SH ПРИМЕР
+Смотрите \fBdlopen\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdl_iterate_phdr\fP(3), \fBdladdr\fP(3), \fBdlerror\fP(3), \fBdlinfo\fP(3),
+\fBdlopen\fP(3), \fBld.so\fP(8)

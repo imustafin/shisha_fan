@@ -1,0 +1,160 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2004 Andries Brouwer <aeb@cwi.nl>.
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SCALB 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+scalb, scalbf, scalbl \- умножает число с плавающей запятой на основание в
+степени целого числа (УСТАРЕЛИ)
+.SH ОБЗОР
+\fB#include <math.h>\fP
+.PP
+\fBdouble scalb(double \fP\fIx\fP\fB, double \fP\fIexp\fP\fB);\fP
+.br
+\fBfloat scalbf(float \fP\fIx\fP\fB, float \fP\fIexp\fP\fB);\fP
+.br
+\fBlong double scalbl(long double \fP\fIx\fP\fB, long double \fP\fIexp\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBscalb\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.br
+\fBscalbf\fP(), \fBscalbl\fP():
+.RS 4
+_XOPEN_SOURCE\ >=\ 600
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Эти функции умножают свой первый аргумент \fIx\fP на \fBFLT_RADIX\fP (обычно, 2),
+возведённый в степень \fIexp\fP, то есть:
+.PP
+.nf
+    x * FLT_RADIX ** exp
+.fi
+.PP
+.\" not in /usr/include but in a gcc lib
+Определение значения \fBFLT_RADIX\fP можно получить включив файл
+\fI<float.h>\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные функции возвращают \fIx\fP * \fBFLT_RADIX\fP **
+\fIexp\fP.
+.PP
+Если значение \fIx\fP или \fIexp\fP равно NaN, будет возвращено NaN.
+.PP
+Если \fIx\fP стремится к плюс бесконечности (минус бесконечности) и \fIexp\fP — не
+минус бесконечность, то возвращается плюс бесконечность (минус
+бесконечность).
+.PP
+Если \fIx\fP равно +0 (\-0), и \fIexp\fP не положительная бесконечность, то
+возвращается +0 (\-0).
+.PP
+If \fIx\fP равно нулю и \fIexp\fP — положительная бесконечность, то будет
+сгенерирована ошибка выхода за пределы области, а в качестве результата
+будет возвращено NaN.
+.PP
+Если \fIx\fP равно бесконечности, а \fIexp\fP — отрицательной бесконечности, то
+будет сгенерирована ошибка выхода за пределы области, а в качестве
+результата будет возвращено NaN.
+.PP
+Если в результате превышена разрядность, то возникает ошибка диапазона и
+функции возвращают \fBHUGE_VAL\fP, \fBHUGE_VALF\fP или \fBHUGE_VALL\fP,
+соответственно, с тем же знаком что и \fIx\fP.
+.PP
+Если результат исчерпал степень, генерируется ошибка диапазона, а функции
+возвращают 0 с тем же знаком что и \fIx\fP.
+.SH ОШИБКИ
+Смотрите \fBmath_error\fP(7), чтобы определить, какие ошибки могут возникать
+при вызове этих функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка области: \fIx\fP равно 0, и \fIexp\fP — положительная бесконечность, или \fIx\fP — положительная бесконечность и \fIexp\fP — отрицательная бесконечность, а другой аргумент не NaN.
+.\" .I errno
+.\" is set to
+.\" .BR EDOM .
+Возникает исключение неправильной плавающей точки (\fBFE_INVALID\fP).
+.TP 
+Ошибка диапазона, переполнение
+.\" .I errno
+.\" is set to
+.\" .BR ERANGE .
+Вызывается исключение переполнения плавающей точки (\fBFE_OVERFLOW\fP).
+.TP 
+Ошибка диапазона, исчерпана степень
+.\" .I errno
+.\" is set to
+.\" .BR ERANGE .
+Возникает исключение исчерпания степени чисел с плавающей запятой
+(\fBFE_UNDERFLOW\fP).
+.PP
+.\" FIXME . Is it intentional that these functions do not set errno?
+.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6803
+.\" Bug raised: http://sources.redhat.com/bugzilla/show_bug.cgi?id=6804
+Эти функции не изменяют \fIerrno\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw28 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBscalb\fP(),
+\fBscalbf\fP(),
+\fBscalbl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функция \fBscalb\fP() определена в POSIX.1\-2001, но помечена как устаревшая. Из
+POSIX.1\-2008 удалено описание \fBscalb\fP(), рекомендуется использовать
+\fBscalbln\fP(3), \fBscalblnf\fP(3) или \fBscalblnl\fP(3). Функция \fBscalb\fP() впервые
+появилась в 4.3BSD.
+.PP
+.\" Looking at header files: scalbf() is present on the
+.\" BSDs, Tru64, HP-UX 11, Irix 6.5; scalbl() is on HP-UX 11 and Tru64.
+Функции \fBscalbf\fP() и \fBscalbl\fP() не стандартизованы; несмотря на это,
+\fBscalbf\fP() есть в нескольких системах
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBldexp\fP(3), \fBscalbln\fP(3)

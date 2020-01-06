@@ -1,0 +1,132 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\"	Single UNIX Specification, Version 2
+.\" Modified Thu Apr  8 15:00:12 1993, David Metcalfe
+.\" Modified Sat Jul 24 18:44:45 1993, Rik Faith (faith@cs.unc.edu)
+.\" Modified Fri Feb 14 21:47:50 1997 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified Mon Oct 11 11:11:11 1999 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified Wed Nov 10 00:02:26 1999 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified Sun May 20 22:17:20 2001 by Andries Brouwer (aeb@cwi.nl)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PUTENV 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+putenv \- изменяет или добавляет переменную окружения
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+.\" Not: const char *
+\fBint putenv(char *\fP\fIstring\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBputenv\fP():
+_XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _SVID_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBputenv\fP() добавляет или изменяет значение переменных
+окружения. Аргумент \fIstring\fP должен быть представлен в форме
+\fIname\fP=\fIvalue\fP. Если переменной с именем \fIname\fP нет в окружении, то
+\fIstring\fP добавляется к окружению. Если переменная \fIname\fP уже существует,
+то значение \fIname\fP в окружении изменяется на \fIvalue\fP. Строка, на которую
+указывает \fIstring\fP, становится частью окружения, так что её изменение
+приведёт к изменению окружения.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBputenv\fP() возвращает ноль при успешном выполнении и не ноль в
+противном случае. При ошибке \fIerrno\fP отражает причину ошибки.
+.SH ОШИБКИ
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти под новое окружение.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBputenv\fP()
+T}	Безвредность в нитях	MT\-Unsafe const:env
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+.\" .LP
+.\" Description for libc4, libc5, glibc:
+.\" If the argument \fIstring\fP is of the form \fIname\fP,
+.\" and does not contain an \(aq=\(aq character, then the variable \fIname\fP
+.\" is removed from the environment.
+.\" If
+.\" .BR putenv ()
+.\" has to allocate a new array \fIenviron\fP,
+.\" and the previous array was also allocated by
+.\" .BR putenv (),
+.\" then it will be freed.
+.\" In no case will the old storage associated
+.\" to the environment variable itself be freed.
+От функции \fBputenv\fP() не требуется быть реентерабельной, и она такова в
+glibc 2.0, но в glibc 2.1 она реентерабельна.
+.PP
+Начиная с версии 2.1.2 glibc соответствует SUSv2: используется указатель
+\fIstring\fP, передаваемый \fBputenv\fP(). В частности, эта строка становится
+частью окружения; последующее её изменение приводит к изменению
+окружения. Таким образом, ошибочным будет вызывать \fBputenv\fP() с
+автоматической переменной в качестве аргумента, так как после возврата из
+вызвавшей функции строка \fIstring\fP является частью окружения. Однако, версии
+glibc 2.0 по 2.1.1 работают по\-другому: используется копия строки. С одной
+стороны, это вызывает утечку памяти, с другой стороны, это не соответствует
+SUSv2.
+.PP
+В версии 4.4BSD как и в glibc 2.0 используется копия.
+.PP
+В SUSv2 удалено \fIconst\fP из прототипа и это сделано в glibc 2.1.3.
+.PP
+Реализация библиотеки GNU C предоставляет нестандартное расширение. Если
+\fIstring\fP не включает знака равно:
+.PP
+.in +4n
+.EX
+putenv("NAME");
+.EE
+.in
+.PP
+то именованная переменная удаляется из окружения вызывающего.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclearenv\fP(3), \fBgetenv\fP(3), \fBsetenv\fP(3), \fBunsetenv\fP(3), \fBenviron\fP(7)

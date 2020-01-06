@@ -1,0 +1,184 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2000 Nicolás Lichtmaier <nick@debian.org>
+.\" Created 2000-07-22 00:52-0300
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2002-07-23 19:21:35 CEST 2002 Walter Harms
+.\" <walter.harms@informatik.uni-oldenburg.de>
+.\"
+.\" Modified 2003-04-04, aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ENCRYPT 3 2018\-04\-30 "" "Руководство программиста Linux"
+.SH ИМЯ
+encrypt, setkey, encrypt_r, setkey_r \- шифрование 64\-битных сообщений
+.SH ОБЗОР
+.nf
+\fB#define _XOPEN_SOURCE\fP       /* См. feature_test_macros(7) */
+\fB#include <unistd.h>\fP
+.PP
+\fBvoid encrypt(char \fP\fIblock\fP\fB[64], int \fP\fIedflag\fP\fB);\fP
+
+\fB#define _XOPEN_SOURCE\fP       /* смотрите feature_test_macros(7) */
+\fB#include <stdlib.h>\fP
+.PP
+\fBvoid setkey(const char *\fP\fIkey\fP\fB);\fP
+
+\fB#define _GNU_SOURCE\fP         /* смотрите feature_test_macros(7) */
+\fB#include <crypt.h>\fP
+.PP
+\fBvoid setkey_r(const char *\fP\fIkey\fP\fB, struct crypt_data *\fP\fIdata\fP\fB);\fP
+\fBvoid encrypt_r(char *\fP\fIblock\fP\fB, int \fP\fIedflag\fP\fB, struct crypt_data *\fP\fIdata\fP\fB);\fP
+.fi
+.PP
+Для любой функции требуется компоновка с параметром \fI\-lcrypt\fP.
+.SH ОПИСАНИЕ
+Эти функции кодируют и декодируют 64\-битные сообщения. Функцией \fBsetkey\fP()
+задаётся ключ, который затем используется \fBencrypt\fP(). Параметр \fIkey\fP
+является массивом из 64 байтов, каждый из которых имеет значение 1 или
+0. Байты key[n], где n=8*i\-1 — игнорируются, так что действительная длина
+ключа равна 56 битам.
+.PP
+Функция \fBencrypt\fP() изменяет переданный буфер и, если значение \fIedflag\fP
+равно 0, то кодирует его, а если равно 1 — то декодирует. Как и параметр
+\fIkey\fP, аргумент \fIblock\fP также является представлением битового вектора
+действительного кодируемого значения. Результат возвращается в этом же
+векторе.
+.PP
+Эти две функции не являются повторно используемыми, то есть данные ключа
+хранятся в статическом хранилище. Функции \fBsetkey_r\fP() и \fBencrypt_r\fP()
+являются повторно используемыми версиями. Они используют следующую структуру
+для хранения данных ключа:
+.PP
+.in +4n
+.EX
+struct crypt_data {
+    char     keysched[16 * 8];
+    char     sb0[32768];
+    char     sb1[32768];
+    char     sb2[32768];
+    char     sb3[32768];
+    char     crypt_3_buf[14];
+    char     current_salt[2];
+    long int current_saltbits;
+    int      direction;
+    int      initialized;
+};
+.EE
+.in
+.PP
+Перед вызовом \fBsetkey_r\fP() обнулите \fIdata\->initialized\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Данные функции не возвращают никаких значений.
+.SH ОШИБКИ
+Установите переменную \fIerrno\fP в ноль перед вызовом этих функций. При
+нормальном завершении работы её значение не изменится.
+.TP 
+\fBENOSYS\fP
+Функция не предусмотрена (например, из\-за старых запретов США на экспорт).
+.SH ВЕРСИИ
+Функции \fBcrypt\fP(), \fBcrypt_r\fP(), \fBsetkey\fP() и \fBsetkey_r\fP() удалены из
+glibc 2.28, так как они используют блочный шифр DES, который теперь
+считается небезопасным. В приложениях следует использовать современную
+библиотеку шифрования, например \fBlibgcrypt\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw23 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBencrypt\fP(),
+\fBsetkey\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:crypt
+T{
+\fBencrypt_r\fP(),
+\fBsetkey_r\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBencrypt\fP(), \fBsetkey\fP(): POSIX.1\-2001, POSIX.1\-2008, SUS, SVr4.
+.PP
+Функции \fBencrypt_r\fP() и \fBsetkey_r\fP() являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+.SS "Доступность в glibc"
+Смотрите \fBcrypt\fP(3).
+.SS "Свойства в glibc"
+В glibc 2.2 в данных функциях используется алгоритм DES.
+.SH ПРИМЕР
+.EX
+#define _XOPEN_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <crypt.h>
+
+int
+main(void)
+{
+    char key[64];
+    char orig[9] = "eggplant";
+    char buf[64];
+    char txt[9];
+    int i, j;
+
+    for (i = 0; i < 64; i++) {
+        key[i] = rand() & 1;
+    }
+
+    for (i = 0; i < 8; i++) {
+        for (j = 0; j < 8; j++) {
+            buf[i * 8 + j] = orig[i] >> j & 1;
+        }
+        setkey(key);
+    }
+    printf("До шифрования: %s\en", orig);
+
+    encrypt(buf, 0);
+    for (i = 0; i < 8; i++) {
+        for (j = 0, txt[i] = \(aq\e0\(aq; j < 8; j++) {
+            txt[i] |= buf[i * 8 + j] << j;
+        }
+        txt[8] = \(aq\e0\(aq;
+    }
+    printf("После шифрования:  %s\en", txt);
+
+    encrypt(buf, 1);
+    for (i = 0; i < 8; i++) {
+        for (j = 0, txt[i] = \(aq\e0\(aq; j < 8; j++) {
+            txt[i] |= buf[i * 8 + j] << j;
+        }
+        txt[8] = \(aq\e0\(aq;
+    }
+    printf("После расшифровки:  %s\en", txt);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcbc_crypt\fP(3), \fBcrypt\fP(3), \fBecb_crypt\fP(3),
+.\" .BR fcrypt (3)

@@ -1,0 +1,190 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) 2005 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGVEC 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sigvec, sigblock, sigsetmask, siggetmask, sigmask \- программный интерфейс
+сигналов BSD
+.SH ОБЗОР
+\fB#include <signal.h>\fP
+.PP
+\fBint sigvec(int \fP\fIsig\fP\fB, const struct sigvec *\fP\fIvec\fP\fB, struct sigvec
+*\fP\fIovec\fP\fB);\fP
+.PP
+\fBint sigmask(int \fP\fIsignum\fP\fB);\fP
+.PP
+\fBint sigblock(int \fP\fImask\fP\fB);\fP
+.PP
+\fBint sigsetmask(int \fP\fImask\fP\fB);\fP
+.PP
+\fBint siggetmask(void);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+Для всех функций, показанных выше:
+    Начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE
+.SH ОПИСАНИЕ
+Данные функции предоставляются glibc для совместимости с программами, в
+которых используются старый программный интерфейс сигналов BSD. Данный
+программный интерфейс устарел: в новых приложениях нужно использовать
+программный интерфейс сигналов POSIX (\fBsigaction\fP(2), \fBsigprocmask\fP(2) и
+т.п.).
+.PP
+Функция \fBsigvec\fP() назначает или возвращает обработчик сигнала \fIsig\fP
+(подобно POSIX \fBsigaction\fP(2)). Если \fIvec\fP не равно NULL, то это значение
+указывает на структуру \fIsigvec\fP, в которой определён новый обработчик для
+\fIsig\fP. Если \fIovec\fP не равно NULL, то это значение указывает на структуру
+\fIsigvec\fP, которая используется для возврата предыдущего обработчика
+\fIsig\fP. Чтобы получить текущий обработчик \fIsig\fP без его изменения, укажите
+NULL в \fIvec\fP и не\-null указатель в \fIovec\fP.
+.PP
+Обработку сигналов \fBSIGKILL\fP и \fBSIGSTOP\fP невозможно изменить.
+.PP
+Структура \fIsigvec\fP описана следующим образом:
+.PP
+.in +4n
+.EX
+struct sigvec {
+    void (*sv_handler)(int); /* обработчик сигнала */
+    int    sv_mask;          /* сигналы для блокировки в обработчике */
+    int    sv_flags;         /* флаги */
+};
+.EE
+.in
+.PP
+В поле \fIsv_handler\fP задаётся обработчик сигнала и это может быть: адрес
+функции сигнального обработчика; \fBSIG_DFL\fP, означающее, что к сигналу
+применяется обработчик по умолчанию; \fBSIG_IGN\fP, означающее, что сигнал
+игнорируется.
+.PP
+Если в \fIsv_handler\fP задан адрес обработчика сигнала, то в \fIsv_mask\fP
+задаётся маска сигналов, которые будут блокироваться на время выполнения
+обработчика. Также блокируется сигнал, для которого вызывается
+обработчик. Попытка заблокировать \fBSIGKILL\fP или \fBSIGSTOP\fP просто
+игнорируется.
+.PP
+Если в \fIsv_handler\fP задан адрес обработчика сигнала, то в поле \fIsv_flags\fP
+задаются флаги, контролирующие, что происходит при вызове обработчика. Это
+поле может содержать ноль или несколько следующих флагов:
+.TP 
+\fBSV_INTERRUPT\fP
+Если обработчик сигнала прерывает блокирующий системный вызов, то по
+окончании обработчика системный вызов не будет перезапущен: вместо этого он
+завершается ошибкой \fBEINTR\fP. Если этот флаг не указан, то по умолчанию
+системные вызовы перезапускаются.
+.TP 
+\fBSV_RESETHAND\fP
+Сбросить обработку сигнала в значение по умолчанию перед вызовом обработчика
+сигнала. Если этот флаг не указан, то обработчик остаётся установленным до
+его явного удаления позднее вызовом \fBsigvec\fP() или пока процесс не вызовет
+\fBexecve\fP(2).
+.TP 
+\fBSV_ONSTACK\fP
+Обрабатывать сигнал в альтернативном стеке сигналов (исторически
+устанавливается в BSD с помощью устаревшей функции \fBsigstack\fP(); замена из
+POSIX — \fBsigaltstack\fP(2)).
+.PP
+Макрос \fBsigmask\fP() создаёт и возвращает «сигнальную маску» для
+\fIsignum\fP. Например, мы можем инициализировать поле \fIvec.sv_mask\fP
+передаваемого в \fBsigvec\fP() с помощью такого кода:
+.PP
+.in +4n
+.EX
+vec.sv_mask = sigmask(SIGQUIT) | sigmask(SIGABRT);
+            /* Блокировать SIGQUIT и SIGABRT при
+               выполнении обработчика */
+.EE
+.in
+.PP
+Функция \fBsigblock\fP() добавляет сигналы в \fImask\fP в сигнальную маску
+процесса (подобно POSIX \fIsigprocmask(SIG_BLOCK)\fP) и возвращает старую
+сигнальную маску процесса. Попытка блокировать \fBSIGKILL\fP или \fBSIGSTOP\fP
+просто игнорируется.
+.PP
+Функция \fBsigsetmask\fP() устанавливает сигнальную маску процесса равной
+значению \fImask\fP (подобно POSIX \fIsigprocmask(SIG_SETMASK)\fP) и возвращает
+старую сигнальную маску процесса.
+.PP
+Функция \fBsiggetmask\fP() возвращает текущую сигнальную маску процесса. Этот
+вызов эквивалентен \fIsigblock(0)\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsigvec\fP() возвращается 0; при ошибке возвращается
+\-1, а в \fIerrno\fP содержится код ошибки.
+.PP
+Функции \fBsigblock\fP() и \fBsigsetmask\fP() возвращают предыдущую сигнальную
+маску процесса.
+.PP
+Макрос \fBsigmask\fP() возвращает сигнальную маску для \fIsignum\fP.
+.SH ОШИБКИ
+Смотрите раздел ОШИБКИ в \fBsigaction\fP(2) и \fBsigprocmask\fP(2).
+.SH ВЕРСИИ
+Начиная с версии 2.21, библиотека GNU C больше не экспортирует функцию
+\fBsigvec\fP() как часть программного интерфейса (для обеспечения обратной
+совместимости схема версий символов glibc продолжает экспортировать
+интерфейс для двоичного кода, скомпонованного со старыми версиями
+библиотеки).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw32 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsigvec\fP(),
+\fBsigmask\fP(),
+\fBsigblock\fP(),
+\fBsigsetmask\fP(),
+\fBsiggetmask\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Все эти функции появились из 4.3BSD, за исключением \fBsiggetmask\fP(), чьё
+происхождение неясно. Эти функции устарели: не используйте их в новых
+программах.
+.SH ЗАМЕЧАНИЯ
+В 4.3BSD, функция \fBsignal\fP() предоставляет надёжную семантику (как при
+вызове \fBsigvec\fP() со значением \fIvec.sv_mask\fP равным 0). В System V,
+\fBsignal\fP() предоставляет ненадёжную семантику. В POSIX.1 эти аспекты
+\fBsignal\fP() не определены. Подробности смотрите в \fBsignal\fP(2).
+.PP
+Для ожидания сигналов в BSD и System V предоставляется функция
+\fBsigpause\fP(3), но в других системах она описана с другим
+аргументом. Подробности смотрите в \fBsigpause\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBpause\fP(2), \fBsigaction\fP(2), \fBsignal\fP(2), \fBsigprocmask\fP(2),
+\fBraise\fP(3), \fBsigpause\fP(3), \fBsigset\fP(3), \fBsignal\fP(7)

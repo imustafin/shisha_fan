@@ -1,0 +1,260 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Michael Kerrisk
+.\" and Copyright (C) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CPU_SET 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+CPU_SET, CPU_CLR, CPU_ISSET, CPU_ZERO, CPU_COUNT, CPU_AND, CPU_OR, CPU_XOR,
+CPU_EQUAL, CPU_ALLOC, CPU_ALLOC_SIZE, CPU_FREE, CPU_SET_S, CPU_CLR_S,
+CPU_ISSET_S, CPU_ZERO_S, CPU_COUNT_S, CPU_AND_S, CPU_OR_S, CPU_XOR_S,
+CPU_EQUAL_S \- макросы для работы с наборами ЦП
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <sched.h>\fP
+.PP
+\fBvoid CPU_ZERO(cpu_set_t *\fP\fIset\fP\fB);\fP
+.PP
+\fBvoid CPU_SET(int \fP\fIcpu\fP\fB, cpu_set_t *\fP\fIset\fP\fB);\fP
+\fBvoid CPU_CLR(int \fP\fIcpu\fP\fB, cpu_set_t *\fP\fIset\fP\fB);\fP
+\fBint  CPU_ISSET(int \fP\fIcpu\fP\fB, cpu_set_t *\fP\fIset\fP\fB);\fP
+.PP
+\fBint  CPU_COUNT(cpu_set_t *\fP\fIset\fP\fB);\fP
+.PP
+\fBvoid CPU_AND(cpu_set_t *\fP\fIdestset\fP\fB,\fP
+\fB             cpu_set_t *\fP\fIsrcset1\fP\fB, cpu_set_t *\fP\fIsrcset2\fP\fB);\fP
+\fBvoid CPU_OR(cpu_set_t *\fP\fIdestset\fP\fB,\fP
+\fB             cpu_set_t *\fP\fIsrcset1\fP\fB, cpu_set_t *\fP\fIsrcset2\fP\fB);\fP
+\fBvoid CPU_XOR(cpu_set_t *\fP\fIdestset\fP\fB,\fP
+\fB             cpu_set_t *\fP\fIsrcset1\fP\fB, cpu_set_t *\fP\fIsrcset2\fP\fB);\fP
+.PP
+\fBint  CPU_EQUAL(cpu_set_t *\fP\fIset1\fP\fB, cpu_set_t *\fP\fIset2\fP\fB);\fP
+.PP
+\fBcpu_set_t *CPU_ALLOC(int \fP\fInum_cpus\fP\fB);\fP
+\fBvoid CPU_FREE(cpu_set_t *\fP\fIset\fP\fB);\fP
+\fBsize_t CPU_ALLOC_SIZE(int \fP\fInum_cpus\fP\fB);\fP
+.PP
+\fBvoid CPU_ZERO_S(size_t \fP\fIsetsize\fP\fB, cpu_set_t *\fP\fIset\fP\fB);\fP
+.PP
+\fBvoid CPU_SET_S(int \fP\fIcpu\fP\fB, size_t \fP\fIsetsize\fP\fB, cpu_set_t *\fP\fIset\fP\fB);\fP
+\fBvoid CPU_CLR_S(int \fP\fIcpu\fP\fB, size_t \fP\fIsetsize\fP\fB, cpu_set_t *\fP\fIset\fP\fB);\fP
+\fBint  CPU_ISSET_S(int \fP\fIcpu\fP\fB, size_t \fP\fIsetsize\fP\fB, cpu_set_t *\fP\fIset\fP\fB);\fP
+.PP
+\fBint  CPU_COUNT_S(size_t \fP\fIsetsize\fP\fB, cpu_set_t *\fP\fIset\fP\fB);\fP
+.PP
+\fBvoid CPU_AND_S(size_t \fP\fIsetsize\fP\fB, cpu_set_t *\fP\fIdestset\fP\fB,\fP
+\fB             cpu_set_t *\fP\fIsrcset1\fP\fB, cpu_set_t *\fP\fIsrcset2\fP\fB);\fP
+\fBvoid CPU_OR_S(size_t \fP\fIsetsize\fP\fB, cpu_set_t *\fP\fIdestset\fP\fB,\fP
+\fB             cpu_set_t *\fP\fIsrcset1\fP\fB, cpu_set_t *\fP\fIsrcset2\fP\fB);\fP
+\fBvoid CPU_XOR_S(size_t \fP\fIsetsize\fP\fB, cpu_set_t *\fP\fIdestset\fP\fB,\fP
+\fB             cpu_set_t *\fP\fIsrcset1\fP\fB, cpu_set_t *\fP\fIsrcset2\fP\fB);\fP
+.PP
+\fBint  CPU_EQUAL_S(size_t \fP\fIsetsize\fP\fB, cpu_set_t *\fP\fIset1\fP\fB, cpu_set_t *\fP\fIset2\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Набор ЦП описывается структурой данных \fIcpu_set_t\fP. Набор ЦП используется в
+\fBsched_setaffinity\fP(2) и подобных интерфейсах.
+.PP
+Тип данных \fIcpu_set_t\fP реализован в виде битовой маски. Однако структуру
+данных следует считать «чёрным ящиком»: все действия с наборами ЦП следует
+выполнять с помощью макросов, описанных на этой странице.
+.PP
+Для работы с набором ЦП \fIset\fP предоставляются следующие макросы:
+.TP  17
+\fBCPU_ZERO\fP()
+Очищает \fIset\fP, после этого он не содержит ЦП.
+.TP 
+\fBCPU_SET\fP()
+Добавляет ЦП \fIcpu\fP в \fIset\fP.
+.TP 
+\fBCPU_CLR\fP()
+Удаляет ЦП \fIcpu\fP из \fIset\fP.
+.TP 
+\fBCPU_ISSET\fP()
+Проверяет, является ли ЦП \fIcpu\fP членом \fIset\fP.
+.TP 
+\fBCPU_COUNT\fP()
+Возвращает количество ЦП в \fIset\fP.
+.PP
+Макросы, имеющие аргумент \fIcpu\fP, не вызывают побочных эффектов, все
+перечисленные выше макросы могут использовать аргумент более одного раза.
+.PP
+Значение первого ЦП системы в \fIcpu\fP обозначается как 0, значение следующего
+ЦП в \fIcpu\fP равно 1 и т. д. Нельзя предполагать о доступности каких\-либо ЦП,
+или что набор ЦП непрерывен, так как ЦП могут динамически отключаться или
+вообще отсутствовать. Константой \fBCPU_SETSIZE\fP (в настоящее время 1024)
+задаётся значение на 1 большее, чем максимальный номер ЦП, который можно
+хранить в \fIcpu_set_t\fP.
+.PP
+Следующие макросы выполняют логические операции над наборами ЦП:
+.TP  17
+\fBCPU_AND\fP()
+Сохраняет пересечение наборов \fIsrcset1\fP и \fIsrcset2\fP в \fIdestset\fP (который
+может быть одним из наборов\-аргументов).
+.TP 
+\fBCPU_OR\fP()
+Сохраняет объединение наборов \fIsrcset1\fP и \fIsrcset2\fP в \fIdestset\fP (который
+может быть одним из наборов\-аргументов).
+.TP 
+\fBCPU_XOR\fP()
+Сохраняет результат XOR наборов \fIsrcset1\fP и \fIsrcset2\fP в \fIdestset\fP
+(который может быть одним из наборов\-аргументов). Операция XOR возвращает
+набор из ЦП, которые есть в одном из \fIsrcset1\fP или \fIsrcset2\fP, но не в
+обоих одновременно.
+.TP 
+\fBCPU_EQUAL\fP()
+Проверяет, что два набора ЦП содержат одинаковые ЦП.
+.SS "Динамически изменяемые наборы ЦП"
+Так как некоторым приложениям может потребоваться наборы ЦП динамически
+изменяемых размеров (например, для выделения наборов больше, чем определено
+стандартным типом данных \fIcpu_set_t\fP), glibc предоставляет набор макросов
+для этого.
+.PP
+Следующие макросы используются для выделения и удаления наборов ЦП:
+.TP  17
+\fBCPU_ALLOC\fP()
+Выделяет набор ЦП, достаточный для хранения ЦП в диапазоне от 0 до
+\fInum_cpus\-1\fP.
+.TP 
+\fBCPU_ALLOC_SIZE\fP()
+Возвращает размер набора ЦП в байтах, который необходим для хранения ЦП в
+диапазоне от 0 до \fInum_cpus\-1\fP. Данный макрос предоставляет значение,
+которое можно использовать в аргументе \fIsetsize\fP в макросах \fBCPU_*_S\fP(),
+описанных далее.
+.TP 
+\fBCPU_FREE\fP()
+Освобождает набор ЦП, выделенный ранее с помощью \fBCPU_ALLOC\fP().
+.PP
+Макросы, чьи имена заканчиваются на «_S», аналогичны макросам с тем же
+именем без суффикса. Эти макросы выполняют те же задачи что и их аналоги, но
+они работают с динамически выделяемыми наборами ЦП, размер которых равен
+\fIsetsize\fP байт.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Макросы \fBCPU_ISSET\fP() и \fBCPU_ISSET_S\fP() возвращают ненулевое значение,
+если \fIcpu\fP есть в \fIset\fP; в противном случае возвращается 0.
+.PP
+Макросы \fBCPU_COUNT\fP() и \fBCPU_COUNT_S\fP() возвращают количество ЦП в \fIset\fP.
+.PP
+Макросы \fBCPU_EQUAL\fP() и \fBCPU_EQUAL_S\fP() возвращают ненулевое значение,
+если два набора ЦП одинаковы; в противном случае возвращается 0.
+.PP
+При успешном выполнении макрос \fBCPU_ALLOC\fP() возвращает указатель, при
+ошибке возвращается NULL (ошибки те же, что и у \fBmalloc\fP(3)).
+.PP
+Макрос \fBCPU_ALLOC_SIZE\fP() возвращает количество байт, требуемое для
+хранения набора ЦП указанных элементов.
+.PP
+Остальные функции не возвращают никаких значений.
+.SH ВЕРСИИ
+Макросы \fBCPU_ZERO\fP(), \fBCPU_SET\fP(), \fBCPU_CLR\fP() и \fBCPU_ISSET\fP() добавлены
+в glibc версии 2.3.3.
+.PP
+Макрос \fBCPU_COUNT\fP() впервые появилась в glibc версии 2.6.
+.PP
+Макросы \fBCPU_AND\fP(), \fBCPU_OR\fP(), \fBCPU_XOR\fP(), \fBCPU_EQUAL\fP(),
+\fBCPU_ALLOC\fP(), \fBCPU_ALLOC_SIZE\fP(), \fBCPU_FREE\fP(), \fBCPU_ZERO_S\fP(),
+\fBCPU_SET_S\fP(), \fBCPU_CLR_S\fP(), \fBCPU_ISSET_S\fP(), \fBCPU_AND_S\fP(),
+\fBCPU_OR_S\fP(), \fBCPU_XOR_S\fP() и \fBCPU_EQUAL_S\fP() впервые появились в glibc
+версии 2.7.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные интерфейсы есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Для создания копии набора ЦП используйте \fBmemcpy\fP(3).
+.PP
+Так как наборы ЦП это битовые маски, выделяемые в единицах длинных слов,
+реальное количество ЦП в динамически выделенном наборе ЦП будет округлено до
+следующего кратного \fIsizeof(unsigned long)\fP. Приложение должно считать
+содержимое этих дополнительных бит неопределённым.
+.PP
+Несмотря на похожесть имён, заметим, что константа \fBCPU_SETSIZE\fP определяет
+количество ЦП в типе данных \fIcpu_set_t\fP (то есть, эффективное количество
+битов в битовой маске), в то время как аргумент \fIsetsize\fP макросов
+\fBCPU_*_S\fP() — это размер в байтах.
+.PP
+Типы данных параметров и возвращаемых значений, показанных в ОБЗОРЕ —
+подсказки, что ожидается в каждом случае. Однако так как эти интерфейсы
+реализованы как макросы, компилятор не обязательно поймает все ошибки
+приведения типов, если вы нарушите предположения.
+.SH ДЕФЕКТЫ
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=7029
+На 32\-разрядных платформах в glibc 2.8 и ранее \fBCPU_ALLOC\fP () выделяет
+вдвое больше пространства, как требуется, и \fBCPU_ALLOC_SIZE\fP() возвращает
+значение вдвое большее, чем должно. Эта ошибка не должна влиять на семантику
+программы, но приводит к трате впустую памяти и менее эффективной работе
+макросов для динамически выделяемых наборов ЦП. Эти ошибки исправлены в
+glibc версии 2.9.
+.SH ПРИМЕР
+Следующая программа показывает использование некоторых макросов, работающих
+с динамически выделяемыми наборами ЦП.
+.PP
+.EX
+#define _GNU_SOURCE
+#include <sched.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <assert.h>
+
+int
+main(int argc, char *argv[])
+{
+    cpu_set_t *cpusetp;
+    size_t size;
+    int num_cpus, cpu;
+
+    if (argc < 2) {
+        fprintf(stderr, "Использование: %s <количество\-ЦП>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    num_cpus = atoi(argv[1]);
+
+    cpusetp = CPU_ALLOC(num_cpus);
+    if (cpusetp == NULL) {
+        perror("CPU_ALLOC");
+        exit(EXIT_FAILURE);
+    }
+
+    size = CPU_ALLOC_SIZE(num_cpus);
+
+    CPU_ZERO_S(size, cpusetp);
+    for (cpu = 0; cpu < num_cpus; cpu += 2)
+        CPU_SET_S(cpu, size, cpusetp);
+
+    printf("CPU_COUNT() набора:    %d\en", CPU_COUNT_S(size, cpusetp));
+
+    CPU_FREE(cpusetp);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsched_setaffinity\fP(2), \fBpthread_attr_setaffinity_np\fP(3),
+\fBpthread_setaffinity_np\fP(3), \fBcpuset\fP(7)

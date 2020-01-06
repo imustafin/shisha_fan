@@ -1,0 +1,46 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"
+.\" Copyright (C) 2014 Red Hat, Inc. All Rights Reserved.
+.\" Written by David Howells (dhowells@redhat.com)
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_ONEPARA)
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version
+.\" 2 of the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH THREAD\-KEYRING 7 2017\-03\-13 Linux "Руководство программиста Linux"
+.SH ИМЯ
+thread\-keyring \- связка ключей нити
+.SH ОПИСАНИЕ
+Связка ключей нити — это связка ключей, используемая для привязки ключей
+нити. Она создаётся только по запросу нити. Связка ключей нити имеет имя
+(описание)  \fI_tid\fP.
+.PP
+Существует специальный серийный номер, \fBKEY_SPEC_THREAD_KEYRING\fP, который
+можно указывать вместо реального серийного номера связки ключей сеанса
+вызывающей нити.
+.PP
+В утилите \fBkeyctl\fP(1) подобным образом можно использовать «\fB@t\fP» вместо
+числового ID ключа, но так как \fBkeyctl\fP(1) выполняется после разветвления,
+это не используется.
+.PP
+Связка ключей нити не наследуется при \fBclone\fP(2) и \fBfork\fP(2) и очищается
+при \fBexecve\fP(2). Связка ключей нити уничтожается по завершению ссылающейся
+на неё нити.
+.PP
+Первоначально, нить не имеет связки ключей нити. Если нить не имеет связки
+ключей нити при обращении, то связка создаётся, если выполняется её
+изменение; в противном случает операция завершается ошибкой \fBENOKEY\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBkeyctl\fP(1), \fBkeyctl\fP(3), \fBkeyrings\fP(7), \fBpersistent\-keyring\fP(7),
+\fBprocess\-keyring\fP(7), \fBsession\-keyring\fP(7), \fBuser\-keyring\fP(7),
+\fBuser\-session\-keyring\fP(7)

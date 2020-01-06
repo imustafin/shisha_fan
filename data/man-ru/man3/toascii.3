@@ -1,0 +1,76 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1995 by Jim Van Zandt <jrv@vanzandt.mv.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Added BUGS section, aeb, 950919
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TOASCII 3 2016\-03\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+toascii \- преобразует символ в код ASCII
+.SH ОБЗОР
+.nf
+\fB#include <ctype.h>\fP
+.PP
+\fBint toascii(int \fP\fIc\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBtoascii\fP():
+_XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версиях glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.SH ОПИСАНИЕ
+\fBtoascii\fP() преобразует \fIc\fP в 7\-битное значение типа \fIunsigned char\fP,
+которое включено в набор символов ASCII, очищая при этом старшие биты.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Возвращаемое значение \(em преобразованный символ.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBtoascii\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4, BSD, POSIX.1\-2001. В POSIX.1\-2008 \fBtoascii\fP() отмечена устаревшей с
+примечанием, что её нельзя использовать в локализованных приложениях.
+.SH ДЕФЕКТЫ
+Многие люди станут несчастными, если вы воспользуетесь этой функцией. Данная
+функция преобразует все символы с диакритическими знаками в случайные
+символы.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBisascii\fP(3), \fBtolower\fP(3), \fBtoupper\fP(3)

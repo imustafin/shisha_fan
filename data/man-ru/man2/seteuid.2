@@ -1,0 +1,120 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2001 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" [should really be seteuid.3]
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETEUID 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+seteuid, setegid \- устанавливает эффективный идентификатор пользователя или
+группы
+.SH ОБЗОР
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <unistd.h>\fP
+.PP
+\fBint seteuid(uid_t \fP\fIeuid\fP\fB);\fP
+.br
+\fBint setegid(gid_t \fP\fIegid\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBseteuid\fP(), \fBsetegid\fP():
+.RS 4
+_POSIX_C_SOURCE\ >=\ 200112L
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Вызов \fBseteuid\fP() устанавливает эффективный идентификатор пользователя
+вызывающего процесса. Непривилегированные процессы могут менять эффективный
+идентификатор пользователя только на действительный, эффективный или
+сохранённый идентификатор пользователя.
+.PP
+.\" When
+.\" .I euid
+.\" equals \-1, nothing is changed.
+.\" (This is an artifact of the implementation in glibc of seteuid()
+.\" using setresuid(2).)
+Тоже самое справедливо при работе \fBsetegid\fP() с «групповым»
+идентификатором, а не «пользовательским».
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.PP
+\fIЗамечание\fP: есть случаи, когда \fBseteuid\fP() может завершиться с ошибкой
+даже когда UID вызывающего равен 0; это серьёзная ошибка безопасности — не
+проверять возвращаемое значение \fBseteuid\fP().
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Целевой идентификатор пользователя или группы некорректен в этом
+пользовательском пространстве имён.
+.TP 
+\fBEPERM\fP
+Для \fBseteuid\fP(): вызывающий процесс не имеет прав (не имеет мандата
+\fBCAP_SETUID\fP в своём пространстве имён пользователя) и \fIeuid\fP не совпадает
+с текущим действительным, эффективным или сохранённым идентификатором
+пользователя.
+.IP
+Для \fBsetegid\fP(): вызывающий процесс не имеет прав (не имеет мандата
+\fBCAP_SETGID\fP в своём пространстве имён пользователя) и \fIegid\fP не совпадает
+с текущим действительным, эффективным или сохранённым идентификатором
+группы.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Установка эффективного идентификатора пользователя (группы) в сохранённый
+идентификатор пользователя (группы) возможна с версии Linux 1.1.37
+(1.1.38). В других системах надо проверять \fB_POSIX_SAVED_IDS\fP.
+.PP
+В glibc 2.0 вызов \fBseteuid(\fP\fIeuid\fP\fB)\fPэквивалентен \fBsetreuid(\-1,\fP\fI
+euid\fP\fB)\fP, и поэтому может изменить сохранённый идентификатор
+пользователя. В glibc 2.1 и новее он эквивалентен \fBsetresuid(\-1,\fP\fI
+euid\fP\fB, \-1)\fP и поэтому не изменяет сохранённый идентификатор
+пользователя. Аналогичные замечания относятся и к \fBsetegid\fP(), с той
+разницей, что изменение в реализации из \fBsetregid(\-1,\fP\fI egid\fP\fB)\fP в
+\fBsetresgid(\-1,\fP\fI egid\fP\fB, \-1)\fP произошло в glibc 2.2 или 2.3 (зависит от
+аппаратной архитектуры).
+.PP
+Согласно POSIX.1, \fBseteuid\fP() (\fBsetegid\fP()) необходимо запрещать \fIeuid\fP
+(\fIegid\fP) равный текущему эффективному идентификатору пользователя (группе),
+и некоторые реализации не позволяют этого.
+.SS "Отличия между библиотекой C и ядром"
+В Linux, \fBseteuid\fP() и \fBsetegid\fP() реализованы в виде библиотечных
+функций, которые вызывают \fBsetreuid\fP(2) и \fBsetregid\fP(2), соответственно.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgeteuid\fP(2), \fBsetresuid\fP(2), \fBsetreuid\fP(2), \fBsetuid\fP(2),
+\fBcapabilities\fP(7), \fBcredentials\fP(7), \fBuser_namespaces\fP(7)

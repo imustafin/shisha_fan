@@ -1,0 +1,75 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) Tom Bjorkholm & Markus Kuhn, 1996
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 1996-04-01 Tom Bjorkholm <tomb@mydata.se>
+.\"            First version written
+.\" 1996-04-10 Markus Kuhn <mskuhn@cip.informatik.uni-erlangen.de>
+.\"            revision
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SCHED_YIELD 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sched_yield \- освободить процессор
+.SH ОБЗОР
+\fB#include <sched.h>\fP
+.PP
+\fBint sched_yield(void);\fP
+.SH ОПИСАНИЕ
+Вызов \fBsched_yield\fP() заставляет вызывающую нить освободить процессор. Нить
+перемещается в конец очереди согласно её статическому приоритету, и
+управление передаётся другой нити.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsched_yield\fP() возвращается 0. При ошибке
+возвращается \-1, а значение \fIerrno\fP устанавливается соответствующим
+образом.
+.SH ОШИБКИ
+В Linux\-реализации \fBsched_yield\fP() всегда завершается успешно.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Если вызывающая нить единственная в списке с самым высоким приоритетом, то
+она продолжит выполняться после вызова \fBsched_yield\fP().
+.PP
+В системах POSIX, в которых доступен вызов \fBsched_yield\fP(), определён
+\fB_POSIX_PRIORITY_SCHEDULING\fP в \fI<unistd.h>\fP.
+.PP
+Оперативные вызовы \fBsched_yield\fP() могут улучшить производительность, давая
+другим нитям или процессам шанс поработать, когда (сильно) оспариваемые
+ресурсы (например, мьютексы) освобождаются вызывающим. Избегайте частых или
+нецелесообразных вызовов \fBsched_yield\fP() (например, когда ресурсы,
+необходимые других планируемым нитям, по\-прежнему удерживаются вызывающим),
+так как это приводит к чрезмерному переключению контекстов, что ухудшит
+производительность системы.
+.PP
+Функция \fBsched_yield\fP() предназначена для использования с алгоритмами
+планирования реального времени (т. е., \fBSCHED_FIFO\fP или
+\fBSCHED_RR\fP). Использование \fBsched_yield\fP() с недерминированными
+алгоритмами планирования, такими как \fBSCHED_OTHER\fP, не определено и
+указывает на, вероятно, неправильно разработанное приложение.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsched\fP(7)

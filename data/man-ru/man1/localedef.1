@@ -1,0 +1,307 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2001 Richard Braakman
+.\" Copyright (C) 2004 Alastair McKinstry
+.\" Copyright (C) 2005 Lars Wirzenius
+.\" Copyright (C) 2014 Marko Myllynen
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" This manual page was initially written by Richard Braakman
+.\" on behalf of the Debian GNU/Linux Project and anyone else
+.\" who wants it. It was amended by Alastair McKinstry to
+.\" explain new ISO 14652 elements, and amended further by
+.\" Lars Wirzenius to document new functionality (as of GNU
+.\" C library 2.3.5).
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LOCALEDEF 1 2019\-03\-06 Linux "Руководство пользователя Linux"
+.SH ИМЯ
+localedef \- компилирует файлы определения локали
+.SH ОБЗОР
+.ad l
+.nh
+\fBlocaledef\fP [\fIпараметры\fP] \fIпуть_результата\fP
+.br
+\fBlocaledef \-\-add\-to\-archive\fP [\fIпараметры\fP] \fIпуть_скомпилированного\fP
+.br
+\fBlocaledef \-\-delete\-from\-archive\fP [\fIпараметры\fP] \fIимя_локали\fP …
+.br
+\fBlocaledef \-\-list\-archive\fP [\fIпараметры\fP]
+.br
+\fBlocaledef \-\-help\fP
+.br
+\fBlocaledef \-\-usage\fP
+.br
+\fBlocaledef \-\-version\fP
+.ad b
+.hy
+.SH ОПИСАНИЕ
+Программа \fBlocaledef\fP читает заданные файлы \fIкарты символов\fP (charmap) и
+\fIвходные\fP файлы, компилирует их в двоичную форму для быстрого доступа из
+функций локали библиотеки C (\fBsetlocale\fP(3), \fBlocaleconv\fP(3) и т. д.) и
+помещает результат в \fIпуть_результата\fP.
+.PP
+Аргумент \fIпуть_результата\fP рассматривается следующим образом:
+.IP * 3
+Если \fIпуть_результата\fP содержит косую черту («/»), то он считается именем
+каталога для хранения создаваемых определений. В этом случае создаётся
+отдельный файл результата для каждой категории локали (\fILC_TIME\fP,
+\fILC_NUMERIC\fP и так далее).
+.IP *
+Если указан параметр \fB\-\-no\-archive\fP, то \fIпуть_результата\fP считается именем
+подкаталога в \fI/usr/lib/locale\fP, где размещены скопированные файлы для
+каждой категории.
+.IP *
+В противном случае, \fIпуть_результата\fP считается именем локали и
+компилируемые данные локали добавляются в файл архива
+\fI/usr/lib/locale/locale\-archive\fP. Файл архива — это файл отображаемый в
+память, который содержит все локали системы; он используется всеми
+локализованными программами, если не установлена переменная окружения
+\fBLOCPATH\fP.
+.PP
+В любом случае, \fBlocaledef\fP прекращает работу, если каталог, в который она
+пытается записать файлы локали, ещё не был создан.
+.PP
+Если файл \fIкарты символов\fP не указан, то по умолчанию используется значение
+\fIANSI_X3.4\-1968\fP (для ASCII). Если не указан \fIвходной\fP файл, или если
+вместо него указан перенос (\-), то \fBlocaledef\fP читает данные из
+стандартного входного потока.
+.SH ПАРАМЕТРЫ
+.SS "Параметры действия\-выбора"
+Некоторые параметры указывают \fBlocaledef\fP сделать что\-то другое, а не
+компилировать определения локали. Одновременно может быть указан только один
+такой параметр.
+.TP 
+\fB\-\-add\-to\-archive\fP
+Добавить каталоги \fIпуть_скомпилированного\fP файл архива локалей. Каталоги
+должны быть созданы ранее запускавшимся \fBlocaledef\fP с параметром
+\fB\-\-no\-archive\fP.
+.TP 
+\fB\-\-delete\-from\-archive\fP
+Удалить заданную локаль из файла архива локалей.
+.TP 
+\fB\-\-list\-archive\fP
+Показать список локалей, содержащихся в файле архива локалей.
+.SS "Другие параметры"
+Следующие параметры имеют значение только для определённых операций; обычно,
+по названию понятно для каких. Заметим, что параметры \fB\-f\fP и \fB\-c\fP работают
+не так как можно ожидать, то есть \fB\-f\fP это не тоже самое что \fB\-\-force\fP.
+.TP 
+\fB\-f\fP\fI charmapfile\fP, \fB\-\-charmap=\fP\fIcharmapfile\fP
+Задаёт файл, которым определяется набор символов, используемый в файле
+входных данных. Если значение \fIфайл_карты_символов\fP содержит косую черту
+(«/»), то оно рассматривается как название карты символов. В противном
+случае, файл ищется в текущем каталоге и каталоге по умолчанию для карт
+символов. Если установлена переменная окружения \fBI18NPATH\fP, то после
+текущего каталога также просматриваются \fI$I18NPATH/charmaps/\fP и
+\fI$I18NPATH/\fP. Каталог по умолчанию для карт символов можно увидеть в выводе
+\fBlocaledef \-\-help\fP.
+.TP 
+\fB\-i\fP\fI inputfile\fP, \fB\-\-inputfile=\fP\fIinputfile\fP
+Задаёт файл определения локали для компиляции. Файл ищется в текущем
+каталоге и каталоге по умолчанию для файлов определения локалей. Если
+установлена переменная окружения \fBI18NPATH\fP, то после текущего каталога
+также просматриваются \fI$I18NPATH/locales/\fP и \fI$I18NPATH\fP. Каталог по
+умолчанию для файлов определения локалей можно увидеть в выводе \fBlocaledef
+\-\-help\fP.
+.TP 
+\fB\-u\fP\fI repertoirefile\fP, \fB\-\-repertoire\-map=\fP\fIrepertoirefile\fP
+Из \fIфайла_набора\fP читаются отображения символических имён в кодовые точки
+Юникода. Если значение \fIфайла_набора\fP содержит косую черту («/»), то оно
+рассматривается имя пути карты набора (repertoire map). В противном случае,
+файл ищется в текущем каталоге и каталоге по умолчанию для карт
+наборов. Если установлена переменная окружения \fBI18NPATH\fP, то после
+текущего каталога также просматриваются \fI$I18NPATH/repertoiremaps/\fP и
+\fI$I18NPATH\fP. Каталог по умолчанию для карт наборов можно увидеть в выводе
+\fBlocaledef \-\-help\fP.
+.TP 
+\fB\-A\fP\fI aliasfile\fP, \fB\-\-alias\-file=\fP\fIaliasfile\fP
+Использовать \fIфайл_псевдонимов\fP для поиска псевдонимов имён локалей. Для
+файла псевдонимом нет файла по умолчанию.
+.TP 
+\fB\-c\fP, \fB\-\-force\fP
+Записывать файлы результата даже, если есть предупреждения при генерации
+входных данных.
+.TP 
+\fB\-v\fP, \fB\-\-verbose\fP
+Генерировать дополнительные предупреждения об ошибках, которые обычно
+игнорируются.
+.TP 
+\fB\-\-big\-endian\fP
+Генерировать вывод с прямым порядком байт (big endian).
+.TP 
+\fB\-\-little\-endian\fP
+Генерировать вывод с обратным порядком байт (little endian).
+.TP 
+\fB\-\-no\-archive\fP
+Не использовать файл архива локалей, вместо этого создать \fIпуть_результата\fP
+в качестве подкаталога в текущем каталоге для файла архива локалей, и
+создать в нём отдельные файлы результата для категорий локали. Это позволяет
+не перезаписывать системный архив локалей пользовательскими локалями,
+созданными с помощью \fBlocaledef\fP.
+.TP 
+\fB\-\-no\-hard\-links\fP
+Не создавать жёсткие ссылки между установленными локалями.
+.TP 
+\fB\-\-no\-warnings=\fP\fIwarnings\fP
+Разделенный запятыми список отключённых предупреждений; поддерживаемые
+предупреждения: \fIascii\fP и \fIintcurrsym\fP.
+.TP 
+\fB\-\-posix\fP
+Жёстко следовать POSIX. Подразумевает \fB\-\-verbose\fP. Этот параметр, в
+настоящее время, больше ничего не делает. Соответствие POSIX предполагается,
+если установлена переменная окружения \fBPOSIXLY_CORRECT\fP.
+.TP 
+\fB\-\-prefix=\fP\fIпуть\fP
+Указывает префикс полного пути к архиву. По умолчанию префикс пуст. Если
+указать в качестве префикса \fIfoo\fP, то архив будет помещён в
+\fIfoo/usr/lib/locale/locale\-archive\fP.
+.TP 
+\fB\-\-quiet\fP
+Не показывать все уведомления и предупреждения; сообщать только о фатальных
+ошибках.
+.TP 
+\fB\-\-replace\fP
+Заменить локаль в файле архива локалей. Без этого параметра, если локаль в
+архиве уже есть, то выдаётся ошибка.
+.TP 
+\fB\-\-warnings=\fP\fIwarnings\fP
+Разделенный запятыми список включённых предупреждений; поддерживаемые
+предупреждения: \fIascii\fP и \fIintcurrsym\fP.
+.TP 
+\fB\-?\fP, \fB\-\-help\fP
+Показать справку по использованию и завершить работу. Также выводятся пути
+по умолчанию, используемые в \fBlocaledef\fP.
+.TP 
+\fB\-\-usage\fP
+Показать краткую справку по использованию и завершить работу.
+.TP 
+\fB\-V\fP, \fB\-\-version\fP
+Показать номер версии, лицензию и уведомление о гарантиях для \fBlocaledef\fP.
+.SH "КОД РЕЗУЛЬТАТА"
+Программа \fBlocaledef\fP может возвращать один из следующих кодов завершения:
+.RS 3
+.TP  10
+\fB0\fP
+Команда успешно выполнена.
+.TP 
+\fB1\fP
+Произошла  ошибка или предупреждение, файлы результата записаны.
+.TP 
+\fB4\fP
+Произошла  ошибка, результат не записан.
+.RE
+.SH ОКРУЖЕНИЕ
+.TP 
+\fBPOSIXLY_CORRECT\fP
+Если эта переменная окружения установлена, то предполагается флаг
+\fB\-\-posix\fP.
+.TP 
+\fBI18NPATH\fP
+Список каталогов через двоеточие для поиска файлов.
+.SH ФАЙЛЫ
+.TP 
+\fI/usr/share/i18n/charmaps\fP
+Обычный путь по умолчанию для файлов карт символов.
+.TP 
+\fI/usr/share/i18n/locales\fP
+Обычный путь по умолчанию для файлов определений локалей.
+.TP 
+\fI/usr/share/i18n/repertoiremaps\fP
+Обычный путь по умолчанию для файлов карт набора.
+.TP 
+\fI/usr/lib/locale/locale\-archive\fP
+Обычный путь по умолчанию для расположения архива локалей.
+.TP 
+\fI/usr/lib/locale\fP
+Обычный путь по умолчанию для скомпонованных файлов данных отдельных
+локалей.
+.TP 
+\fIoutputpath/LC_ADDRESS\fP
+Файл результата содержит информацию о формате адресов и географических
+элементах.
+.TP 
+\fIoutputpath/LC_COLLATE\fP
+Файл результата содержит информацию о правилах сравнения строк.
+.TP 
+\fIoutputpath/LC_CTYPE\fP
+Файл результата содержит информацию о классах символов.
+.TP 
+\fIoutputpath/LC_IDENTIFICATION\fP
+Файл результата содержит метаданные о локали.
+.TP 
+\fIoutputpath/LC_MEASUREMENT\fP
+Файл результата содержит информацию о единицах измерения (метрическая или
+система мер США).
+.TP 
+\fIoutputpath/LC_MESSAGES/SYS_LC_MESSAGES\fP
+Файл результата содержит информацию о языке, на котором должны выводиться
+сообщения и как выглядят ответы «да» и «нет».
+.TP 
+\fIoutputpath/LC_MONETARY\fP
+Файл результата содержит информацию о правилах написания денежных единиц.
+.TP 
+\fIoutputpath/LC_NAME\fP
+Файл результата содержит информацию об описании персон.
+.TP 
+\fIoutputpath/LC_NUMERIC\fP
+Файл результата содержит информацию о правилах написания не денежных
+числовых единиц.
+.TP 
+\fIoutputpath/LC_PAPER\fP
+Файл результата содержит информацию о параметрах, относящихся к размерам
+бумаги.
+.TP 
+\fIoutputpath/LC_TELEPHONE\fP
+Файл результата содержит информацию о форматах, используемых в телефонных
+службах.
+.TP 
+\fIoutputpath/LC_TIME\fP
+Файл результата содержит информацию о форматах значений даты и времени.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2008.
+.SH ПРИМЕР
+Компилирование файлов локали для финских пользователей с набором символов
+UTF\-8 и добавление к архиву локалей по умолчанию с именем \fBfi_FI.UTF\-8\fP:
+.PP
+.in +4n
+.EX
+localedef \-f UTF\-8 \-i fi_FI fi_FI.UTF\-8
+.EE
+.in
+.PP
+В следующем примере делается тоже самое, но файлы генерируются в каталоге
+\fIfi_FI.UTF\-8\fP, который затем можно использовать в программах, установив
+переменную окружения \fBLOCPATH\fP равной текущему каталогу (заметим, что
+последний аргумент должен содержать косую черту):
+.PP
+.in +4n
+.EX
+localedef \-f UTF\-8 \-i fi_FI ./fi_FI.UTF\-8
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlocale\fP(1), \fBcharmap\fP(5), \fBlocale\fP(5), \fBrepertoiremap\fP(5), \fBlocale\fP(7)

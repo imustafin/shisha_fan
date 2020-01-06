@@ -1,0 +1,146 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified 1993-03-29, David Metcalfe
+.\" Modified 1993-07-24, Rik Faith (faith@cs.unc.edu)
+.\" Modified 2003-10-25, Walter Harms
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ATEXIT 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+atexit \- регистрирует функцию, вызываемую при обычном завершении программы
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint atexit(void (*\fP\fIfunction\fP\fB)(void));\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBatexit\fP() регистрирует передаваемую функцию \fIfunction\fP в качестве
+функции, вызываемой при нормальном завершении работы программы, например, с
+помощью \fBexit\fP(3), или при завершении работы функции
+\fImain\fP. Зарегистрированные функции вызываются в порядке, обратном
+регистрации; никаких аргументов им не передаётся.
+.PP
+Одна и та же функция может быть зарегистрирована несколько раз: она
+вызывается один раз для каждой регистрации.
+.PP
+.\" POSIX.1-2001, POSIX.1-2008
+В POSIX.1 требуется, чтобы реализация позволяла регистрировать не менее
+\fBATEXIT_MAX\fP (32) таких функций. Установленный лимит, поддерживаемый
+реализацией, можно определить с помощью \fBsysconf\fP(3).
+.PP
+Когда дочерний процесс создается через \fBfork\fP(2), он наследует копии
+родительских регистраций. При успешном вызове к одной из функций \fBexec\fP(3),
+все регистрации снимаются.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBatexit\fP() при успешном выполнении возвращает 0, в противном случае
+— ненулевое значение.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBatexit\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Функции, зарегистрированные с помощью \fBatexit\fP() (и \fBon_exit\fP(3)) не
+вызываются, если процесс завершился некорректно, например из\-за полученного
+сигнала.
+.PP
+Если одна из зарегистрированных функций вызывает \fB_exit\fP(2), то оставшиеся
+функции не вызываются, и другие шаги по завершению процесса, производимые
+\fBexit\fP(3), не выполняются.
+.PP
+.\" POSIX.1-2001, POSIX.1-2008
+.\" This can happen on OpenBSD 4.2 for example, and is documented
+.\" as occurring on FreeBSD as well.
+.\" Glibc does "the Right Thing" -- invocation of the remaining
+.\" exit handlers carries on as normal.
+В POSIX.1 указано, что при многократном вызове \fBexit\fP(3) (т. е., вызов
+\fBexit\fP(3) из функций, зарегистрированных \fBatexit\fP()) состояние программы
+не определено. В некоторых системах (не в Linux), это приводит к бесконечной
+рекурсии; переносимые программы не должны вызывать \fBexit\fP(3) из функций,
+зарегистрированных через \fBatexit\fP().
+.PP
+Функции \fBatexit\fP() и \fBon_exit\fP(3) регистрируют функции в едином списке:
+при нормальном завершении процесса зарегистрированные функции вызываются в
+порядке обратном регистрации с помощью данных функций.
+.PP
+.\" In glibc, things seem to be handled okay
+Согласно POSIX.1 результат является не определённым, если при завершении
+выполнения одной из функций, зарегистрированной с помощью \fBatexit\fP(),
+используется \fBlongjmp\fP(3).
+.SS "Замечания для Linux"
+Начиная с glibc 2.2.3, функция \fBatexit\fP() (и \fBon_exit\fP(3)) может быть
+использована в общей библиотеке для указания функций, который вызываются при
+выгрузке общей библиотеки.
+.SH ПРИМЕР
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+void
+bye(void)
+{
+    printf("Но вот и всё\en");
+}
+
+int
+main(void)
+{
+    long a;
+    int i;
+
+    a = sysconf(_SC_ATEXIT_MAX);
+    printf("ATEXIT_MAX = %ld\en", a);
+
+    i = atexit(bye);
+    if (i != 0) {
+        fprintf(stderr, "не удалось установить функцию при выходе\en");
+        exit(EXIT_FAILURE);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fB_exit\fP(2), \fBdlopen\fP(3), \fBexit\fP(3), \fBon_exit\fP(3)

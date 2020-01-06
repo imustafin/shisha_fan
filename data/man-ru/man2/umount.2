@@ -1,0 +1,169 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1993 Rickard E. Faith <faith@cs.unc.edu>
+.\" and Copyright (C) 1994 Andries E. Brouwer <aeb@cwi.nl>
+.\" and Copyright (C) 2002, 2005 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2008-10-06, mtk: Created this as a new page by splitting
+.\"     umount/umount2 material out of mount.2
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UMOUNT 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+umount, umount2 \- размонтирует файловую систему
+.SH ОБЗОР
+.nf
+\fB#include <sys/mount.h>\fP
+.PP
+\fBint umount(const char *\fP\fItarget\fP\fB);\fP
+.PP
+\fBint umount2(const char *\fP\fItarget\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+.\" Note: the kernel naming differs from the glibc naming
+.\" umount2 is the glibc name for what the kernel now calls umount
+.\" and umount is the glibc name for oldumount
+Вызовы \fBumount\fP() и \fBumount2\fP() удаляют подключение (самого верхнего
+уровня) к файловой системе, примонтированной к \fItarget\fP.
+.PP
+Для размонтирования файловых систем требуются права (Linux: мандат
+\fBCAP_SYS_ADMIN\fP).
+.PP
+В Linux 2.1.116 добавлен системный вызов \fBumount2\fP(), который, подобно
+\fBumount\fP(), размонтирует заданный объект, но позволяет указать
+дополнительные флаги \fIflags\fP, контролирующие поведение операции:
+.TP 
+\fBMNT_FORCE\fP (начиная с Linux 2.1.116)
+Попросить файловую систему прервать ожидающие запросы перед попыткой
+размонтирования. Это может позволить выполнить размонтирование без ожидания
+недоступного сервера, но может привести к потере данных. Если после
+прерывания запросов некоторые процессы продолжат обращаться к файловой
+системе, размонтирование не будет выполнено. В Linux 4.12 \fBMNT_FORCE\fP
+поддерживается только в следующих файловых системах: 9p (начиная с Linux
+2.6.16), ceph (начиная с Linux 2.6.34), cifs (начиная с Linux 2.6.12), fuse
+(начиная с Linux 2.6.16), lustre (начиная с Linux 3.11) и NFS (начиная с
+Linux 2.1.116).
+.TP 
+\fBMNT_DETACH\fP (начиная с Linux 2.4.11)
+Выполнить отложенное размонтирование: сделать точку монтирования недоступной
+для новых подключений, немедленно размонтировать файловую систему и все
+файловые системы, смонтированные ниже по дереву и по таблице монтирования, и
+выполнить настоящее размонтирование только когда точка доступа станет
+свободной.
+.TP 
+\fBMNT_EXPIRE\fP (начиная Linux 2.6.8)
+Пометить точку монтирования как недействительную. Если точка монтирования в
+это время не используется, то первоначальный вызов \fBumount2\fP() с этим
+флагом завершится с ошибкой \fBEAGAIN\fP, но пометит точку монтирования как
+недействительную. Точка монтирования остаётся недействительной до тех пор,
+пока какой\-нибудь процесс не запросит к ней доступ. Второй вызов
+\fBumount2\fP() с флагом \fBMNT_EXPIRE\fP размонтирует недействительную точку
+монтирования. Этот флаг нельзя указывать вместе с \fBMNT_FORCE\fP или
+\fBMNT_DETACH\fP.
+.TP 
+\fBUMOUNT_NOFOLLOW\fP (начиная с Linux 2.6.34)
+.\" Later added to 2.6.33-stable
+Не следовать по ссылке, если \fItarget\fP является символьной ссылкой. Это флаг
+помогает избежать проблем с безопасностью в программах принадлежащих root и
+с установленным битом set\-user\-ID, которые позволяют непривилегированным
+пользователям размонтировать файловые системы.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+Коды ошибок, описанные ниже, не зависят от типа файловой системы. У каждой
+файловой системы могут быть свои коды ошибок и своё собственное
+поведение. Подробности смотрите в исходном коде ядра Linux.
+.TP 
+\fBEAGAIN\fP
+Вызов \fBumount2\fP() с флагом \fBMNT_EXPIRE\fP успешно пометил незанятую файловую
+систему как недействительную.
+.TP 
+\fBEBUSY\fP
+Объект \fItarget\fP не может быть размонтирован, так как он занят.
+.TP 
+\fBEFAULT\fP
+Объект \fItarget\fP указывает вне адресного пространства, доступного
+пользователю.
+.TP 
+\fBEINVAL\fP
+Значение \fItarget\fP не является точкой монтирования.
+.TP 
+\fBEINVAL\fP
+Вызов \fBumount2\fP() был вызван с флагом \fBMNT_EXPIRE\fP и с \fBMNT_DETACH\fP или
+\fBMNT_FORCE\fP.
+.TP 
+\fBEINVAL\fP (начиная с Linux 2.6.34)
+Вызов \fBumount2\fP() был сделан с неверным значением флага \fIflags\fP.
+.TP 
+\fBENAMETOOLONG\fP
+Значение пути длиннее чем \fBMAXPATHLEN\fP.
+.TP 
+\fBENOENT\fP
+Указан пустой путь или одна из его частей не существует.
+.TP 
+\fBENOMEM\fP
+Ядро не может выделить свободную страницу для копирования имени файла или
+данных.
+.TP 
+\fBEPERM\fP
+Вызывающий процесс не имеет требуемых привилегий.
+.SH ВЕРСИИ
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=10092
+Флаги \fBMNT_DETACH\fP и \fBMNT_EXPIRE\fP доступны в glibc начиная с версии 2.11.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции есть только в Linux, и они не должны использоваться в
+переносимых программах.
+.SH ЗАМЕЧАНИЯ
+.SS "Вызов umount() и общие точки монтирования"
+Действия на точку монтирования, являющуюся общей, включая операции
+\fBumount\fP(), будут переданы каждой общей точке монтирования в этой группе и
+каждой подчинённой точке монтирования в этой группе. Это означает, что
+\fBumount\fP() члена из набора общих точек монтирования приведёт к
+размонтированию всех в его членов, а также всех их подчинённых.
+.PP
+Это распространение действия размонтирования может быть особенно
+удивительным в системах, где каждая точка монтирования является общей по
+умолчанию. В таких системах рекурсивно привязываемое монтирование корневого
+каталога файловой системы в подкаталог, а затем размонтирование этого
+подкаталога с \fBMNT_DETACH\fP приведёт к тому, что каждая точка монтирования в
+пространстве имён монтирования будет размонтирована в отложенном режиме.
+.PP
+Чтобы \fBumount\fP() также не делал, перед вызовом \fBumount\fP() точка
+монтирования может быть перемонтирована с помощью вызова \fBmount\fP() с
+аргументом \fImount_flags\fP, в который добавлены \fBMS_REC\fP и \fBMS_PRIVATE\fP.
+.SS "Историческая справка"
+Изначально функция \fBumount\fP() вызывалась как \fIumount(device)\fP и возвращала
+\fBENOTBLK\fP при попытке работы с любым не блочным устройством. В Linux 0.98p4
+был добавлен вызов \fIumount(dir)\fP для поддержки анонимных устройств. В Linux
+2.3.99\-pre7 был убран вызов \fIumount(device)\fP, остался только \fIumount(dir)\fP
+(теперь устройства могут быть подключены более чем к одной точке, поэтому
+указания только устройства недостаточно).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmount\fP(2), \fBmount_namespaces\fP(7), \fBpath_resolution\fP(7), \fBmount\fP(8),
+\fBumount\fP(8)

@@ -1,0 +1,118 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright IBM Corp. 2017
+.\" Author: QingFeng Hao <haoqf@linux.vnet.ibm.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH S390_STHYI 2 2019\-03\-06 "Руководство программиста Linux" 
+.SH ИМЯ
+s390_sthyi \- эмулирует инструкцию STHYI
+.SH ОБЗОР
+.nf
+\fB#include <asm/unistd.h>\fP
+.PP
+\fBint s390_sthyi(unsigned long \fP\fIfunction_code\fP\fB, void *\fP\fIresp_buffer\fP\fB,\fP
+\fB               uint64_t *\fP\fIreturn_code\fP\fB, unsigned long \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBs390_sthyi\fP() эмулирует инструкцию STHYI (Store Hypervisor
+Information). Он предоставляет информацию о ресурсах машины и её уровни
+виртуализации. В частности, возвращается тип ЦП и ёмкость, а также модель
+машины и другие свойства.
+.PP
+В аргументе \fIfunction_code\fP указывается какую функцию нужно
+выполнить. Поддерживаются следующие коды:
+.TP 
+0
+Вернуть информацию о CP (Central Processor) и ёмкости IFL (Integrated
+Facility for Linux).
+.PP
+В аргументе \fIresp_buffer\fP указывается адрес буфера результата. При
+\fIfunction_code\fP равном 0, размер буфера должен быть равен странице
+(4K). Если системный вызов вернул 0, то буфер результата будет заполнен
+информацией о ёмкости ЦП. В противном случае содержимое буфера результата не
+меняется.
+.PP
+В аргументе \fIreturn_code\fP хранится код возврата инструкции STHYI; возможно
+одно из следующих значений:
+.TP  8
+0
+Успешно.
+.TP 
+4
+Неподдерживаемый код функции.
+.PP
+Дополнительную информацию о \fIreturn_code\fP, \fIfunction_code\fP и
+\fIresp_buffer\fP смотрите по ссылкам, приведённым в ЗАМЕЧАНИЯХ.
+.PP
+Аргумент \fIflags\fP предназначен для будущих расширений, а пока его значение
+должно быть равно 0.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении (т. е. эмуляция прошла успешно), возвращаемое
+\fBs390_sthyi\fP() значение совпадает с кодом условия инструкций STHYI —
+значением в диапазоне [0..3]. Возвращаемое значение 0 означает, что
+информация о ёмкости ЦП сохранена в \fI*resp_buffer\fP. Возвращаемое значение 3
+указывает на «неподдерживаемый код функции» и содержимое \fI*resp_buffer\fP не
+изменяется. Значения 1 и 2 зарезервированы.
+.PP
+В случае ошибки возвращается \-1 и значение \fIerrno\fP устанавливается
+соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Значение, указанное в \fIresp_buffer\fP или \fIreturn_code\fP, содержит
+некорректный адрес.
+.TP 
+\fBEINVAL\fP
+Значение, указанное в \fIflags\fP, не равно нулю.
+.TP 
+\fBENOMEM\fP
+Не удалось выделить память для обработки информации о ёмкости ЦП.
+.TP 
+\fBEOPNOTSUPP\fP
+Некорректное значение в \fIfunction_code\fP.
+.SH ВЕРСИИ
+Данный системный вызов появился в Linux 4.15.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный системный вызов есть только в Linux и доступен только на архитектуре
+s390.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данного системного вызова; запускайте его с помощью
+\fBsyscall\fP(2).
+.PP
+Описание инструкции STHYI смотрите на
+.UR https://www.ibm.com\:/support\:/knowledgecenter\:/SSB27U_6.3.0\:/com.ibm.zvm.v630.hcpb4\:/hcpb4sth.htm
+странице документации
+.UE .
+.PP
+При использовании интерфейса системного вызова буфер результата не имеет
+требований по выравниванию, описанных в инструкции STHYI.
+.PP
+Ядро кэширует результат (в Linux 4.16 каждую секунду). Последующие запуски
+системного вызова могут вернуть кэшированный ответ.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsyscall\fP(2)

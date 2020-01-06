@@ -1,0 +1,107 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2015 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+)
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH POSIX_MADVISE 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+posix_madvise \- отсылает предложения по шаблонам использования памяти
+.SH ОБЗОР
+.nf
+\fB#include <sys/mman.h>\fP
+.PP
+\fBint posix_madvise(void *\fP\fIaddr\fP\fB, size_t \fP\fIlen\fP\fB, int \fP\fIadvice\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBposix_madvise\fP():
+.br
+.RS 4
+.ad l
+_POSIX_C_SOURCE >= 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBposix_madvise\fP() позволяет приложению показывать системе свои
+ожидания при использовании памяти в диапазоне начиная с адреса \fIaddr\fP и
+длиной \fIlen\fP байт. Система может использовать это предложение для улучшения
+производительности доступа к памяти (или игнорировать), но вызов
+\fBposix_madvise\fP() не повлияет на семантику доступа к памяти в указанном
+диапазоне.
+.PP
+В аргументе \fIadvice\fP указывается одно из следующих значений:
+.TP 
+\fBPOSIX_MADV_NORMAL\fP
+Приложение не даёт каких\-либо предложений о том, как будет использована
+память в указанном диапазоне. Поведение по умолчанию.
+.TP 
+\fBPOSIX_MADV_SEQUENTIAL\fP
+Приложение будет последовательно обращаться к памяти в указанном диапазоне
+адресов, от младшего адреса к старшему. Следовательно, все страницы в этом
+диапазоне можно заранее прочитать и освободить сразу после доступа к ним.
+.TP 
+\fBPOSIX_MADV_RANDOM\fP
+Приложение будет обращаться по указанному диапазону адресов в случайном
+порядке. То есть упреждающее чтение может быть менее эффективным, чем
+обычно.
+.TP 
+\fBPOSIX_MADV_WILLNEED\fP
+Приложение обратится по указанному диапазону адресов в в ближайшем
+будущем. То есть от упреждающего чтения можно выиграть.
+.TP 
+\fBPOSIX_MADV_DONTNEED\fP
+Приложение не будет обращаться по указанному диапазону адресов в в ближайшем
+будущем.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBposix_madvise\fP() возвращает 0. При ошибке
+возвращается положительный номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Значение \fIaddr\fP не кратно размеру системной страницы или значение \fIlen\fP
+отрицательно.
+.TP 
+\fBEINVAL\fP
+Неверное значение \fIadvice\fP.
+.TP 
+\fBENOMEM\fP
+Адреса в указанном диапазоне частично или полностью лежат вне адресного
+пространства вызывающего.
+.SH ВЕРСИИ
+Поддержка \fBposix_madvise\fP() появилась в glibc  2.2.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001.
+.SH ЗАМЕЧАНИЯ
+В POSIX.1 допускается, что реализация генерирует ошибку, если \fIlen\fP равно
+0. В Linux допустимо значение \fIlen\fP равное 0 (ничего не делается).
+.PP
+В glibc эта функция реализована через вызов \fBmadvise\fP(2). Однако, начиная с
+glibc 2.6, \fBPOSIX_MADV_DONTNEED\fP для ничего не делается, так как
+соответствующее значение в \fBmadvise\fP(2), \fBMADV_DONTNEED\fP, имеет
+разрушительную семантику.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmadvise\fP(2), \fBposix_fadvise\fP(2)

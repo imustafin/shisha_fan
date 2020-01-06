@@ -1,0 +1,208 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2013, Peter Schiffer <pschiffe@redhat.com>
+.\" and Copyright (C) 2014, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MEMUSAGE 1 2019\-03\-06 GNU "Руководство пользователя Linux"
+.SH ИМЯ
+memusage \- исследует использование памяти программы
+.SH ОБЗОР
+\fBmemusage\fP [\fIпараметры\fP]… \fIпрограмма\fP [\fIпараметры_программы\fP]…
+.SH ОПИСАНИЕ
+Программа \fBmemusage\fP представляет собой сценарий bash, который описывает
+использование памяти \fIпрограммой\fP. Сценарий загружает библиотеку
+\fBlibmemusage.so\fP в окружение вызывающего (через переменную окружения
+\fBLD_PRELOAD\fP, смотрите \fBld.so\fP(8)). Библиотека \fBlibmemusage.so\fP
+отслеживает распределение памяти путём перехвата вызовов \fBmalloc\fP(3),
+\fBcalloc\fP(3), \fBfree\fP(3) и \fBrealloc\fP(3); при необходимости, также могут
+быть перехвачены вызовы \fBmmap\fP(2), \fBmremap\fP(2) и \fBmunmap\fP(2).
+.PP
+\fBmemusage\fP может выводить собранные данные в текстовом виде, также может
+использовать \fBmemusagestat\fP(1) (смотрите вариант \fB\-р\fP далее) для того,
+чтобы создать файл PNG, содержащий графическое представление собранных
+данных.
+.SS "Сводка использование памяти"
+Выводимая \fBmemusage\fP строка "сводка использование памяти" содержит три
+поля:
+.RS 4
+.TP 
+\fBheap total\fP
+Сумма  аргументов \fIsize\fP  всех вызовов \fBmalloc\fP (3), результат аргументов
+(\fInmemb\fP*\fIsize\fP) всех вызовов \fBcalloc\fP(3) и сумма аргументов \fIlength\fP
+всех вызовов \fBmmap\fP (2) . В случае \fBrealloc\fP (3) и \fBmremap\fP (2), если
+новый размер блока адресов больше, чем в предыдущий размер, добавляется
+сумма всех таких различий (новый размер минус старый размер).
+.TP 
+\fBheap peak\fP
+Максимальное значение всех аргументов \fIsize\fP у \fBmalloc\fP(3), все
+произведения \fInmemb\fP*\fIsize\fP у \fBcalloc\fP(3), все аргументы \fIsize\fP у
+\fBrealloc\fP(3), аргументы \fIlength\fP у \fBmmap\fP(2) и аргументы \fInew_size\fP у
+\fBmremap\fP(2).
+.TP 
+\fBstack peak\fP
+Перед первым вызовом любой отслеживаемой функции сохраняется адрес указателя
+стека (базовый указатель стека). После каждого вызова функции читается
+текущий адрес указателя стека и вычисляет разница с базовым указателем
+стека. Максимальное значение среди вычитаний является пиком стека.
+.RE
+.PP
+Сразу за строкой итога в таблице для каждой перехваченной функции
+показывается количество вызовов, общее количество выделенной и освобождённой
+памяти и количество вызовов с ошибками. Для \fBrealloc\fP(3) и \fBmremap\fP(2)
+также есть поле «nomove», показывающее переразмещения, у которых изменился
+адрес блока, и поле «dec», показывающее переразмещения, у которых уменьшился
+размер блока. Для \fBrealloc\fP(3) в дополнительном поле «free» показываются
+переразмещения, которые были вызваны освобождением блока (т. е., размер
+переразмещения был равен 0).
+.PP
+Таблица «realloc/total memory», выводимая \fBmemusage\fP, не отражает случаи,
+где \fBrealloc\fP(3) используется для переразмещения блока памяти меньшего
+размера, чем предыдущий. Это может привести к тому, что сумма всех ячеек
+«total memory» (кроме «free») будет больше, чем ячейка «free/total memory».
+.SS "Гистограмма размеров блоков"
+«Гистограмма размеров блоков»  выдает разбивку адресованных блоков по
+размерам.
+.SH ПАРАМЕТРЫ
+.TP 
+\fB\-n\ \fP\fIимя\fP,\ \fB\-\-progname=\fP\fIимя\fP
+Имя файла профилируемой программы.
+.TP 
+\fB\-p\ \fP\fIfile\fP,\ \fB\-\-png=\fP\fIfile\fP
+Создать изображение в формате PNG и сохранить его в
+.TP 
+\fB\-d\ \fP\fIфайл\fP,\ \fB\-\-data=\fP\fIфайл\fP
+Создать двоичный файл данных и сохранить его в \fIфайл\fP.
+.TP 
+\fB\-u\fP,\ \fB\-\-unbuffered\fP
+Не буферизуйте вывод.
+.TP 
+\fB\-b\ \fP\fIsize\fP,\ \fB\-\-buffer=\fP\fIsize\fP
+Собрать \fIsize\fP записей перед тем, как записать их.
+.TP 
+\fB\-\-no\-timer\fP
+Отключить измерение значения указателя стека на основе таймера (\fBSIGPROF\fP).
+.TP 
+\fB\-m\fP,\ \fB\-\-mmap\fP
+Также трассировать \fBmmap\fP(2), \fBmremap\fP(2) и \fBmunmap\fP(2).
+.TP 
+\fB\-?\fP,\ \fB\-\-help\fP
+Показать справку по использованию и завершить работу.
+.TP 
+\fB\-\-usage\fP
+Показать короткое сообщение об использовании и завершить работу.
+.TP 
+\fB\-V\fP,\ \fB\-\-version\fP
+Показать информацию о версии и завершить работу.
+.TP 
+Следующие параметры применяются только когда используется графический вывод:
+.TP 
+\fB\-t\fP,\ \fB\-\-time\-based\fP
+По оси X — время (а не количество вызовов функций).
+.TP 
+\fB\-T\fP,\ \fB\-\-total\fP
+Построить также график общего использования памяти.
+.TP 
+\fB\-\-title=\fP\fIназвание\fP
+Использовать \fIназвание\fP в качестве заголовка графика.
+.TP 
+\fB\-x\ \fP\fIsize\fP,\ \fB\-\-x\-size=\fP\fIsize\fP
+Рисовать график шириной в \fIsize\fP пикселов.
+.TP 
+\fB\-y\ \fP\fIsize\fP,\ \fB\-\-y\-size=\fP\fIsize\fP
+Рисовать график высотой в \fIsize\fP пикселов.
+.SH "КОД РЕЗУЛЬТАТА"
+Код завершения работы равен коду выхода профилируемой программы.
+.SH ДЕФЕКТЫ
+Сообщения об ошибках доступны по адресу
+.UR http://www.gnu.org/software/libc/bugs.html
+.UE
+.SH ПРИМЕР
+Ниже показана простая программа, которая переразмещает блок памяти в цикле,
+который достигает пика до того как размер циклически переразмещаемой памяти
+достигнет нуля. После компиляции программы и запуска следующих команд график
+использования памяти программой можно найти в файле \fImemusage.png\fP:
+.PP
+.in +4n
+.EX
+$ \fBmemusage \-\-data=memusage.dat ./a.out\fP
+\&...
+Memory usage summary: heap total: 45200, heap peak: 6440, stack peak: 224
+        total calls  total memory  failed calls
+ malloc|         1           400             0
+realloc|        40         44800             0  (nomove:40, dec:19, free:0)
+ calloc|         0             0             0
+   free|         1           440
+Histogram for block sizes:
+  192\-207             1   2% ================
+\&...
+ 2192\-2207            1   2% ================
+ 2240\-2255            2   4% =================================
+ 2832\-2847            2   4% =================================
+ 3440\-3455            2   4% =================================
+ 4032\-4047            2   4% =================================
+ 4640\-4655            2   4% =================================
+ 5232\-5247            2   4% =================================
+ 5840\-5855            2   4% =================================
+ 6432\-6447            1   2% ================
+$ \fBmemusagestat memusage.dat memusage.png\fP
+.EE
+.in
+.SS "Исходный код программы"
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+
+#define CYCLES 20
+
+int
+main(int argc, char *argv[])
+{
+     int i, j;
+     int *p;
+
+     printf("malloc: %zd\en", sizeof(int) * 100);
+     p = malloc(sizeof(int) * 100);
+
+     for (i = 0; i < CYCLES; i++) {
+         if (i < CYCLES / 2)
+             j = i;
+         else
+             j\-\-;
+
+         printf("realloc: %zd\en", sizeof(int) * (j * 50 + 110));
+         p = realloc(p, sizeof(int) * (j * 50 + 100));
+
+         printf("realloc: %zd\en", sizeof(int) * ((j+1) * 150 + 110));
+         p = realloc(p, sizeof(int) * ((j + 1) * 150 + 110));
+     }
+
+     free(p);
+     exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmemusagestat\fP(1), \fBmtrace\fP(1)  \fBld.so\fP(8)

@@ -1,0 +1,211 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2007 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" drawing on material by Justin Pryzby <pryzbyj@justinpryzby.com>
+.\"
+.\" %%%LICENSE_START(PERMISSIVE_MISC)
+.\" Permission is hereby granted, free of charge, to any person obtaining
+.\" a copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\"
+.\" The above copyright notice and this permission notice shall be
+.\" included in all copies or substantial portions of the Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+.\" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+.\" CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+.\" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+.\" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.\" %%%LICENSE_END
+.\"
+.\" References:
+.\"   glibc manual and source
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BACKTRACE 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+backtrace, backtrace_symbols, backtrace_symbols_fd \- поддержка самоотладки в
+приложении
+.SH ОБЗОР
+\fB#include <execinfo.h>\fP
+.PP
+\fBint backtrace(void\fP \fB**\fP\fIbuffer\fP\fB,\fP \fBint\fP \fIsize\fP\fB);\fP
+.PP
+\fBchar **backtrace_symbols(void *const\fP \fB*\fP\fIbuffer\fP\fB,\fP \fBint\fP
+\fIsize\fP\fB);\fP
+.PP
+\fBvoid backtrace_symbols_fd(void *const\fP \fB*\fP\fIbuffer\fP\fB,\fP \fBint\fP
+\fIsize\fP\fB,\fP \fBint\fP \fIfd\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функция \fBbacktrace\fP() возвращает список запущенных функций вызвавшей
+программы в массив, на который указывает \fIbuffer\fP. Список вызванных функций
+(backtrace) — это последовательность в данный момент активных вызовов
+функций программы. Каждый элемент в массиве, на который указывает \fIbuffer\fP,
+имеет тип \fIvoid\ *\fP и указывает на адрес возврата из соответствующего
+стекового кадра (stack frame). В аргументе \fIsize\fP задаётся максимальное
+количество адресов, которые могут храниться в \fIbuffer\fP. Если список
+вызванных функций больше \fIsize\fP, то возвращаются \fIsize\fP адресов функций,
+вызванных последними; чтобы получить полный список вызванных функций,
+сделайте \fIbuffer\fP и \fIsize\fP достаточно большими.
+.PP
+Набор адресов, полученных от \fBbacktrace\fP() через \fIbuffer\fP, функция
+\fBbacktrace_symbols\fP() транслирует в массив строк, в которых адреса
+представлены в символическом виде. В аргументе \fIsize\fP передаётся количество
+адресов в \fIbuffer\fP. Символический вид каждого адреса содержит имя функции
+(если его можно определить), шестнадцатеричное смещение в функции и реальный
+адрес возврата (в шестнадцатеричном виде). Результатом функции
+\fBbacktrace_symbols\fP() является адрес массива указателей на строки. Этот
+массив выделяется \fBbacktrace_symbols\fP() с помощью \fBmalloc\fP(3) и должен
+освобождаться вызывающим (строки, на которые указывают указатели в массиве,
+освобождаться не должны).
+.PP
+Функция \fBbacktrace_symbols_fd\fP() ожидает аргументы \fIbuffer\fP и \fIsize\fP как
+у \fBbacktrace_symbols\fP(), но вместо записи строк в массив вызывающему, она
+записывает строки, одну в строке, в файловый дескриптор \fIfd\fP. Функция
+\fBbacktrace_symbols_fd\fP() не вызывает \fBmalloc\fP(3) и поэтому может
+применяться в случаях, когда вызов \fBmalloc\fP(3) может завершаться ошибкой,
+но смотрите ЗАМЕЧАНИЯ.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBbacktrace\fP() возвращает количество адресов, записанных в
+\fIbuffer\fP, и не может быть больше \fIsize\fP. Если возвращаемое значение меньше
+\fIsize\fP, то был сохранён полный список вызванных функций; если значение
+равно \fIsize\fP, то список может быть не полным, то есть адреса самых старых
+кадров стека могут отсутствовать.
+.PP
+При успешном выполнении \fBbacktrace_symbols\fP() возвращает указатель на
+массив, выделенный \fBmalloc\fP(3); при ошибке возвращается NULL.
+.SH ВЕРСИИ
+Функции \fBbacktrace\fP(), \fBbacktrace_symbols\fP() и \fBbacktrace_symbols_fd\fP()
+появились в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw22 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBbacktrace\fP(),
+.br
+\fBbacktrace_symbols\fP(),
+.br
+\fBbacktrace_symbols_fd\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+Поведение данных функций основано на предположении, что адреса возврата из
+функций хранятся в стеке. Заметим следующее:
+.IP * 3
+Отсутствие указателей кадров (происходит при  указании \fBgcc\fP(1) любого
+ненулевого уровня оптимизации) может вызвать нарушение этих предположений.
+.IP *
+Встраиваемые (inlined) функции не имеют стековых кадров.
+.IP *
+Оптимизация хвостовых вызовов приводит к замещению одного стекового кадра
+другим.
+.IP *
+Функция \fBbacktrace\fP() и \fBbacktrace_symbols_fd\fP() не вызывает \fBmalloc\fP()
+явным образом, но они являются частью \fIlibgcc\fP, которая загружается
+динамически при первом использовании. Обычно, динамическая загрузка вызывает
+\fBmalloc\fP(3). Если вам нужно, чтобы работа с этими функциями не приводила к
+выделению памяти (например, в обработчиках сигналов), то перед обращением
+загрузите \fIlibgcc\fP самостоятельно.
+.PP
+Символьные имена могут быть недоступны, если не указаны специальные
+параметра компоновщика. В системах с  компоновщиком GNU необходимо
+использовать параметр \fI\-rdynamic\fP. Заметим, что имена «статических» функций
+не показываются, и недоступны в списке вызовов функций.
+.SH ПРИМЕР
+Программа, представленная далее, демонстрирует использование \fBbacktrace\fP()
+и \fBbacktrace_symbols\fP(). В следующем сеансе оболочки показано, что может
+получиться при запуске программы:
+.PP
+.in +4n
+.EX
+$\fB cc \-rdynamic prog.c \-o prog\fP
+$\fB ./prog 3\fP
+backtrace() returned 8 addresses
+\&./prog(myfunc3+0x5c) [0x80487f0]
+\&./prog [0x8048871]
+\&./prog(myfunc+0x21) [0x8048894]
+\&./prog(myfunc+0x1a) [0x804888d]
+\&./prog(myfunc+0x1a) [0x804888d]
+\&./prog(main+0x65) [0x80488fb]
+\&/lib/libc.so.6(__libc_start_main+0xdc) [0xb7e38f9c]
+\&./prog [0x8048711]
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <execinfo.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define BT_BUF_SIZE 100
+
+void
+myfunc3(void)
+{
+    int j, nptrs;
+    void *buffer[BT_BUF_SIZE];
+    char **strings;
+
+    nptrs = backtrace(buffer, BT_BUF_SIZE);
+    printf("backtrace() вернула %d адресов\en", nptrs);
+
+    /* При вызове backtrace_symbols_fd(buffer, nptrs, STDOUT_FILENO)
+       получилось бы подобное следующему: */
+
+    strings = backtrace_symbols(buffer, nptrs);
+    if (strings == NULL) {
+        perror("backtrace_symbols");
+        exit(EXIT_FAILURE);
+    }
+
+    for (j = 0; j < nptrs; j++)
+        printf("%s\en", strings[j]);
+
+    free(strings);
+}
+
+static void   /* "static" означает не экспортировать символ... */
+myfunc2(void)
+{
+    myfunc3();
+}
+
+void
+myfunc(int ncalls)
+{
+    if (ncalls > 1)
+        myfunc(ncalls \- 1);
+    else
+        myfunc2();
+}
+
+int
+main(int argc, char *argv[])
+{
+    if (argc != 2) {
+        fprintf(stderr, "%s количество\-вызовов\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    myfunc(atoi(argv[1]));
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaddr2line\fP(1), \fBgcc\fP(1), \fBgdb\fP(1), \fBld\fP(1), \fBdlopen\fP(3), \fBmalloc\fP(3)

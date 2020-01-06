@@ -1,0 +1,186 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\" and Copyright (C) 1993 Michael Haardt, Ian Jackson.
+.\" and Copyright (C) 2016 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Wed Jul 21 22:40:25 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sat Feb 18 15:27:48 1995 by Michael Haardt
+.\" Modified Sun Apr 14 11:40:50 1996 by Andries Brouwer <aeb@cwi.nl>:
+.\"   corrected description of effect on locks (thanks to
+.\"   Tigran Aivazian <tigran@sco.com>).
+.\" Modified Fri Jan 31 16:21:46 1997 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2000-07-22 by Nicolás Lichtmaier <nick@debian.org>
+.\"   added note about close(2) not guaranteeing that data is safe on close.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CLOSE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+close \- закрывает файловый дескриптор
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBint close(int \fP\fIfd\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBclose\fP() закрывает файловый дескриптор, который после этого не
+ссылается ни на один и файл и может быть использован повторно. Все
+блокировки (см. \fBfcntl\fP(2)), связанные с соответствующим файлом и
+принадлежащие процессу, снимаются (независимо от того, какой файловый
+дескриптор был ли использован для установки блокировки).
+.PP
+Если \fIfd\fP является последней копией какого\-либо файлового дескриптора,
+ссылающегося на используемое описание открытого файла, (см. \fBopen\fP(2)), то
+ресурсы, связанные с описанием открытого файла, освобождаются; если файловый
+дескриптор был последней ссылкой на файл, удалённый с помощью \fBunlink\fP(2),
+то файл окончательно удаляется.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функции \fBclose\fP() возвращается 0. В случае ошибки
+возвращается \-1, а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является допустимым открытым файловым дескриптором.
+.TP 
+\fBEINTR\fP
+.\" Though, it's in doubt whether this error can ever occur; see
+.\" https://lwn.net/Articles/576478/ "Returning EINTR from close()"
+Вызов \fBclose\fP() был прерван по сигналу; см. \fBsignal\fP(7).
+.TP 
+\fBEIO\fP
+Произошла ошибка ввода\-вывода.
+.TP 
+\fBENOSPC\fP, \fBEDQUOT\fP
+Для NFS об этих ошибках, обычно, не сообщается при первой записи, которая
+превысила доступное пространство памяти, а только в последующем \fBwrite\fP(),
+\fBfsync\fP(2) или \fBclose\fP().
+.PP
+Смотрите в ЗАМЕЧАНИЯХ почему \fBclose\fP() нельзя вызывать снова после ошибки.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents an additional ENOLINK error condition.
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Выполнение закрытия без ошибок не гарантирует, что данные были успешно
+записаны на диск, так как в ядре используется буферный кэш для отложенных
+записей. Как правило, файловые системы не записывают буферы при закрытии
+файла. Если требуется гарантировать физическую запись на используемый диск,
+то можно использовать \fBfsync\fP(2) (дальше всё будет зависеть от аппаратной
+составляющей диска).
+.PP
+Флаг файлового дескриптора закрытие\-при\-exec можно использовать для гарантии
+того, что файловый дескриптор автоматически закроется при успешном
+выполнении \fBexecve\fP(2); подробности смотрите в \fBfcntl\fP(2).
+.PP
+.\" Date: Tue, 4 Sep 2007 13:57:35 +0200
+.\" From: Fredrik Noring <noring@nocrew.org>
+.\" One such race involves signals and ERESTARTSYS. If a file descriptor
+.\" in use by a system call is closed and then reused by e.g. an
+.\" independent open() in some unrelated thread, before the original system
+.\" call has restarted after ERESTARTSYS, the original system call will
+.\" later restart with the reused file descriptor. This is most likely a
+.\" serious programming error.
+.\"
+Вероятно неблагоразумно закрывать дескрипторы файла, в то время как они
+могут использоваться системными вызовами других нитей того же процесса. Так
+как файловый дескриптор может использоваться повторно, есть некоторые
+неясные условия возникновения гонок, которые могут вызвать непреднамеренные
+побочные эффекты.
+.SS "Обработка ошибки, возвращённой close()"
+Аккуратный программист всегда проверяет возвращаемое \fBclose\fP() значение,
+так как очень вероятно, что об ошибках предыдущей операции \fBwrite\fP(2) будет
+сообщено только при последнем вызове \fBclose\fP(), который освобождает
+описание открытого файла. Невыполнение проверки возвращаемого значение при
+закрытии файла может привести к \fIнеучтённой\fP потере данных. Это особенно
+часто встречается с NFS и дисковыми квотами.
+.PP
+Однако заметим, что возвращаемая ошибка должна использоваться только для
+диагностики (т. е., предупредить приложение, что, возможно, есть
+незаконченные операции ввода\-вывода или произошла ошибка ввода\-вывода) или
+исправления (например, повторной записи файла или создания резервной копии).
+.PP
+.\" The file descriptor is released early in close();
+.\" close() ==> __close_fd():
+.\"			__put_unused_fd() ==> __clear_open_fd()
+.\"			return filp_close(file, files);
+.\"
+.\" The errors are returned by filp_close() after the FD has been
+.\" cleared for re-use.
+.\" filp_close()
+Повторный вызов \fBclose\fP() после получения ошибки делать не стоит, так как
+это может привести к закрытию повторно использованного файлового дескриптора
+другой нити. Это может произойти из\-за того, что ядро Linux \fIвсегда\fP
+освобождает файловый дескриптор в самом начале операции закрытия, делая его
+доступным для повторного использования; шаги, которые могут вернуть ошибку,
+такие как сброс данных в файловую систему или устройство, происходят только
+после операции закрытия.
+.PP
+.\" FreeBSD documents this explicitly. From the look of the source code
+.\" SVR4, ancient SunOS, later Solaris, and AIX all do this.
+.\" Issue 8
+Многие другие реализации поступают схожим образом и всегда закрывают
+файловый дескриптор (за исключением случая \fBEBADF\fP, означающего
+некорректный файловый дескриптор) даже, если они затем возвратят ошибку
+\fBclose\fP(). В POSIX.1 ничего не сказано на этот счёт, но есть планы
+узаконить такое поведение в следующем выпуске стандарта.
+.PP
+Аккуратный программист, который хочет узнать об ошибках ввода\-вывода, перед
+\fBclose\fP() вызовет \fBfsync\fP(2).
+.PP
+Ошибка \fBEINTR\fP является особым случаем. Про \fBEINTR\fP в POSIX.1\-2013
+сказано:
+.PP
+.RS
+Если \fBclose\fP() прерван сигналом, который будет обработан, то вызов должен
+вернуть \-1, а \fIerrno\fP присвоить значение \fBEINTR\fP; при этом состояние
+\fIfildes\fP не определено.
+.RE
+.PP
+.\" FIXME . for later review when Issue 8 is one day released...
+.\" POSIX proposes further changes for EINTR
+.\" http://austingroupbugs.net/tag_view_page.php?tag_id=8
+.\" http://austingroupbugs.net/view.php?id=529
+.\"
+.\" FIXME .
+.\" Review the following glibc bug later
+.\" https://sourceware.org/bugzilla/show_bug.cgi?id=14627
+Этим допускается режим работы, действующий в Linux и многих других
+реализациях, где как и при других ошибках, которые может вернуть \fBclose\fP(),
+файловый дескриптор гарантированно закрывается. Однако, это также допускает
+и другой режим: реализация возвращает ошибку \fBEINTR\fP и оставляет файловый
+дескриптор открытым (согласно документации, так делает \fBclose\fP() в
+HP\-UX). Вызывающий должен позднее ещё раз вызвать \fBclose\fP() для закрытия
+файлового дескриптора, чтобы не допустить утечек файловых
+дескрипторов. Такое расхождение в поведении реализаций является сложным
+препятствием для переносимых приложений, так как во многих реализациях
+\fBclose\fP() не должен вызываться ещё раз после получения ошибки \fBEINTR\fP и,
+по крайней мере, в одной \fBclose\fP() нужно вызвать снова. Есть планы
+разгадать эту загадку в следующей большой версии стандарта POSIX.1.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfcntl\fP(2), \fBfsync\fP(2), \fBopen\fP(2), \fBshutdown\fP(2), \fBunlink\fP(2),
+\fBfclose\fP(3)

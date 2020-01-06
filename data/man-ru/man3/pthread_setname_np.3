@@ -1,0 +1,184 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2012 Chandan Apsangi <chandan.jc@gmail.com>
+.\" and Copyright (C) 2013 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_SETNAME_NP 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_setname_np, pthread_getname_np \- изменяет/возвращает имя нити
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* смотрите feature_test_macros(7) */
+\fB#include <pthread.h>\fP
+\fBint pthread_setname_np(pthread_t \fP\fIthread\fP\fB, const char *\fP\fIname\fP\fB);\fP
+\fBint pthread_getname_np(pthread_t \fP\fIthread\fP\fB,\fP
+\fB                       char *\fP\fIname\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.fi
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.SH ОПИСАНИЕ
+По умолчанию, все нити, созданные \fBpthread_create\fP(), наследуют имя
+программы. Функция \fBpthread_setname_np\fP() позволяет задать уникальное имя
+нити, которое можно использовать при отладки многонитевых приложений. Имя
+нити задаётся по правилам строк языка C, его длина ограничена 16 символами,
+включая конечный байт null (\(aq\e0\(aq). В аргументе \fIthread\fP указывается
+нить, чьё имя будет изменено; в \fIname\fP указывается новое имя.
+.PP
+Функция \fBpthread_getname_np\fP() возвращает имя нити. В аргументе \fIthread\fP
+указывает нить, чьё имя будет возвращено. В буфер \fIname\fP возвращается имя
+нити; в аргументе \fIlen\fP указывается количество байт, доступное в
+\fIname\fP. Длина буфера \fIname\fP должна быть не менее 16 символов. Возвращаемое
+имя в выходном буфере завершается байтом null.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+Функция \fBpthread_setname_np\fP() может завершиться со следующей ошибкой:
+.TP 
+\fBERANGE\fP
+Длина строки, на которую ссылается \fIname\fP, превышает разрешённую.
+.PP
+Функция \fBpthread_getname_np\fP() может завершиться со следующей ошибкой:
+.TP 
+\fBERANGE\fP
+Буфер, задаваемый \fIname\fP и \fIlen\fP, слишком мал для имени нити.
+.PP
+Если одна из этих функций завершается с ошибкой открытия
+\fI/proc/self/task/[tid]/comm\fP, то вызов может завершиться одной из ошибок,
+описанных в \fBopen\fP(2).
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.12.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_setname_np\fP(),
+\fBpthread_getname_np\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции являются не стандартизированными расширениями GNU, о чём
+свидетельствует наличие суффикса «_np» (nonportable).
+.SH ЗАМЕЧАНИЯ
+Запись \fBpthread_setname_np\fP() выполняет через файл нити \fIcomm\fP из файловой
+системы \fI/proc\fP: \fI/proc/self/task/[tid]/comm\fP. Функция
+\fBpthread_getname_np\fP() также используется его для возврата имени.
+.SH ПРИМЕР
+.PP
+Представленная ниже программа показывает использование
+\fBpthread_setname_np\fP() и \fBpthread_getname_np\fP().
+.PP
+Пример сеанса работы с программой:
+.PP
+.in +4n
+.EX
+$\fB ./a.out\fP
+Нить создана. Имя по умолчанию: a.out
+Имя нити после изменения — THREADFOO.
+\fB^Z\fP                           # Приостановка программы
+[1]+  Stopped           ./a.out
+$ \fBps H \-C a.out \-o 'pid tid cmd comm'\fP
+  PID   TID CMD                         COMMAND
+ 5990  5990 ./a.out                     a.out
+ 5990  5991 ./a.out                     THREADFOO
+$ \fBcat /proc/5990/task/5990/comm\fP
+a.out
+$ \fBcat /proc/5990/task/5991/comm\fP
+THREADFOO
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <pthread.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdlib.h>
+
+#define NAMELEN 16
+
+#define errExitEN(en, msg) \e
+            do { errno = en; perror(msg); exit(EXIT_FAILURE); \e
+        } while (0)
+
+static void *
+threadfunc(void *parm)
+{
+    sleep(5);          // позволить главной программе изменить имя нити
+    return NULL;
+}
+
+int
+main(int argc, char **argv)
+{
+    pthread_t thread;
+    int rc;
+    char thread_name[NAMELEN];
+
+    rc = pthread_create(&thread, NULL, threadfunc, NULL);
+    if (rc != 0)
+        errExitEN(rc, "pthread_create");
+
+    rc = pthread_getname_np(thread, thread_name, NAMELEN);
+    if (rc != 0)
+        errExitEN(rc, "pthread_getname_np");
+
+    printf("Нить создана. Имя по умолчанию: %s\en", thread_name);
+    rc = pthread_setname_np(thread, (argc > 1) ? argv[1] : "THREADFOO");
+    if (rc != 0)
+        errExitEN(rc, "pthread_setname_np");
+
+    sleep(2);
+
+    rc = pthread_getname_np(thread, thread_name,
+                            (argc > 2) ? atoi(argv[1]) : NAMELEN);
+    if (rc != 0)
+        errExitEN(rc, "pthread_getname_np");
+    printf("Имя нити после изменения — %s.\en", thread_name);
+
+    rc = pthread_join(thread, NULL);
+    if (rc != 0)
+        errExitEN(rc, "pthread_join");
+
+    printf("Done\en");
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBprctl\fP(2), \fBpthread_create\fP(3), \fBpthreads\fP(7)

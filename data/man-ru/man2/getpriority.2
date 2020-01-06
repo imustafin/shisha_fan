@@ -1,0 +1,174 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1980, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)getpriority.2	6.9 (Berkeley) 3/10/91
+.\"
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-07-01 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 1996-11-06 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2001-10-21 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"    Corrected statement under EPERM to clarify privileges required
+.\" Modified 2002-06-21 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"    Clarified meaning of 0 value for 'who' argument
+.\" Modified 2004-05-27 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETPRIORITY 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getpriority, setpriority \- получить/установить приоритет планирования
+программы
+.SH ОБЗОР
+\fB#include <sys/time.h>\fP
+.br
+\fB#include <sys/resource.h>\fP
+.PP
+\fBint getpriority(int \fP\fIwhich\fP\fB, id_t \fP\fIwho\fP\fB);\fP
+.br
+\fBint setpriority(int \fP\fIwhich\fP\fB, id_t \fP\fIwho\fP\fB, int \fP\fIprio\fP\fB);\fP
+.SH ОПИСАНИЕ
+С помощью вызова \fBgetpriority\fP() можно получить приоритет планирования
+(scheduling priority) процесса, группы процессов или пользователя, которые
+заданы в аргументах \fIwhich\fP и \fIwho\fP, а с помощью вызова \fBsetpriority\fP()
+назначить его. Атрибут процесса этих системных вызовов тот же самый что
+атрибут (так называемое значение уступчивости «nice»), с которым работает
+вызов \fBnice\fP(2).
+.PP
+Значением \fIwhich\fP может быть одно из: \fBPRIO_PROCESS\fP, \fBPRIO_PGRP\fP или
+\fBPRIO_USER\fP, а значение \fIwho\fP рассматривается относительно \fIwhich\fP
+(идентификатор процесса, если \fBPRIO_PROCESS\fP; группы процесса, если
+\fBPRIO_PGRP\fP; идентификатор пользователя, если \fBPRIO_USER\fP). Нулевое
+значение \fIwho\fP означает (соответственно) вызывающий процесс, группу
+вызывающего процесса или реальный идентификатор пользователя вызывающего
+процесса.
+.PP
+Аргумент \fIprio\fP — это значение в диапазоне от \-20 до 19 (смотрите ЗАМЕЧАНИЯ
+ниже), где \-20 это наивысший приоритет, а 19 — наинизший. Попытка задать
+приоритет вне этого диапазона просто подгоняется под диапазон. По умолчанию
+приоритет равен 0; низкие значения дают процессу больший приоритет при
+планировании.
+.PP
+Вызов \fBgetpriority\fP() возвращает наивысший приоритет (наименьшее числовое
+значение) из приоритетов всех указанных процессов. Вызов \fBsetpriority\fP()
+устанавливает приоритеты всех указанных процессов в заданное значение.
+.PP
+Обычно, только привилегированный процесс может понижать значение
+уступчивости (т. е., повышать приоритет). Однако начиная с Linux 2.6.12
+непривилегированный процесс может понизить значение уступчивости процесса
+назначения, у которого установлено подходящее мягкое ограничение
+\fBRLIMIT_NICE\fP; подробности смотрите в \fBgetrlimit\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBgetpriority\fP() возвращает значение уступчивости
+вызывающей нити, которое может быть отрицательным. При ошибке возвращается
+\-1 и изменяется значение \fIerrno\fP, указывающее код ошибки. Так как
+\fBgetpriority\fP() в качестве результата может вернуть \-1, то перед вызовом
+необходимо очищать значение внешней переменной \fIerrno\fP, а затем проверять
+его после вызова, чтобы определить, является ли \-1 ошибкой или результатом
+вызова.
+.PP
+При нормальном завершении работы \fBsetpriority\fP() возвращает 0. В случае
+ошибки возвращается \-1, а \fIerrno\fP устанавливается в соответствующее
+значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Значение \fIwhich\fP не равно \fBPRIO_PROCESS\fP, \fBPRIO_PGRP\fP или \fBPRIO_USER\fP.
+.TP 
+\fBESRCH\fP
+Не найдено процессов, которые заданы значениями \fIwhich\fP и \fIwho\fP.
+.PP
+В дополнение к вышеуказанным ошибкам, \fBsetpriority\fP() может завершиться
+неудачно:
+.TP 
+\fBEACCES\fP
+Вызывающий пытается понизить значение уступчивости (то есть повысить
+приоритет процесса), но он не имеет на это прав (в Linux: не имеет мандата
+\fBCAP_SYS_NICE\fP).
+.TP 
+\fBEPERM\fP
+Процесс был найден, но эффективному идентификатору пользователя этого
+процесса не соответствует заданный в вызове эффективный (или реальный)
+идентификатор вызывающего и  у вызывающего нет прав (в Linux: не имеет
+мандата \fBCAP_SYS_NICE\fP). Смотрите ЗАМЕЧАНИЯ далее.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.4BSD (эти интерфейсы впервые появились в
+4.2BSD).
+.SH ЗАМЕЧАНИЯ
+Дополнительную информацию о значении уступчивости смотрите в \fBsched\fP(7).
+.PP
+\fIЗамечание\fP: дополнительное свойство «autogroup» из Linux 2.6.38 означает,
+что значение уступчивости во многих случаях больше не работает как
+обычно. Подробней смотрите в \fBsched\fP(7).
+.PP
+Потомок, созданный с помощью \fBfork\fP(2), наследует значение nice
+родителя. При вызове \fBexecve\fP(2)  значение nice сохраняется.
+.PP
+Детали условия возникновения ошибки \fBEPERM\fP зависят от системы. Описание,
+приведённое выше, соответствует POSIX.1\-2001, и, кажется, ему удовлетворяют
+все System\ V\-подобные системы. Ядра Linux до версии 2.6.12 требуют, чтобы
+эффективный идентификатор пользователя вызывающего совпадал с реальным
+идентификатором пользователя процесса \fIwho\fP (вместо его эффективного
+идентификатора пользователя). В Linux 2.6.12 и новее требуется, чтобы
+эффективный идентификатор пользователя вызывающего совпадал с реальным или
+эффективным идентификатором пользователя процесса \fIwho\fP. Все системы BSD
+(SunOS 4.1.3, Ultrix 4.2, 4.3BSD, FreeBSD 4.3, OpenBSD\-2.5, …) действуют
+также как Linux 2.6.12 и новее.
+.PP
+.\"
+Включать \fI<sys/time.h>\fP в настоящее время не требуется, но это
+увеличивает переносимость (безусловно, в \fI<sys/resource.h>\fP
+определена структура \fIrusage\fP с полями типа \fIstruct timeval\fP, которая
+определена в \fI<sys/time.h>\fP).
+.SS "Отличия между библиотекой C и ядром"
+Внутри ядра значения nice на самом деле представлены как диапазон  (так как
+отрицательными числами задаются коды ошибок) и эти значения возвращаются
+системными вызовами \fBsetpriority\fP() и \fBgetpriority\fP(). Обёрточные функции
+glibc для этих системных вызовов преобразуют значение между пользовательским
+и ядерным диапазонами по формуле \fIunice\ =\ 20\ \-\ knice\fP (таким образом,
+ядерный диапазон 40..1 соответствует диапазону \-20..19, видимый в
+пользовательском пространстве).
+.SH ДЕФЕКТЫ
+Согласно POSIX, значение nice — свойство процесса. Однако в текущей
+реализации Linux/NPTL нитей POSIX значение nice — атрибут нити: различные
+нити в одном процессе могут иметь разные значения nice. Переносимые
+приложения не должны полагаться на поведение Linux, которое может стать
+стандартом в будущем.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBnice\fP(1), \fBrenice\fP(1), \fBfork\fP(2), \fBcapabilities\fP(7), \fBsched\fP(7)
+.PP
+Файл \fIDocumentation/scheduler/sched\-nice\-design.txt\fP из дерева исходного
+кода ядра Linux (начиная с Linux 2.6.23)

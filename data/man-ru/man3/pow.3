@@ -1,0 +1,231 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified 1993-07-24 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 1995-08-14 by Arnt Gulbrandsen <agulbra@troll.no>
+.\" Modified 2002-07-27 by Walter Harms
+.\" 	(walter.harms@informatik.uni-oldenburg.de)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH POW 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+pow, powf, powl \- функции возведения в степень
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble pow(double \fP\fIx\fP\fB, double \fP\fIy\fP\fB);\fP
+\fBfloat powf(float \fP\fIx\fP\fB, float \fP\fIy\fP\fB);\fP
+\fBlong double powl(long double \fP\fIx\fP\fB, long double \fP\fIy\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBpowf\fP(), \fBpowl\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Данные функции возвращают значение \fIx\fP, возведённое в степень \fIy\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные функции возвращают значение \fIx\fP, возведённое
+в степень \fIy\fP.
+.PP
+.\" The domain error is generated at least as far back as glibc 2.4
+Если \fIx\fP — конечное значение меньшее 0 и \fIy\fP — конечное не целое, то будет
+сгенерирована ошибка выхода за пределы области, а в качестве результата
+будет возвращено NaN.
+.PP
+.\" The range error is generated at least as far back as glibc 2.4
+Если происходит переполнение результата, возникает ошибка диапазона, а
+функция возвращает \fBHUGE_VAL\fP, \fBHUGE_VALF\fP или \fBHUGE_VALL\fP,
+соответственно, с математически правильным знаком.
+.PP
+.\" POSIX.1 does not specify the sign of the zero,
+.\" but http://sources.redhat.com/bugzilla/show_bug.cgi?id=2678
+.\" points out that the zero has the wrong sign in some cases.
+Если в результате исчерпана степень числа и оно не представимо, то возникает
+ошибка диапазона и возвращается 0.0.
+.PP
+За исключениями, указанными далее, если значение \fIx\fP или \fIy\fP равно NaN, то
+результат равен NaN.
+.PP
+Если \fIx\fP равно +1, то результат равен 1.0 (даже если \fIy\fP равно NaN).
+.PP
+Если \fIy\fP равно 0, то результат равен 1.0 (даже если \fIx\fP равно NaN).
+.PP
+Если \fIx\fP равно +0 (\-0) и \fIy\fP — нечётное целое большее 0, то результат
+равен +0 (\-0).
+.PP
+Если \fIx\fP равно 0 и \fIy\fP больше 0 и не чётное целое, то результат равен +0.
+.PP
+Если \fIx\fP равно \-1 и \fIy\fP стремится к плюс или минус бесконечности, то
+результат равен 1.0.
+.PP
+Если абсолютное значение \fIx\fP меньше 1 и \fIy\fP стремится к минус
+бесконечности, то результат стремится к плюс бесконечности.
+.PP
+Если абсолютное значение \fIx\fP больше 1 и \fIy\fP стремится к минус
+бесконечности, то результат равен +0.
+.PP
+Если абсолютное значение \fIx\fP меньше 1 и \fIy\fP стремится к плюс
+бесконечности, то результат равен +0.
+.PP
+Если абсолютное значение \fIx\fP больше 1 и \fIy\fP стремится к плюс
+бесконечности, то результат стремится к плюс бесконечности.
+.PP
+Если \fIx\fP стремится к минус бесконечности и \fIy\fP — нечётное целое меньшее 0,
+то результат равен \-0.
+.PP
+Если \fIx\fP стремится к минус бесконечности и \fIy\fP — меньше 0 и чётное целое,
+то результат равен +0.
+.PP
+Если \fIx\fP стремится к минус бесконечности и \fIy\fP — нечётное целое большее 0,
+то результат стремится к минус бесконечности.
+.PP
+Если \fIx\fP стремится к минус бесконечности и \fIy\fP — больше 0 и чётное целое,
+то результат стремится к плюс бесконечности.
+.PP
+Если \fIx\fP стремится к плюс бесконечности и \fIy\fP — меньше 0, то результат
+равен +0.
+.PP
+Если \fIx\fP стремится к плюс бесконечности и \fIy\fP — больше 0, то результат
+стремится к плюс бесконечности.
+.PP
+Если \fIx\fP равно +0 или \-0 и \fIy\fP — нечётное целое меньшее 0, то генерируется
+ошибка особой точки и возвращается \fBHUGE_VAL\fP, \fBHUGE_VALF\fP или
+\fBHUGE_VALL\fPс тем же знаком что и у \fIx\fP.
+.PP
+.\" The pole error is generated at least as far back as glibc 2.4
+Если \fIx\fP равно + или \-0 и \fIy\fP — меньше 0 и чётное целое, то генерируется
+ошибка особой точки и возвращается +\fBHUGE_VAL\fP, +\fBHUGE_VALF\fP или
++\fBHUGE_VALL\fP.
+.SH ОШИБКИ
+.\" FIXME . review status of this error
+.\" longstanding bug report for glibc:
+.\" http://sources.redhat.com/bugzilla/show_bug.cgi?id=369
+.\" For negative x, and -large and +large y, glibc 2.8 gives incorrect
+.\" results
+.\" pow(-0.5,-DBL_MAX)=nan
+.\" EDOM FE_INVALID nan; fail-errno fail-except fail-result;
+.\" FAIL (expected: range-error-overflow (ERANGE, FE_OVERFLOW); +INF)
+.\"
+.\" pow(-1.5,-DBL_MAX)=nan
+.\" EDOM FE_INVALID nan; fail-errno fail-except fail-result;
+.\" FAIL (expected: range-error-underflow (ERANGE, FE_UNDERFLOW); +0)
+.\"
+.\" pow(-0.5,DBL_MAX)=nan
+.\" EDOM FE_INVALID nan; fail-errno fail-except fail-result;
+.\" FAIL (expected: range-error-underflow (ERANGE, FE_UNDERFLOW); +0)
+.\"
+.\" pow(-1.5,DBL_MAX)=nan
+.\" EDOM FE_INVALID nan; fail-errno fail-except fail-result;
+.\" FAIL (expected: range-error-overflow (ERANGE, FE_OVERFLOW); +INF)
+Смотрите \fBmath_error\fP(7), чтобы определить, где возникла ошибка при вызове
+этих функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка области: \fIx\fP является отрицательным и \fIy\fP конечное нецелое
+\fIerrno\fP устанавливается в \fBEDOM\fP. Возникает исключение неправильной
+плавающей запятой (\fBFE_INVALID\fP).
+.TP 
+Ошибка особой точки: \fIx\fP равно нулю и \fIy\fP отрицательно
+\fIerrno\fP устанавливается в \fBERANGE\fP (но смотрите ДЕФЕКТЫ). Возникает
+исключение деления плавающей запятой на ноль (\fBFE_DIVBYZERO\fP).
+.TP 
+Ошибка диапазона: результат превысил разрядность
+Значение \fIerrno\fP устанавливается в \fBERANGE\fP. Возникает исключение
+переполнения плавающей запятой (\fBFE_OVERFLOW\fP).
+.TP 
+Ошибка диапазона: результат исчерпал степень
+Значение \fIerrno\fP устанавливается в \fBERANGE\fP. Возникает исключение
+исчерпания степени чисел с плавающей запятой (\fBFE_UNDERFLOW\fP).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpow\fP(),
+\fBpowf\fP(),
+\fBpowl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.PP
+Вариант, возвращающий значение типа \fIdouble\fP, также соответствует SVr4,
+4.3BSD, C89.
+.SH ДЕФЕКТЫ
+.\"
+.\" https://sourceware.org/bugzilla/show_bug.cgi?id=13932
+На 64\-битных архитектурах \fBpow\fP() может быть медленнее более чем в 10000
+раз для некоторых значений (очень редких). Это происходит только с \fBpow\fP(),
+и отсутствует у \fBpowf\fP() и \fBpowl\fP().
+.PP
+.\"
+.\" http://sources.redhat.com/bugzilla/show_bug.cgi?id=6776
+.\" or possibly 2.9, I haven't found the source code change
+.\" and I don't have a 2.9 system to test
+В glibc 2.9 и ранее при возникновении ошибки особой точки, значению \fIerrno\fP
+присваивается \fBEDOM\fP вместо \fBERANGE\fP согласно POSIX. Начиная с версии
+2.10, в glibc это исправлено.
+.PP
+.\" see bug http://sources.redhat.com/bugzilla/show_bug.cgi?id=3866
+.\" and http://sources.redhat.com/bugzilla/show_bug.cgi?id=369
+Если \fIx\fP отрицательно, то большие отрицательные или положительные значения
+\fIy\fP приводят к результату NaN, с присвоением \fIerrno\fP значения \fBEDOM\fP или
+исключению неправильной плавающей запятой (\fBFE_INVALID\fP). Например для
+\fBpow\fP() такое случает когда абсолютное значение \fIy\fP больше 9.223373e18.
+.PP
+.\" FIXME . Actually, 2.3.2 is the earliest test result I have; so yet
+.\" to confirm if this error occurs only in 2.3.2.
+В glibc версии 2.3.2 или старее при возникновении ошибки переполнения или
+исчерпания, функция \fBpow\fP() в дополнение к исключениям переполнения и
+исчерпания генерирует необоснованное исключение неправильной плавающей
+запятой (\fBFE_INVALID\fP)
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcbrt\fP(3), \fBcpow\fP(3), \fBsqrt\fP(3)

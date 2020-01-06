@@ -1,0 +1,102 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_EXIT 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_exit \- завершает работу вызвавшей нити
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBvoid pthread_exit(void *\fP\fIretval\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_exit\fP() завершает работу вызвавшей нити и возвращает
+значение через \fIretval\fP, доступное (если к нити можно присоединиться)
+другой нити в том же процессе, вызвавшей \fBpthread_join\fP(3).
+.PP
+Если есть какие\-либо невызванные очищающие обработчики, установленные
+\fBpthread_cleanup_push\fP(3), то они выполняются (в обратном регистрации
+порядке). Если у нити есть какие\-либо свои данные, то после выполнения
+очищающих обработчиков вызываются соответствующие функции удаления, в
+неопределённом порядке.
+.PP
+Когда нить завершает выполнение связанные с процессом ресурсы (например,
+мьютексы, условные переменные, семафоры и файловые дескрипторы) не
+освобождаются и функции, зарегистрированные через \fBatexit\fP(3), не
+вызываются.
+.PP
+После завершения последней нити процесса, процесс завершает работу как при
+вызове \fBexit\fP(3) с нулевых кодом выхода; то есть ресурсы процесса
+освобождаются и вызываются функции, зарезервированные с помощью
+\fBatexit\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Данная функция не возвращает выполнение вызвавшему.
+.SH ОШИБКИ
+Данная функция всегда завершается успешно.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_exit\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Выполнение возврата из начальной функции любой не главной нити приводит к
+неявному вызову \fBpthread_exit\fP(), возвращаемое значение которой является
+кодом выхода нити.
+.PP
+Чтобы продолжить выполнение других нитей, главная нить должна завершаться
+вызовом \fBpthread_exit\fP(), а не \fBexit\fP(3).
+.PP
+Значение, на которое указывает \fIretval\fP, не должно располагаться в стеки
+вызывающей нити, так как содержимое этого стека не определено после
+завершения работы нити.
+.SH ДЕФЕКТЫ
+.\" Linux 2.6.27
+.\" FIXME . review a later kernel to see if this gets fixed
+.\" http://thread.gmane.org/gmane.linux.kernel/611611
+.\" http://marc.info/?l=linux-kernel&m=122525468300823&w=2
+В настоящее время в реализуемой ядром логики есть ограничения для
+остановленных групп нитей с помощью \fBwait\fP(2) с мёртвым лидером группы
+нитей. Из\-за этого могут возникнуть такие проблемы как заблокированный
+терминал, если сигнал останова посылается фоновому процессу, у которого
+лидер группы нитей уже вызвал \fBpthread_exit\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthread_create\fP(3), \fBpthread_join\fP(3), \fBpthreads\fP(7)

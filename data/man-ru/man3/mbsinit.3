@@ -1,0 +1,94 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MBSINIT 3 2016\-10\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+mbsinit \- проверяет начальное состояние сдвига
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBint mbsinit(const mbstate_t *\fP\fIps\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Преобразование многобайтового представления символов в представление в виде
+широких символов (и наоборот) происходит с помощью состояния преобразования
+(тип \fImbstate_t\fP). Преобразование строк происходит с помощью конечного
+автомата; если преобразование прерывается после некоторого количества
+символов, то может потребоваться сохранить состояние для обработки остальных
+символов. Это состояние преобразования необходимо, к примеру, для кодировок
+ISO\-2022 и UTF\-7.
+.PP
+Начальное состояние  — это состояние в начале преобразования строки. Есть
+два типа состояния: первое используется функциями преобразования
+многобайтовых символов в широкие (\fBmbsrtowcs\fP(3)); второе используется
+функциями преобразования широких символов в многобайтовые
+(\fBwcsrtombs\fP(3)). Для начального состояния обоих типов используется тип
+\fImbstate_t\fP.
+.PP
+Все состояния 8\-битных кодировок соответствуют начальному состоянию. Для
+многобайтовых кодировок (UTF\-8, EUC\-*, BIG5 или SJIS) функции преобразования
+широкого символа в многобайтовый никогда не создают не исходные состояния, а
+функции преобразования многобайтового символа в широкий (например,
+\fBmbrtowc\fP(3)) создают не исходные состояния, если прерываются на середине
+символа.
+.PP
+Одним из способов создания \fImbstate_t\fP в начальном состоянии является
+присвоение нулевого значения:
+.PP
+.in +4n
+.EX
+mbstate_t state;
+memset(&state,0,sizeof(mbstate_t));
+.EE
+.in
+.PP
+В Linux также работает и следующее, но может привести к появлению
+предупреждения компилятора:
+.PP
+.in +4n
+.EX
+mbstate_t state = { 0 };
+.EE
+.in
+.PP
+Функция \fBmbsinit\fP() проверяет \fI*ps\fP на соответствие начальному состоянию.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBmbsinit\fP() возвращает ненулевое значение, если \fI*ps\fP находится в
+начальном состоянии, или если \fIps\fP равно NULL. В противном случае
+возвращается 0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmbsinit\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBmbsinit\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmbrlen\fP(3), \fBmbrtowc\fP(3), \fBmbsrtowcs\fP(3), \fBwcrtomb\fP(3), \fBwcsrtombs\fP(3)

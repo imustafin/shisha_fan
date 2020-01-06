@@ -1,0 +1,130 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C), 1994, Graeme W. Wilford (Wilf).
+.\" and Copyright (C) 2010, 2014, 2015, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Fri Jul 29th 12:56:44 BST 1994  Wilf. <G.Wilford@ee.surrey.ac.uk>
+.\" Changes inspired by patch from Richard Kettlewell
+.\"   <richard@greenend.org.uk>, aeb 970616.
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETUID 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+setuid \- устанавливает идентификатор пользователя
+.SH ОБЗОР
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <unistd.h>\fP
+.PP
+\fBint setuid(uid_t \fP\fIuid\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBsetuid\fP() устанавливает эффективный идентификатор пользователя
+вызвавшего процесса. Если вызывающий процесс имеет права (мандат
+\fBCAP_SETUID\fP в своём пространстве имён пользователя), то также
+устанавливаются действительный и сохраненный идентификаторы пользователя.
+.PP
+В Linux \fBsetuid\fP() реализован как и в стандарте POSIX с возможностью
+\fB_POSIX_SAVED_IDS\fP. Это позволяет setuid\-программам (не setuid\-root)
+сбрасывать все привилегии, делать непривилегированную работу, а затем
+безопасным путём возвращать себе исходный эффективный идентификатор
+пользователя.
+.PP
+Если пользователь root или программа установлена как setuid root, при работе
+требуется особая осторожность: функция \fBsetuid\fP() проверяет эффективный
+идентификатор вызвавшего пользователя и, если это суперпользователь, то все
+устанавливаемые значения идентификаторов равны \fIuid\fP. После этого программа
+уже никаким образом не сможет вернуть права пользователя root.
+.PP
+Таким образом, программа, принадлежащая root и с установленным битом setuid,
+собирающаяся временно сбросить права root и поработать с правами
+непривилегированного пользователя, а затем восстановить права root, не
+сможет использовать \fBsetuid\fP(). Требуемого результата можно достичь с
+помощью вызова \fBseteuid\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.PP
+\fIЗамечание\fP: есть случаи, когда \fBsetuid\fP() может завершиться с ошибкой
+даже когда UID вызывающего равен 0; это серьёзная ошибка безопасности — не
+проверять возвращаемое значение \fBsetuid\fP().
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Вызов изменил бы настоящего реальный UID вызывающего (т. е. \fIuid\fP не
+совпадает с реальным UID вызывающего), но возникла временная ошибка при
+выделении памяти под необходимые структуры ядра.
+.TP 
+\fBEAGAIN\fP
+Значение \fIuid\fP не совпадает с реальным UID вызывающего и этот вызов создал
+был превышение количества процессов, принадлежащих пользователю с реальным
+ID \fIruid\fP сверх ограничителя ресурсы \fBRLIMIT_NPROC\fP вызывающего. Начиная с
+Linux 3.1 эта ошибка больше не возникает (но корректное приложение должно
+проверять эту ошибку); смотрите описание \fBEAGAIN\fP в \fBexecve\fP(2).
+.TP 
+\fBEINVAL\fP
+Идентификатор пользователя, заданный в \fIuid\fP, некорректен в этом
+пользовательском пространстве имён.
+.TP 
+\fBEPERM\fP
+Пользователь не является суперпользователем (Linux: нет мандата
+\fBCAP_SETUID\fP в пользовательском пространстве имён), а \fIuid\fP не совпадает с
+действительным или сохранённым идентификатором пользователя вызывающего
+процесса.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents an additional EINVAL error condition.
+POSIX.1\-2001, POSIX.1\-2008, SVr4. Этот системный вызов не полностью
+совместим с 4.4BSD, который устанавливает действительный, эффективный и
+сохранённый идентификаторы пользователя.
+.SH ЗАМЕЧАНИЯ
+Linux поддерживает идентификатор пользователя файловой системы, обычно
+совпадающий с эффективным идентификатором. Системный вызов \fBsetuid\fP() также
+устанавливает идентификатор пользователя файловой системы вызывающего
+процесса. См. \fBsetfsuid\fP(2).
+.PP
+Если \fIuid\fP отличается от старого эффективного идентификатора, то процессу
+нельзя будет создавать core\-файлы.
+.PP
+.\"
+Первоначальная версия системного вызова \fBsetuid\fP() в Linux поддерживала
+только 16\-битные идентификаторы пользователя. Позднее в Linux 2.4 был
+добавлен вызов \fBsetuid32\fP(), поддерживающий 32\-битные идентификаторы. В
+glibc обёрточная функция \fBsetuid\fP() работает одинаково вне зависимости от
+версий ядра.
+.SS "Отличия между библиотекой C и ядром"
+На уровне ядра ID пользователя и группы являются атрибутами нити. Однако в
+POSIX требуется, чтобы все нити в процессе имели одинаковые права. В
+реализации нитей NPTL требования POSIX реализованы через обёрточные функции
+для различных системных вызовов, которые изменяют UID и GID процесса. В этих
+функциях (включая и \fBsetuid\fP()) используется алгоритмы на основе сигналов,
+которые следят за тем, что когда у одной нити изменяются права, эти
+изменения выполняются и для остальных нитей процесса. Подробное описание
+смотрите в \fBnptl\fP(7).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetuid\fP(2), \fBseteuid\fP(2), \fBsetfsuid\fP(2), \fBsetreuid\fP(2),
+\fBcapabilities\fP(7), \fBcredentials\fP(7), \fBuser_namespaces\fP(7)

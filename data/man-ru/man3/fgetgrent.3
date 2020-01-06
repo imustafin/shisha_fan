@@ -1,0 +1,110 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 19:38:44 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FGETGRENT 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+fgetgrent \- возвращает запись из файла групп
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+\fB#include <sys/types.h>\fP
+\fB#include <grp.h>\fP
+.PP
+\fBstruct group *fgetgrent(FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfgetgrent\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _SVID_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBfgetgrent\fP() возвращает указатель на структуру, содержащую
+информацию о группах из файла, на который ссылается \fIstream\fP. Во время
+первого вызова функция возвращает первую запись; в дальнейшем она возвращает
+все последующие записи. Формат файла, на который указывает \fIstream\fP, должен
+быть таким же как у \fI/etc/group\fP (смотрите \fBgroup\fP(5)).
+.PP
+Структура \fIgroup\fP определена в \fI<grp.h>\fP следующим образом:
+.PP
+.in +4n
+.EX
+struct group {
+    char   *gr_name;        /* имя группы */
+    char   *gr_passwd;      /* пароль группы */
+    gid_t   gr_gid;         /* ID группы */
+    char  **gr_mem;         /* массив, указателей
+                               имён членов группы, оканчивающийся NULL */
+};
+.EE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBfgetgrent\fP() возвращает указатель на структуру \fIgroup\fP или NULL,
+если больше записей не найдено или произошла ошибка. При ошибке \fIerrno\fP
+присваивается соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для структуры \fIgroup\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfgetgrent\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:fgetgrent
+.TE
+.\" FIXME The marking is different from that in the glibc manual,
+.\" which has:
+.\"
+.\"    fgetgrent: MT-Unsafe race:fgrent
+.\"
+.\" We think race:fgrent in glibc may be hard for users to understand,
+.\" and have sent a patch to the GNU libc community for changing it to
+.\" race:fgetgrent, however, something about the copyright impeded the
+.\" progress.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBendgrent\fP(3), \fBfgetgrent_r\fP(3), \fBfopen\fP(3), \fBgetgrent\fP(3),
+\fBgetgrgid\fP(3), \fBgetgrnam\fP(3), \fBputgrent\fP(3), \fBsetgrent\fP(3), \fBgroup\fP(5)

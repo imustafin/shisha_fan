@@ -1,0 +1,100 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Mon Apr 12 12:51:24 1993, David Metcalfe
+.\" 2006-05-19, Justin Pryzby <pryzbyj@justinpryzby.com>
+.\"	Document strchrnul(3).
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STRCHR 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+strchr, strrchr, strchrnul \- определение местонахождения символа в строке
+.SH ОБЗОР
+.nf
+\fB#include <string.h>\fP
+.PP
+\fBchar *strchr(const char *\fP\fIs\fP\fB, int \fP\fIc\fP\fB);\fP
+.PP
+\fBchar *strrchr(const char *\fP\fIs\fP\fB, int \fP\fIc\fP\fB);\fP
+
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+\fB#include <string.h>\fP
+.PP
+\fBchar *strchrnul(const char *\fP\fIs\fP\fB, int \fP\fIc\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBstrchr\fP() возвращает указатель на местонахождение первого
+совпадения с символом \fIc\fP в строке \fIs\fP.
+.PP
+Функция \fBstrrchr\fP() возвращает указатель на местонахождение последнего
+совпадения с символом \fIc\fP в строке \fIs\fP.
+.PP
+Функция \fBstrchrnul\fP() подобна \fBstrchr\fP(), за исключением того, что если
+символ \fIc\fP не найден в строке \fIs\fP, то возвращается указатель на байт null
+в конце \fIs\fP, а не NULL.
+.PP
+Здесь под «символом» подразумевается «байт» — данные функции не работают с
+широкими и многобайтными символами.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBstrchr\fP() и \fBstrrchr\fP() возвращает указатель на местонахождение
+первого совпадения с символом или NULL, если символ не найден. Завершающий
+байт null считается частью строки, и поэтому, если символ \fIc\fP задан как
+\(aq\e0\(aq, то эти функции возвращают указатель на завершающий символ.
+.PP
+Функция \fBstrchrnul\fP() возвращает указатель на совпавший символ, или
+указатель на байт null в конце строки \fIs\fP (т.е., \fIs+strlen(s)\fP), если
+символ не найден.
+.SH ВЕРСИИ
+Функция \fBstrchrnul\fP() впервые появилась в glibc версии 2.1.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw32 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstrchr\fP(),
+\fBstrrchr\fP(),
+\fBstrchrnul\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBstrchr\fP(), \fBstrrchr\fP(): POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4,
+4.3BSD.
+.PP
+Функция \fBstrchrnul\fP() является расширением GNU.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBindex\fP(3), \fBmemchr\fP(3), \fBrindex\fP(3), \fBstring\fP(3), \fBstrlen\fP(3),
+\fBstrpbrk\fP(3), \fBstrsep\fP(3), \fBstrspn\fP(3), \fBstrstr\fP(3), \fBstrtok\fP(3),
+\fBwcschr\fP(3), \fBwcsrchr\fP(3)

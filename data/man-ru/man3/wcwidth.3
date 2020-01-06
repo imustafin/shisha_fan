@@ -1,0 +1,60 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCWIDTH 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wcwidth \- определяет количество колонок, необходимых для широкого символа
+.SH ОБЗОР
+.nf
+\fB#define _XOPEN_SOURCE\fP       /* см. feature_test_macros(7) */
+\fB#include <wchar.h>\fP
+.PP
+\fBint wcwidth(wchar_t \fP\fIc\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBwcwidth\fP() возвращает количество колонок, необходимое для
+представления широкого символа \fIc\fP. Если \fIc\fP это представимый широкий
+символ, то величина всегда больше 0. Если \fIc\fP это («\e0»), то возвращаемая
+величина равна 0. Иначе возвращается \-1.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBwcwidth\fP() возвращает количество колонок для \fIc\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwcwidth\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.PP
+Заметим, что в glibc до версии 2.2.5 использовался прототип
+.PP
+.nf
+\fBint wcwidth(wint_t \fP\fIc\fP\fB);\fP
+.fi
+.SH ЗАМЕЧАНИЯ
+Поведение \fBwcwidth\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBiswprint\fP(3), \fBwcswidth\fP(3)

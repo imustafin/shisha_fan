@@ -1,0 +1,71 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1999 SuSE GmbH Nuernberg, Germany
+.\" Author: Thorsten Kukuk <kukuk@suse.de>
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_3_PARA)
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of the
+.\" License, or (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+.\" General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 2008-12-05 Petr Baudis <pasky@suse.cz>
+.\"	Rewrite the NOTES section to reflect modern reality
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NSCD 8 2015\-05\-07 GNU "Руководство программиста Linux"
+.SH ИМЯ
+nscd \- программа кэширования службы имён
+.SH ОПИСАНИЕ
+\fBnscd\fP — это служба, которая кэширует наиболее частые запросы службы
+имён. По умолчанию, поведение службы кэша определяет файл с настройками
+\fI/etc/nscd.conf\fP. Смотрите \fBnscd.conf\fP(5).
+.PP
+\fBnscd\fP предоставляет кэшированный доступ к базам данных \fBpasswd\fP(5),
+\fBgroup\fP(5), \fBhosts\fP(5), \fBservices\fP(5) и \fInetgroup\fP через стандартные
+интерфейсы libc, такие как \fBgetpwnam\fP(3), \fBgetpwuid\fP(3), \fBgetgrnam\fP(3),
+\fBgetgrgid\fP(3), \fBgethostbyname\fP(3) и другие.
+.PP
+Для каждой базы есть два кэша: попаданий (для найденных элементов) и
+промахов (для ненайденных элементов). Каждый кэш имеет для своих данных
+отдельное TTL (time\-to\-live — время жизни). Заметим, что файл теневых
+паролей (shadow) специально не кэшируется. Вызовы \fBgetspnam\fP(3) оставляют
+результат некэшированным.
+.SH ПАРАМЕТРЫ
+.TP 
+\fB\-\-help\fP
+показать список всех параметров и для чего они предназначены.
+.SH ЗАМЕЧАНИЯ
+Служба пытается отслеживать изменения в файлах настройки для каждой базы
+данных (например \fI/etc/passwd\fP для базы данных \fIpasswd\fP или \fI/etc/hosts\fP
+и \fI/etc/resolv.conf\fP базы данных \fIhosts\fP), и очищает кэш при наличии
+изменений. Однако это происходит только после короткой задержки (если
+недоступен механизм \fBinotify\fP(7) и glibc 2.9 или новее), и данное
+автоматическое слежение не распространяется на файлы настройки нестандартных
+модулей NSS, если они указаны в \fI/etc/nsswitch.conf\fP. В этом случае, вам
+нужно запустить следующую команду после изменения файла настройки базы
+данных для того, чтобы \fBnscd\fP засчитал свой кэш недействительным:
+.PP
+.in +4n
+.EX
+$ \fBnscd \-i\fP \fI<база данных>\fP
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBnscd.conf\fP(5), \fBnsswitch.conf\fP(5)
+.\" .SH AUTHOR
+.\" .B nscd
+.\" was written by Thorsten Kukuk and Ulrich Drepper.

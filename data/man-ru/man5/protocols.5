@@ -1,0 +1,82 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1995 Martin Schulze <joey@infodrom.north.de>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 1995-10-18  Martin Schulze  <joey@infodrom.north.de>
+.\"	* first released
+.\" 2002-09-22  Seth W. Klein  <sk@sethwklein.net>
+.\"     * protocol numbers are now assigned by the IANA
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PROTOCOLS 5 2012\-08\-05 Linux "Руководство программиста Linux"
+.SH ИМЯ
+protocols \- файл определения протоколов
+.SH ОПИСАНИЕ
+Данный файл является простым файлом в кодировке ASCII и описывает различные
+протоколы DARPA internet, которые доступны через подсистему TCP/IP. Вместо
+того, чтобы использовать номера протоколов из заголовочных (include) файлов
+ARPA или, ещё хуже, строить догадки относительно номеров протоколов, нужно
+использовать данный файл. Номера протоколов присутствуют в поле протокола в
+любом IP\-заголовке.
+.PP
+.\" .. by the DDN Network Information Center.
+Не изменяйте этот файл, так как изменения могут привести к некорректному
+формированию IP\-пакетов. Номера протоколов и их имена определяются Центром
+Сетевой Информации (DDN Network Information Center).
+.PP
+Каждая строка файла имеет следующий формат:
+.PP
+.RS
+\fIпротокол номер псевдоним ...\fP
+.RE
+.PP
+Поля отделяются друг от друга пробелами или символами табуляции. Пустые
+строки игнорируются. Если строка содержит символ решётки (#), то он сам и
+часть строки, которая следует за этим символом, игнорируется.
+.PP
+Описание полей:
+.TP 
+\fIпротокол\fP
+Имя протокола. Например, \fIip\fP, \fItcp\fP или \fIudp\fP.
+.TP 
+\fIномер\fP
+Официальный номер этого протокола, который будет помещаться в IP\-заголовок.
+.TP 
+\fIпсевдонимы\fP
+Необязательные псевдонимы этого протокола.
+.PP
+Данный файл может распространяться по сети с помощью сетевых служб имён,
+таких как Yellow Pages/NIS или BIND/Hesiod.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/protocols\fP
+Файл определения протоколов.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetprotoent\fP(3)
+.PP
+.UR http://www.iana.org\:/assignments\:/protocol\-numbers
+.UE

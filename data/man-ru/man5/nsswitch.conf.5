@@ -1,0 +1,339 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1998, 1999 Thorsten Kukuk (kukuk@vt.uni-paderborn.de)
+.\" Copyright (c) 2011, Mark R. Bannister <cambridge@users.sourceforge.net>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NSSWITCH.CONF 5 2017\-05\-03 Linux "Руководство программиста Linux"
+.SH ИМЯ
+nsswitch.conf \- файл настроек диспетчера службы имён
+.SH ОПИСАНИЕ
+Файл настроек диспетчера службы имён (Name Service Switch, (NSS))
+\fI/etc/nsswitch.conf\fP используется библиотекой GNU C и другими приложениями
+для определения источников служб имён разных категорий и их
+очерёдности. Каждая категория информации обозначается по имени её базы
+данных.
+.PP
+Данный файл представляет собой простой текст в кодировке ASCII с колонками,
+разделёнными пробелами или символами табуляции. В первой колонке указывается
+имя базы данных. В оставшихся колонках задаётся порядок запросов к
+источникам и ограниченный набор действий, который может быть выполнен в
+зависимости от результата запроса.
+.PP
+Библиотека GNU C распознаёт следующие базы данных:
+.TP  12
+\fBaliases\fP
+Почтовые псевдонимы, используемые \fBgetaliasent\fP(3) и подобными функциями.
+.TP 
+\fBethers\fP
+Номера ethernet.
+.TP 
+\fBgroup\fP
+Группы пользователей, используемые \fBgetgrent\fP(3) и подобными функциями.
+.TP 
+\fBhosts\fP
+Имена узлов и номера, используемые \fBgethostbyname\fP(3) и подобными
+функциями.
+.TP 
+\fBinitgroups\fP
+Дополнительный список групп доступа, используется функцией
+\fBgetgrouplist\fP(3).
+.TP 
+\fBnetgroup\fP
+Список узлов и пользователей сети, используемый для правил
+доступа. Библиотеки C до версии glibc 2.1 поддерживают сетевые группы только
+посредством NIS.
+.TP 
+\fBnetworks\fP
+Имена сетей и номера, используемые \fBgetnetent\fP(3) и подобными функциями.
+.TP 
+\fBpasswd\fP
+Пароли пользователей, используемые \fBgetpwent\fP(3) и подобными функциями.
+.TP 
+\fBprotocols\fP
+Сетевые протоколы, используемые \fBgetprotoent\fP(3) и подобными функциями.
+.TP 
+\fBpublickey\fP
+Открытые и секретные ключи для Secure_RPC, используемые в NFS и NIS+.
+.TP 
+\fBrpc\fP
+Имена и номера вызовов удалённых процедур, используемые \fBgetrpcbyname\fP(3) и
+подобными функциями.
+.TP 
+\fBservices\fP
+Сетевые службы, используемые \fBgetservent\fP(3) и подобными функциями.
+.TP 
+\fBshadow\fP
+Теневые пароли пользователей, используемые \fBgetspnam\fP(3) и подобными
+функциями.
+.PP
+Библиотека GNU C игнорирует базы данных с неизвестными именами. Некоторые
+приложения используют это для реализации обработки своих баз
+данных. Например, \fBsudo\fP(8) обращается к базе данных \fBsudoers\fP.
+.PP
+Пример файла \fI/etc/nsswitch.conf\fP:
+.PP
+.in +4n
+.EX
+passwd:         compat
+group:          compat
+shadow:         compat
+
+hosts:          dns [!UNAVAIL=return] files
+networks:       nis [NOTFOUND=return] files
+ethers:         nis [NOTFOUND=return] files
+protocols:      nis [NOTFOUND=return] files
+rpc:            nis [NOTFOUND=return] files
+services:       nis [NOTFOUND=return] files
+.EE
+.in
+.PP
+В первой колонке содержится имя базы данных. В остальных колонках
+указывается:
+.IP * 3
+Одна или более служб, например, «files», «db» или «nis». Очерёдность служб в
+строке определяет порядок, в котором будут опрашиваться данные службы (пока
+не будет найден результат).
+.IP *
+Необязательные действия для выполнения, если получен определённый результат
+от предыдущей службы, например «[NOTFOUND=return]».
+.PP
+Список поддерживаемых системой служб зависит от наличия динамических
+библиотек (и, таким образом, расширяем). Библиотека с именем
+\fI/lib/libnss_СЛУЖБА.so.\fP\fBX\fP предоставляет службу \fIСЛУЖБА\fP. В стандартной
+установке вы можете использовать «files», «db», «nis» и «nisplus». Для базы
+данных \fBhosts\fP вы можете дополнительно указать «dns». Для баз данных
+\fBpasswd\fP, \fBgroup\fP и \fBshadow\fP вы можете дополнительно указать «compat»
+(см. \fBРежим совместимости\fP далее). Номер версии \fBX\fP может быть равен 1
+(для glibc 2.0) или 2 (для glibc 2.1 и новее). В системах с дополнительно
+установленными библиотеками могут быть другие службы, такие как «hesiod»,
+«ldap», «winbind» и «wins».
+.PP
+Также, после указания службы может быть указано действие. Действие изменяет
+дальнейшее поведение в зависимости от результата, полученного из предыдущего
+источника данных. Действия задаются следующим образом:
+.PP
+.RS 4
+[\fIСОСТОЯНИЕ\fP=\fIДЕЙСТВИЕ\fP]
+.br
+[!\fIСОСТОЯНИЕ\fP=\fIДЕЙСТВИЕ\fP]
+.RE
+.PP
+где
+.PP
+.RS 4
+\fIСОСТОЯНИЕ\fP => \fBsuccess\fP | \fBnotfound\fP | \fBunavail\fP | \fBtryagain\fP
+.br
+\fIДЕЙСТВИЕ\fP => \fBreturn\fP | \fBcontinue\fP | \fBmerge\fP
+.RE
+.PP
+Символ ! инвертирует результат теста, то есть совпадают все результаты,
+кроме указанного. Регистр символов ключевых слов не важен.
+.PP
+Значение \fIСОСТОЯНИЕ\fP — это результат вызова функции поиска заданной
+службы. Оно может принимать значения:
+.RS 4
+.TP  12
+\fBsuccess\fP
+Запрашиваемая запись найдена и ошибок не произошло. Для этого состояния
+действием по умолчанию является «return».
+.TP 
+\fBnotfound\fP
+Поиск выполнен, но нужная запись не была найдена. Для этого состояния
+действием по умолчанию является «continue».
+.TP 
+\fBunavail\fP
+Служба постоянно недоступна. Это может означать, что недоступен для чтения
+нужный  файл или, для сетевых служб, что сервер недоступен или не
+обслуживает запросы. Для этого состояния действием по умолчанию является
+«continue».
+.TP 
+\fBtryagain\fP
+Служба временно недоступна. Это может означать, что какой\-либо файл
+заблокирован или что в данный момент сервер не может принять больше
+соединений. Для этого состояния действием по умолчанию является «continue».
+.RE
+.PP
+Значением \fIДЕЙСТВИЕ\fP может быть одно из:
+.RS 4
+.TP  12
+\fBreturn\fP
+Вернуть результат. Не вызывать функции для дальнейшего поиска. Однако, с
+целью совместимости, если это действие указывается для базы данных \fBgroup\fP
+и состояние равно \fBnotfound\fP, и файл настройки не содержит строку
+\fBinitgroups\fP, то всегда вызывается следующая функция поиска, независимо от
+результата поиска.
+.TP 
+\fBcontinue\fP
+Вызвать следующую функцию поиска.
+.TP 
+\fBmerge\fP
+\fI[SUCCESS=merge]\fP используется между двумя записями базы данных. Если
+группа расположена в первой из двух записей групп, то обработка будет
+продолжена со следующей. Если группа также присутствует в следующей записи
+(имя группы и GID совпадают полностью), то список членов второй записи будет
+добавлен к возвращаемому объекту группы. Доступно начиная с glibc
+2.24. Заметим, что слияние не будет выполнено для \fBgetgrent\fP(3)
+повторяющиеся члены не будут удалены, если они присутствуют в обоих
+объединяемых записях.
+.RE
+.SS "Режим совместимости (compat)"
+Служба NSS «compat» подобна «files», за исключением того, что она позволяет
+иметь дополнительные специальные записи в соответствующих файлах для
+разграничения прав доступа пользователей и сетевых групп в системе. В этом
+режиме допустимы следующие записи:
+.RS 4
+.PP
+Для баз данных \fBpasswd\fP и \fBshadow\fP:
+.RS 4
+.TP  12
+\fB+\fP\fIпользователь\fP
+Включить указанного \fIпользователя\fP в карту NIS passwd/shadow.
+.TP 
+\fB+@\fP\fIсетевая группа\fP
+Включить всех пользователей в указанную \fIсетевую группу\fP.
+.TP 
+\fB\-\fP\fIпользователь\fP
+Исключить указанного \fIпользователя\fP из карты NIS passwd/shadow.
+.TP 
+\fB\-@\fP\fIсетевая группа\fP
+Исключить всех пользователей из указанной \fIсетевой группы\fP.
+.TP 
+\fB+\fP
+Включить каждого пользователя, за исключением исключённых ранее, в карту NIS
+passwd/shadow.
+.RE
+.PP
+Для базы данных \fBgroup\fP:
+.RS 4
+.TP  12
+\fB+\fP\fIгруппа\fP
+Включить указанную \fIгруппу\fP в карту NIS group.
+.TP 
+\fB\-\fP\fIгруппа\fP
+Исключить указанную \fIгруппу\fP из карты NIS group.
+.TP 
+\fB+\fP
+Включить каждую группу, за исключением исключённых ранее, в карту NIS group.
+.RE
+.RE
+.PP
+По умолчанию источником является «nis», но это можно изменить, указав любую
+службу NSS, за исключением самого «compat» в качестве источника псевдо\-базы
+данных \fBpasswd_compat\fP, \fBgroup_compat\fP и \fBshadow_compat\fP.
+.SH ФАЙЛЫ
+Каждая \fIСЛУЖБА\fP реализована в динамической объектной библиотеки с именем
+\fBlibnss_СЛУЖБА.so.\fP\fBX\fP, которая находится в каталоге \fI/lib\fP.
+.RS 4
+.TP  25
+.PD 0
+\fI/etc/nsswitch.conf\fP
+файл настройки NSS
+.TP 
+\fI/lib/libnss_compat.so.\fP\fBX\fP
+реализует источник «compat»
+.TP 
+\fI/lib/libnss_db.so.\fP\fBX\fP
+реализует источник «db»
+.TP 
+\fI/lib/libnss_dns.so.\fP\fBX\fP
+реализует источник «dns»
+.TP 
+\fI/lib/libnss_files.so.\fP\fBX\fP
+реализует источник «files»
+.TP 
+\fI/lib/libnss_hesiod.so.\fP\fBX\fP
+реализует источник «hesiod»
+.TP 
+\fI/lib/libnss_nis.so.\fP\fBX\fP
+реализует источник «nis»
+.TP 
+\fI/lib/libnss_nisplus.so.\fP\fBX\fP
+реализует источник «nisplus»
+.PD
+.RE
+.PP
+При указании в соответствующих базах источника «files», читаются следующие
+файлы:
+.RS 4
+.TP  12
+.PD 0
+\fBaliases\fP
+\fI/etc/aliases\fP
+.TP 
+\fBethers\fP
+\fI/etc/ethers\fP
+.TP 
+\fBgroup\fP
+\fI/etc/group\fP
+.TP 
+\fBhosts\fP
+\fI/etc/hosts\fP
+.TP 
+\fBinitgroups\fP
+\fI/etc/group\fP
+.TP 
+\fBnetgroup\fP
+\fI/etc/netgroup\fP
+.TP 
+\fBnetworks\fP
+\fI/etc/networks\fP
+.TP 
+\fBpasswd\fP
+\fI/etc/passwd\fP
+.TP 
+\fBprotocols\fP
+\fI/etc/protocols\fP
+.TP 
+\fBpublickey\fP
+\fI/etc/publickey\fP
+.TP 
+\fBrpc\fP
+\fI/etc/rpc\fP
+.TP 
+\fBservices\fP
+\fI/etc/services\fP
+.TP 
+\fBshadow\fP
+\fI/etc/shadow\fP
+.PD
+.RE
+.SH ЗАМЕЧАНИЯ
+Внутри каждого процесса, который использует файл \fBnsswitch.conf\fP, файл
+полностью читается только один раз. Если позднее файл был изменён, то
+процесс продолжит выполнение, используя старые настройки.
+.PP
+Изначально использовался только один источник служебной информации, часто в
+виде одного файла настройки (например, \fI/etc/passwd\fP). Однако, по мере
+того, как становились популярными другие службы, такие как служба сетевой
+информации (Network Information Service (NIS)) и служба доменных имён
+(Domain Name Service (DNS)), потребовался более гибкий способ определения
+порядка поиска вместо встроенного в библиотеку C. Для решения этой проблемы
+был создан диспетчер службы имён (Name Service Switch), основанный на
+механизме, использованном Sun Microsystems в C\-библиотеке Solaris 2.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetent\fP(1), \fBnss\fP(5)

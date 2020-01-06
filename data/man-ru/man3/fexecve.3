@@ -1,0 +1,139 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2006, 2014, Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FEXECVE 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+fexecve \- запускает программу, заданную файловым дескриптором
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBint fexecve(int \fP\fIfd\fP\fB, char *const \fP\fIargv\fP\fB[], char *const \fP\fIenvp\fP\fB[]);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfexecve\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+Функция \fBfexecve\fP() выполняет ту же задачу, что и \fBexecve\fP(2), только
+выполняемый файл указывается посредством файлового дескриптора \fIfd\fP, а не
+через путь к файлу. Файловый дескриптор \fIfd\fP должен быть открыт только для
+чтения (\fBO_RDONLY\fP) или иметь флаг \fBO_PATH\fP и вызывающий должен иметь
+право на выполнение файла, на который ссылается дескриптор.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBfexecve\fP() не возвращает управление. При ошибке
+функция возвращает выполнение с результатом \-1, а \fIerrno\fP устанавливает в
+соответствующее значение.
+.SH ОШИБКИ
+Возникают те же ошибки что и для \fBexecve\fP(2), а также дополнительно:
+.TP 
+\fBEINVAL\fP
+Значение \fIfd\fP не является правильным файловым дескриптором или \fIargv\fP
+равно NULL, или \fIenvp\fP равно NULL.
+.TP 
+\fBENOENT\fP
+На \fIfd\fP установлен флаг close\-on\-exec и  \fIfd\fP ссылается на
+сценарий. Смотрите ДЕФЕКТЫ.
+.TP 
+\fBENOSYS\fP
+Ядро не предоставляет системный вызов \fBexecveat\fP(2) и файловая система
+\fI/proc\fP недоступна.
+.SH ВЕРСИИ
+Функция \fBfexecve\fP() появилась в glibc 2.3.2.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfexecve\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2008. Эта функция не определена в POSIX.1\-2001 и широко не
+распространена среди других систем. Она определена в POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.\" glibc commit 43ffc53a352a67672210c9dd4959f6c6b7407e60
+В Linux c glibc с версией 2.26 и старее функция \fBfexecve\fP() реализована с
+использованием файловой системы \fBproc\fP(5), поэтому \fI/proc\fP должна быть
+смонтирована и доступна на момент вызова. Начиная с glibc 2.27, если
+используемое ядро поддерживает системный вызов \fBexecveat\fP(2), то
+\fBfexecve\fP() реализуется через этот системный вызов и \fI/proc\fP монтировать
+уже не нужно.
+.PP
+Предназначение \fBfexecve\fP() — позволить вызывающему проверить содержимое
+исполняемого файла (контрольную сумму) до запуска. Простого открытия файла,
+вычисления контрольной суммы содержимого и выполнения \fBexecve\fP(2)
+недостаточно, так как между двумя этими шагами может измениться имя файла
+или каталог пути (например, посредством изменения цели символьной
+ссылки). Функция \fBfexecve\fP() не решает проблему возможного изменения
+\fIсодержимого\fP файла между проверкой контрольной суммы и вызовом
+\fBfexecve\fP() — для этого есть права на файл, которые должны предотвращать
+его несанкционированное изменение.
+.PP
+Естественная идиома при использовании \fBfexecve\fP() — установить флаг
+закрытия\-при\-выполнении на \fIfd\fP для того, чтобы дескриптор файла не утекал
+выполняемой программе. Этот подход естественен по двум причинам. Во\-первых,
+это предотвращает трату дескрипторов файлов без надобности (выполняемой
+программе, обычно, не нужен дескриптор файла, который ссылается на саму
+программу). Во\-вторых, если \fBfexecve\fP() использовать рекурсивно, то
+применение флага закрытия\-при\-выполнении предотвращает исчерпание
+дескрипторов файлов, которое произошло бы, так как каждый шаг в рекурсии
+вызывает передачу ещё одного дескриптора файла новой программе (но смотрите
+ДЕФЕКТЫ).
+.SH ДЕФЕКТЫ
+Если \fIfd\fP ссылается на сценарий (т. е., это исполняемый текстовый файл, у
+которого в первой строке (начинается с \fI#!\fP) указан интерпретатор сценария
+и флаг закрытия\-при\-выполнении установлен на \fIfd\fP, то \fBfexecve\fP()
+завершается с ошибкой \fBENOENT\fP. Эта ошибка возникает потому, что на момент
+выполнения интерпретатора сценария \fIfd\fP уже закрыт, так как указан флаг
+закрытия\-при\-выполнении. Таким образом флаг закрытия\-при\-выполнении не может
+быть установлен \fIfd\fP, если он указывает на сценарий, так как это приводит к
+проблемам, описанным в ЗАМЕЧАНИЯХ.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBexecve\fP(2), \fBexecveat\fP(2)

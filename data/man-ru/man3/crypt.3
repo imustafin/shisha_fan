@@ -1,0 +1,242 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Michael Haardt (michael@cantor.informatik.rwth.aachen.de)
+.\"     Sat Sep  3 22:00:30 MET DST 1994
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Sun Feb 19 21:32:25 1995, faith@cs.unc.edu edited details away
+.\"
+.\" TO DO: This manual page should go more into detail how DES is perturbed,
+.\" which string will be encrypted, and what determines the repetition factor.
+.\" Is a simple repetition using ECB used, or something more advanced?  I hope
+.\" the presented explanations are at least better than nothing, but by no
+.\" means enough.
+.\"
+.\" added _XOPEN_SOURCE, aeb, 970705
+.\" added GNU MD5 stuff, aeb, 011223
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CRYPT 3 2018\-04\-30 "" "Руководство программиста Linux"
+.SH ИМЯ
+crypt, crypt_r \- шифрует пароль и данные
+.SH ОБЗОР
+.nf
+\fB#define _XOPEN_SOURCE\fP       /* См. feature_test_macros(7) */
+\fB#include <unistd.h>\fP
+.PP
+\fBchar *crypt(const char *\fP\fIkey\fP\fB, const char *\fP\fIsalt\fP\fB);\fP
+
+\fB#define _GNU_SOURCE\fP         /* смотрите feature_test_macros(7) */
+\fB#include <crypt.h>\fP
+.PP
+\fBchar *crypt_r(const char *\fP\fIkey\fP\fB, const char *\fP\fIsalt\fP\fB,\fP
+\fB              struct crypt_data *\fP\fIdata\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lcrypt\fP.
+.SH ОПИСАНИЕ
+\fBcrypt\fP() — функция шифрования пароля. Она основана на алгоритме стандарта
+шифрования данных (Data Encryption Standard) с различными расширениями,
+нацеленными (помимо прочего) на усложнение задачи поиска ключа при помощи
+специального оборудования.
+.PP
+\fIkey\fP — задаваемый пользователем пароль.
+.PP
+\fIsalt\fP (соль) — двухсимвольная строка, выбираемая из набора
+[\fBa\-zA\-Z0\-9./\fP]. Эта строка используется для направления алгоритма по
+одному из 4096\-и путей.
+.PP
+Если взять младшие 7 битов каждого из первых 8 символов \fIkey\fP, то
+получается 56\-битный ключ. Этот ключ используется для многократного
+шифрования константной строки (обычно строки, состоящей из символов
+«0»). Возвращаемое значение — указатель на зашифрованный пароль, серия из
+13\-и печатных ASCII\-символов (первые два символа содержат
+\fIsalt\fP). Возвращаемое значение указывает на статические данные, которые
+перезаписываются при каждом вызове.
+.PP
+Предупреждение: количество ключей равно
+.if  t 2\s-2\u56\s0\d
+.if  n 2**56
+т. е. существует 7.2e16 возможных вариантов. Полный перебор этого множестве
+возможен с помощью большого количества параллельных компьютеров. Программное
+обеспечение, такое, как \fBcrack\fP(1), способно отыскать часть ключей из этого
+множества, обычно используемых людьми для создания пароля. Поэтому в
+качестве пароля не стоит, как минимум, использовать простые слова и
+имена. Рекомендуется использовать программу \fBpasswd\fP(1), которая проверяет
+сложность пароля уже на стадии ввода.
+.PP
+Алгоритм DES имеет некоторые особенности, которые не позволяют использовать
+интерфейс \fBcrypt\fP() для чего\-то кроме аутентификации пользователя по
+паролю. Если вы планируете использовать интерфейс \fBcrypt\fP() в проекте
+шифрования, то лучше не делайте этого. Вместо этого возьмите хорошую книгу
+по шифрованию или одну из общедоступных библиотек DES.
+.PP
+Функция \fBcrypt_r\fP() является реентерабельной версией \fBcrypt\fP(). Для учёта
+и хранения результата в ней используется структура, на которую указывает
+\fIdata\fP. Перед первым вызовом \fBcrypt_r\fP() требуется выделить место под
+структуру и присвоить \fIdata\->initialized\fP значение 0.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращает указатель на шифрованный пароль. При
+ошибке возвращается NULL.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Значение \fIsalt\fP имеет неверный формат.
+.TP 
+\fBENOSYS\fP
+.\" This level of detail is not necessary in this man page. . .
+.\" .PP
+.\" When encrypting a plain text P using DES with the key K results in the
+.\" encrypted text C, then the complementary plain text P' being encrypted
+.\" using the complementary key K' will result in the complementary encrypted
+.\" text C'.
+.\" .PP
+.\" Weak keys are keys which stay invariant under the DES key transformation.
+.\" The four known weak keys 0101010101010101, fefefefefefefefe,
+.\" 1f1f1f1f0e0e0e0e and e0e0e0e0f1f1f1f1 must be avoided.
+.\" .PP
+.\" There are six known half weak key pairs, which keys lead to the same
+.\" encrypted data.  Keys which are part of such key clusters should be
+.\" avoided.
+.\" Sorry, I could not find out what they are.
+.\""
+.\" .PP
+.\" Heavily redundant data causes trouble with DES encryption, when used in the
+.\" .I codebook
+.\" mode that
+.\" .BR crypt ()
+.\" implements.  The
+.\" .BR crypt ()
+.\" interface should be used only for its intended purpose of password
+.\" verification, and should not be used as part of a data encryption tool.
+.\" .PP
+.\" The first and last three output bits of the fourth S-box can be
+.\" represented as function of their input bits.  Empiric studies have
+.\" shown that S-boxes partially compute the same output for similar input.
+.\" It is suspected that this may contain a back door which could allow the
+.\" NSA to decrypt DES encrypted data.
+.\" .PP
+.\" Making encrypted data computed using crypt() publicly available has
+.\" to be considered insecure for the given reasons.
+Функция \fBcrypt\fP() не реализована, возможно, из\-за запретов США на экспорт
+алгоритмов шифрования.
+.TP 
+\fBEPERM\fP
+Значение \fI/proc/sys/crypto/fips_enabled\fP не равно нулю, но делается попытка
+использовать нестойкий тип шифрования, такой как DES.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBcrypt\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:crypt
+T{
+\fBcrypt_r\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBcrypt\fP(): POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD. Функция \fBcrypt_r\fP()
+является расширением GNU.
+.SH ЗАМЕЧАНИЯ
+.SS "Доступность в glibc"
+Функции \fBcrypt\fP(), \fBencrypt\fP(3) и \fBsetkey\fP(3) являются частью
+POSIX.1\-2008 XSI Options Group for Encryption и необязательны. Если
+интерфейсы недоступны, то символическая константа \fB_XOPEN_CRYPT\fP или не
+определена, или имеет значение \-1 и доступность можно проверить во время
+выполнения с помощью \fBsysconf\fP(3). Такое может случиться, если дистрибутив
+переключился с glibc crypt на \fIlibxcrypt\fP. При перекомпиляции приложений в
+таких дистрибутивах программист должен проверять доступность \fB_XOPEN_CRYPT\fP
+и включать \fI<crypt.h>\fP с прототипами функций; в противном случае
+использовать \fIlibxcrypt\fP как ABI\-совместимую замену.
+.SS "Свойства в glibc"
+Версия этой функции, реализованная в glibc, содержит дополнительные
+алгоритмы шифрования.
+.PP
+Если \fIsalt\fP является строкой символов, начинающейся с «$\fIid\fP$», за которой
+следует строка, оканчивающаяся «$», то результатом будет:
+.RS
+.PP
+$\fIid\fP$\fIsalt\fP$\fIencrypted\fP
+.PP
+.RE
+В \fIid\fP указывается метод шифрования, используемый вместо DES; он определяет
+как понимать оставшуюся часть строки пароля. Поддерживаются следующие
+значения \fIid\fP:
+.RS
+.TS
+l l.
+ID  | Метод
+_
+1   | MD5
+2a  | Blowfish (нет в основной ветви glibc; добавлен в
+    | некоторых дистрибутивах Linux)
+.\" openSUSE has Blowfish, but AFAICS, this option is not supported
+.\" natively by glibc -- mtk, Jul 08
+.\"
+.\" md5 | Sun MD5
+.\" glibc doesn't appear to natively support Sun MD5; I don't know
+.\" if any distros add the support.
+5   | SHA\-256 (начиная с glibc 2.7)
+6   | SHA\-512 (начиная с glibc 2.7)
+.TE
+.RE
+.PP
+Таким образом, $5$\fIsalt\fP$\fIencrypted\fP и $6$\fIsalt\fP$\fIencrypted\fP содержат
+пароль, зашифрованный функциями на основе SHA\-256 и SHA\-512, соответственно.
+.PP
+Значение «\fIsalt\fP» представляет собой строку длиной до 16 символов,
+следующую после «$\fIid\fP$» в соли. Часть строки пароля «\fIencrypted\fP» —
+действительно вычисленный пароль. Размер этой строки постоянен:
+.TS
+l l.
+MD5     | 22 символа
+SHA\-256 | 43 символа
+SHA\-512 | 86 символов
+.TE
+.sp 1
+Символы в «\fIsalt\fP» и «\fIencrypted\fP» входят в диапазон [\fBa\-zA\-Z0\-9./\fP]. В
+реализациях MD5 и SHA учитывается всё значение \fIkey\fP (а не только первые 8
+байт как в DES).
+.PP
+.\" glibc commit 9425cb9eea6a62fc21d99aafe8a60f752b934b05
+Начиная с glibc 2.7, реализации SHA\-256 и SHA\-512 поддерживают задаваемое
+пользователем количество циклов хеширования, по умолчанию 5000. Если символы
+"$\fIid\fP$" в соли указываются после "rounds=\fIxxx\fP$", где \fIxxx\fP целое, то
+результат имеет вид
+.RS
+.PP
+$\fIid\fP$\fIrounds=yyy\fP$\fIsalt\fP$\fIencrypted\fP
+.PP
+.RE
+где \fIyyy\fP — используемое количество циклов хеширования. Количество циклов
+равно 1000, если значение \fIxxx\fP меньше 1000, 999999999, если \fIxxx\fP больше
+999999999, и равно \fIxxx\fP в остальных случаях.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlogin\fP(1), \fBpasswd\fP(1), \fBencrypt\fP(3), \fBgetpass\fP(3), \fBpasswd\fP(5)

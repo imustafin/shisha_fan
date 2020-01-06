@@ -1,0 +1,87 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"
+.\" Copyright (C) 2014 Red Hat, Inc. All Rights Reserved.
+.\" Written by David Howells (dhowells@redhat.com)
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_ONEPARA)
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version
+.\" 2 of the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SESSION\-KEYRING 7 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+session\-keyring \- общая сеансовая связка ключей процесса
+.SH ОПИСАНИЕ
+Связка ключей сеанса — это связка ключей для привязки ключей от имени
+процесса. Обычно, она создаётся \fBpam_keyinit\fP(8) при входе пользователя в
+систему и добавляется связь, на которую указывает \fBuser\-keyring\fP(7). Также,
+PAM может отозвать связку ключей сеанса при выходе пользователя (обычно, PAM
+так и делает). Связка ключей сеанса имеет имя (описание) \fI_ses\fP.
+.PP
+Существует специальный серийный номер, \fBKEY_SPEC_SESSION_KEYRING\fP, который
+можно указывать вместо реального серийного номера связки ключей сеанса
+вызывающего процесса.
+.PP
+В утилите \fBkeyctl\fP(1) подобным образом можно использовать «\fB@s\fP» вместо
+числового идентификатора ключа.
+.PP
+Связка ключей сеанса процесса наследуется при вызове \fBclone\fP(2), \fBfork\fP(2)
+и \fBvfork\fP(2). Связка ключей сеанса сохраняется при вызове \fBexecve\fP(2),
+даже когда исполняемый файл содержит биты set\-user\-ID и set\-group\-ID или
+имеет другие мандаты. Связка ключей сеанса уничтожается когда завершается
+последний ссылающийся на неё процесс.
+.PP
+Если процесс при обращении не имеет связки ключей сеанса, то в одних
+случаях, в качестве связке ключей сеанса будет присоединена
+\fBuser\-session\-keyring\fP(7), а в других будет создана новая связка ключей
+сеанса (подробности смотрите в \fBuser\-session\-keyring\fP(7)).
+.SS "Специальные операции"
+Библиотека \fIkeyutils\fP предоставляет следующие операции для работы со
+связками ключей сеанса:
+.TP 
+\fBkeyctl_join_session_keyring\fP(3)
+Данная операция позволяет вызывающему изменить связку ключей сеанса, на
+которую он подписан. Вызывающий может присоединить существующую связку
+ключей с заданным именем (описанием), создать новую связку ключей с заданным
+именем или попросить ядро создать новую «анонимную» связку ключей сеанса с
+именем «_ses» (данная функция является интерфейсом к \fBkeyctl\fP(2) с
+операцией \fBKEYCTL_JOIN_SESSION_KEYRING\fP).
+.TP 
+\fBkeyctl_session_to_parent\fP(3)
+Данная операция позволяет вызывающему сделать связку ключей сеанса родителя
+своей собственной. Для успешного выполнения родительский процесс должен
+иметь такие же атрибуты безопасности и состоять из одной нити (данная
+операция является интерфейсом к \fBkeyctl\fP(2) с операцией
+\fBKEYCTL_SESSION_TO_PARENT\fP).
+.PP
+Эти операции также доступны через утилиту \fBkeyctl\fP(1):
+.PP
+.in +4n
+.EX
+keyctl session
+keyctl session \- [<прог> <арг1> <арг2> …]
+keyctl session <имя> [<прог> <арг1> <арг2> …]
+.EE
+.in
+.PP
+и
+.PP
+.in +4n
+.EX
+keyctl new_session
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBkeyctl\fP(1), \fBkeyctl\fP(3), \fBkeyctl_join_session_keyring\fP(3),
+\fBkeyctl_session_to_parent\fP(3), \fBkeyrings\fP(7), \fBpersistent\-keyring\fP(7),
+\fBprocess\-keyring\fP(7), \fBthread\-keyring\fP(7), \fBuser\-keyring\fP(7),
+\fBuser\-session\-keyring\fP(7), \fBpam_keyinit\fP(8)

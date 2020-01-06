@@ -1,0 +1,73 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Michael Haardt, Ian Jackson.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Wed Jul 21 19:42:57 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sun Jul 21 21:25:26 1996 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified Wed Nov  6 03:46:05 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ALARM 2 2017\-05\-03 Linux "Руководство программиста Linux"
+.SH ИМЯ
+alarm \- установка будильника для доставки сигнала
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBunsigned int alarm(unsigned int \fP\fIseconds\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBalarm\fP() размещает сигнал \fBSIGALRM\fP для доставки
+вызывающему процессу через \fIseconds\fP секунд.
+.PP
+Если значение \fIseconds\fP равно 0, то любой ожидающий будильник будет
+отменён.
+.PP
+При любом событии ранее запланированный \fBalarm\fP() отменяется.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+\fBalarm\fP() возвращает количество секунд, оставшихся до момента доставки
+сигнала, запланированного ранее, или ноль, если сигнал не запланирован.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+\fBalarm\fP() и \fBsetitimer\fP(2) используют один и тот же таймер; они будут
+мешать работе друг друга.
+.PP
+Будильники, созданные \fBalarm\fP(), сохраняются при выполнении \fBexecve\fP(2) и
+не наследуются потомками, созданными с помощью \fBfork\fP(2).
+.PP
+\fBsleep\fP(3) может быть реализован через \fBSIGALRM\fP, поэтому лучше не
+использовать \fBalarm\fP() и \fBsleep\fP(3) одновременно.
+.PP
+Постановка сигнала в очередь может вызывать задержу выполнения вызвавшего
+процесса на произвольное время.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgettimeofday\fP(2), \fBpause\fP(2), \fBselect\fP(2), \fBsetitimer\fP(2),
+\fBsigaction\fP(2), \fBsignal\fP(2), \fBtimer_create\fP(2), \fBtimerfd_create\fP(2),
+\fBsleep\fP(3), \fBtime\fP(7)

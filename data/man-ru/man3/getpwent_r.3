@@ -1,0 +1,185 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2003 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETPWENT_R 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getpwent_r, fgetpwent_r \- получает запись из файла паролей (реентерабельные
+версии)
+.SH ОБЗОР
+.nf
+\fB#include <pwd.h>\fP
+.PP
+\fBint getpwent_r(struct passwd *\fP\fIpwbuf\fP\fB, char *\fP\fIbuf\fP\fB,\fP
+\fB               size_t \fP\fIbuflen\fP\fB, struct passwd **\fP\fIpwbufp\fP\fB);\fP
+.PP
+\fBint fgetpwent_r(FILE *\fP\fIstream\fP\fB, struct passwd *\fP\fIpwbuf\fP\fB, char *\fP\fIbuf\fP\fB,\fP
+\fB                size_t \fP\fIbuflen\fP\fB, struct passwd **\fP\fIpwbufp\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgetpwent_r\fP(),
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE || _SVID_SOURCE
+.br
+\fBfgetpwent_r\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _SVID_SOURCE
+.SH ОПИСАНИЕ
+Функции \fBgetpwent_r\fP() и \fBfgetpwent_r\fP() являются реентерабельными
+версиями \fBgetpwent\fP(3) и \fBfgetpwent\fP(3). Первая читает следующую запись
+паролей из потока, инициализированного \fBsetpwent\fP(3). Последняя читает
+следующую запись паролей из потока \fIstream\fP.
+.PP
+Структура \fIpasswd\fP определена в \fI<pwd.h>\fP следующим образом:
+.PP
+.in +4n
+.EX
+struct passwd {
+    char   *pw_name;       /* имя пользователя */
+    char   *pw_passwd;     /* пароль пользователя */
+    uid_t   pw_uid;        /* идентификатор пользователя */
+    gid_t   pw_gid;        /* идентификатор группы */
+    char   *pw_gecos;      /* информация о пользователе */
+    char   *pw_dir;        /* домашний каталог */
+    char   *pw_shell;      /* программная оболочка */
+};
+.EE
+.in
+.PP
+Подробней о полях этой структуры смотрите в \fBpasswd\fP(5).
+.PP
+Нереентерабельные версии возвращают указатель на статическое хранилище, в
+котором хранятся другие указатели на имя пользователя, пароль, поле gecos,
+домашний каталог и оболочку. Реентерабельные функции, описанные здесь,
+возвращают всю информацию в буферах, предоставленных вызывающим. Основным
+буфером является \fIpwbuf\fP, в котором может храниться \fIstruct passwd\fP. В
+дополнительном буфере \fIbuf\fP размера \fIbuflen\fP могут храниться
+дополнительные строки. Результат этих функций, прочитанная из потока
+\fIstruct passwd\fP, сохраняется в предоставляемый буфер \fI*pwbuf\fP, и указатель
+на эту \fIstruct passwd\fP возвращается в \fI*pwbufp\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0 и \fI*pwbufp\fP указывает на
+\fIstruct passwd\fP. При ошибке возвращается значение ошибки и \fI*pwbufp\fP равен
+NULL.
+.SH ОШИБКИ
+.TP 
+\fBENOENT\fP
+Больше записей нет.
+.TP 
+\fBERANGE\fP
+Недостаточно места в буфере. Попробуйте ещё раз с большим буфером.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw27
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetpwent_r\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:pwent locale
+T{
+\fBfgetpwent_r\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+В приведённой выше таблице \fIpwent\fP в \fIrace:pwent\fP означает, что если в
+нескольких нитях программы одновременно используются функции \fBsetpwent\fP(),
+\fBgetpwent\fP(), \fBendpwent\fP() или \fBgetpwent_r\fP(), то может возникнуть
+состязательность по данным.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU; они выполнены похожими на
+POSIX\-версию функции \fBgetpwnam_r\fP(3). В других системах используется
+прототип
+.PP
+.in +4n
+.EX
+struct passwd *
+getpwent_r(struct passwd *pwd, char *buf, int buflen);
+.EE
+.in
+.PP
+или, лучше,
+.PP
+.in +4n
+.EX
+int
+getpwent_r(struct passwd *pwd, char *buf, int buflen,
+           FILE **pw_fp);
+.EE
+.in
+.SH ЗАМЕЧАНИЯ
+Функция \fBgetpwent_r\fP() не совсем реентерабельна, так как она использует
+общую позицию чтения в потоке с другими нитями.
+.SH ПРИМЕР
+.EX
+#define _GNU_SOURCE
+#include <pwd.h>
+#include <stdio.h>
+#define BUFLEN 4096
+
+int
+main(void)
+{
+    struct passwd pw, *pwp;
+    char buf[BUFLEN];
+    int i;
+
+    setpwent();
+    while (1) {
+        i = getpwent_r(&pw, buf, BUFLEN, &pwp);
+        if (i)
+            break;
+        printf("%s (%d)\etHOME %s\etSHELL %s\en", pwp\->pw_name,
+               pwp\->pw_uid, pwp\->pw_dir, pwp\->pw_shell);
+    }
+    endpwent();
+    exit(EXIT_SUCCESS);
+}
+.EE
+.\" perhaps add error checking - should use strerror_r
+.\" #include <errno.h>
+.\" #include <stdlib.h>
+.\"         if (i) {
+.\"               if (i == ENOENT)
+.\"                     break;
+.\"               printf("getpwent_r: %s", strerror(i));
+.\"               exit(EXIT_SUCCESS);
+.\"         }
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfgetpwent\fP(3), \fBgetpw\fP(3), \fBgetpwent\fP(3), \fBgetpwnam\fP(3),
+\fBgetpwuid\fP(3), \fBputpwent\fP(3), \fBpasswd\fP(5)

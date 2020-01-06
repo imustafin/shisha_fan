@@ -1,0 +1,248 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Giorgio Ciucci (giorgio@crcc.it)
+.\" and Copyright 2004, 2005 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Tue Oct 22 08:11:14 EDT 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Sun Feb 18 01:59:29 2001 by Andries E. Brouwer <aeb@cwi.nl>
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on CAP_IPC_OWNER requirement
+.\" Modified, 17 Jun 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on CAP_SYS_ADMIN requirement for IPC_SET and IPC_RMID
+.\" Modified, 11 Nov 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Language and formatting clean-ups
+.\"	Added msqid_ds and ipc_perm structure definitions
+.\" 2005-08-02, mtk: Added IPC_INFO, MSG_INFO, MSG_STAT descriptions
+.\" 2018-03-20, dbueso: Added MSG_STAT_ANY description.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MSGCTL 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+msgctl \- операции для работы с сообщениями System V
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/ipc.h>\fP
+\fB#include <sys/msg.h>\fP
+.PP
+\fBint msgctl(int \fP\fImsqid\fP\fB, int \fP\fIcmd\fP\fB, struct msqid_ds *\fP\fIbuf\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBmsgctl\fP() выполняет операцию, заданную в \fIcmd\fP, над очередью
+сообщений System\ V с идентификатором \fImsqid\fP.
+.PP
+Структура данных \fImsqid_ds\fP определена в \fI<sys/msg.h>\fP следующим
+образом:
+.PP
+.in +4n
+.EX
+struct msqid_ds {
+    struct ipc_perm msg_perm;     /* владелец и права */
+    time_t          msg_stime;    /* время последнего msgsnd(2) */
+    time_t          msg_rtime;    /* время последнего msgrcv(2) */
+    time_t          msg_ctime;    /* время последнего изменения */
+    unsigned long   __msg_cbytes; /* текущее количество байт в
+                                     очереди (нет в стандарте) */
+    msgqnum_t       msg_qnum;     /* текущее количество сообщений
+                                     в очереди */
+    msglen_t        msg_qbytes;   /* максимальное количество байт
+                                     для очереди */
+    pid_t           msg_lspid;    /* PID последнего msgsnd(2) */
+    pid_t           msg_lrpid;    /* PID последнего msgrcv(2) */
+};
+.EE
+.in
+.PP
+Структура \fIipc_perm\fP определена следующим образом (значения полей
+устанавливаются с помощью \fBIPC_SET\fP):
+.PP
+.in +4n
+.EX
+struct ipc_perm {
+    key_t          __key;       /* ключ, передаваемый в msgget(2) */
+    uid_t          \fBuid\fP;         /* эффективный UID владельца */
+    gid_t          \fBgid\fP;         /* эффективный GID владельца */
+    uid_t          cuid;        /* эффективный UID создателя */
+    gid_t          cgid;        /* эффективный GID создателя */
+    unsigned short \fBmode\fP;        /* права */
+    unsigned short __seq;       /* порядковый номер */
+};
+.EE
+.in
+.PP
+Возможные значения \fIcmd\fP:
+.TP 
+\fBIPC_STAT\fP
+Копирует информацию из структуры данных ядра, связанной с \fImsqid\fP, в
+структуру \fImsqid_ds\fP, расположенную по адресу \fIbuf\fP. Вызывающий должен
+иметь права на чтение очереди сообщений.
+.TP 
+\fBIPC_SET\fP
+Записывает значения некоторых полей структуры \fImsqid_ds\fP, адрес которой
+указан в \fIbuf\fP, в структуру данных ядра, связанную с этой очередью
+сообщений, обновляя при этом её поле \fImsg_ctime\fP. Обновляются следующие
+поля структуры: \fImsg_qbytes\fP, \fImsg_perm.uid\fP, \fImsg_perm.gid\fP и
+\fImsg_perm.mode\fP (младшие 9 бит). Эффективный UID вызывающего процесса
+должен совпадать с идентификатором владельца (\fImsg_perm.uid\fP) или создателя
+(\fImsg_perm.cuid\fP) очереди сообщений, или вызывающий должен иметь
+привилегии. Для указания значения \fImsg_qbytes\fP большего чем значение
+системного параметра \fBMSGMNB\fP также требуются соответствующие привилегии
+(Linux: мандат \fBCAP_SYS_RESOURCE\fP).
+.TP 
+\fBIPC_RMID\fP
+Немедленно удаляет очередь сообщений, «будя» все процессы, ожидающие записи
+или чтения этой очереди (при этом возвращается ошибка, а переменная \fIerrno\fP
+приобретает значение \fBEIDRM\fP). Вызывающий процесс должен иметь
+соответствующие привилегии или его эффективный идентификатор пользователя
+должен совпадать с идентификатором создателя или владельца очереди
+сообщений. Третий аргумент \fBmsgctl\fP() в этом случае игнорируется.
+.TP 
+\fBIPC_INFO\fP (есть только в Linux)
+Возвращает параметры и информацию о системных максимальных значениях очереди
+сообщений в структуре, указанной в \fIbuf\fP. Данная структура имеет тип
+\fImsginfo\fP (то есть, требуется приведение типов) и определена в
+\fI<sys/msg.h>\fP, если определён макрос тестирования свойств
+\fB_GNU_SOURCE\fP:
+.IP
+.in +4n
+.EX
+struct msginfo {
+    int msgpool; /* размер в килобайтах буферного пула,
+                    используемого для хранения данных сообщения;
+                    ядром не используется */
+    int msgmap;  /* максимальное количество элементов в карте
+                    сообщений; ядром не используется */
+    int msgmax;  /* максимальное количество байт, которые могут быть
+                    записаны в одно сообщение */
+    int msgmnb;  /* максимальное количество байт, которое можно
+                    записать в очередь; используется для инициализации
+                    msg_qbytes во время создания очереди
+                    (msgget(2)) */
+    int msgmni;  /* максимальное количество очередей сообщений */
+    int msgssz;  /* размер сегмента сообщения;
+                    ядром не используется */
+    int msgtql;  /* максимальное количество сообщений во всех очередях
+                    в системе; ядром не используется */
+    unsigned short int msgseg;
+                 /* максимальное количество сегментов;
+                    ядром не используется */
+};
+.EE
+.in
+.IP
+Значения \fImsgmni\fP, \fImsgmax\fP и \fImsgmnb\fP можно изменить с помощью файлов в
+\fI/proc\fP с теми же именами; подробней смотрите \fBproc\fP(5).
+.TP 
+\fBMSG_INFO\fP (есть только в Linux)
+Возвращает структуру \fImsginfo\fP, содержащую такую же информацию что и при
+операции \fBIPC_INFO\fP, за исключением того, что возвращаемые значения полей
+содержат информацию о системных ресурсах, потребляемых очередями сообщений:
+в поле \fImsgpool\fP возвращается количество очередей сообщений, которые в
+данный момент находятся в системе; в поле \fImsgmap\fP возвращается общее
+количество сообщений во всех очередях системы; в поле \fImsgtql\fP возвращается
+общее количество байт во всех сообщениях во всех очередях системы.
+.TP 
+\fBMSG_STAT\fP (есть только в Linux)
+Возвращает структуру \fImsqid_ds\fP как в операции \fBIPC_STAT\fP. Однако аргумент
+\fImsqid\fP является не уникальным идентификатором, а индексом во внутреннем
+массиве ядра, в котором содержится информации о всех очередях сообщений в
+системе.
+.TP 
+\fBMSG_STAT_ANY\fP (есть только в Linux, начиная с Linux 4.17)
+Возвращает структуру \fImsqid_ds\fP как для \fBMSG_STAT\fP. Однако
+\fImsg_perm.mode\fP не проверяется на доступность чтения для \fImsqid\fP, что
+означает, что эту операцию может выполнять пользователь (как и любой
+пользователь, который может прочитать эту же информацию из
+\fI/proc/sysvipc/msg\fP).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBIPC_STAT\fP, \fBIPC_SET\fP и \fBIPC_RMID\fP возвращается
+0. При успешном выполнении операции \fBIPC_INFO\fP или \fBMSG_INFO\fP возвращается
+индекс самого последнего использованного элемента во внутреннем массиве
+ядра, в котором записана информация о всех очередях сообщений. (Эта
+информация может быть использована при повторяющихся операциях \fBMSG_STAT\fP и
+\fBMSG_STAT_ANY\fP для получения информации о всех очередях системы.) При
+успешном выполнении операции \fBMSG_STAT\fP или \fBMSG_STAT_ANY\fP возвращается
+идентификатор очереди, чей индекс был указан в \fImsqid\fP.
+.PP
+В случае ошибки возвращается \-1, а в \fIerrno\fP записывается значение ошибки.
+.SH ОШИБКИ
+В случае возникновения ошибки \fIerrno\fP может принимать следующие значения:
+.TP 
+\fBEACCES\fP
+Значение аргумента \fIcmd\fP равно \fBIPC_STAT\fP или \fBMSG_STAT\fP, но вызывающий
+процесс не имеет прав на чтение очереди сообщений \fImsqid\fP, и не имеет
+мандата \fBCAP_IPC_OWNER\fP в пространстве имён пользователя, которое управляет
+его пространством имён IPC.
+.TP 
+\fBEFAULT\fP
+Значение аргумента \fIcmd\fP равно \fBIPC_SET\fP или \fBIPC_STAT\fP, но адрес,
+указанный в \fIbuf\fP, недоступен.
+.TP 
+\fBEIDRM\fP
+Очередь сообщений была удалена.
+.TP 
+\fBEINVAL\fP
+Неверное значение \fIcmd\fP или \fImsqid\fP. Или: для операции \fBMSG_STAT\fP
+значение индекса, указанного в \fImsqid\fP, ссылается на слот массива, который
+в данный момент не используется.
+.TP 
+\fBEPERM\fP
+Значение аргумента \fIcmd\fP равно \fBIPC_SET\fP или \fBIPC_RMID\fP, но эффективный
+пользовательский идентификатор вызывающего процесса не равен идентификатору
+создателя (\fImsg_perm.cuid\fP) или владельца (\fImsg_perm.uid\fP) очереди
+сообщений, и вызывающий не имеет прав (Linux: не имеет мандата
+\fBCAP_SYS_ADMIN\fP).
+.TP 
+\fBEPERM\fP
+Была предпринята попытка (\fBIPC_SET\fP) увеличить \fImsg_qbytes\fP и нарушить
+границы системного параметра \fBMSGMNB\fP, но вызывающий не имеет прав (Linux:
+не имеет мандата \fBCAP_SYS_RESOURCE\fP).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVID does not document the EIDRM error condition.
+POSIX.1\-2001, POSIX.1\-2008, SVr4.
+.SH ЗАМЕЧАНИЯ
+.\" Like Linux, the FreeBSD man pages still document
+.\" the inclusion of these header files.
+Включение файлов \fI<sys/types.h>\fP и \fI<sys/ipc.h>\fP не
+требуется в Linux или любых версий POSIX. Однако, некоторые старые
+реализации требуют включения данных заголовочных файлов, и это также
+требуется по SVID. В приложениях, которые нужно перенести на такие старые
+системы, может потребоваться включить данных заголовочные файлы.
+.PP
+Операции \fBIPC_INFO\fP, \fBMSG_STAT\fP и \fBMSG_INFO\fP используются программой
+\fBipcs\fP(1) для получения информации о выделенных ресурсах. В будущем для
+этого может быть задействован интерфейс файловой системы \fI/proc\fP.
+.PP
+Различные поля в \fIstruct msqid_ds\fP, которые имели тип \fIshort\fP в Linux 2.2,
+в Linux 2.4 теперь имеют тип \fIlong\fP. Чтобы воспользоваться этим
+преимуществом достаточно пересобрать программу с glibc\-2.1.91 или более
+новой версией. (Ядро различает старые и новые вызовы по флагу \fBIPC_64\fP в
+\fIcmd\fP.)
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmsgget\fP(2), \fBmsgrcv\fP(2), \fBmsgsnd\fP(2), \fBcapabilities\fP(7),
+\fBmq_overview\fP(7), \fBsysvipc\fP(7)

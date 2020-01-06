@@ -1,0 +1,111 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" @(#)des_crypt.3	2.1 88/08/11 4.0 RPCSRC; from 1.16 88/03/02 SMI;
+.\"
+.\" Taken from libc4 sources, which say:
+.\" Copyright (C) 1993 Eric Young - can be distributed under GPL.
+.\"
+.\" However, the above header line suggests that this file in fact is
+.\" Copyright Sun Microsystems, Inc (and is provided for unrestricted use,
+.\" see other Sun RPC sources).
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" can be distributed under GPL.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DES_CRYPT 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+des_crypt, ecb_crypt, cbc_crypt, des_setparity, DES_FAILED \- быстрое
+шифрование DES
+.SH ОБЗОР
+.nf
+.\" Sun version
+.\" .B #include <des_crypt.h>
+\fB#include <rpc/des_crypt.h>\fP
+.PP
+\fBint ecb_crypt(char *\fP\fIkey\fP\fB, char *\fP\fIdata\fP\fB, unsigned \fP\fIdatalen\fP\fB,\fP
+\fB              unsigned \fP\fImode\fP\fB);\fP
+.PP
+\fBint cbc_crypt(char *\fP\fIkey\fP\fB, char *\fP\fIdata\fP\fB, unsigned \fP\fIdatalen\fP\fB,\fP
+\fB              unsigned \fP\fImode\fP\fB, char *\fP\fIivec\fP\fB);\fP
+.PP
+\fBvoid des_setparity(char *\fP\fIkey\fP\fB);\fP
+.PP
+\fBint DES_FAILED(int \fP\fIstatus\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+В функциях \fBecb_crypt\fP() и \fBcbc_crypt\fP() реализован стандарт шифрования
+данных NBS DES (Data Encryption Standard). Они более быстры и имеют более
+широкое предназначение, чем \fBcrypt\fP(3). Также они могут использовать (при
+наличии) оборудование DES. Функция \fBecb_crypt\fP() шифрует данные в режиме
+ECB (Electronic Code Book), при котором блоки данных шифруются независимо
+друг от друга. Функция \fBcbc_crypt\fP() шифрует данные в режиме CBC (Cipher
+Block Chaining), при котором вместе связываются рядом стоящие блоки. Режим
+CBC защищает от вставки, удаления или подмены блоков. Также повторяющиеся
+отрезки простого текста не появятся в зашифрованном в таком режиме коде.
+.PP
+Рассмотрим применение этих функций. Первый параметр, \fIkey\fP, является
+8\-байтным ключом шифрования с чётностью. Для установки чётности ключа,
+которая для DES находится в младшем бите каждого байта, используйте
+\fBdes_setparity\fP. Второй параметр, \fIdata\fP, содержит данные для шифрования
+или расшифровки. Третий параметр, \fIdatalen\fP, задаёт длину блока данных
+\fIdata\fP в байтах, длина должна быть кратна 8. Четвертый параметр, \fImode\fP,
+формируется через логическое сложение (OR) нескольких вещей. Чтобы указать
+тип операции добавляется либо \fBDES_ENCRYPT\fP, либо \fBDES_DECRYPT\fP. Чтобы
+применить программное шифрование или использовать специальное оборудование,
+добавляется либо \fBDES_HW\fP, либо \fBDES_SW\fP. Если указано \fBDES_HW\fP и
+оборудование не обнаружено, то шифрование выполняется в программном режиме,
+а функция возвращает \fBDESERR_NOHWDEVICE\fP. В \fBcbc_crypt\fP() параметр \fIivec\fP
+используется как 8\-байтовый вектор инициализации для шифрования цепочек. Он
+обновляется на следующий вектор инициализации при возврате.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.PD 0
+.TP  20
+\fBDESERR_NONE\fP
+Нет ошибок.
+.TP 
+\fBDESERR_NOHWDEVICE\fP
+Шифрование выполнено, но использовался программный метод, так как не было
+обнаружено запрошенное оборудование шифрования.
+.TP 
+\fBDESERR_HWERROR\fP
+Ошибка в оборудовании или драйвере.
+.TP 
+\fBDESERR_BADPARAM\fP
+Некорректный параметр функции.
+.PD
+.PP
+.\" .BR DES_FAILED\c
+.\" .BR ( stat )
+.\" So far the Sun page
+.\" Some additions - aeb
+Указывая итоговое состояние \fIstat\fP, значение макроса
+\fBDES_FAILED(\fP\fIstat\fP\fB)\fP будет ложно только для первых двух состояний.
+.SH ВЕРСИИ
+Эти функции присутствуют в glibc 2.1 и более новых.
+.SH ВЕРСИИ
+Функции \fBecb_crypt\fP(), \fBecb_crypt\fP(), \fBcrypt_r\fP() и \fBdes_setparity\fP()
+удалены из glibc 2.28, так как они используют блочный шифр DES, который
+теперь считается небезопасным. В приложениях следует использовать
+современную библиотеку шифрования, например \fBlibgcrypt\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw25 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBecb_crypt\fP(),
+\fBcbc_crypt\fP(),
+\fBdes_setparity\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.3BSD. Отсутствует в POSIX\-1.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdes\fP(1), \fBcrypt\fP(3), \fBxcrypt\fP(3)

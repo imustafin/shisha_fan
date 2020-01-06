@@ -1,0 +1,397 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) 1983, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     $Id: socket.2,v 1.4 1999/05/13 11:33:42 freitag Exp $
+.\"
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-10-22 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1998, 1999 by Andi Kleen <ak@muc.de>
+.\" Modified 2002-07-17 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2004-06-17 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SOCKET 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+socket \- создаёт конечную точку соединения
+.SH ОБЗОР
+\fB#include <sys/types.h>\fP /* смотрите ЗАМЕЧАНИЯ */
+.br
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint socket(int \fP\fIdomain\fP\fB, int \fP\fItype\fP\fB, int \fP\fIprotocol\fP\fB);\fP
+.SH ОПИСАНИЕ
+Системный вызов \fBsocket\fP() создаёт конечную точку соединения и возвращает
+файловый дескриптор, указывающий на эту точку. Возвращаемый при успешном
+выполнении файловый дескриптор будет иметь самый маленький номер, который не
+используется процессом.
+.PP
+Параметр \fIdomain\fP задает домен соединения: выбирает семейство протоколов,
+которое будет использоваться для соединения. Семейства описаны в
+\fI<sys/socket.h>\fP. В настоящее время ядром Linux распознаются
+следующие форматы:
+.TS
+tab(:);
+l1 lw40 l.
+Имя:Цель:Справочная страница
+T{
+\fBAF_UNIX\fP
+T}:T{
+Локальное соединение
+T}:T{
+\fBunix\fP(7)
+T}
+T{
+\fBAF_LOCAL\fP
+T}:T{
+Синоним
+\fBAF_UNIX\fP
+T}:T{
+T}
+T{
+\fBAF_INET\fP
+T}:Протоколы Интернет IPv4:T{
+\fBip\fP(7)
+T}
+T{
+\fBAF_AX25\fP
+T}:T{
+Протокол любительского радио AX.25
+T}:T{
+.\" Part of ax25-tools
+\fBax25\fP(4)
+T}
+T{
+\fBAF_IPX\fP
+T}:Протоколы Novell IPX:
+T{
+\fBAF_APPLETALK\fP
+T}:AppleTalk:T{
+\fBddp\fP(7)
+T}
+T{
+\fBAF_X25\fP
+T}:Протокол ITU\-T X.25/ISO\-8208:T{
+\fBx25\fP(7)
+T}
+T{
+\fBAF_INET6\fP
+T}:Протоколы Интернет IPv6:T{
+\fBipv6\fP(7)
+T}
+T{
+\fBAF_DECnet\fP
+T}:T{
+Протокольные сокеты DECet
+T}
+T{
+\fBAF_KEY\fP
+T}:T{
+Протокол управления ключами, изначально разрабатывавшийся для использования с IPsec
+T}
+T{
+\fBAF_NETLINK\fP
+T}:T{
+Устройство для взаимодействия с ядром
+T}:T{
+\fBnetlink\fP(7)
+T}
+T{
+\fBAF_PACKET\fP
+T}:T{
+Низкоуровневый пакетный интерфейс
+T}:T{
+\fBpacket\fP(7)
+T}
+T{
+\fBAF_RDS\fP
+T}:T{
+.\" commit: 639b321b4d8f4e412bfbb2a4a19bfebc1e68ace4
+Протокол надёжных датаграмных сокетов (RDS)
+T}:T{
+.\" rds-tools: https://github.com/oracle/rds-tools/blob/master/rds.7
+.\" rds-tools: https://github.com/oracle/rds-tools/blob/master/rds-rdma.7
+\fBrds\fP(7)
+.br
+\fBrds\-rdma\fP(7)
+T}
+T{
+\fBAF_PPPOX\fP
+T}:T{
+Транспортный слой PPP общего назначения для настройки
+туннелей L2 (L2TP и PPPoE)
+T}
+T{
+\fBAF_LLC\fP
+T}:T{
+.\" linux-history commit: 34beb106cde7da233d4df35dd3d6cf4fee937caa
+Протокол управления логической связью (IEEE 802.2 LLC)
+T}
+T{
+\fBAF_IB\fP
+T}:T{
+.\" commits: 8d36eb01da5d371f..ce117ffac2e93334
+Собственная адресация InfiniBand
+T}
+T{
+\fBAF_MPLS\fP
+T}:T{
+.\" commits: 0189197f441602acdca3f97750d392a895b778fd
+Многопротокольная коммутация по меткам
+T}
+T{
+\fBAF_CAN\fP
+T}:T{
+.\" commits: 8dbde28d9711475a..5423dd67bd0108a1
+Протокол шины сети транспортных контроллеров
+T}
+T{
+\fBAF_TIPC\fP
+T}:T{
+.\" commits: b97bf3fd8f6a16966d4f18983b2c40993ff937d4
+Протокол «кластерных доменных сокетов» TIPC
+T}
+T{
+\fBAF_BLUETOOTH\fP
+T}:T{
+.\" commits: 8d36eb01da5d371f..ce117ffac2e93334
+Сокетный протокол Bluetooth низкого уровня
+T}
+T{
+\fBAF_ALG\fP
+T}:T{
+.\" commit: 03c8efc1ffeb6b82a22c1af8dd908af349563314
+Интерфейс к ядерному крипто\-API
+T}
+T{
+\fBAF_VSOCK\fP
+T}:T{
+.\" commit: d021c344051af91f42c5ba9fdedc176740cbd238
+Протокол VSOCK (изначально «VMWare VSockets»)
+для связей гипервизор\-гость
+T}:T{
+\fBvsock\fP(7)
+T}
+T{
+\fBAF_KCM\fP
+T}:T{
+.\" commit: 03c8efc1ffeb6b82a22c1af8dd908af349563314
+Интерфейс KCM (мультиплексор соединений ядра)
+T}
+T{
+\fBAF_XDP\fP
+T}:T{
+.\" commit: c0c77d8fb787cfe0c3fca689c2a30d1dad4eaba7
+Интерфейс XDP (express data path)
+T}
+.TE
+.PP
+Подробнее об адресных семействах, приведённых выше, а также информацию о
+других адресных семействах можно найти в \fBaddress_families\fP(7).
+.PP
+Сокет имеет тип \fItype\fP, задающий семантику соединения. В настоящее время
+определены следующие типы:
+.TP  16
+\fBSOCK_STREAM\fP
+Обеспечивает создание двусторонних, надёжных потоков байтов на основе
+установления соединения. Может также поддерживаться механизм внепоточных
+данных.
+.TP 
+\fBSOCK_DGRAM\fP
+Поддерживает дейтаграммы (ненадежные сообщения с ограниченной длиной без
+установки соединения).
+.TP 
+\fBSOCK_SEQPACKET\fP
+Обеспечивает работу последовательного двустороннего канала для передачи
+дейтаграмм на основе соединений; дейтаграммы имеют постоянный размер; от
+получателя требуется за один раз прочитать целый пакет.
+.TP 
+\fBSOCK_RAW\fP
+Обеспечивает прямой доступ к сетевому протоколу.
+.TP 
+\fBSOCK_RDM\fP
+Обеспечивает надежную доставку дейтаграмм без гарантии, что они будут
+расположены по порядку.
+.TP 
+\fBSOCK_PACKET\fP
+Устарел и не должен использоваться в новых программах; см. \fBpacket\fP(7).
+.PP
+Некоторые типы сокетов могут быть не реализованы во всех семействах
+протоколов.
+.PP
+Начиная с Linux 2.6.27, аргумент \fItype\fP предназначается для двух вещей:
+кроме определения типа сокета, для изменения поведения \fBsocket\fP() он может
+содержать побитно сложенные любые следующие значения:
+.TP  16
+\fBSOCK_NONBLOCK\fP
+Устанавливает флаг состояния файла \fBO_NONBLOCK\fP для нового открытого
+файлового описания (смотрите \fBopen\fP(2)), на которое ссылается новый
+файловый дескриптор. Использование данного флага делает ненужными
+дополнительные вызовы \fBfcntl\fP(2) для достижения того же результата.
+.TP 
+\fBSOCK_CLOEXEC\fP
+Устанавливает флаг close\-on\-exec (\fBFD_CLOEXEC\fP) для нового открытого
+файлового дескриптора. Смотрите описание флага \fBO_CLOEXEC\fP в \fBopen\fP(2) для
+того, чтобы узнать как это может пригодиться.
+.PP
+В \fIprotocol\fP задаётся определённый протокол, используемый с
+сокетом. Обычно, только единственный протокол существует для поддержи
+определённого типа сокета с заданным семейством протоколов, в этом случае в
+\fIprotocol\fP можно указать 0. Однако, может существовать несколько
+протоколов, тогда нужно указать один из них. Номер используемого протокола
+зависит от "домена соединения\*(rq, по которому устанавливается соединение;
+см. \fBprotocols\fP(5). Смотрите \fBgetprotoent\fP(3), где описано, как соотносить
+имена протоколов с их номерами.
+.PP
+Сокеты типа \fBSOCK_STREAM\fP являются соединениями полнодуплексных байтовых
+потоков. Они не сохраняют границы записей. Потоковый сокет должен быть в
+состоянии \fIсоединения\fP перед тем, как из него можно будет отсылать данные
+или принимать их. Соединение с другим сокетом создается с помощью системного
+вызова \fBconnect\fP(2). После соединения данные можно передавать с помощью
+системных вызовов \fBread\fP(2) и \fBwrite\fP(2) или одного из вариантов системных
+вызовов \fBsend\fP(2) и \fBrecv\fP(2). Когда сеанс закончен, выполняется команда
+\fBclose\fP(2). Внепоточные данные могут передаваться, как описано в
+\fBsend\fP(2), и приниматься, как описано в \fBrecv\fP(2).
+.PP
+Протоколы связи, которые реализуют \fBSOCK_STREAM\fP, следят, чтобы данные не
+были потеряны или дублированы. Если часть данных, для которых имеется место
+в буфере протокола, не может быть передана за определённое время, соединение
+считается разорванным. Когда в сокете включен флаг \fBSO_KEEPALIVE\fP, протокол
+каким\-либо способом проверяет, не отключена ли ещё другая сторона. Если
+процесс посылает или принимает данные, пользуясь «разорванным» потоком, ему
+выдаётся сигнал \fBSIGPIPE\fP; это приводит к тому, что процессы, не
+обрабатывающие этот сигнал, завершаются. Сокеты \fBSOCK_SEQPACKET\fP используют
+те же самые системные вызовы, что и сокеты \fBSOCK_STREAM\fP. Единственное
+отличие в том, что вызовы \fBread\fP(2) возвращают только запрошенное
+количество данных, а остальные данные пришедшего пакета будут
+отброшены. Границы сообщений во входящих дейтаграммах сохраняются.
+.PP
+Сокеты \fBSOCK_DGRAM\fP и \fBSOCK_RAW\fP позволяют посылать дейтаграммы
+принимающей стороне, заданной при вызове \fBsendto\fP(2). Дейтаграммы обычно
+принимаются с помощью вызова \fBrecvfrom\fP(2), который возвращает следующую
+дейтаграмму с соответствующим обратным адресом.
+.PP
+Тип \fBSOCK_PACKET\fP считается устаревшим типом сокета; он позволяет получать
+необработанные пакеты прямо от драйвера устройства. Используйте вместо него
+\fBpacket\fP(7).
+.PP
+Системный вызов \fBfcntl\fP(2) с аргументом \fBF_SETOWN\fP может использоваться
+для задания группы процессов, которая будет получать сигнал \fBSIGURG\fP, когда
+прибывают внепоточные данные, или сигнал \fBSIGPIPE\fP, когда соединение типа
+\fBSOCK_STREAM\fP неожиданно обрывается. Этот вызов также можно использовать,
+чтобы задать процесс или группу процессов, которые получают асинхронные
+уведомления о событиях ввода\-вывода с помощью \fBSIGIO\fP. Использование
+\fBF_SETOWN\fP  эквивалентно использованию вызова \fBioctl\fP(2) с аргументом
+\fBFIOSETOWN\fP или \fBSIOCSPGRP\fP.
+.PP
+Когда сеть сообщает модулю протокола об ошибке (например, в случае IP,
+используя ICMP\-сообщение), то для сокета устанавливается флаг ожидающей
+ошибки. Следующая операция этого сокета вернёт код ожидающей
+ошибки. Некоторые протоколы позволяют организовывать очередь ошибок в сокете
+для получения подробной информацию об ошибке; смотрите \fBIP_RECVERR\fP в
+\fBip\fP(7).
+.PP
+Операции сокетов контролируются их параметрами \fIoptions\fP. Эти параметры
+описаны в \fI<sys/socket.h>\fP. Вызовы \fBsetsockopt\fP(2) и
+\fBgetsockopt\fP(2) используются, чтобы установить и получить необходимые
+параметры.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае успешного выполнения возвращается дескриптор, ссылающийся на
+сокет. В случае ошибки возвращается \-1, а значение \fIerrno\fP устанавливается
+соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Нет прав на создание сокета указанного типа и/или протокола.
+.TP 
+\fBEAFNOSUPPORT\fP
+Реализация не поддерживает указанное семейства адресов.
+.TP 
+\fBEINVAL\fP
+Неизвестный протокол или недоступное семейство протоколов.
+.TP 
+\fBEINVAL\fP
+.\" Since Linux 2.6.27
+Неверные флаги в \fItype\fP.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOBUFS\fP или \fBENOMEM\fP
+Недостаточно памяти для создания сокета. Сокет не может быть создан, пока не
+будет освобождено достаточное количество ресурсов.
+.TP 
+\fBEPROTONOSUPPORT\fP
+Тип протокола или указанный протокол не поддерживаются в этом домене.
+.PP
+Другие ошибки могут быть созданы модулями протоколов более низкого уровня.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.4BSD.
+.PP
+Флаги \fBSOCK_NONBLOCK\fP и \fBSOCK_CLOEXEC\fP есть только в Linux.
+.PP
+Вызов \fBsocket\fP() появился в 4.2BSD. Обычно он переносим в/из не\-BSD систем
+на уровне сокетов BSD (включая варианты System\ V).
+.SH ЗАМЕЧАНИЯ
+В POSIX.1 не требуется включение \fI<sys/types.h>\fP, и этот
+заголовочный файл не требуется в Linux. Однако, для некоторых старых
+реализаций (BSD) требует данный файл, и в переносимых приложениях для
+предосторожности, вероятно, лучше его указать.
+.PP
+Для семейств протоколов в 4.x BSD используются константы \fBPF_UNIX\fP,
+\fBPF_INET\fP, \fBPF_INET\fP и т. д., тогда как \fBAF_UNIX\fP, \fBAF_INET\fP и
+т. п. используется для указания семейства адресов. Однако, в справочной
+странице BSD сказано: «Обычно, семейство протоколов совпадает с семейством
+адресов» и во всех последующих стандартах используется AF_*.
+.SH ПРИМЕР
+Пример использования \fBsocket\fP() показан в \fBgetaddrinfo\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaccept\fP(2), \fBbind\fP(2), \fBclose\fP(2), \fBconnect\fP(2), \fBfcntl\fP(2),
+\fBgetpeername\fP(2), \fBgetsockname\fP(2), \fBgetsockopt\fP(2), \fBioctl\fP(2),
+\fBlisten\fP(2), \fBread\fP(2), \fBrecv\fP(2), \fBselect\fP(2), \fBsend\fP(2),
+\fBshutdown\fP(2), \fBsocketpair\fP(2), \fBwrite\fP(2), \fBgetprotoent\fP(3),
+\fBaddress_families\fP(7), \fBip\fP(7), \fBsocket\fP(7), \fBtcp\fP(7), \fBudp\fP(7),
+\fBunix\fP(7)
+.PP
+\(lqAn Introductory 4.3BSD Interprocess Communication Tutorial\(rq and
+\(lqBSD Interprocess Communication Tutorial\(rq, reprinted in \fIUNIX
+Programmer's Supplementary Documents Volume 1.\fP

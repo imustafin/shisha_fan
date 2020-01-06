@@ -1,0 +1,299 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2012, Cyrill Gorcunov <gorcunov@openvz.org>
+.\" and Copyright (C) 2012, 2016, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume
+.\" no responsibility for errors or omissions, or for damages resulting
+.\" from the use of the information contained herein.  The author(s) may
+.\" not have taken the same level of care in the production of this
+.\" manual, which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Kernel commit d97b46a64674a267bc41c9e16132ee2a98c3347d
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH KCMP 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+kcmp \- сравнивает два процесса, определяя используют ли они общий ресурс
+ядра
+.SH ОБЗОР
+.nf
+\fB#include <linux/kcmp.h>\fP
+.PP
+\fBint kcmp(pid_t \fP\fIpid1\fP\fB, pid_t \fP\fIpid2\fP\fB, int \fP\fItype\fP\fB,\fP
+\fB         unsigned long \fP\fIidx1\fP\fB, unsigned long \fP\fIidx2\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Системный вызов \fBkcmp\fP() может использоваться для проверки, используют ли
+два процесса \fIpid1\fP и \fIpid2\fP общий ресурс ядра, например виртуальную
+память, файловые дескрипторы и т.д.
+.PP
+Право вызывать \fBkcmp\fP() определяется проверкой режима доступа ptrace
+\fBPTRACE_MODE_READ_REALCREDS\fP вместе с \fIpid1\fP и \fIpid2\fP; смотрите
+\fBptrace\fP(2).
+.PP
+В аргументе \fItype\fP указывается какой ресурс двух процессов нужно
+сравнивать. Допустимы следующие значения:
+.TP 
+\fBKCMP_FILE\fP
+Проверить, что файловый дескриптор \fIidx1\fP в процессе \fIpid1\fP указывает на
+то же открытое файловое описание (смотрите \fBopen\fP(2)) что и файловый
+дескриптор \fIidx2\fP в процессе \fIpid2\fP. Существование двух файловых
+дескрипторов, ссылающихся на одно файловое описание, может возникнуть в
+результате вызова \fBdup\fP(2) (и подобного) в \fBfork\fP(2), или передачи
+файловых дескрипторов через доменный сокет (смотрите \fBunix\fP(7)).
+.TP 
+\fBKCMP_FILES\fP
+Проверить, используют ли процессы общий одинаковый набор открытых файловых
+дескрипторов. Аргументы \fIidx1\fP и \fIidx2\fP игнорируются. Подробности смотрите
+в описании флага \fBCLONE_FILES\fP в \fBclone\fP(2).
+.TP 
+\fBKCMP_FS\fP
+Проверить, используют ли процессы общую одинаковую информацию о файловой
+системе (т. е. маску прав создания, рабочий каталог и корень файловой
+системы). Аргументы \fIidx1\fP и \fIidx2\fP игнорируются. Подробности смотрите в
+описании флага \fBCLONE_FS\fP в \fBclone\fP(2).
+.TP 
+\fBKCMP_IO\fP
+Проверить, используют ли процессы общее контекст ввода\-вывода. Аргументы
+\fIidx1\fP и \fIidx2\fP игнорируются. Подробности смотрите в описании флага
+\fBCLONE_IO\fP в \fBclone\fP(2).
+.TP 
+\fBKCMP_SIGHAND\fP
+Проверить, используют ли процессы общую одинаковую таблицу обработчиков
+сигналов. Аргументы \fIidx1\fP и \fIidx2\fP игнорируются. Подробности смотрите в
+описании флага \fBCLONE_SIGHAND\fP в \fBclone\fP(2).
+.TP 
+\fBKCMP_SYSVSEM\fP
+Проверить, используют ли процессы общий одинаковый список отмены операций
+семафоров System\ V. Аргументы \fIidx1\fP и \fIidx2\fP игнорируются. Подробности
+смотрите в описании флага \fBCLONE_SYSVSEM\fP в \fBclone\fP(2).
+.TP 
+\fBKCMP_VM\fP
+Проверить, используют ли процессы общее адресное пространство. Аргументы
+\fIidx1\fP и \fIidx2\fP игнорируются. Подробности смотрите в описании флага
+\fBCLONE_VM\fP в \fBclone\fP(2).
+.TP 
+\fBKCMP_EPOLL_TFD\fP (начиная с Linux 4.13)
+.\" commit 0791e3644e5ef21646fe565b9061788d05ec71d4
+Проверить, есть ли файловый дескриптор \fIidx1\fP процесса \fIpid1\fP в экземпляре
+\fBepoll\fP(7), описанном в \fIidx2\fP у процесса \fIpid2\fP. Аргумент \fIidx2\fP
+является указателем на структуру, которая описывает файл назначения. Формат
+структуры:
+.PP
+.in +4n
+.EX
+struct kcmp_epoll_slot {
+    __u32 efd;
+    __u32 tfd;
+    __u64 toff;
+};
+.EE
+.in
+.PP
+В этой структуре поле \fIefd\fP содержит файловый дескриптор epoll,
+возвращаемый \fBepoll_create\fP(2), \fItfd\fP содержит номер файлового
+дескриптора, а \fItoff\fP содержит смещение в файле назначения, начиная с
+нуля. Несколько разных назначений могут быть зарегистрированы с одним
+номером файлового дескриптора, а установка определённого смещения помогает
+выбрать нужный.
+.PP
+Заметим, что вызов \fBkcmp\fP() не защищён от ложных срабатываний (false
+positives), которые могут случаться, если процессы в этот момент
+выполняются. То есть для получения достоверных результатов перед выполнением
+данного системного вызова нужно  послать процессам сигнал \fBSIGSTOP\fP
+(смотрите \fBsignal\fP(7)).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBkcmp\fP() возвращает результат арифметического
+сложения указателей ядра (когда ядро сравнивает ресурсы, оно использует их
+адреса памяти).
+.PP
+Для простоты объяснения рассмотрим пример. Предположим, что \fIv1\fP и \fIv2\fP —
+адреса соответствующих ресурсов и возвращается значение:
+.RS 4
+.IP 0 4
+\fIv1\fP равен \fIv2\fP; другими словами, два процесса используют ресурс
+совместно.
+.IP 1
+\fIv1\fP меньше \fIv2\fP.
+.IP 2
+\fIv1\fP больше \fIv2\fP.
+.IP 3
+\fIv1\fP не равен \fIv2\fP, но нужная информация недоступна.
+.RE
+.PP
+В случае ошибки возвращается \-1 и значение \fIerrno\fP устанавливается
+соответствующим образом.
+.PP
+Значения вызова \fBkcmp\fP() специально выбраны так, чтобы их легко можно было
+упорядочить. В частности, это удобно когда нужно сравнить большое количество
+файловых дескрипторов.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fItype\fP равно \fBKCMP_FILE\fP и \fIfd1\fP или \fIfd2\fP не являются
+открытыми файловыми дескрипторами.
+.TP 
+\fBEFAULT\fP
+Слот epoll, указанный в \fIidx2\fP, находится за пределами пользовательского
+адресного пространства.
+.TP 
+\fBEINVAL\fP
+Значение \fItype\fP неверно.
+.TP 
+\fBENOENT\fP
+Файл назначения отсутствует в экземпляре \fBepoll\fP(7).
+.TP 
+\fBEPERM\fP
+Недостаточно прав для просмотра ресурсов процесса. Для проверки процессов
+требуется мандат \fBCAP_SYS_PTRACE\fP, которого у вас нет. Также могут
+действовать другие ограничения ptrace, например  \fBCONFIG_SECURITY_YAMA\fP,
+которое при \fI/proc/sys/kernel/yama/ptrace_scope\fP равном 2, ограничивает
+\fBkcmp\fP() дочерними процессами; смотрите \fBptrace\fP(2).
+.TP 
+\fBESRCH\fP
+Процесс \fIpid1\fP или \fIpid2\fP не существует.
+.SH ВЕРСИИ
+Системный вызов \fBkcmp\fP() впервые появился в Linux 3.5.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBkcmp\fP() есть только в Linux и не должен использоваться в переносимых
+программах.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данного системного вызова; запускайте его с помощью
+\fBsyscall\fP(2).
+.PP
+Данный системный вызов доступен только, если ядро собрано с параметром
+\fBCONFIG_CHECKPOINT_RESTORE\fP. Основное предназначение вызова — возможность
+засечки/восстановления в пользовательском пространстве (CRIU). Альтернативой
+этому системному вызову было бы выставление соответствующей информации о
+процессе в файловой системе \fBproc\fP(5); такой вариант не пригоден по
+причинам безопасности.
+.PP
+Дополнительную информацию об общих ресурсах смотрите в \fBclone\fP(2).
+.SH ПРИМЕР
+Данная программа использует \fBkcmp\fP() про проверки того, что пара файловых
+дескрипторов указывает на одно и тоже открытое файловое описание. Программа
+тестирует различные случаи для пар файловых дескрипторов, описанных в выводе
+программы. Пример работы программы:
+.PP
+.in +4n
+.EX
+$ \fB./a.out\fP
+PID родителя 1144
+Открытый родителем файл на FD 3
+
+PID потомка после fork() равен 1145
+	Сравнение дубликатов FD из других процессов:
+		kcmp(1145, 1144, KCMP_FILE, 3, 3) ==> одинаков
+Открытый потомком файл на FD 4
+	Сравнение FD из различных open() одного процесса:
+		kcmp(1145, 1145, KCMP_FILE, 3, 4) ==> отличается
+Дубликат FD 3 потомка для создания FD 5
+	Сравнение дубликатов FD одного процесса:
+		kcmp(1145, 1145, KCMP_FILE, 3, 5) ==> одинаков
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <sys/syscall.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <linux/kcmp.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+static int
+kcmp(pid_t pid1, pid_t pid2, int type,
+     unsigned long idx1, unsigned long idx2)
+{
+    return syscall(SYS_kcmp, pid1, pid2, type, idx1, idx2);
+}
+
+static void
+test_kcmp(char *msg, id_t pid1, pid_t pid2, int fd_a, int fd_b)
+{
+    printf("\et%s\en", msg);
+    printf("\et\etkcmp(%ld, %ld, KCMP_FILE, %d, %d) ==> %s\en",
+            (long) pid1, (long) pid2, fd_a, fd_b,
+            (kcmp(pid1, pid2, KCMP_FILE, fd_a, fd_b) == 0) ?
+                        "одинаков" : "отличается");
+}
+
+int
+main(int argc, char *argv[])
+{
+    int fd1, fd2, fd3;
+    char pathname[] = "/tmp/kcmp.test";
+
+    fd1 = open(pathname, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+    if (fd1 == \-1)
+        errExit("open");
+
+    printf("PID родителя %ld\en", (long) getpid());
+    printf("Открытый родителем файл на FD %d\en\en", fd1);
+
+    switch (fork()) {
+    case \-1:
+        errExit("fork");
+
+    case 0:
+        printf("PID потомка после fork() равен %ld\en", (long) getpid());
+
+        test_kcmp("Сравнение дубликатов FD из других процессов:",
+                getpid(), getppid(), fd1, fd1);
+
+        fd2 = open(pathname, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+        if (fd2 == \-1)
+            errExit("open");
+        printf("Открытый потомком файл на FD %d\en", fd2);
+
+        test_kcmp("Сравнение FD из различных open() одного процесса:",
+                getpid(), getpid(), fd1, fd2);
+
+        fd3 = dup(fd1);
+        if (fd3 == \-1)
+            errExit("dup");
+        printf("Дубликат FD %d потомка для создания FD %d\en", fd1, fd3);
+
+        test_kcmp("Сравнение дубликатов FD одного процесса:",
+                getpid(), getpid(), fd1, fd3);
+        break;
+
+    default:
+        wait(NULL);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclone\fP(2), \fBunshare\fP(2)

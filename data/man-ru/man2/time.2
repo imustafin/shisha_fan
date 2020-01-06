@@ -1,0 +1,103 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified Sat Jul 24 14:13:40 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Additions by Joseph S. Myers <jsm28@cam.ac.uk>, 970909
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TIME 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+time \- получить время в секундах
+.SH ОБЗОР
+\fB#include <time.h>\fP
+.PP
+\fBtime_t time(time_t *\fP\fItloc\fP\fB);\fP
+.SH ОПИСАНИЕ
+\fBtime\fP() возвращает количество секунд, которое прошло с начала эпохи,
+1970\-01\-01 00:00:00 +0000 (UTC).
+.PP
+Если \fItloc\fP не равно NULL, то возвращаемое значение также сохраняется в
+область памяти, на которую указывает \fItloc\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается время в секундах, прошедшее с начала
+эпохи. При ошибке возвращается \fI((time_t)\ \-1)\fP, а \fIerrno\fP устанавливается
+должным образом.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+\fItloc\fP указывает за пределы доступного адресного пространства (однако
+см. ОШИБКИ).
+.IP
+В системах, где обёрточная функция \fBtime\fP() библиотеки C вызывает
+реализацию, предоставляемую \fBvdso\fP(7) (то есть нет ловушки в ядре), из\-за
+некорректного адреса может генерироваться сигнал \fBSIGSEGV\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" Under 4.3BSD, this call is obsoleted by
+.\" .BR gettimeofday (2).
+SVr4, 4.3BSD, C89, C99, POSIX.1\-2001. В POSIX не определены условия
+возникновения ошибок.
+.SH ЗАМЕЧАНИЯ
+В POSIX.1 для определения \fIсекунд, прошедших с начала эпохи\fP используется
+формула для приблизительного подсчёта количества секунд между указываемым
+временем и началом эпохи. Эта формула учитывает тот факт, что все годы,
+номер которых делится на 4, считаются високосными, но годы, которые делятся
+на 100 не високосные, если они также не делятся на 400 (которые нужно
+считать високосными). Это значение не является указанием на точное
+количество секунд между заданным временем и началом эпохи вследствие
+игнорирования високосных секунд и по причине того, что время в часах
+необязательно синхронизировано со временем стандартного
+источника. Считается, что это значение соответствует настоящему количеству
+секунд, прошедшему с начала эпохи. Дополнительную информацию можно найти в
+POSIX.1\-2008 Rationale A.4.15.
+.PP
+В Linux, вызов \fBtime\fP() со значением \fItloc\fP равным NULL, не может
+завершиться ошибкой \fBEOVERFLOW\fP, даже с ABI, у которого \fItime_t\fP —
+знаковое 32\-битное целое и количество тактов часов выходит за пределами
+времени 2**31 (2038\-01\-19 03:14:08 UTC, високосные секунды игнорируются) (в
+POSIX.1 допускается, но не требуется возврат ошибки \fBEOVERFLOW\fP в случае,
+когда количество секунд с начала эпохи не влезает в \fItime_t\fP). Вместо
+этого, поведение в Linux является не определённым, когда системное время
+выходит за границы диапазона \fItime_t\fP. Приложения, которые должны работать
+после 2038 года, должны использовать ABI, в котором тип \fItime_t\fP больше 32
+бит.
+.SH ДЕФЕКТЫ
+Ошибка, возвращаемая из этого системного вызова неотличима от успешного
+выполнения в случае, когда момент времени — за несколько секунд \fIдо\fP эпохи,
+поэтому обёрточная функция библиотеки C никогда не изменяет \fIerrno\fP при
+возврате.
+.PP
+.\"
+Аргумент \fItloc\fP устарел и в новом коде всегда должен быть равен NULL. Если
+\fItloc\fP равно NULL, то вызов не может завершиться ошибкой.
+.SS "Отличия между библиотекой C и ядром"
+На некоторых архитектурах реализация \fBtime\fP() находится в \fBvdso\fP(7).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdate\fP(1), \fBgettimeofday\fP(2), \fBctime\fP(3), \fBftime\fP(3), \fBtime\fP(7),
+\fBvdso\fP(7)

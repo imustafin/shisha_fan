@@ -1,0 +1,70 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2017, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_MUTEXATTR_INIT 3 2017\-08\-20 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_mutexattr_init, pthread_mutexattr_destroy \- инициализирует и
+уничтожает объект атрибутов мьютекса
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_mutexattr_init(pthread_mutexattr_t *\fP\fIattr\fP\fB);\fP
+\fBint pthread_mutexattr_destroy(pthread_mutexattr_t *\fP\fIattr\fP\fB);\fP
+.fi
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.SH ОПИСАНИЕ
+Функция \fBpthread_mutexattr_init\fP() инициализирует объект атрибутов
+мьютекса, на который указывает \fIattr\fP, значениями по умолчанию для всех
+атрибутов, определённых реализацией.
+.PP
+Если для инициализации указан уже инициализированный объект атрибутов
+мьютекса, то результат не определён.
+.PP
+Функция \fBpthread_mutexattr_destroy\fP() уничтожает объект атрибутов мьютекса
+(делает его не инициализированным). После уничтожения объекта атрибутов
+мьютекса, его можно инициализировать с помощью \fBpthread_mutexattr_init\fP().
+.PP
+Если для уничтожения указан не инициализированный объект атрибутов мьютекса,
+то результат не определён.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0. При ошибке возвращается
+положительный номер ошибки.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Изменения объекта атрибутов мьютекса не влияют на мьютексы, которые уже были
+инициализированы с помощью этого объекта.
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBpthread_mutex_init\fP(3), \fBpthread_mutexattr_getpshared\fP(3),
+\fBpthread_mutexattr_getrobust\fP(3), \fBpthreads\fP(7)

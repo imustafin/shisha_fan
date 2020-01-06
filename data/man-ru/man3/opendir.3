@@ -1,0 +1,135 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 18:46:01 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 11 June 1995 by Andries Brouwer (aeb@cwi.nl)
+.\" 2007-07-30 Ulrich Drepper <drepper@redhat.com>: document fdopendir().
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH OPENDIR 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+opendir, fdopendir \- открывает каталог
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <dirent.h>\fP
+.PP
+\fBDIR *opendir(const char *\fP\fIname\fP\fB);\fP
+\fBDIR *fdopendir(int \fP\fIfd\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfdopendir\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+Функция \fBopendir\fP() открывает поток каталога, соответствующий каталогу с
+именем \fIname\fP, и возвращает указатель на поток каталога. Поток
+устанавливается на первую запись в каталоге.
+.PP
+Функция \fBfdopendir\fP() похожа на \fBopendir\fP(), но возвращает поток каталога
+для каталога, на который ссылается открытый файловый дескриптор \fIfd\fP. После
+успешного вызова \fBfdopendir\fP(), дескриптор \fIfd\fP используется только внутри
+реализации и не должен использоваться в приложении.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBopendir\fP() и \fBfdopendir\fP() возвращают указатель на поток
+каталога. В случае ошибки возвращается NULL, а \fIerrno\fP присваивается
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Доступ запрещен.
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является подходящим файловым дескриптором, открытым для
+чтения.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOENT\fP
+Каталог не существует, либо \fIname\fP содержит пустую строку.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для завершения операции.
+.TP 
+\fBENOTDIR\fP
+Значение \fIname\fP не является каталогом.
+.SH ВЕРСИИ
+Функция \fBfdopendir\fP() доступна в glibc начиная с версии 2.4.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw22 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBopendir\fP(),
+\fBfdopendir\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функция \fBopendir\fP() присутствует в SVr4, 4.3BSD и описана в стандарте
+POSIX.1\-2001. Функция \fBfdopendir\fP() описана в POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Записи имён файлов можно читать из потока каталога с помощью \fBreaddir\fP(3).
+.PP
+Задействованный файловый дескриптор потока каталога может быть получен в
+помощью \fBdirfd\fP(3).
+.PP
+Функция \fBopendir\fP() устанавливает флаг close\-on\-exec для файлового
+дескриптора, указывающего на \fIDIR *\fP. Функция \fBfdopendir\fP() оставляет флаг
+close\-on\-exec не изменённым для файлового дескриптора \fIfd\fP. В POSIX.1\-200x
+нет точного определения на этот счет, хотя успешный вызов \fBfdopendir\fP()
+установит флаг close\-on\-exec для файлового дескриптора \fIfd\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBopen\fP(2), \fBclosedir\fP(3), \fBdirfd\fP(3), \fBreaddir\fP(3), \fBrewinddir\fP(3),
+\fBscandir\fP(3), \fBseekdir\fP(3), \fBtelldir\fP(3)

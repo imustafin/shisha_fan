@@ -1,0 +1,108 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2017, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_SPIN_LOCK 3 2017\-09\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_spin_lock, pthread_spin_trylock, pthread_spin_unlock \- блокирует и
+разблокирует блокировку циклически (spin lock)
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_spin_lock(pthread_spinlock_t *\fP\fIlock\fP\fB);\fP
+\fBint pthread_spin_trylock(pthread_spinlock_t *\fP\fIlock\fP\fB);\fP
+\fBint pthread_spin_unlock(pthread_spinlock_t *\fP\fIlock\fP\fB);\fP
+.fi
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBpthread_spin_lock\fP(), \fBpthread_spin_trylock\fP():
+.br
+.RS 4
+.ad l
+_POSIX_C_SOURCE >= 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBpthread_spin_lock\fP() блокирует циклическую блокировку (spin lock),
+на которую указывает \fIlock\fP. Если циклическая блокировка разблокирована, то
+вызывающая нить сразу же захватывает блокировку. Если циклическая блокировка
+заблокирована, то проверка блокировки продолжается до тех пор, пока она не
+освободится, и в этот момент вызывающая нить захватит блокировку.
+.PP
+Вызов \fBpthread_spin_lock\fP() для блокировки, которая уже захвачена
+вызывающим или не была инициализирована с помощью \fBpthread_spin_init\fP(3),
+приводит к непредсказуемому поведению.
+.PP
+Функция \fBpthread_spin_trylock\fP() подобна \fBpthread_spin_lock\fP(), за
+исключением того, что если циклическая блокировка, на которую указывает
+\fIlock\fP заблокирована, то вместо зацикливания вызов завершается с ошибкой
+\fBEBUSY\fP.
+.PP
+Функция \fBpthread_spin_unlock\fP() разблокирует циклическую блокировку, на
+которую указывает \fIlock\fP. Если какая\-то нить зациклена в ожидании
+блокировки, то она захватит блокировку.
+.PP
+Вызов \fBpthread_spin_unlock\fP() для блокировки, которая не была захвачена
+вызывающим, приводит к непредсказуемому поведению.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают ноль. При ошибке возвращается
+номер ошибки.
+.SH ОШИБКИ
+Функция \fBpthread_spin_lock\fP() может завершаться со следующими ошибками:
+.TP 
+\fBEDEADLOCK\fP
+.\" Not detected in glibc
+Система обнаружила условие взаимной блокировки.
+.PP
+Функция \fBpthread_spin_trylock\fP() может завершаться со следующими ошибками:
+.TP 
+\fBEBUSY\fP
+Циклическая блокировка уже заблокирована другой нитью.
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.2.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001.
+.SH ЗАМЕЧАНИЯ
+Применение любой из описанных в этой странице функций к не
+инициализированной циклической блокировке приведёт к непредсказуемому
+поведению.
+.PP
+Внимательно прочитайте ЗАМЕЧАНИЯ в \fBpthread_spin_init\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+.\" FIXME . .BR pthread_mutex_lock (3),
+\fBpthread_spin_destroy\fP(3), \fBpthread_spin_init\fP(3), \fBpthreads\fP(7)

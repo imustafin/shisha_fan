@@ -1,0 +1,119 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified 1993-07-24 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 2004-10-31 by aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LDEXP 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+ldexp, ldexpf, ldexpl \- умножает число с плавающей запятой на 2 в степени
+целого числа
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble ldexp(double \fP\fIx\fP\fB, int \fP\fIexp\fP\fB);\fP
+\fBfloat ldexpf(float \fP\fIx\fP\fB, int \fP\fIexp\fP\fB);\fP
+\fBlong double ldexpl(long double \fP\fIx\fP\fB, int \fP\fIexp\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBldexpf\fP(), \fBldexpl\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Эти функции возвращают результат умножения числа с плавающей запятой \fIx\fP на
+2 в степени \fIexp\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные функции возвращают \fIx * (2^exp)\fP.
+.PP
+Если \fIexp\fP равно 0, то будет возвращено \fIx\fP.
+.PP
+Если \fIx\fP равно NaN, будет возвращено NaN.
+.PP
+Если \fIx\fP стремится к плюс или минус бесконечности, будет возвращена плюс
+или минус бесконечность.
+.PP
+Если в результате исчерпана степень числа, возникает ошибка диапазона и
+возвращается ноль.
+.PP
+Если в результате превышена разрядность, то возникает ошибка диапазона и
+функции возвращают \fBHUGE_VAL\fP, \fBHUGE_VALF\fP или \fBHUGE_VALL\fP,
+соответственно, с тем же знаком что и \fIx\fP.
+.SH ОШИБКИ
+Смотрите \fBmath_error\fP(7), чтобы определить, какие ошибки могут возникать
+при вызове этих функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка диапазона, переполнение
+Значение \fIerrno\fP устанавливается в \fBERANGE\fP. Возникает исключение
+переполнения плавающей запятой (\fBFE_OVERFLOW\fP).
+.TP 
+Ошибка диапазона, исчерпана степень
+Значение \fIerrno\fP устанавливается в \fBERANGE\fP. Возникает исключение
+исчерпания степени числа с плавающей запятой (\fBFE_UNDERFLOW\fP).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBldexp\fP(),
+\fBldexpf\fP(),
+\fBldexpl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.PP
+Вариант, возвращающий значение типа \fIdouble\fP, также соответствует SVr4,
+4.3BSD, C89.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfrexp\fP(3), \fBmodf\fP(3), \fBscalbln\fP(3)

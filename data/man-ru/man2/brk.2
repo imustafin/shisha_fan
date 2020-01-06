@@ -1,0 +1,136 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt
+.\" (michael@moria.de),
+.\" Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Wed Jul 21 19:52:58 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sun Aug 21 17:40:38 1994 by Rik Faith <faith@cs.unc.edu>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BRK 2 2016\-03\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+brk, sbrk \- изменяет размер сегмента данных
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint brk(void *\fP\fIaddr\fP\fB);\fP
+.PP
+\fBvoid *sbrk(intptr_t \fP\fIincrement\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBbrk\fP(), \fBsbrk\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Начиная с glibc 2.19:
+.nf
+.\"    (_XOPEN_SOURCE\ >=\ 500 ||
+.\"        _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED) &&
+_DEFAULT_SOURCE ||
+    (_XOPEN_SOURCE\ >=\ 500) &&
+    ! (_POSIX_C_SOURCE\ >=\ 200112L)
+.fi
+.TP  4
+В glibc с 2.12 по 2.19:
+.nf
+.\"    (_XOPEN_SOURCE\ >=\ 500 ||
+.\"        _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED) &&
+_BSD_SOURCE || _SVID_SOURCE ||
+    (_XOPEN_SOURCE\ >=\ 500) &&
+    ! (_POSIX_C_SOURCE\ >=\ 200112L)
+.fi
+.TP  4
+До glibc 2.12:
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_BSD_SOURCE || _SVID_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.PD
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Вызов \fBbrk\fP() и \fBsbrk\fP() изменяет расположение \fIмаркера окончания
+программы\fP (program break), который определяет конец сегмента данных
+процесса (т.е., маркер окончания \(em это первая точка после конца сегмента
+неинициализированных данных). Увеличение маркера окончания программы
+позволяет процессу выделить память; уменьшение маркера приводит к
+освобождению памяти.
+.PP
+\fBbrk\fP() устанавливает конец сегмента данных в значение, указанное в
+аргументе \fIaddr\fP, если это значение является приемлемым, система имеет
+достаточно памяти и процесс не достиг максимально возможного размера своего
+сегмента данных (см. \fBsetrlimit\fP(2)).
+.PP
+\fBsbrk\fP() увеличивает пространство данных программы на \fIincrement\fP
+байт. Вызов \fBsbrk\fP() с \fIincrement\fP равным 0 может быть использован для
+нахождения текущего местоположения маркера окончания программы.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBbrk\fP() возвращает ноль. В случае ошибки
+возвращается \-1, а \fIerrno\fP становится равной \fBENOMEM\fP.
+.PP
+При успешном выполнении \fBsbrk\fP() возвращает предыдущий маркер окончания
+программы. Если маркер окончания был увеличен, то это значение указывает на
+начало новой выделенной памяти. В случае ошибки возвращается \fI(void\ *)\ \-1\fP, а \fIerrno\fP становится равной \fBENOMEM\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\"
+.\" .BR brk ()
+.\" and
+.\" .BR sbrk ()
+.\" are not defined in the C Standard and are deliberately excluded from the
+.\" POSIX.1-1990 standard (see paragraphs B.1.1.1.3 and B.8.3.3).
+4.3BSD; SUSv1, помечены как УСТАРЕВШИЕ в SUSv2, удалены из POSIX.1\-2001.
+.SH ЗАМЕЧАНИЯ
+Не используйте \fBbrk\fP() и \fBsbrk\fP(): для выделения памяти функции
+\fBmalloc\fP(3) являются более переносимыми и удобными.
+.PP
+.\" One sees
+.\" \fIint\fP (e.g., XPGv4, DU 4.0, HP-UX 11, FreeBSD 4.0, OpenBSD 3.2),
+.\" \fIssize_t\fP (OSF1 2.0, Irix 5.3, 6.5),
+.\" \fIptrdiff_t\fP (libc4, libc5, ulibc, glibc 2.0, 2.1),
+.\" \fIintptr_t\fP (e.g., XPGv5, AIX, SunOS 5.8, 5.9, FreeBSD 4.7, NetBSD 1.6,
+.\" Tru64 5.1, glibc2.2).
+В различных системах используются различные типы для аргумента
+\fBsbrk\fP(). Обычно это \fIint\fP, \fIssize_t\fP, \fIptrdiff_t\fP, \fIintptr_t\fP.
+.SS "Отличия между библиотекой C и ядром"
+Возвращаемое \fBbrk\fP() значение, описанное выше, является частью поведения
+обёрточной функции glibc к системному вызову Linux \fBbrk\fP(). В большинстве
+других реализаций возвращаемое \fBbrk\fP() значение то же самое; это значение
+также описано в SUSv2. Однако, реальный системный вызов Linux в случае
+успешного завершения возвращает новый маркер окончания программы. При ошибке
+системный вызов возвращает текущий маркер окончания. Обёрточная функция
+glibc делает то же самое (т. е., проверяет меньше ли новый маркер чем
+\fIaddr\fP), возвращая значения 0 и \-1, как описано выше.
+.PP
+В Linux, вызов \fBsbrk\fP() реализован в виде библиотечной функции, которая
+использует системный вызов \fBbrk\fP() и ведёт внутренний учёт для возврата
+старого значения маркера окончания.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBexecve\fP(2), \fBgetrlimit\fP(2), \fBend\fP(3), \fBmalloc\fP(3)

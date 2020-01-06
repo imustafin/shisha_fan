@@ -1,0 +1,48 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"
+.\" Copyright (C) 2014 Red Hat, Inc. All Rights Reserved.
+.\" Written by David Howells (dhowells@redhat.com)
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_ONEPARA)
+.\" This program is free software; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License
+.\" as published by the Free Software Foundation; either version
+.\" 2 of the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PROCESS\-KEYRING 7 2017\-03\-13 Linux "Руководство программиста Linux"
+.SH ИМЯ
+process\-keyring \- общая связка ключей для процесса
+.SH ОПИСАНИЕ
+Связка ключей процесса — это связка ключей, используемая для привязки ключей
+процесса. Она создаётся только по запросу процесса. Связка ключей процесса
+имеет имя (описание)  \fI_pid\fP.
+.PP
+Существует специальное значение, \fBKEY_SPEC_PROCESS_KEYRING\fP, которое можно
+использовать вместо настоящего серийного номера связки ключей процесса
+вызывающего процесса.
+.PP
+В утилите \fBkeyctl\fP(1) подобным образом можно использовать «\fB@p\fP» вместо
+числового ID ключа, но так как \fBkeyctl\fP(1) выполняется после разветвления,
+это не используется.
+.PP
+Нить, создаваемая \fBclone\fP(2) с флагом \fBCLONE_THREAD\fP, имеет ту же связку
+ключей процесса, что и вызвавший \fBclone\fP(2). Если новый процесс создаётся с
+помощью \fBfork\fP(), то изначально он не имеет связки ключей процесса. Связка
+ключей процесса очищается при \fBexecve\fP(2). Связка ключей процесса
+уничтожается когда завершается последняя нить, которая на неё ссылалась.
+.PP
+Если процесс не имеет связки ключей процесса, когда к ней обращается, то она
+будет создана, если запрашивается изменение связки ключей; в противном
+случае возвращается ошибка \fBENOKEY\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBkeyctl\fP(1), \fBkeyctl\fP(3), \fBkeyrings\fP(7), \fBpersistent\-keyring\fP(7),
+\fBsession\-keyring\fP(7), \fBthread\-keyring\fP(7), \fBuser\-keyring\fP(7),
+\fBuser\-session\-keyring\fP(7)

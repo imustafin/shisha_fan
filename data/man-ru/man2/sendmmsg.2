@@ -1,0 +1,191 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2012 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" with some material from a draft by
+.\" Stephan Mueller <stephan.mueller@atsec.com>
+.\" in turn based on Andi Kleen's recvmmsg.2 page.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SENDMMSG 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sendmmsg \- отправляет несколько сообщений в сокет
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* Смотрите feature_test_macros(7) */
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint sendmmsg(int \fP\fIsockfd\fP\fB, struct mmsghdr *\fP\fImsgvec\fP\fB, unsigned int \fP\fIvlen\fP\fB,\fP
+\fB             int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+.\" See commit 228e548e602061b08ee8e8966f567c12aa079682
+Системный вызов \fBsendmmsg\fP() является расширенной версией \fBsendmsg\fP(2),
+позволяя вызывающему передавать несколько сообщений из сокета, используя
+только один системный вызов (в некоторых приложениях это позволяет получить
+выигрыш в производительности).
+.PP
+Аргумент \fIsockfd\fP представляет собой файловый дескриптор сокета для
+отправки данных.
+.PP
+Аргумент \fImsgvec\fP является указателем на массив структур \fImmsghdr\fP. Размер
+этого массива указывается в \fIvlen\fP.
+.PP
+Структура \fImmsghdr\fP определена в \fI<sys/socket.h>\fP следующим
+образом:
+.PP
+.in +4n
+.EX
+struct mmsghdr {
+    struct msghdr msg_hdr;  /* заголовок сообщения */
+    unsigned int  msg_len;  /* кол\-во переданных байт */
+};
+.EE
+.in
+.PP
+Поле \fImsg_hdr\fP представляет собой структуру \fImsghdr\fP, которая описана в
+\fBsendmsg\fP(2). Поле \fImsg_len\fP используется для возврата количества байт,
+посланных из сообщения в \fImsg_hdr\fP (т. е., такое же значение, что и
+возвращаемое значение одиночного вызова \fBsendmsg\fP(2)).
+.PP
+Аргумент \fIflags\fP содержит объединённые с помощью OR флаги. Флаги те же, что
+и у \fBsendmsg\fP(2).
+.PP
+Блокирование вызова \fBsendmmsg\fP() происходит до тех пор, пока не будет
+отправлено \fIvlen\fP сообщений. Неблокирующий вызов посылает столько сообщений
+сколько возможно (максимальное количество указано в \fIvlen\fP) и сразу
+завершает работу.
+.PP
+При возврате из \fBsendmmsg\fP(), поля \fImsg_len\fP последующих элементов
+\fImsgvec\fP обновляются и содержат количество байт, переданных из
+соответствующего \fImsg_hdr\fP. Возвращаемое вызовом значение равно количеству
+элементов \fImsgvec\fP, которые были обновлены.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsendmmsg\fP() возвращает количество сообщений,
+посланных из \fImsgvec\fP; если это значение меньше чем \fIvlen\fP, то вызывающий
+может повторить вызов \fBsendmmsg\fP() для отправки оставшихся сообщений.
+.PP
+В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в значение
+ошибки.
+.SH ОШИБКИ
+.\" commit 728ffb86f10873aaf4abd26dde691ee40ae731fe
+.\"     ... only return an error if no datagrams could be sent.
+.\"     If less than the requested number of messages were sent, the application
+.\"     must retry starting at the first failed one and if the problem is
+.\"     persistent the error will be returned.
+.\"
+.\"     This matches the behavior of other syscalls like read/write - it
+.\"     is not an error if less than the requested number of elements are sent.
+Возникают те же ошибки что и для \fBsendmsg\fP(2). Ошибка возвращается только,
+если ни одной дейтаграммы не послано. Смотрите также ДЕФЕКТЫ.
+.SH ВЕРСИИ
+Системный вызов \fBsendmmsg\fP() был добавлен в ядро Linux версии
+3.0. Поддержка в glibc появилась в версии 2.14.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBsendmmsg\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+.\" commit 98382f419f32d2c12d021943b87dea555677144b
+.\"     net: Cap number of elements for sendmmsg
+.\"
+.\"     To limit the amount of time we can spend in sendmmsg, cap the
+.\"     number of elements to UIO_MAXIOV (currently 1024).
+.\"
+.\"     For error handling an application using sendmmsg needs to retry at
+.\"     the first unsent message, so capping is simpler and requires less
+.\"     application logic than returning EINVAL.
+Значение, указанное в \fIvlen\fP, ограничено \fBUIO_MAXIOV\fP (1024).
+.SH ДЕФЕКТЫ
+Если после отправки хотя бы одного сообщения произошла ошибка, то вызов
+завершается успешно и возвращается количество отправленных сообщений. Код
+ошибки теряется. Вызывающий может повторить передачу, начиная с первого
+ошибочного сообщения, но нет гарантии, что возвращаемый код ошибки будет
+совпадать с потерянным в предыдущем вызове.
+.SH ПРИМЕР
+В примере далее \fBsendmmsg\fP() используется для отправки \fIonetwo\fP и \fIthree\fP
+в двух разных дейтаграммах UDP за один системный вызов. Содержимое первой
+дейтаграммы составляется из пары буферов.
+.PP
+.EX
+#define _GNU_SOURCE
+#include <netinet/ip.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+int
+main(void)
+{
+    int sockfd;
+    struct sockaddr_in addr;
+    struct mmsghdr msg[2];
+    struct iovec msg1[2], msg2;
+    int retval;
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd == \-1) {
+        perror("socket()");
+        exit(EXIT_FAILURE);
+    }
+
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    addr.sin_port = htons(1234);
+    if (connect(sockfd, (struct sockaddr *) &addr, sizeof(addr)) == \-1) {
+        perror("connect()");
+        exit(EXIT_FAILURE);
+    }
+
+    memset(msg1, 0, sizeof(msg1));
+    msg1[0].iov_base = "one";
+    msg1[0].iov_len = 3;
+    msg1[1].iov_base = "two";
+    msg1[1].iov_len = 3;
+
+    memset(&msg2, 0, sizeof(msg2));
+    msg2.iov_base = "three";
+    msg2.iov_len = 5;
+
+    memset(msg, 0, sizeof(msg));
+    msg[0].msg_hdr.msg_iov = msg1;
+    msg[0].msg_hdr.msg_iovlen = 2;
+
+    msg[1].msg_hdr.msg_iov = &msg2;
+    msg[1].msg_hdr.msg_iovlen = 1;
+
+    retval = sendmmsg(sockfd, msg, 2, 0);
+    if (retval == \-1)
+        perror("sendmmsg()");
+    else
+        printf("%d сообщений послано\en", retval);
+
+    exit(0);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBrecvmmsg\fP(2), \fBsendmsg\fP(2), \fBsocket\fP(2), \fBsocket\fP(7)

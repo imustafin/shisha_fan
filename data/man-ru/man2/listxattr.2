@@ -1,0 +1,281 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) Andreas Gruenbacher, February 2001
+.\" Copyright (C) Silicon Graphics Inc, September 2001
+.\" Copyright (C) 2015 Heinrich Schuchardt <xypron.glpk@gmx.de>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LISTXATTR 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+listxattr, llistxattr, flistxattr \- выводит список названий расширенных
+атрибутов
+.SH ОБЗОР
+.fam C
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/xattr.h>\fP
+.PP
+\fBssize_t listxattr(const char\ *\fP\fIpath\fP\fB, char\ *\fP\fIlist\fP\fB, size_t \fP\fIsize\fP\fB);\fP
+\fBssize_t llistxattr(const char\ *\fP\fIpath\fP\fB, char\ *\fP\fIlist\fP\fB, size_t \fP\fIsize\fP\fB);\fP
+\fBssize_t flistxattr(int \fP\fIfd\fP\fB, char\ *\fP\fIlist\fP\fB, size_t \fP\fIsize\fP\fB);\fP
+.fi
+.fam T
+.SH ОПИСАНИЕ
+Расширенные атрибуты представляют собой пару \fIимя\fP:\fIзначение\fP и
+связываются с записями inode (файлы, каталоги, символьные ссылки и
+т.п.). Они являются расширениями к обычным атрибутам, связанным со всеми
+записями inode в системе (например, данные \fBstat\fP(2)). Полное описание
+модели расширенных атрибутов можно найти в \fBxattr\fP(7).
+.PP
+\fBlistxattr\fP() получает список названий расширенных атрибутов, связанных с
+заданным путем \fIpath\fP в файловой системе. Список помещается в \fIlist\fP
+вызывающего, который выделил для этого буфер размером \fIsize\fP (задаётся в
+байтах). Список представляет собой набор названий (заканчивающихся null)
+один за одним. Названия расширенных атрибутов, к которым вызывающий процесс
+не может иметь доступ, могут отсутствовать в списке. Возвращается длина
+списка \fIlist\fP.
+.PP
+\fBllistxattr\fP() идентичен \fBlistxattr\fP(), за исключением случая с символьной
+ссылкой, где возвращается список названий расширенных атрибутов, связанных с
+самой ссылкой, а не с файлом, на который она ссылается.
+.PP
+\fBflistxattr\fP() идентичен \fBlistxattr\fP(), отличием является то, что
+используется открытый файл, на который указывает \fIfd\fP (возвращаемом
+\fBopen\fP(2)), а не указанный в \fIpath\fP.
+.PP
+Одиночный расширенный атрибут \fIname\fP является  строкой, заканчивающейся
+null. Имя включает префикс пространства имен; их может быть несколько,
+разрозненные пространства связаны с отдельной записью inode.
+.PP
+Если \fIsize\fP равно нулю, то эти вызовы возвращают текущий размер списка имён
+расширенных атрибутов (и не изменяют \fIlist\fP). Это можно использовать для
+определения размера буфера, который будет указан в последующем вызове (но
+учтите, есть вероятность, что набор расширенных атрибутов может измениться
+между двумя вызовами, поэтому всё равно нужно проверять возвращаемое
+состояние после второго вызова).
+.SS Пример
+\fIСписок\fP названий возвращается в виде неупорядоченного массива символьных
+строк, заканчивающихся null (названия атрибутов разделяются байтами null
+(\(aq\e0\(aq)), например:
+.PP
+.in +4n
+.EX
+user.name1\e0system.name1\e0user.name2\e0
+.EE
+.in
+.PP
+Файловые системы, реализующие ACL стандарта POSIX с помощью расширенных
+атрибутов, могут возвращать такой \fIсписок\fP:
+.PP
+.in +4n
+.EX
+system.posix_acl_access\e0system.posix_acl_default\e0
+.EE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном завершении работы возвращается неотрицательное число,
+обозначающее размер списка названий расширенных атрибутов. При ошибках
+возвращается \-1 и \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBE2BIG\fP
+Размер списка имён расширенных атрибутов превышает максимально допустимый;
+список невозможно получить. Это может случиться в файловых системах, которые
+поддерживают бесконечное количество расширенных атрибутов на файл, например
+XFS. Смотрите ДЕФЕКТЫ.
+.TP 
+\fBENOTSUP\fP
+Расширенные атрибуты не поддерживаются файловой системой или отключены.
+.TP 
+\fBERANGE\fP
+Размер \fIsize\fP буфера \fIlist\fP слишком мал для хранения результата.
+.PP
+Также могут возникать ошибки, описанные в \fBstat\fP(2).
+.SH ВЕРСИИ
+Данные системные вызовы доступны в Linux начиная с ядра версии 2.4;
+поддержка в glibc появилась в версии 2.3.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" .SH AUTHORS
+.\" Andreas Gruenbacher,
+.\" .RI < a.gruenbacher@computer.org >
+.\" and the SGI XFS development team,
+.\" .RI < linux-xfs@oss.sgi.com >.
+.\" Please send any bug reports or comments to these addresses.
+Данные системные вызовы есть только в Linux.
+.SH ДЕФЕКТЫ
+.\" The xattr(7) page refers to this text:
+Как упоминалось в \fBxattr\fP(7), в VFS есть ограничение в 64\ КБ на размер
+списка имён расширенных атрибутов, возвращаемый \fBlistxattr\fP(7). Если полный
+размер имён атрибутов, прикреплённых к файлу, превышает это ограничение, то
+становится невозможно получить список имён атрибутов.
+.SH ПРИМЕР
+В следующей программе показано использование \fBlistxattr\fP() и
+\fBgetxattr\fP(2). Для файла, чьё имя указывается параметром в командной
+строке, выводится список файловых атрибутов и их значения.
+.PP
+Для упрощения кода при выполнении программы ключи атрибутов и значения
+считаются константами. В реальной программе нужно учитывать и обрабатывать
+изменения при выполнении программы. Например, количество байт, необходимое
+для ключей атрибутов, может увеличиваться между двумя вызовами
+\fBlistxattr\fP(). В приложении нужно предусмотреть эту возможность с помощью
+цикла, который повторяет вызов (возможно, ввести задаваемое максимальное
+количество попыток) с большим буфером каждый раз при ошибке
+\fBERANGE\fP. Вызовы \fBgetxattr\fP(2) могут обрабатываться схожим образом.
+.PP
+В следующем выводе был создан файл, заданы некоторые расширенные файловые
+атрибуты и показан вывод атрибутов с помощью программы\-примера.
+.SS "Пример вывода"
+.in +4n
+.EX
+$ \fBtouch /tmp/foo\fP
+$ \fBsetfattr \-n user.fred \-v chocolate /tmp/foo\fP
+$ \fBsetfattr \-n user.frieda \-v bar /tmp/foo\fP
+$ \fBsetfattr \-n user.empty /tmp/foo\fP
+$ \fB./listxattr /tmp/foo\fP
+user.fred: chocolate
+user.frieda: bar
+user.empty: <нет значения>
+.EE
+.in
+.SS "Исходный код программы (listxattr.c)"
+.EX
+#include <malloc.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/xattr.h>
+
+int
+main(int argc, char *argv[])
+{
+    ssize_t buflen, keylen, vallen;
+    char *buf, *key, *val;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s путь\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /*
+     * Определение длины буфера.
+     */
+    buflen = listxattr(argv[1], NULL, 0);
+    if (buflen == \-1) {
+        perror("listxattr");
+        exit(EXIT_FAILURE);
+    }
+    if (buflen == 0) {
+        printf("%s не имеет атрибутов.\en", argv[1]);
+        exit(EXIT_SUCCESS);
+    }
+
+    /*
+     * Выделение буфера.
+     */
+    buf = malloc(buflen);
+    if (buf == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+
+    /*
+     * Копирование списка ключей атрибутов в буфер.
+     */
+    buflen = listxattr(argv[1], buf, buflen);
+    if (buflen == \-1) {
+        perror("listxattr");
+        exit(EXIT_FAILURE);
+    }
+
+    /*
+     * Циклический проход по списку строк (завершающихся 0) с
+     * ключей атрибутов. Используется оставшаяся длина буфера для
+     * определения конца списка.
+     */
+    key = buf;
+    while (buflen > 0) {
+
+        /*
+         * Вывод ключа атрибута.
+         */
+        printf("%s: ", key);
+
+        /*
+         * Определение длины значения.
+         */
+        vallen = getxattr(argv[1], key, NULL, 0);
+        if (vallen == \-1)
+            perror("getxattr");
+
+        if (vallen > 0) {
+
+            /*
+             * Выделение буфера под значения.
+             * Один доп. байт нужен для добавляемого 0x00.
+             */
+            val = malloc(vallen + 1);
+            if (val == NULL) {
+                perror("malloc");
+                exit(EXIT_FAILURE);
+            }
+
+            /*
+             * Копирование значения в буфер.
+             */
+            vallen = getxattr(argv[1], key, val, vallen);
+            if (vallen == \-1)
+                perror("getxattr");
+            else {
+                /*
+                 * Вывод значения атрибута.
+                 */
+                val[vallen] = 0;
+                printf("%s", val);
+            }
+
+            free(val);
+        } else if (vallen == 0)
+            printf("<нет значения>");
+
+        printf("\en");
+
+        /*
+         * Переход к следующему ключу атрибута.
+         */
+        keylen = strlen(key) + 1;
+        buflen \-= keylen;
+        key += keylen;
+    }
+
+    free(buf);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetfattr\fP(1), \fBsetfattr\fP(1), \fBgetxattr\fP(2), \fBopen\fP(2),
+\fBremovexattr\fP(2), \fBsetxattr\fP(2), \fBstat\fP(2), \fBsymlink\fP(7), \fBxattr\fP(7)

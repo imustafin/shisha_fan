@@ -1,0 +1,136 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1999 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TEMPNAM 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+tempnam \- создаёт имя для временного файла
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+.PP
+\fBchar *tempnam(const char *\fP\fIdir\fP\fB, const char *\fP\fIpfx\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBtempnam\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE || _SVID_SOURCE
+.SH ОПИСАНИЕ
+\fIНикогда не используйте эту функцию\fP. Вместо неё используйте \fBmkstemp\fP(3)
+или \fBtmpfile\fP(3).
+.PP
+Функция \fBtempnam\fP() возвращает указатель на строку, которая является
+допустимым именем файла и при этом файл с подобным именем на момент проверки
+\fBtempnam\fP() не существует. Суффикс сгенерированного имени файла будет
+начинаться с \fIpfx\fP (при условии, что \fIpfx\fP — не NULL\-строка и содержит не
+менее пяти байт). Также необходимо, чтобы префикс, состоящий из имён
+каталогов полного имени файла, был «целесообразным» (чаще всего это
+подразумевает, как минимум, доступность на запись).
+.PP
+Попытка найти подходящий каталог делится на следующие шаги:
+.TP  3
+1.
+Если существует переменная окружения \fBTMPDIR\fP, которая содержит подходящий
+каталог, то используется она.
+.TP 
+2.
+Иначе, если аргумент \fIdir\fP не является NULL и подходящий, то используется
+он.
+.TP 
+3.
+Иначе используется \fIP_tmpdir\fP (описана в \fI<stdio.h>\fP), если она
+подходит.
+.TP 
+4.
+И, наконец, может быть использован каталог, определённый реализацией
+функции.
+.PP
+Память под строку, возвращаемую \fBtempnam\fP(), выделяется с помощью
+\fBmalloc\fP(3) и в последствии должна быть освобождена с помощью \fBfree\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBtempnam\fP() возвращает указатель на
+уникальное имя временного файла. Она возвращает NULL, если его невозможно
+сгенерировать и записывает в \fIerrno\fP номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBENOMEM\fP
+Не удалось выделить память для строки.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBtempnam\fP()
+T}	Безвредность в нитях	MT\-Safe env
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4, 4.3BSD, POSIX.1\-2001. В POSIX.1\-2008 функция \fBtempnam\fP() отмечена как
+устаревшая.
+.SH ЗАМЕЧАНИЯ
+Хотя \fBtempnam\fP() генерирует имена, которые трудно подобрать, тем не менее,
+есть вероятность, что за промежуток времени, когда \fBtempnam\fP() вернёт имя
+файла и программа откроет его, другая программа успеет создать такое же имя
+с помощью \fBopen\fP(2) или создать символическую ссылку, что может привести к
+проблемам безопасности. Чтобы исключить подобную вероятность, для открытия
+имени файла используйте \fBopen\fP(2) с флагом \fBO_EXCL\fP. А ещё лучше \(em
+воспользуйтесь \fBmkstemp\fP(3) или \fBtmpfile\fP(3).
+.PP
+В SUSv2 не упоминается использование \fBTMPDIR\fP; в glibc она будет
+использоваться только в том случае, если у программы не установлен бит
+set\-user\-ID. В SVr4, используемый каталог для случая \fB4.\fP \(em \fI/tmp\fP (как
+и для glibc).
+.PP
+Так как \fBtempnam\fP() динамически выделяет память под возвращаемое имя файла,
+то она является реентерабельной и, следовательно, безопасной при
+использовании нитей (в отличие от \fBtmpnam\fP(3)).
+.PP
+Функция \fBtempnam\fP() генерирует уникальное имя каждый раз, пока не достигнет
+предела \fBTMP_MAX\fP (определённого в \fI<stdio.h>\fP). Если она будет
+вызвана более чем \fBTMP_MAX\fP раз, то дальнейшее поведение определяется
+конкретной реализацией.
+.PP
+\fBtempnam\fP() использует по крайней мере первые пять байт из \fIpfx\fP.
+.PP
+Реализация \fBtempnam\fP() из glibc завершается ошибкой \fBEEXIST\fP, если не
+сможет найти уникальное имя.
+.SH ДЕФЕКТЫ
+Точного определения «целесообразности» не существует. Не определено, каким
+образом должна определяться доступность каталога.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmkstemp\fP(3), \fBmktemp\fP(3), \fBtmpfile\fP(3), \fBtmpnam\fP(3)

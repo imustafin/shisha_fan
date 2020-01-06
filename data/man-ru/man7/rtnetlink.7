@@ -1,0 +1,388 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" This man page is Copyright (C) 1999 Andi Kleen <ak@muc.de>.
+.\"
+.\" %%%LICENSE_START(VERBATIM_ONE_PARA)
+.\" Permission is granted to distribute possibly modified copies
+.\" of this page provided the header is included verbatim,
+.\" and in case of nontrivial modification author and date
+.\" of the modification is added to the header.
+.\" %%%LICENSE_END
+.\"
+.\" Based on the original comments from Alexey Kuznetsov, written with
+.\" help from Matthew Wilcox.
+.\" $Id: rtnetlink.7,v 1.8 2000/01/22 01:55:04 freitag Exp $
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RTNETLINK 7 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+rtnetlink \- сокет маршрутизации IPv4 в Linux
+.SH ОБЗОР
+\fB#include <asm/types.h>\fP
+.br
+\fB#include <linux/netlink.h>\fP
+.br
+\fB#include <linux/rtnetlink.h>\fP
+.br
+\fB#include <sys/socket.h>\fP
+.PP
+\fBrtnetlink_socket = socket(AF_NETLINK, int \fP\fIsocket_type\fP\fB,
+NETLINK_ROUTE);\fP
+.SH ОПИСАНИЕ
+.\" FIXME . ? all these macros could be moved to rtnetlink(3)
+Rtnetlink позволяет читать и изменять таблицы маршрутизации ядра. Он
+используется для взаимодействия различных подсистем внутри ядра (это здесь
+не описано), а также для взаимодействия пользовательских программ. Сетевыми
+маршрутами, IP\-адресами, параметрами связи (link parameters), настройками
+соседства (neighbor setups), алгоритмами планирования очереди (queueing
+disciplines), классификацией трафика и  и пакетными классификаторами можно
+управлять через сокеты \fBNETLINK_ROUTE\fP. Они основываются на сообщениях
+netlink; подробности смотрите в \fBnetlink\fP(7).
+.SS "Атрибуты маршрутизации"
+Некоторые сообщения rtnetlink содержат необязательные атрибуты после
+начального заголовка:
+.PP
+.in +4n
+.EX
+struct rtattr {
+    unsigned short rta_len;    /* длина параметра */
+    unsigned short rta_type;   /* тип параметра */
+    /* данные … */
+};
+.EE
+.in
+.PP
+Этими атрибутами нужно управлять только с помощью макросов RTA_* или
+libnetlink, смотрите \fBrtnetlink\fP(3).
+.SS Сообщения
+Rtnetlink поддерживает следующие типы сообщений (в дополнении к стандартным
+сообщениям netlink):
+.TP 
+\fBRTM_NEWLINK\fP, \fBRTM_DELLINK\fP, \fBRTM_GETLINK\fP
+Создание, удаление и получение информации об определённом сетевом
+интерфейсе. Эти сообщения содержат структуру \fIifinfomsg\fP, за которой
+следует ряд структур \fIrtattr\fP.
+.IP
+.EX
+struct ifinfomsg {
+    unsigned char  ifi_family; /* AF_UNSPEC */
+    unsigned short ifi_type;   /* тип устройства */
+    int            ifi_index;  /* индекс интерфейса */
+    unsigned int   ifi_flags;  /* флаги устройства */
+    unsigned int   ifi_change; /* маска изменения */
+};
+.EE
+.IP
+.\" FIXME Document ifinfomsg.ifi_type
+В \fIifi_flags\fP содержатся флаги устройства, смотрите \fBnetdevice\fP(7); в
+\fIifi_index\fP — уникальный индекс интерфейса (начиная с Linux 3.7 возможно
+передать ненулевое значение в сообщении \fBRTM_NEWLINK\fP; в этом случае
+создаётся связь (link) с заданным \fIifindex\fP); элемент \fIifi_change\fP
+зарезервирован на будущее и его значение всегда должно быть равно
+0xFFFFFFFF.
+.TS
+tab(:);
+c s s
+l l l.
+Атрибуты маршрутизации
+rta_type:тип значения:описание
+_
+IFLA_UNSPEC:\-:не определено
+IFLA_ADDRESS:аппаратный адрес:адрес интерфейса L2
+IFLA_BROADCAST:аппаратный адрес:широковещательный адрес L2
+IFLA_IFNAME:строка asciiz:имя устройства
+IFLA_MTU:unsigned int:MTU устройства
+IFLA_LINK:int:тип связи
+IFLA_QDISC:строка asciiz:алгоритм очереди
+IFLA_STATS:T{
+смотрите ниже
+T}:статистика интерфейса
+.TE
+.PP
+Тип значения для \fBIFLA_STATS\fP — \fIstruct rtnl_link_stats\fP (в Linux 2.4 и
+старее — \fIstruct net_device_stats\fP).
+.TP 
+\fBRTM_NEWADDR\fP, \fBRTM_DELADDR\fP, \fBRTM_GETADDR\fP
+Добавление, удаление или получение информации об IP\-адресе, назначенном
+интерфейсу. В Linux 2.2 интерфейс может иметь несколько IP\-адресов; эта
+концепция пришла на смену псевдонимам устройства, использовавшимся в версии
+2.0. В Linux 2.2 эти сообщения поддерживают адреса IPv4 и IPv6. В них
+содержится структура \fIifaddrmsg\fP, которая может быть указана после
+атрибутов маршрутизации \fIrtattr\fP.
+.IP
+.EX
+struct ifaddrmsg {
+    unsigned char ifa_family;    /* тип адреса */
+    unsigned char ifa_prefixlen; /* длина префикса адреса */
+    unsigned char ifa_flags;     /* флаги адреса */
+    unsigned char ifa_scope;     /* область адреса */
+    int           ifa_index;     /* индекс интерфейса */
+};
+.EE
+.IP
+Поле \fIifa_family\fP представляет тип адресного семейства (\fBAF_INET\fP или
+\fBAF_INET6\fP), \fIifa_prefixlen\fP — длину адресной маски адреса, если это
+применимо для семейства (в IPv4), \fIifa_scope\fP — область адреса,
+\fIifa_index\fP — индекс интерфейса, которому назначен адрес. Поле \fIifa_flags\fP
+— слово флагов: \fBIFA_F_SECONDARY\fP — вторичный адрес (старый псевдоним
+интерфейса), \fBIFA_F_PERMANENT\fP — постоянный адрес, назначенный
+пользователем и другие недокументированные флаги.
+.TS
+tab(:);
+c s s
+l l l.
+Атрибуты
+rta_type:тип значения:описание
+_
+IFA_UNSPEC:\-:не определено
+IFA_ADDRESS:адрес неструктурированного протокола:адрес интерфейса
+IFA_LOCAL:адрес неструктурированного протокола:локальный адрес
+IFA_LABEL:строка asciiz:название интерфейса
+IFA_BROADCAST:адрес неструктурированного протокола:широковещательный адрес
+IFA_ANYCAST:адрес неструктурированного протокола:адрес anycast
+IFA_CACHEINFO:struct ifa_cacheinfo:информация об адресе
+.TE
+.\" FIXME Document struct ifa_cacheinfo
+.TP 
+\fBRTM_NEWROUTE\fP, \fBRTM_DELROUTE\fP, \fBRTM_GETROUTE\fP
+Создание, удаление или получение информации о сетевом маршруте. Эти
+сообщения содержат структуру \fIrtmsg\fP с необязательными дополнительными
+структурами \fIrtattr\fP. Для \fBRTM_GETROUTE\fP, если \fIrtm_dst_len\fP и
+\fIrtm_src_len\fP задать значение 0, то вы получите все записи определённой
+таблицы маршрутизации. В других полях, кроме \fIrtm_table\fP и \fIrtm_protocol\fP,
+0 считается шаблоном (wildcard).
+.IP
+.EX
+struct rtmsg {
+    unsigned char rtm_family;   /* адресное семейство маршрута */
+    unsigned char rtm_dst_len;  /* длина назначения */
+    unsigned char rtm_src_len;  /* длина источника */
+    unsigned char rtm_tos;      /* фильтр TOS */
+
+    unsigned char rtm_table;    /* ID таблицы маршрутизации */
+    unsigned char rtm_protocol; /* протокол марш\-ции; см. ниже */
+    unsigned char rtm_scope;    /* см. ниже */
+    unsigned char rtm_type;     /* см. ниже */
+
+    unsigned int  rtm_flags;
+};
+.EE
+.TS
+tab(:);
+l l.
+rtm_type:Тип маршрута
+_
+RTN_UNSPEC:неизвестный маршрут
+RTN_UNICAST:шлюз или прямой маршрут
+RTN_LOCAL:маршрут локального интерфейса
+RTN_BROADCAST:T{
+локальный широковещательный маршрут (широковещательная отправка)
+T}
+RTN_ANYCAST:T{
+локальный широковещательный маршрут (однонаправленная отправка)
+T}
+RTN_MULTICAST:многоадресный маршрут
+RTN_BLACKHOLE:маршрут для отброса пакетов
+RTN_UNREACHABLE:недостижимый пункт назначения
+RTN_PROHIBIT:маршрут для отклонения пакетов
+RTN_THROW:продолжение поиска маршрута в другой таблице
+RTN_NAT:правило трансляции сетевого адреса
+RTN_XRESOLVE:T{
+ссылка на внешний определитель (не реализовано)
+T}
+.TE
+.TS
+tab(:);
+l l.
+ :Происхождение маршрута
+_
+RTPROT_UNSPEC:неизвестно
+RTPROT_REDIRECT:T{
+из\-за перенаправления полученном по ICMP (не используется)
+T}
+RTPROT_KERNEL:посылается ядром
+RTPROT_BOOT:при загрузке машины
+RTPROT_STATIC:указан администратором
+.TE
+.sp 1
+Значения больше \fBRTPROT_STATIC\fP не учитываются ядром, они предназначены
+только для пользовательской информации. Они могут использоваться для пометки
+источника информации о маршрутизации или для отличения различных служб
+маршрутизации друг от друга. Уже назначенные идентификаторы для служб
+маршрутизации можно найти в \fI<linux/rtnetlink.h>\fP.
+.IP
+\fIrtm_scope\fP — расстояние до назначения:
+.TS
+tab(:);
+l l.
+RT_SCOPE_UNIVERSE:глобальный маршрут
+RT_SCOPE_SITE:T{
+внутренний маршрут в локальной автономной системе
+T}
+RT_SCOPE_LINK:маршрут на эту связь
+RT_SCOPE_HOST:маршрут на локальный узел
+RT_SCOPE_NOWHERE:назначение не существует
+.TE
+.sp 1
+Значения от \fBRT_SCOPE_UNIVERSE\fP и до \fBRT_SCOPE_SITE\fP доступны
+пользователю.
+.IP
+Поле \fIrtm_flags\fP может иметь следующие значения:
+.TS
+tab(:);
+l l.
+RTM_F_NOTIFY:T{
+если маршрут изменился — уведомить пользователя через rtnetlink
+T}
+RTM_F_CLONED:маршрут склонирован из другого маршрута
+RTM_F_EQUALIZE:многопутевой уравниватель (не реализовано)
+.TE
+.sp 1
+В \fIrtm_table\fP задаётся таблица маршрутизации:
+.TS
+tab(:);
+l l.
+RT_TABLE_UNSPEC:таблица маршрутизации не задана
+RT_TABLE_DEFAULT:таблица по умолчанию
+RT_TABLE_MAIN:главная таблица
+RT_TABLE_LOCAL:локальная таблица
+.TE
+.sp 1
+.\" Keep table on same page
+Пользователь может назначать произвольные значения от \fBRT_TABLE_UNSPEC\fP и
+до \fBRT_TABLE_DEFAULT\fP.
+.bp +1
+.TS
+tab(:);
+c s s
+l l l.
+Атрибуты
+rta_type:тип значения:описание
+_
+RTA_UNSPEC:\-:игнорируется
+RTA_DST:адрес протокола:адрес маршрута назначения
+RTA_SRC:адрес протокола:адрес маршрута источника
+RTA_IIF:int:индекс входного интерфейса
+RTA_OIF:int:индекс выходного интерфейса
+RTA_GATEWAY:адрес протокола:шлюз маршрута
+RTA_PRIORITY:int:приоритет маршрута
+RTA_PREFSRC::
+RTA_METRICS:int:метрика маршрута
+RTA_MULTIPATH::
+RTA_PROTOINFO::
+RTA_FLOW::
+RTA_CACHEINFO::
+.TE
+.sp 1
+\fBЗаполнить эти значения!\fP
+.TP 
+\fBRTM_NEWNEIGH\fP, \fBRTM_DELNEIGH\fP, \fBRTM_GETNEIGH\fP
+Добавление, удаление или получение информации о записи соседей по таблице
+(например, запись ARP). В сообщении содержится структура \fIndmsg\fP:
+.IP
+.EX
+struct ndmsg {
+    unsigned char ndm_family;
+    int           ndm_ifindex;  /* индекс интерфейса */
+    __u16         ndm_state;    /* состояние */
+    __u8          ndm_flags;    /* флаги */
+    __u8          ndm_type;
+};
+
+struct nda_cacheinfo {
+    __u32         ndm_confirmed;
+    __u32         ndm_used;
+    __u32         ndm_updated;
+    __u32         ndm_refcnt;
+};
+.EE
+.IP
+В \fIndm_state\fP содержится битовая маска следующих состояний:
+.TS
+tab(:);
+l l.
+NUD_INCOMPLETE:запись кэша в данный момент определяется
+NUD_REACHABLE:подтверждённая рабочая запись кэша
+NUD_STALE:устаревшая запись кэша
+NUD_DELAY:запись ожидает срабатывания таймера
+NUD_PROBE:запись кэша в данный момент проверяется повторно
+NUD_FAILED:некорректная запись кэша
+NUD_NOARP:устройство без кэша назначений
+NUD_PERMANENT:статическая запись
+.TE
+.sp 1
+Допустимые значения \fIndm_flags\fP:
+.TS
+tab(:);
+l l.
+NTF_PROXY:запись прокси arp
+NTF_ROUTER:маршрутизатор IPv6
+.TE
+.sp 1
+.\" FIXME .
+.\" document the members of the struct better
+Структура \fIrtattr\fP имеет следующие значения для поля \fIrta_type\fP:
+.TS
+tab(:);
+l l.
+NDA_UNSPEC:неизвестный тип
+NDA_DST:кэш адресов назначения соседей на сетевом уровне
+NDA_LLADDR:кэш адресов соседей на уровне связей
+NDA_CACHEINFO:статистика кэша
+.TE
+.sp 1
+Если значение поля \fIrta_type\fP равно \fBNDA_CACHEINFO\fP, то присутствует
+заголовок \fIstruct nda_cacheinfo\fP.
+.TP 
+\fBRTM_NEWRULE\fP, \fBRTM_DELRULE\fP, \fBRTM_GETRULE\fP
+Добавление, удаление или получение правила маршрутизации. Содержит \fIstruct
+rtmsg\fP.
+.TP 
+\fBRTM_NEWQDISC\fP, \fBRTM_DELQDISC\fP, \fBRTM_GETQDISC\fP
+Добавление, удаление или получение планирования очереди. В сообщении
+содержится \fIstruct tcmsg\fP, а также может быть серия атрибутов.
+.IP
+.EX
+struct tcmsg {
+    unsigned char    tcm_family;
+    int              tcm_ifindex;   /* индекс интерфейса */
+    __u32            tcm_handle;    /* описатель qdisc */
+    __u32            tcm_parent;    /* предок qdisc */
+    __u32            tcm_info;
+};
+.EE
+.TS
+tab(:);
+c s s
+l2 l2 l.
+Атрибуты
+rta_type:тип значения:Описание
+_
+TCA_UNSPEC:\-:не определено
+TCA_KIND:строка asciiz:имя план\-ания очереди
+TCA_OPTIONS:байтовая последовательность:есть параметры qdisc
+TCA_STATS:struct tc_stats:статистика qdisc
+TCA_XSTATS:относится к qdisc:стат\-ка по опр. модулю
+TCA_RATE:struct tc_estimator:ограничение по скорости
+.TE
+.sp 1
+Также, разрешены дополнительные атрибуты модуля qdisc. Дополнительную
+информацию можно получить из соответствующих заголовочных файлов.
+.TP 
+\fBRTM_NEWTCLASS\fP, \fBRTM_DELTCLASS\fP, \fBRTM_GETTCLASS\fP
+Добавление, удаление или получение класса трафика. В этих сообщениях
+содержится структура \fIstruct tcmsg\fP, описанная ранее.
+.TP 
+\fBRTM_NEWTFILTER\fP, \fBRTM_DELTFILTER\fP, \fBRTM_GETTFILTER\fP
+Добавление, удаление или получение информации о фильтре трафика. В этих
+сообщениях содержится структура \fIstruct tcmsg\fP, описанная ранее.
+.SH ВЕРСИИ
+Свойство \fBrtnetlink\fP появилось в Linux 2.2.
+.SH ДЕФЕКТЫ
+Данная справочная страница не полна.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcmsg\fP(3), \fBrtnetlink\fP(3), \fBip\fP(7), \fBnetlink\fP(7)

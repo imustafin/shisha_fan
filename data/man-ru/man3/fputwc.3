@@ -1,0 +1,77 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FPUTWC 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+fputwc, putwc \- записывает широкий символ в поток FILE
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+\fB#include <wchar.h>\fP
+.PP
+\fBwint_t fputwc(wchar_t \fP\fIwc\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+\fBwint_t putwc(wchar_t \fP\fIwc\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBfputwc\fP — это эквивалент функции \fBfputc\fP(3), но для широких
+символов. Она записывает широкий символ \fIwc\fP в поток \fIstream\fP. Если
+значение \fIferror(stream)\fP истинно, то возвращается \fBWEOF\fP. Если при
+преобразовании в широкий символ возникает ошибка, то значение переменной
+\fIerrno\fP устанавливается равным \fBEILSEQ\fP и возвращается \fBWEOF\fP. В любом
+другом случае возвращается \fIwc\fP.
+.PP
+Функция \fBputwc\fP() — это функция, или макрос, идентичный \fBfputwc\fP(). Она
+может быть реализована в виде макроса, и может вычислять свой аргумент более
+одного раза. Вообще нет смысла использовать эту функцию.
+.PP
+Неблокирующие аналоги смотрите в \fBunlocked_stdio\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBfputwc\fP() возвращает \fIwc\fP, если не было ошибок, или \fBWEOF\fP в
+противном случае. При ошибке в \fIerrno\fP записывается соответствующее
+значение.
+.SH ОШИБКИ
+Кроме обычных могут возникать:
+.TP 
+\fBEILSEQ\fP
+Не удалось преобразовать \fIwc\fP в кодировку потока.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw17 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfputwc\fP(),
+\fBputwc\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBfputwc\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.PP
+Из\-за отсутствия дополнительной информации, передаваемой в \fBfopen\fP(3),
+закономерно ожидать, что \fBfputwc\fP() на самом деле пишет многобайтовую
+последовательность, соответствующую широкому символу \fIwc\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfgetwc\fP(3), \fBfputws\fP(3), \fBunlocked_stdio\fP(3)

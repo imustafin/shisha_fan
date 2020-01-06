@@ -1,0 +1,273 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1990, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" This code is derived from software contributed to Berkeley by
+.\" Chris Torek and the American National Standards Committee X3,
+.\" on Information Processing Systems.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)fopen.3	6.8 (Berkeley) 6/29/91
+.\"
+.\" Converted for Linux, Mon Nov 29 15:22:01 1993, faith@cs.unc.edu
+.\" Modified, aeb, 960421, 970806
+.\" Modified, joey, aeb, 2002-01-03
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FOPEN 3 2019\-05\-09 GNU "Руководство программиста Linux"
+.SH ИМЯ
+fopen, fdopen, freopen \- функции для открытия потоков
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+.PP
+\fBFILE *fopen(const char *\fP\fIpathname\fP\fB, const char *\fP\fImode\fP\fB);\fP
+.PP
+\fBFILE *fdopen(int \fP\fIfd\fP\fB, const char *\fP\fImode\fP\fB);\fP
+.PP
+\fBFILE *freopen(const char *\fP\fIpathname\fP\fB, const char *\fP\fImode\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfdopen\fP(): _POSIX_C_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBfopen\fP() открывает файл с именем, которое задано в виде строки в
+\fIpathname\fP, и связывает его с потоком.
+.PP
+Параметр \fImode\fP указывает на строку, начинающуюся с одной из следующих
+последовательностей (за ними могут следовать дополнительные символы,
+описанные далее):
+.TP 
+\fBr\fP
+Открыть текстовый файл для чтения. Поток совмещается с началом файла.
+.TP 
+\fBr+\fP
+Открыть для чтения и записи. Поток совмещается с началом файла.
+.TP 
+\fBw\fP
+Обрезать файл до нулевой длины или создать текстовый файл для записи. Поток
+совмещается с началом файла.
+.TP 
+\fBw+\fP
+Открыть для чтения и записи. Файл создаётся, если его не существует, в
+противном случае он обрезается. Поток совмещается с началом файла.
+.TP 
+\fBa\fP
+Открыть для добавления (записи в конец файла). Файл создаётся, если его не
+существует. Поток совмещается с концом файла.
+.TP 
+\fBa+\fP
+Открыть для чтения и добавления (записи в конец файла). Файл создаётся, если
+не существует. Вывод всегда добавляется в конец файла. В POSIX ничего не
+упоминается о начальном положении при чтении, когда используется данный
+режим. В glibc начальное положение в файле для чтения устанавливается в
+начало файла, но в Android/BSD/MacOS начальное положение в файле для чтения
+устанавливается в конец файла.
+.PP
+Строка \fImode\fP может также содержать символ «b» в качестве последнего
+символа или символа между двумя символами в любых описанных выше
+двухсимвольных комбинациях. Это требуется только для совместимости с C89 и
+не оказывает никакого влияния; символ «b» игнорируется во всех
+POSIX\-совместимых системах, включая Linux. Другие системы могут по\-разному
+обращаться с текстовыми и двоичными файлами, и добавление «b» может
+оказаться полезным, если вы осуществляете ввод\-вывод в двоичный файл и
+ожидаете, что ваша программа может быть перенесена в не UNIX окружение.
+.PP
+О имеющихся расширениях \fImode\fP в glibc смотрите ЗАМЕЧАНИЯ далее.
+.PP
+Любой созданный файл будет иметь атрибуты \fBS_IRUSR\fP | \fBS_IWUSR\fP |
+\fBS_IRGRP\fP | \fBS_IWGRP\fP | \fBS_IROTH\fP | \fBS_IWOTH\fP (0666), как изменённые в
+соответствии со значением umask процесса (смотрите \fBumask\fP(2)).
+.PP
+Чтение и запись могут перемешиваться друг с другом в потоке, открытом для
+чтения/записи, в любом порядке). Заметим, что в ANSI C требуется, чтобы
+между выводом и вводом использовались функции позиционирования в файле, если
+операция ввода не встретила конец файла. Если это условие не выполняется, то
+при чтении разрешается возвращать результат, не совпадающий с данными самой
+последней записи. Поэтому рекомендуется (а иногда и действительно необходимо
+в Linux) использовать функции \fBfseek\fP(3) или \fBfgetpos\fP(3) между операциями
+чтения и записи в одном потоке. Эти операции могут фактически быть пустыми
+(например, \fIfseek(..., 0L, SEEK_CUR)\fP, вызванная для того, чтобы возник её
+побочный эффект синхронизации).
+.PP
+Открытие файла в режиме дописывания (\fBa\fP в качестве первого символа
+\fImode\fP) приводит к тому, что все последующие операции записи в этот поток
+производятся в конец файла, как если бы перед ними была вызвана:
+.PP
+.in +4n
+.EX
+fseek(stream, 0, SEEK_END);
+.EE
+.in
+.PP
+Файловый дескриптор, связанный с потоком, открывается как при вызове
+\fBopen\fP(2) со следующими флагами:
+.RS
+.TS
+allbox;
+lb lb
+c l.
+режим fopen()	флаги open()
+\fIr\fP	O_RDONLY
+\fIw\fP	O_WRONLY | O_CREAT | O_TRUNC
+\fIa\fP	O_WRONLY | O_CREAT | O_APPEND
+\fIr+\fP	O_RDWR
+\fIw+\fP	O_RDWR | O_CREAT | O_TRUNC
+\fIa+\fP	O_RDWR | O_CREAT | O_APPEND
+.TE
+.RE
+.\"
+.SS fdopen()
+.\"
+Функция \fBfdopen\fP() связывает поток с существующим дескриптором файла
+\fIfd\fP. Режим \fImode\fP потока (одно из следующих значений: «r», «r+», «w»,
+,w+», «a», «a+») должен быть совместим с режимом дескриптора
+файла. Указатель положения в файле в новом потоке принимает значение, равное
+значению у \fIfd\fP, а указатели ошибок и конца файла очищаются. Режимы «w» или
+«w+» не обрезают файл. При этом не делается копия дескриптора файла и он
+будет закрыт одновременно с закрытием потока, созданного
+\fBfdopen\fP(). Результат применения \fBfdopen\fP() к общему объекту памяти не
+определён.
+.SS freopen()
+Функция \fBfreopen\fP() открывает файл с именем \fIpathname\fP и связывает его с
+потоком, указанным в \fIstream\fP. Исходный поток (если такой существовал)
+закрывается. Значение параметра \fImode\fP такое же как для функции \fBfopen\fP().
+.PP
+Если значение \fIpathname\fP равно указателю null, то \fBfreopen\fP() изменяет
+режим потока на указанный в \fImode\fP; то есть, \fBfreopen\fP() переоткрывает
+pathname, связанный с потоком. Описание этого поведения было добавлено в
+стандарт C99, где сказано:
+.PP
+.RS
+В этом случае файловый дескриптор, связанный с потоком, не нужно закрывать,
+если вызов \fBfreopen\fP() завершился без ошибок. Допустимость изменения режима
+и при каких условиях определяется реализацией.
+.RE
+.PP
+Основной задачей функции \fBfreopen\fP() является смена файла, связанного со
+стандартным текстовым потоком (\fIstderr\fP, \fIstdin\fP или \fIstdout\fP).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBfopen\fP(), \fBfdopen\fP() и \fBfreopen\fP() возвращается
+указатель \fIFILE\fP. В противном случае возвращается NULL и \fIerrno\fP
+присваивается код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Передано неверное значение \fImode\fP в \fBfopen\fP(), \fBfdopen\fP() или
+\fBfreopen\fP().
+.PP
+Функции \fBfopen\fP(), \fBfdopen\fP() и \fBfreopen\fP() могут также завершаться с
+ошибками и устанавливают значение \fIerrno\fP равным какому\-либо значению из
+определённых в \fBmalloc\fP(3).
+.PP
+Функция \fBfopen\fP() при ошибках устанавливает значение \fIerrno\fP равным
+какому\-либо значению из определённых в \fBopen\fP(2).
+.PP
+Функция \fBfdopen\fP() при ошибках устанавливает значение \fIerrno\fP равным
+какому\-либо значению из определённых в \fBfcntl\fP(2).
+.PP
+Функция \fBfreopen\fP() при ошибках устанавливает \fIerrno\fP равным какому\-либо
+значению из определённых в \fBopen\fP(2), \fBfclose\fP(3) и \fBfflush\fP(3).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw28 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfopen\fP(),
+\fBfdopen\fP(),
+\fBfreopen\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBfopen\fP(), \fBfreopen\fP(): POSIX.1\-2001, POSIX.1\-2008, C89, C99.
+.PP
+\fBfdopen\fP(): POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.SS "Замечания по glibc"
+Библиотека GNU C предоставляет следующие расширения строки в \fImode\fP:
+.TP 
+\fBc\fP (начиная с glibc 2.3.3)
+Не выполнять операцию открытия, последующие чтение и запись, точки отмены
+нити (thread cancellation points). Этот флаг игнорируется для \fBfdopen\fP().
+.TP 
+\fBe\fP (начиная с glibc 2.7)
+Открыть файл с флагом \fBO_CLOEXEC\fP. Подробности смотрите в \fBopen\fP(2). Этот
+флаг игнорируется для \fBfdopen\fP().
+.TP 
+\fBm\fP (начиная с glibc 2.3)
+.\" As at glibc 2.4:
+Пытаться получить доступ к файлу с помощью \fBmmap\fP(2), а не с помощью
+системных операций ввода\-вывода (\fBread\fP(2), \fBwrite\fP(2)). В настоящее время
+\fBmmap\fP(2) используется только для файла, открытого на чтение.
+.TP 
+\fBx\fP
+.\" Since glibc 2.0?
+.\" FIXME . C11 specifies this flag
+Открыть файл в монопольном режиме (как с флагом \fBO_EXCL\fP у
+\fBopen\fP(2)). Если файл уже существует, то \fBfopen\fP() завершается с ошибкой и
+устанавливает значение \fIerrno\fP равное \fBEEXIST\fP. Этот флаг игнорируется для
+\fBfdopen\fP().
+.PP
+В дополнении к этим символам, для \fBfopen\fP() и \fBfreopen\fP() поддерживается
+следующий синтаксис в \fImode\fP:
+.PP
+\fB ,ccs=\fP\fIстрока\fP
+.PP
+Передаваемая \fIстрока\fP используется как имя набора символов и поток
+помечается как широкосимвольный. С того момента внутренние функции
+преобразования перекодируют данные ввода\-вывода в соответствии с набором
+символов с именем \fIстрока\fP. Если синтаксис \fB,ccs=\fP\fIстрока\fP не указан, то
+широкосимвольность потока определяется по первой файловой операции. Если это
+операция является широкосимвольной, то поток помечается как широкосимвольный
+и загружаются функции для перекодировки.
+.SH ДЕФЕКТЫ
+.\" FIXME . http://sourceware.org/bugzilla/show_bug.cgi?id=12685
+При анализе отдельных флагов в \fImode\fP (т. е., символов перед «ccs»)
+реализация glibc для \fBfopen\fP() и \fBfreopen\fP() ограничивает количество
+обрабатываемых в \fImode\fP символов 7\-ю (или, в glibc до версии 2.14, 6\-ю, что
+было недостаточно для включения всех возможных флагов, например
+«rb+cmxe»). Текущая реализация \fBfdopen\fP() анализирует в \fImode\fP не более 5
+символов.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBopen\fP(2), \fBfclose\fP(3), \fBfileno\fP(3), \fBfmemopen\fP(3), \fBfopencookie\fP(3),
+\fBopen_memstream\fP(3)

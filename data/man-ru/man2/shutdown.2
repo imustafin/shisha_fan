@@ -1,0 +1,93 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     $Id: shutdown.2,v 1.1.1.1 1999/03/21 22:52:23 freitag Exp $
+.\"
+.\" Modified Sat Jul 24 09:57:55 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Oct 22 22:04:51 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1998 by Andi Kleen
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SHUTDOWN 2 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+shutdown \- закрывает часть полнодуплексного соединения
+.SH ОБЗОР
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint shutdown(int \fP\fIsockfd\fP\fB, int \fP\fIhow\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBshutdown\fP() приводит к закрытию всего полнодуплексного соединения
+или его части в сокете, связанном с \fIsockfd\fP. Если значение \fIhow\fP равно
+\fBSHUT_RD\fP, то дальнейший приём данных будет запрещён. Если значение \fIhow\fP
+равно \fBSHUT_WR\fP, то дальнейшая передача данных будет запрещена. Если
+значение \fIhow\fP равно \fBSHUT_RDWR\fP, то дальнейший приём и передача данных
+будут запрещены.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fIsockfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+Указано неверное значение в \fIhow\fP (но смотрите ДЕФЕКТЫ).
+.TP 
+\fBENOTCONN\fP
+Указанный сокет не подключён.
+.TP 
+\fBENOTSOCK\fP
+Файловый дескриптор \fIsockfd\fP указывает не на каталог.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.4BSD, (\fBshutdown\fP() впервые появился в
+4.2BSD).
+.SH ЗАМЕЧАНИЯ
+Константы \fBSHUT_RD\fP, \fBSHUT_WR\fP, \fBSHUT_RDWR\fP имеют значения 0, 1, 2,
+соответственно, и определены в \fI<sys/socket.h>\fP начиная с
+glibc\-2.1.91.
+.SH ДЕФЕКТЫ
+.\" https://bugzilla.kernel.org/show_bug.cgi?id=47111
+.\" commit fc61b928dc4d72176cf4bd4d30bf1d22e599aefc
+.\" and for DECnet sockets in commit 46b66d7077b89fb4917ceef19b3f7dd86055c94a
+Проверки применимости \fIhow\fP выполняются в коде, относящемся к домену, и до
+Linux 3.7 проверки были не во всех доменах. В первую очередь, это были
+доменные сокеты UNIX, которые просто игнорировали некорректные
+значения. Данная проблема была устранена для доменных сокетов UNIX в Linux
+3.7.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclose\fP(2), \fBconnect\fP(2), \fBsocket\fP(2), \fBsocket\fP(7)

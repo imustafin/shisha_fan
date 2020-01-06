@@ -1,0 +1,63 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2017 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NETWORK_NAMESPACES 7 2018\-02\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+network_namespaces \- обзор сетевых пространств имён Linux
+.SH ОПИСАНИЕ
+Сетевые пространства имён позволяют изолировать системные ресурсы, связанные
+с сетью: сетевые устройства, стеки протоколов IPv4 и IPv6, таблицы
+IP\-маршрутизации, правила межсетевых экранов, каталог \fI/proc/net\fP
+(символическая ссылка на \fI/proc/PID/net\fP), каталог \fI/sys/class/net\fP,
+различные файлы в \fI/proc/sys/net\fP, номера портов (сокеты) и т. п. Также
+сетевые пространства имён изолируют пространство имён абстрактных сокетов
+домена UNIX (смотрите \fBunix\fP(7)).
+.PP
+Физическое сетевое устройство может находиться только в одном сетевом
+пространстве имён. Когда сетевое пространство имён высвобождается (т. е.,
+когда завершается последний процесс в пространстве имён), его физические
+сетевые устройства перемещаются обратно в первоначальное сетевое
+пространство имён (не родительского процесса).
+.PP
+Пара устройств виртуальной сети (\fBveth\fP(4)) предоставляет подобную каналу
+абстракцию, которую можно использовать для создания туннелей между сетевыми
+пространствами имён, а также для создания мостов к физическому сетевому
+устройству в другом пространстве имён. Когда пространство имён
+освобождается, устройства \fBveth\fP(4), содержащиеся в нём, уничтожаются.
+.PP
+.\" FIXME .SH EXAMPLE
+Для использования пространств имён network требуется, чтобы ядро было
+собрано с параметром \fBCONFIG_NET_NS\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBnsenter\fP(1), \fBunshare\fP(1), \fBclone\fP(2), \fBveth\fP(4), \fBproc\fP(5),
+\fBsysfs\fP(5), \fBnamespaces\fP(7), \fBuser_namespaces\fP(7), \fBbrctl\fP(8), \fBip\fP(8),
+\fBip\-address\fP(8), \fBip\-link\fP(8), \fBip\-netns\fP(8), \fBiptables\fP(8),
+\fBovs\-vsctl\fP(8)

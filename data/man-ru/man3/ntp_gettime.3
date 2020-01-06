@@ -1,0 +1,123 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2016 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NTP_GETTIME 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ntp_gettime, ntp_gettimex \- возвращает параметры времени (интерфейс службы
+NTP)
+.SH ОБЗОР
+.nf
+\fB#include <sys/timex.h>\fP
+.PP
+\fBint ntp_gettime(struct ntptimeval *\fP\fIntv\fP\fB);\fP
+.PP
+\fBint ntp_gettimex(struct ntptimeval *\fP\fIntv\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Эти функции возвращают информацию вызывающему через аргумент \fIntv\fP,
+структуру следующего вида:
+.PP
+.in +4n
+.EX
+struct ntptimeval {
+    struct timeval time;        /* текущее время */
+    long int maxerror;          /* максимальная ошибка */
+    long int esterror;          /* расчётная ошибка */
+    long int tai;               /* смещение TAI */
+
+    /* байты\-заполнители под будущее расширение */
+};
+.EE
+.in
+.PP
+Поля этой структуры имеют следующее назначение:
+.TP 
+\fItime\fP
+Текущее время, представляется структурой \fItimeval\fP:
+.IP
+.in +4n
+.EX
+struct timeval {
+    time_t      tv_sec;   /* кол\-во секунд, начиная с Эпохи */
+    suseconds_t tv_usec;  /* кол\-во микросекунд */
+};
+.EE
+.in
+.IP
+.TP 
+\fImaxerror\fP
+Максимальная ошибка, в микросекундах. Это значение может быть
+инициализировано \fBntp_adjtime\fP(3), и периодически увеличивается (в Linux
+каждую секунду), но не переходит верхний порог (константа ядра
+\fBNTP_PHASE_MAX\fP, равная 16000).
+.TP 
+\fIesterror\fP
+Расчётная ошибка, в микросекундах. Это значение может быть установлено с
+помощью \fBntp_adjtime\fP(3) и содержит расчётную разницу между системными
+часами и настоящим временем. Данное значение не используется внутри ядра.
+.TP 
+\fItai\fP
+Смещение TAI (Atomic International Time, атомное международное время).
+.PP
+Функция \fBntp_gettime\fP() возвращает структуру \fIntptimeval\fP с заполненными
+полями \fItime\fP, \fImaxerror\fP и \fIesterror\fP.
+.PP
+Функция \fBntp_gettimex\fP() выполняет тоже что и \fBntp_gettime\fP() и
+дополнительно возвращает информацию в поле \fItai\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.\" FIXME . the info page incorrectly describes the return values.
+Возвращаемые значения \fBntp_gettime\fP() и \fBntp_gettimex\fP() такие же как у
+\fBadjtimex\fP(2). При корректным переданном указателе эти функции всегда
+выполняются без ошибок.
+.SH ВЕРСИИ
+Функция \fBntp_gettime\fP() доступна в glibc с версии 2.1. Функция
+\fBntp_gettimex\fP() доступна в glibc с версии 2.12.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw30 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBntp_gettime\fP(),
+\fBntp_gettimex\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функция \fBntp_gettime\fP() описана в интерфейсе NTP Kernel Application
+Program. Функция \fBntp_gettimex\fP() является расширением GNU.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBadjtimex\fP(2)  \fBntp_adjtime\fP(3), \fBtime\fP(7)
+.PP
+.ad l
+.UR http://www.slac.stanford.edu/comp/unix/\:package/\:rtems/\:src/\:ssrlApps/\:ntpNanoclock/\:api.htm
+NTP "Kernel Application Program Interface"
+.UE

@@ -1,0 +1,84 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2003 John Levon <levon@movementarian.org>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2004-06-17 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LOOKUP_DCOOKIE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+lookup_dcookie \- возвращает путь элемента каталога
+.SH ОБЗОР
+\fBint lookup_dcookie(u64 \fP\fIcookie\fP\fB, char *\fP\fIbuffer\fP\fB, size_t
+\fP\fIlen\fP\fB);\fP
+.SH ОПИСАНИЕ
+Ищет полный путь элемента каталога, указанного в параметре \fIcookie\fP. Маркёр
+(cookie) представляет собой простейший идентификатор, уникально определяющий
+отдельный элемент каталога. Указанный буфер заполняется полным путём
+элемента каталога.
+.PP
+Для успешного выполнения \fBlookup_dcookie\fP()  ядро должно удерживать ссылку
+маркёра на элемент каталога.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBlookup_dcookie\fP() возвращается длина строки пути,
+скопированного в буфер. В случае ошибки возвращается \-1, а \fIerrno\fP
+устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Неверный буфер.
+.TP 
+\fBEINVAL\fP
+При поиске в ядре не было зарегистрированных отображённых элементов
+маркёра/каталога или маркёр ссылается на некорректный элемент каталога.
+.TP 
+\fBENAMETOOLONG\fP
+Имя не помещается в буфере.
+.TP 
+\fBENOMEM\fP
+Ядро не может выделить память для временного буфера для пути.
+.TP 
+\fBEPERM\fP
+Процесс не имеет мандата \fBCAP_SYS_ADMIN\fP для поиска значений маркёра.
+.TP 
+\fBERANGE\fP
+Буфер не был достаточно велик для хранения пути элемента каталога.
+.SH ВЕРСИИ
+Доступен, начиная с Linux 2.5.43. В версии 2.5.70 добавлено возвращение
+ошибки \fBENAMETOOLONG\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBlookup_dcookie\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Вызов \fBlookup_dcookie\fP() является специальным системным вызовом, в данный
+момент используется только программой профилирования \fBoprofile\fP(1). Она
+полагается на регистрацию драйвером ядра маркёра для элементов каталога.
+.PP
+Возвращаемый путь может заканчиваться строкой « (deleted)», если элемент
+каталога был удалён.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBoprofile\fP(1)

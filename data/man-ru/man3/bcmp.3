@@ -1,0 +1,70 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 21:36:50 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Oct 22 23:47:36 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BCMP 3 2017\-03\-13 Linux "Руководство программиста Linux"
+.SH ИМЯ
+bcmp \- сравнивает две последовательности байт
+.SH ОБЗОР
+.nf
+\fB#include <strings.h>\fP
+.PP
+\fBint bcmp(const void *\fP\fIs1\fP\fB, const void *\fP\fIs2\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBbcmp\fP() сравнивает две последовательности байт \fIs1\fP и \fIs2\fP
+длиной \fIn\fP каждая. Если они равны или если \fIn\fP равно нулю, то \fBbcmp\fP()
+возвращает 0. В противном случае она возвращает ненулевой результат.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBbcmp\fP() возвращает 0, если последовательности байт равны, иначе
+возвращается ненулевой результат.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBbcmp\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.3BSD. Данная функция устарела (отмечена как УСТАРЕВШАЯ в POSIX.1\-2001): в
+новых программах следует использовать \fBmemcmp\fP(3). В POSIX.1\-2008
+спецификация \fBbcmp\fP() удалена.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbstring\fP(3), \fBmemcmp\fP(3), \fBstrcasecmp\fP(3), \fBstrcmp\fP(3), \fBstrcoll\fP(3),
+\fBstrncasecmp\fP(3), \fBstrncmp\fP(3)

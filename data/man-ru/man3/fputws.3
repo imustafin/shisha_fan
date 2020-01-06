@@ -1,0 +1,61 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FPUTWS 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+fputws \- записывает строку широких символов в поток FILE
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBint fputws(const wchar_t *\fP\fIws\fP\fB, FILE *\fP\fIstream\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBfputws\fP() — эквивалент \fBfputs\fP(3) для строк широких символов. Она
+записывает строку широких символов, начинающуюся с \fIws\fP до, но не включая,
+завершающего широкого символа null (L\(aq\e0\(aq), в \fIstream\fP.
+.PP
+Неблокирующий аналог смотрите в \fBunlocked_stdio\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBfputws\fP() возвращает неотрицательное целое число, если операция
+завершилась успешно, или \-1 для обозначения ошибки.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfputws\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBfputws\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.PP
+Из\-за отсутствия дополнительной информации, передаваемой в \fBfopen\fP(3),
+закономерно ожидать, что \fBfputws\fP() на самом деле пишет многобайтовую
+строку, соответствующую строке широких символов \fIws\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfputwc\fP(3), \fBunlocked_stdio\fP(3)

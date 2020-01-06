@@ -1,0 +1,124 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2016, Oracle.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IOCTL\-FICLONERANGE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ioctl_ficlonerange, ioctl_ficlone \- сделать некоторые данные одного файла
+общими с другим файлом
+.SH ОБЗОР
+.br
+\fB#include <sys/ioctl.h>\fP
+.br
+\fB#include <linux/fs.h>\fP
+.PP
+\fBint ioctl(int \fP\fIdest_fd\fP\fB, FICLONERANGE, struct file_clone_range
+*\fP\fIarg\fP\fB);\fP
+.br
+\fBint ioctl(int \fP\fIdest_fd\fP\fB, FICLONE, int \fP\fIsrc_fd\fP\fB);\fP
+.SH ОПИСАНИЕ
+Если файловая система поддерживает общее файловое физическое хранилище для
+файлов («reflink»), то эту операцию \fBioctl\fP(2) можно использовать для того,
+чтобы часть данных файла \fIsrc_fd\fP появилась в файле \fIdest_fd\fP в виде
+общего пространства на носителе, что быстрее по сравнению с созданием
+отдельной физической копии данных. Оба файла должны располагаться в одной
+файловой системе. Если выполняется запись в эту общую область, то файловая
+система должна гарантировать, что изменения будут видны только в файле, в
+который производится запись. Такое поведение часто называют как «копирование
+при записи» (copy on write).
+.PP
+Данный ioctl создаёт ссылку (reflink) на не более \fIsrc_length\fP байт из
+файлового дескриптора \fIsrc_fd\fP по смещению \fIsrc_offset\fP в файл \fIdest_fd\fP
+по смещению \fIdest_offset\fP, предоставляя её обоим файлам. Если \fIsrc_length\fP
+равно нулю, то ioctl делает ссылку на конец файла\-источника. Данная
+информация передаётся в структуре следующего вида:
+.PP
+.in +4n
+.EX
+struct file_clone_range {
+    __s64 src_fd;
+    __u64 src_offset;
+    __u64 src_length;
+    __u64 dest_offset;
+};
+.EE
+.in
+.PP
+Клоны атомарны для одновременной записи, поэтому для получения корректной
+копии не нужно получать блокировки.
+.PP
+Операция \fBFICLONE\fP ioctl клонирует файлы полностью.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в значение
+ошибки.
+.PP
+.SH ОШИБКИ
+Возможные коды ошибок (помимо прочих):
+.TP 
+\fBEBADF\fP
+Дескриптор \fIsrc_fd\fP не открыт на чтение; \fIdest_fd\fP не открыт на запись или
+открыт только для добавления; файловая система, в которой находится
+\fIsrc_fd\fP, не поддерживает reflink.
+.TP 
+\fBEINVAL\fP
+Файловая система не поддерживает создание ссылок диапазонов в заданных
+файлах. Эта ошибка также может возникнуть, если файловый дескриптор
+представляет устройство, FIFO или сокет. Обычно, для дисковых файловых
+систем требуются, чтобы аргументы смещения и длины были выровнены по
+основному размеру блока. В XFS и Btrfs нет поддержки ссылок перекрывающихся
+диапазонов в одном и том же файле.
+.TP 
+\fBEISDIR\fP
+Один из файлов является каталогом и файловая система не поддерживает
+диапазоны для каталогов.
+.TP 
+\fBEOPNOTSUPP\fP
+Может возникать, если файловая система не поддерживает ссылки для файловых
+дескрипторов или когда файловый дескриптор ссылается на специальные иноды.
+.TP 
+\fBEPERM\fP
+Дескриптор \fIdest_fd\fP является неизменным.
+.TP 
+\fBETXTBSY\fP
+Один из файлов является файлом подкачки. Файлы подкачки не могут содержаться
+в совместных хранилищах.
+.TP 
+\fBEXDEV\fP
+Дескрипторы \fIdest_fd\fP и \fIsrc_fd\fP находятся на разных смонтированных
+файловых системах.
+.SH ВЕРСИИ
+Данные операции ioctl появились в Linux 4.5. Раньше они назывались
+\fBBTRFS_IOC_CLONE\fP и \fBBTRFS_IOC_CLONE_RANGE\fP и работали только в Btrfs.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный программный интерфейс существует только в Linux.
+.SH ЗАМЕЧАНИЯ
+Так как для операции копирования\-при\-записи требуется выделение нового
+пространства в хранилище, операция \fBfallocate\fP(2) может отменить совместное
+использование общих блоков для гарантии того, что последующие операции
+записи не завершатся ошибкой из\-за нехватки места на диске.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBioctl\fP(2)

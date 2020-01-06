@@ -1,0 +1,71 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2004 Andries Brouwer <aeb@cwi.nl>.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INFINITY 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+INFINITY, NAN, HUGE_VAL, HUGE_VALF, HUGE_VALL \- константы величин с
+плавающей запятой
+.SH ОБЗОР
+.nf
+\fB#define _ISOC99_SOURCE\fP      /* смотрите feature_test_macros(7) */
+\fB#include <math.h>\fP
+.PP
+\fBINFINITY\fP
+.PP
+\fBNAN\fP
+.PP
+\fBHUGE_VAL\fP
+\fBHUGE_VALF\fP
+\fBHUGE_VALL\fP
+.fi
+.SH ОПИСАНИЕ
+Макрос \fBINFINITY\fP расширяет до константы \fIfloat\fP, представляющую
+положительную бесконечность.
+.PP
+Макрос \fBNAN\fP расширяет до константы \fIfloat\fP, представляющую не нарушающее
+(quiet) NaN (если поддерживается). \fIНе нарушающее\fP NaN — это NaN («не
+число»), которое не вызывает исключений при использовании в арифметических
+действиях. Обратное — \fIсигнализирующее\fP (signaling) NaN. Смотрите IEC
+60559:1989.
+.PP
+Макросы \fBHUGE_VAL\fP, \fBHUGE_VALF\fP, \fBHUGE_VALL\fP расширяют до констант с
+типами \fIdouble\fP, \fIfloat\fP и \fIlong double\fP, соответственно, которые
+представляют большое положительное число, возможно положительную
+бесконечность.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99.
+.SH ДОСТУПНОСТЬ
+В системах с glibc макрос \fBHUGE_VAL\fP доступен всегда. Доступность макроса
+\fBNAN\fP можно проверить с помощью \fB#ifdef NAN\fP; это же относится и к
+\fBINFINITY\fP, \fBHUGE_VALF\fP, \fBHUGE_VALL\fP. Они будут определены в
+\fI<math.h>\fP, если определён \fB_ISOC99_SOURCE\fP, \fB_GNU_SOURCE\fP или
+\fB__STDC_VERSION__\fP и это значение не меньше чем 199901L.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfpclassify\fP(3), \fBmath_error\fP(7)

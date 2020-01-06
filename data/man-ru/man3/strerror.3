@@ -1,0 +1,184 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright (C) 2005, 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 18:05:30 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Fri Feb 16 14:25:17 1996 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified Sun Jul 21 20:55:44 1996 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified Mon Oct 15 21:16:25 2001 by John Levon <moz@compsoc.man.ac.uk>
+.\" Modified Tue Oct 16 00:04:43 2001 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified Fri Jun 20 03:04:30 2003 by Andries Brouwer <aeb@cwi.nl>
+.\" 2005-12-13, mtk, Substantial rewrite of strerror_r() description
+.\"         Addition of extra material on portability and standards.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STRERROR 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+strerror, strerror_r, strerror_l \- возвращают строку описания номера ошибки
+.SH ОБЗОР
+.nf
+\fB#include <string.h>\fP
+.PP
+\fBchar *strerror(int \fP\fIerrnum\fP\fB);\fP
+.PP
+\fBint strerror_r(int \fP\fIerrnum\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fIbuflen\fP\fB);\fP
+            /* XSI\-совместимо */
+.PP
+\fBchar *strerror_r(int \fP\fIerrnum\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fIbuflen\fP\fB);\fP
+            /* есть только в GNU */
+.PP
+\fBchar *strerror_l(int \fP\fIerrnum\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.ad l
+.PP
+\fBstrerror_r\fP():
+.RS 4
+Совместимая с XSI версия предоставляется если:
+.br
+(_POSIX_C_SOURCE\ >=\ 200112L) && ! \ _GNU_SOURCE
+.br
+В противном случае предоставляется версия GNU.
+.RE
+.ad
+.SH ОПИСАНИЕ
+.\"
+Функция \fBstrerror\fP() возвращает указатель на строку, которая описывает код
+ошибки, переданный в аргументе \fIerrnum\fP, возможно, с помощью части
+\fBLC_MESSAGES\fP текущей локали для выбора соответствующего языка (например,
+если \fIerrnum\fP равно \fBEINVAL\fP, то возвращается описание «Invalid
+argument»). Эту строку нельзя изменять в приложении, она может измениться
+при последующих вызовах \fBstrerror\fP() или \fBstrerror_l\fP(). Другие
+библиотечные функции, включая \fBperror\fP(3), не изменяют эту строку.
+.SS strerror_r()
+Функция \fBstrerror_r\fP() подобна \fBstrerror\fP(), но её можно безопасно
+использовать в нитях. Она доступна в двух версиях: версия, совместимая с
+XSI, определена в POSIX.1\-2001 (доступна в glibc начиная с 2.3.4, но не
+совместима с POSIX до glibc 2.13) и версия, совместимая с GNU (доступна,
+начиная с glibc 2.0). Версия, совместимая с XSI, предоставляется при наличии
+набора макросов тестирования свойств, показанных в ОБЗОРЕ; в противном
+случае предоставляется версия GNU. Если макросы тестирования свойств не
+указаны явным образом, то (начиная с glibc 2.4) по умолчанию определяется
+\fB_POSIX_C_SOURCE\fP со значением 200112L, то есть версия \fBstrerror_r\fP() XSI
+предоставляется по умолчанию.
+.PP
+Совместимая с XSI версия \fBstrerror_r\fP() более предпочтительна для
+переносимых приложений. Она возвращает строку ошибки в предоставляемом
+пользователем буфере \fIbuf\fP длиной \fIbuflen\fP.
+.PP
+.\"
+Специальная GNU\-версия \fBstrerror_r\fP() возвращает строку, содержащую
+сообщение об ошибке. Это может быть или указатель на строку, которую функция
+записывает в \fIbuf\fP, или указатель на некую (неизменную) статическую строку
+(в этом случае \fIbuf\fP не используется). Если функция сохраняет строку в
+\fIbuf\fP, то сохраняется не более \fIbuflen\fP байт (строка может быть обрезана,
+если значение \fIbuflen\fP слишком мало и \fIerrnum\fP неизвестно). В строке
+всегда содержится конечный байт null (\(aq\e0\(aq).
+.SS strerror_l()
+Функция \fBstrerror_l\fP() подобна \fBstrerror\fP(), но отражает \fIerrnum\fP в
+локале\-зависимое сообщение об ошибке, в зависимости от локали, заданной в
+\fIlocale\fP. Поведение \fBstrerror_l\fP() не определено, если значение \fIlocale\fP
+равно специальному объекту локали \fBLC_GLOBAL_LOCALE\fP или некорректному
+описателю объекта локали.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBstrerror\fP(), \fBstrerror_l\fP() и GNU\-версия \fBstrerror_r\fP()
+возвращают соответствующую строку описания ошибки или сообщение «Unknown
+error nnn», если номер ошибки неизвестен.
+.PP
+При успешном выполнении совместимая с XSI функция \fBstrerror_r\fP() возвращает
+0. При ошибке возвращается (положительный) номер ошибки (начиная с glibc
+2.13), или \-1 с изменением \fIerrno\fP на соответствующий код ошибки (версии
+glibc до 2.13).
+.PP
+В POSIX.1\-2001 и POSIX.1\-2008 требуется, чтобы успешный вызов \fBstrerror\fP()
+или \fBstrerror_l\fP() не изменял \fIerrno\fP, и отмечается, что так как для
+указания на ошибку не зарезервировано возвращаемого значения, в приложениях
+для проверки ошибки нужно инициализировать \fIerrno\fP нулём до вызова и
+проверять \fIerrno\fP после вызова.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Значение \fIerrnum\fP не является допустимым номером ошибки.
+.TP 
+\fBERANGE\fP
+Предоставлено недостаточно места для сохранения описания ошибки.
+.SH ВЕРСИИ
+Функция \fBstrerror_l\fP() впервые появилась в glibc 2.6.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw14 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstrerror\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:strerror
+T{
+\fBstrerror_r\fP(),
+.br
+\fBstrerror_l\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" FIXME . for later review when Issue 8 is one day released...
+.\" A future POSIX.1 may remove strerror_r()
+.\" http://austingroupbugs.net/tag_view_page.php?tag_id=8
+.\" http://austingroupbugs.net/view.php?id=508
+Функция \fBstrerror\fP() определена в POSIX.1\-2001, POSIX.1\-2008, C89 и
+C99. Функция \fBstrerror_r\fP() определена в POSIX.1\-2001 и POSIX.1\-2008.
+.PP
+Функция \fBstrerror_l\fP() описана в POSIX.1\-2008.
+.PP
+Функция GNU \fBstrerror_r\fP() является нестандартизованным расширением.
+.PP
+.\" e.g., Solaris 8, HP-UX 11
+.\" e.g., FreeBSD 5.4, Tru64 5.1B
+В POSIX.1\-2001 разрешено \fBstrerror\fP() изменять \fIerrno\fP, если при вызове
+возникла ошибка, но не указано какое значение нужно возвращать в качестве
+результата функции. В некоторых системах \fBstrerror\fP() возвращает NULL, если
+номер ошибки неизвестен. В других системах \fBstrerror\fP() возвращает строку
+вроде «Error nnn occurred» и записывает в \fIerrno\fP значение \fBEINVAL\fP, если
+номер ошибки неизвестен. В C99 и POSIX.1\-2008 требуется, чтобы возвращаемое
+значение не было равно NULL.
+.SH ЗАМЕЧАНИЯ
+В библиотеке GNU C для \fBstrerror\fP() используется буфер в 1024
+символов. Размер буфера должен быть достаточным для исключения возникновения
+ошибки \fBERANGE\fP при вызове \fBstrerror_r\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBerr\fP(3), \fBerrno\fP(3), \fBerror\fP(3), \fBperror\fP(3), \fBstrsignal\fP(3),
+\fBlocale\fP(7)

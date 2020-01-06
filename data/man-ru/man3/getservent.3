@@ -1,0 +1,162 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 19:19:11 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Wed Oct 18 20:23:54 1995 by Martin Schulze <joey@infodrom.north.de>
+.\" Modified Mon Apr 22 01:50:54 1996 by Martin Schulze <joey@infodrom.north.de>
+.\" 2001-07-25 added a clause about NULL proto (Martin Michlmayr or David N. Welton)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETSERVENT 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getservent, getservbyname, getservbyport, setservent, endservent \-
+возвращают запись о службе
+.SH ОБЗОР
+.nf
+\fB#include <netdb.h>\fP
+.PP
+\fBstruct servent *getservent(void);\fP
+.PP
+\fBstruct servent *getservbyname(const char *\fP\fIname\fP\fB, const char *\fP\fIproto\fP\fB);\fP
+.PP
+\fBstruct servent *getservbyport(int \fP\fIport\fP\fB, const char *\fP\fIproto\fP\fB);\fP
+.PP
+\fBvoid setservent(int \fP\fIstayopen\fP\fB);\fP
+.PP
+\fBvoid endservent(void);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBgetservent\fP() считывает следующую запись из файла, содержащего
+базу служб (смотрите \fBservices\fP(5)), и возвращает структуру \fIservent\fP,
+содержащую поля из этой записи. При необходимости будет открыто подключение
+к базе.
+.PP
+Функция \fBgetservbyname\fP() возвращает структуру \fIservent\fP элемента из базы
+данных, который совпадает со службой \fIname\fP и использующей протокол
+\fIproto\fP. Если значение \fIproto\fP равно NULL, то подойдёт любой протокол. При
+необходимости будет открыто подключение к базе.
+.PP
+Функция \fBgetservbyport\fP() возвращает структуру \fIservent\fP элемента из базы
+данных, который совпадает с портом \fIport\fP (значение имеет сетевой порядок
+байт) и использующей протокол \fIproto\fP. Если значение \fIproto\fP равно NULL,
+то подойдёт любой протокол. При необходимости будет открыто подключение к
+базе.
+.PP
+Функция \fBsetservent\fP() открывает соединение к базе и устанавливает
+следующую запись к первой записи. Если \fIstayopen\fP не равен нулю, то
+подключение к базе между вызовами нескольких функций \fBgetserv*\fP() не будет
+закрыто.
+.PP
+Функция \fBendservent\fP() закрывает подключение к базе.
+.PP
+Структура \fIservent\fP определена в \fI<netdb.h>\fP таким образом:
+.PP
+.in +4n
+.EX
+struct servent {
+    char  *s_name;       /* официальное имя службы */
+    char **s_aliases;    /* список псевдонимов */
+    int    s_port;       /* номер порта */
+    char  *s_proto;      /* используемый протокол */
+}
+.EE
+.in
+.PP
+Члены структуры \fIservent\fP:
+.TP 
+\fIs_name\fP
+Официальное название службы.
+.TP 
+\fIs_aliases\fP
+Список альтернативных имён службы, завершающийся NULL.
+.TP 
+\fIs_port\fP
+Номер порта службы, задаваемый в сетевом порядке байт.
+.TP 
+\fIs_proto\fP
+Имя протокола, используемого с данной службой.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBgetservent\fP(), \fBgetservbyname\fP() и \fBgetservbyport\fP() возвращают
+указатель на статически выделенную структуру \fIservent\fP или NULL при ошибке
+или достижении конца файла.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/services\fP
+файл базы данных служб
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw15 lb lbw25
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetservent\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:servent
+.br
+race:serventbuf locale
+T}
+T{
+\fBgetservbyname\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:servbyname
+.br
+locale
+T}
+T{
+\fBgetservbyport\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:servbyport
+.br
+locale
+T}
+T{
+\fBsetservent\fP(),
+.br
+\fBendservent\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:servent
+.br
+locale
+T}
+.TE
+.sp 1
+В приведённой выше таблице \fIservent\fP в \fIrace:servent\fP означает, что если в
+нескольких нитях программы одновременно используются функции
+\fBsetservent\fP(), \fBgetservent\fP() или \fBendservent\fP(), то может возникнуть
+состязательность по данным.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.3BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetnetent\fP(3), \fBgetprotoent\fP(3), \fBgetservent_r\fP(3), \fBservices\fP(5)

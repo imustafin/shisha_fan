@@ -1,0 +1,136 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt
+.\" (michael@moria.de),
+.\" Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1993-07-22 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1993-08-10 by Alan Cox <iiitac@pyramid.swansea.ac.uk>
+.\" Modified 1998-11-04 by Tigran Aivazian <tigran@sco.com>
+.\" Modified 2004-05-27, 2004-06-17, 2004-06-23 by Michael Kerrisk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ACCT 2 2016\-03\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+acct \- включает или выключает учёт процессов
+.SH ОБЗОР
+.ad l
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBint acct(const char *\fP\fIfilename\fP\fB);\fP
+.fi
+.ad b
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBacct\fP():
+.nf
+.\"		commit 266865c0e7b79d4196e2cc393693463f03c90bd8
+    начиная с glibc 2.21:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и 2.20:
+        _DEFAULT_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+    до glibc 2.19, включительно:
+        _BSD_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBacct\fP() включает или выключает учёт процессов. Если при
+вызове, в качестве аргумента, указывается имя существующего файла,
+происходит включение учёта, и при завершении процесса, в файл \fIfilename\fP
+добавляются записи для каждого завершившегося процесса. Если в качестве
+аргумента указан NULL, то учёт выключается.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Нет прав на запись в указанный файл, или в одном из каталогов в \fIpathname\fP
+не разрешён поиск (см. также \fBpath_resolution\fP(7)), или \fIfilename\fP не
+является обычным файлом.
+.TP 
+\fBEFAULT\fP
+Аргумент \fIfilename\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEIO\fP
+Ошибка записи в файл \fIfilename\fP.
+.TP 
+\fBEISDIR\fP
+\fIfilename\fP является каталогом.
+.TP 
+\fBELOOP\fP
+Во время определения \fIpathname\fP встретилось слишком много символьных
+ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fIpathname\fP.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOENT\fP
+Указанный файл не существует.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти.
+.TP 
+\fBENOSYS\fP
+BSD учёт процессов не может быть разрешён, если эта возможность не была
+включена при компиляции ядра операционной системы. Этой возможностью
+управляет параметр настройки ядра \fBCONFIG_BSD_PROCESS_ACCT\fP.
+.TP 
+\fBENOTDIR\fP
+Компонент пути в \fIpathname\fP в действительности не является каталогом.
+.TP 
+\fBEPERM\fP
+Вызвавшему процессу не хватает прав включить учёт процессов. В Linux для
+этого требуется мандат \fBCAP_SYS_PACCT\fP.
+.TP 
+\fBEROFS\fP
+\fIfilename\fP указывает на файл в файловой системе, доступной только для
+чтения.
+.TP 
+\fBEUSERS\fP
+Закончились свободные файловые структуры или память.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents an EBUSY error condition, but no EISDIR or ENOSYS.
+.\" Also AIX and HP-UX document EBUSY (attempt is made
+.\" to enable accounting when it is already enabled), as does Solaris
+.\" (attempt is made to enable accounting using the same file that is
+.\" currently being used).
+SVr4, 4.3BSD (но не POSIX).
+.SH ЗАМЕЧАНИЯ
+Учёт не производится для программ, которые заканчиваются аварийно. В
+частности, незавершаемые процессы никогда не учитываются.
+.PP
+Структура записей, записываемых в файл учёта, описана в \fBacct\fP(5).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBacct\fP(5)

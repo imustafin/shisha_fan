@@ -1,0 +1,203 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1990, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"	@(#)btree.3	8.4 (Berkeley) 8/18/94
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH BTREE 3 2017\-09\-15 "" "Руководство программиста Linux"
+.\".UC 7
+.SH ИМЯ
+btree \- метод доступа к базе данных двоичного дерева
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>
+#include <db.h>\fP
+.fi
+.SH ОПИСАНИЕ
+\fIПримечание\fP: В этой странице описаны интерфейсы, предоставляемые glibc до
+версии 2.1. Начиная с версии 2.2, glibc больше не поддерживает эти
+интерфейсы. Вероятно, вы ищите API, предоставляемое библиотекой \fIlibdb\fP.
+.PP
+Функция \fBdbopen\fP(3) — это библиотечный интерфейс к файлам баз данных. Один
+из поддерживаемых форматов файлов — btree. Общее описание методов доступа к
+базам данных находится в \fBdbopen\fP(3). Эта справочная страница содержит
+только информацию, относящуюся к btree.
+.PP
+btree — это отсортированная, сбалансированная древовидная структура данных,
+содержащая связанные пары типа «ключ/данные».
+.PP
+Специальная структура метода доступа данных btree, к которой обращается
+\fBdbopen\fP(3), задана в \fI<db.h>\fP следующим образом:
+.PP
+.in +4n
+.EX
+typedef struct {
+    unsigned long flags;
+    unsigned int  cachesize;
+    int           maxkeypage;
+    int           minkeypage;
+    unsigned int  psize;
+    int         (*compare)(const DBT *key1, const DBT *key2);
+    size_t      (*prefix)(const DBT *key1, const DBT *key2);
+    int           lorder;
+} BTREEINFO;
+.EE
+.in
+.PP
+Элементы этой структуры имеют следующее назначение:
+.TP 
+\fIflags\fP
+Значение флага определяется как логическое ИЛИ следующих значений:
+.RS
+.TP 
+\fBR_DUP\fP
+Разрешает повторяющиеся ключи в дереве, т. е. разрешает вставку, если
+вставляемый ключ уже существует в дереве. По умолчанию, как описано в
+\fBdbopen\fP(3), если ключ уже встречается в дереве, новые данные записываются
+«поверх» старых; или запись прерывается, если задан флаг со значением
+\fBR_NOOVERWRITE\fP. Флаг \fBR_DUP\fP перекрывается флагом \fBR_NOOVERWRITE\fP; если
+\fBR_NOOVERWRITE\fP задан, то попытка записи одинаковых ключей приведёт к
+ошибке.
+.IP
+Если база данных содержит дубликаты ключей, порядок получения пар
+ключ/данные не определён при использовании функции \fIget\fP, однако функция
+\fIseq\fP, вызванная с установленным флагом \fBR_CURSOR\fP, всегда возвращает
+ссылку на «первый» ключ в группе идентичных ключей.
+.RE
+.TP 
+\fIcachesize\fP
+Предлагаемый максимальный размер (в байтах) для кэша в памяти. Это значение
+носит \fIтолько\fP рекомендательный характер, и при попытке доступа к данным
+может выделиться большее количество памяти во избежании ошибок. Так как при
+каждом поиске проверяется корневая страница дерева, кэшируются наиболее
+часто используемые страницы, что уменьшает время, необходимое для доступа к
+данным. В дополнение к этому, физическая запись на диск откладывается
+настолько, насколько это возможно, что значительно уменьшает количество
+операций ввода/вывода. Очевидно, использование кэша увеличивает (но только
+увеличивает) вероятность повреждения или потери изменённых данных при отказе
+системы. Если значение \fIcachesize\fP равно 0 (т. е., размер не указан), то
+используется размер кэша по умолчанию.
+.TP 
+\fImaxkeypage\fP
+.\" The maximum number of keys which will be stored on any single page.
+.\" Because of the way the btree data structure works,
+.\" .I maxkeypage
+.\" must always be greater than or equal to 2.
+.\" If
+.\" .I maxkeypage
+.\" is 0 (no maximum number of keys is specified), the page fill factor is
+.\" made as large as possible (which is almost invariably what is wanted).
+Максимальное количество ключей, которые могут храниться на одной странице. В
+настоящее время данная возможность не реализована.
+.TP 
+\fIminkeypage\fP
+Минимальное количество ключей, которые могут храниться в одной странице. Это
+значение используется для определения какие ключи будут сохранены в
+страницах переполнения (overflow pages), т. е., если ключ или данные
+длиннее, чем значение pagesize, поделённое на величину minkeypage, то они
+будут сохранены в страницах переполнения, а не в самой странице. Если
+значение \fIminkeypage\fP равно 0 (минимальное количество ключей  не
+определено), то величина принимается равной 2.
+.TP 
+\fIpsize\fP
+Размер страницы (в байтах), используемой для узлов дерева Минимальный размер
+страницы — 512 байтов, максимальный — 64\ КиБ. Если \fIpsize\fP равно 0 (размер
+страницы не указан), то размер страницы выбирается на основе размера блока
+ввода/вывода задействованной файловой системы.
+.TP 
+\fIcompare\fP
+Это функция сравнения ключей. Она возвращает целое значение, меньшее нуля,
+равное нулю или большее нуля, если первый аргумент соответственно меньше,
+равен или больше второго аргумента. При каждом открытии дерева для сравнения
+должна быть использована одинаковая функция. Если \fIcompare\fP указывает на
+NULL (функция сравнения не определена), то ключи сравниваются лексически,
+т. е., короткие ключи меньше, чем длинные.
+.TP 
+\fIprefix\fP
+Это функция сравнения префиксов. Данная функция, если она определена, должна
+возвращать количество байтов во втором аргументе; это необходимо для того,
+чтобы определить, что данный аргумент больше, чем первый. Если аргументы
+равны, функция должна вернуть значение, равное длине ключа. Отметим, что
+эффективность этой функции в большой степени зависит от типа данных, но в
+некоторых случаях помогает значительно уменьшить размер дерева и время
+поиска данных. Если \fIprefix\fP равно NULL (функция не определена) \fIи\fP
+функция сравнения не определена, то по умолчанию используется лексический
+метод сравнения. Если \fIprefix\fP равно NULL и функция сравнения определена,
+то сравнения префиксов не происходит.
+.TP 
+\fIlorder\fP
+Порядок расположения байтов, используемый при хранении целых чисел в
+метаданных базы данных. Число должно отражать порядок размещения в виде
+целого значения; например, порядок «big  endian» должен обозначаться числом
+4321. Если \fIlorder\fP равно 0 (порядок не определён), то используется
+значение по умолчанию, принятое на машине.
+.PP
+Если файл уже существует (и не задан флаг \fBO_TRUNC\fP), то значения,
+определённые в параметрах  \fIflags\fP, \fIlorder\fP и \fIpsize\fP, игнорируются,
+приобретая значения, указанные при создании дерева.
+.PP
+Последовательное сканирование дерева производится от меньших ключей к
+большим.
+.PP
+Место, освобождённое при удалении из дерева пар ключ/данные, в дальнейшем
+никогда не возвращается, хотя и может использоваться снова. Это значит, что
+физический размер базы данных может только увеличиваться. Единственное
+решение — избегать чрезмерного удаления и регулярно создавать новое дерево
+при помощи полного сканирования старого.
+.PP
+Поиск, вставка и удаление из дерева выполняются за время O lg по основанию
+N, где основание — средняя скорость заполнения. Довольно часто вставка
+упорядоченных данных в дерево даёт не столь хорошие результаты, однако,
+данная реализация изменена так, что работа упорядоченных вставок оказывается
+наилучшей и во многом более быстрой, чем обычное заполнение.
+.SH ОШИБКИ
+Функции метода доступа \fIbtree\fP могут завершиться с ошибкой и присвоить
+\fIerrno\fP любое значение из определённых для библиотеки функций \fBdbopen\fP(3).
+.SH ДЕФЕКТЫ
+Поддерживаются значения только с прямым и обратным порядком байт.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdbopen\fP(3), \fBhash\fP(3), \fBmpool\fP(3), \fBrecno\fP(3)
+.PP
+\fIThe Ubiquitous B\-tree\fP, Douglas Comer, ACM Comput. Surv. 11, 2 (June
+1979), 121\-138.
+.PP
+\fIPrefix B\-trees\fP, Bayer and Unterauer, ACM Transactions on Database
+Systems, Vol. 2, 1 (March 1977), 11\-26.
+.PP
+\fIThe Art of Computer Programming Vol. 3: Sorting and Searching\fP,
+D.E. Knuth, 1968, pp 471\-480.

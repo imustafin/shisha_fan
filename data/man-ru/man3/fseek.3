@@ -1,0 +1,131 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1990, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" This code is derived from software contributed to Berkeley by
+.\" Chris Torek and the American National Standards Committee X3,
+.\" on Information Processing Systems.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)fseek.3	6.11 (Berkeley) 6/29/91
+.\"
+.\" Converted for Linux, Mon Nov 29 15:22:01 1993, faith@cs.unc.edu
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FSEEK 3 2018\-04\-30 GNU "Руководство программиста Linux"
+.SH ИМЯ
+fgetpos, fseek, fsetpos, ftell, rewind \- меняют положение в потоке
+.SH ОБЗОР
+\fB#include <stdio.h>\fP
+.PP
+\fBint fseek(FILE *\fP\fIstream\fP\fB, long \fP\fIoffset\fP\fB, int \fP\fIwhence\fP\fB);\fP
+.PP
+\fBlong ftell(FILE *\fP\fIstream\fP\fB);\fP
+.PP
+\fBvoid rewind(FILE *\fP\fIstream\fP\fB);\fP
+.PP
+\fBint fgetpos(FILE *\fP\fIstream\fP\fB, fpos_t *\fP\fIpos\fP\fB);\fP
+.PP
+\fBint fsetpos(FILE *\fP\fIstream\fP\fB, const fpos_t *\fP\fIpos\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функция \fBfseek\fP() устанавливает положение файлового индикатора в потоке, на
+который указывает аргумент \fIstream\fP. Новое положение (в байтах) получается
+прибавлением \fIoffset\fP байтов к положению, которое задаётся параметром
+\fIwhence\fP. Если значение \fIwhence\fP равно \fBSEEK_SET\fP, \fBSEEK_CUR\fP или
+\fBSEEK_END\fP, то смещение указывается относительно начала файла, текущего
+положения указателя или конца файла, соответственно. Успешный вызов функции
+\fBfseek\fP() очищает (clear) индикатор конца файла потока и отменяет влияние
+функции \fBungetc\fP(3) на этот же поток.
+.PP
+Функция \fBftell\fP() возвращает текущее значение файлового индикатора
+положения для потока, на который указывает \fIstream\fP.
+.PP
+Функция \fBrewind\fP() устанавливает файловый индикатор положения для потока,
+на который указывает \fIstream\fP, равным началу файла. Эта функция
+эквивалентна вызову:
+.PP
+.RS
+(void) fseek(stream, 0L, SEEK_SET)
+.RE
+.PP
+хотя в этом случае также сбрасывается индикатор ошибок потока (смотрите
+\fBclearerr\fP(3)).
+.PP
+Функции \fBfgetpos\fP() и \fBfsetpos\fP() эквивалентны \fBftell\fP() и \fBfseek\fP()
+(где значение \fIwhence\fP равно \fBSEEK_SET\fP); они сохраняют или устанавливают
+текущее значение файлового смещения в объектах, определяемых \fIpos\fP. В
+некоторых не\-UNIX системах объект \fIfpos_t\fP может быть сложным объектом, а
+данные функции могут быть единственным переносимым способом изменения
+положения в текстовом потоке.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBrewind\fP() не возвращает значений. При успешном выполнении функции
+\fBfgetpos\fP(), \fBfseek\fP(), \fBfsetpos\fP() возвращают 0, а \fBftell\fP() возвращает
+значение текущего смещения. В противном случае возвращается \-1, а в \fIerrno\fP
+записывается соответствующий код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Значение \fIwhence\fP в \fBfseek\fP() не равно \fBSEEK_SET\fP, \fBSEEK_\fP или
+\fBSEEK_CUR\fP. Или результирующее смещение файла получается отрицательным.
+.TP 
+\fBESPIPE\fP
+Связанный со \fIstream\fP файловый дескриптор не допускает перемоток (верно для
+каналов, FIFO или сокетов).
+.PP
+При ошибках функции \fBfgetpos\fP(), \fBfseek\fP(), \fBfsetpos\fP() и \fBftell\fP()
+устанавливают значение \fIerrno\fP равным значению, определённому в функциях
+\fBfflush\fP(3), \fBfstat\fP(2), \fBlseek\fP(2) и \fBmalloc\fP(3).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfseek\fP(),
+\fBftell\fP(),
+\fBrewind\fP(),
+.br
+\fBfgetpos\fP(),
+\fBfsetpos\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlseek\fP(2), \fBfseeko\fP(3)

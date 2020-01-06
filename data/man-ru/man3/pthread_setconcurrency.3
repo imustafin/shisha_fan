@@ -1,0 +1,103 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2009 Michael Kerrisk, <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_SETCONCURRENCY 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_setconcurrency, pthread_getconcurrency \- изменяет/возвращает уровень
+распараллеливания
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_setconcurrency(int \fP\fInew_level\fP\fB);\fP
+\fBint pthread_getconcurrency(void);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_setconcurrency\fP() информирует реализацию приложения о
+желаемом уровне распараллеливания (concurrency level), задаваемом в
+\fInew_level\fP. Реализация принимает это только как рекомендацию: в POSIX.1 не
+указан уровень распараллеливания, который должен получиться в результате
+вызова \fBpthread_setconcurrency\fP().
+.PP
+Значение \fInew_level\fP равное 0 указывает реализации использовать уровень
+распараллеливания по своему усмотрению.
+.PP
+Функция \fBpthread_getconcurrency\fP() возвращает текущее значение уровня
+распараллеливания для этого процесса.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBpthread_setconcurrency\fP() возвращается 0; при
+ошибке возвращается ненулевой номер ошибки.
+.PP
+Функция \fBpthread_getconcurrency\fP() всегда завершается успешно, возвращая
+уровень распараллеливания, заданный предыдущим вызовом
+\fBpthread_setconcurrency\fP(), или 0, если функция \fBpthread_setconcurrency\fP()
+не вызывалась.
+.SH ОШИБКИ
+Функция \fBpthread_setconcurrency\fP() может завершиться со следующей ошибкой:
+.TP 
+\fBEINVAL\fP
+Значение \fInew_level\fP отрицательно.
+.PP
+В POSIX.1 также описана ошибка \fBEAGAIN\fP («значение, указанное в
+\fInew_level\fP, привело бы к превышению системного ограничения»).
+.SH ВЕРСИИ
+Эти функции доступны в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw25 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_setconcurrency\fP(),
+\fBpthread_getconcurrency\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Значение уровня распараллеливания по умолчанию равно 0.
+.PP
+Уровни распараллеливания имеют смысл только в реализациях нитей M:N, где в
+любой момент времени поднабор из набора пользовательских нитей процесса
+может быть ограничен меньшим количеством единиц планирования
+ядра. Назначение уровня распараллеливания позволяет приложению дать системе
+подсказку о количестве единиц планирования ядра для эффективного выполнения
+приложения.
+.PP
+В реализациях нитей LinuxThreads и NPTL используется отношение 1:1, поэтому
+назначение уровня распараллеливания не имеет смысла. Другими словами, в
+Linux эти функции существуют только лишь для совместимости с другими
+системами и никак не влияют на выполнение программы.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthread_attr_setscope\fP(3), \fBpthreads\fP(7)

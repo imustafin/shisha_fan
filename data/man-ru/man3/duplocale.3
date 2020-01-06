@@ -1,0 +1,158 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DUPLOCALE 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+duplocale \- создаёт копию объекта локали
+.SH ОБЗОР
+.nf
+\fB#include <locale.h>\fP
+.PP
+\fBlocale_t duplocale(locale_t \fP\fIlocobj\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBduplocale\fP():
+.PD 0
+.RS 4
+.TP 
+Начиная с glibc 2.10:
+_XOPEN_SOURCE\ >=\ 700
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.PD
+.SH ОПИСАНИЕ
+Функция \fBduplocale\fP() создаёт копию объекта локали, на которую указывает
+\fIlocobj\fP.
+.PP
+Если значение \fIlocobj\fP равно \fBLC_GLOBAL_LOCALE\fP, то \fBduplocale\fP() создаёт
+объект локали, содержащий копию глобальной локали, задаваемой
+\fBsetlocale\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBduplocale\fP() возвращает описатель нового объекта
+локали. При ошибке возвращается \fI(locale_t)\ 0\fP, а \fIerrno\fP присваивается
+код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для создания копии объекта локали.
+.SH ВЕРСИИ
+Функция \fBduplocale\fP() впервые появилась в версии 2.3 библиотеки GNU C.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Создание копии локали может пригодиться в следующих случаях:
+.IP * 3
+Для создания копии объекта локали, в которой одна или более категорий будут
+изменены (с помощью \fBnewlocale\fP(3)).
+.IP *
+Для получения описателя текущей локали, который может использоваться в
+других функциях, таких как \fBtoupper_l\fP(3). Для этого \fBduplocale\fP()
+передаётся значение, полученное от следующего вызова:
+.IP
+    loc = uselocale((locale_t) 0);
+.IP
+Такая последовательность необходима, так как вызов \fBuselocale\fP(3) может
+вернуть значение \fBLC_GLOBAL_LOCALE\fP, которое вызовет непредсказуемое
+поведение, если будет передано в функции, подобные \fBtoupper_l\fP(3). Вызов
+\fBduplocale\fP() можно использовать для проверки, что значение
+\fBLC_GLOBAL_LOCALE\fP преобразуется в подходящий объект локали. Смотрите
+ПРИМЕР далее.
+.PP
+Каждый объект локали, созданный \fBduplocale\fP(), должен освобождаться с
+помощью \fBfreelocale\fP(3).
+.SH ПРИМЕР
+Представленная ниже программа использует \fBuselocale\fP(3) и \fBduplocale\fP()
+для получения описателя текущей локали, который затем передаётся в
+\fBtoupper_l\fP(3). Программа распознаёт один аргумент командной строки, строку
+символов, которая приводится к верхнему регистру и выводится в стандартный
+вывод. Пример использования:
+.PP
+.in +4n
+.EX
+$ \fB./a.out abc\fP
+ABC
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _XOPEN_SOURCE 700
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    locale_t loc, nloc;
+    char *p;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s строка\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /* Эта последовательность необходима, так как uselocale() может
+       вернуть значение LC_GLOBAL_LOCALE, которое нельзя
+       передавать как аргумент в toupper_l() */
+
+    loc = uselocale((locale_t) 0);
+    if (loc == (locale_t) 0)
+        errExit("uselocale");
+
+    nloc = duplocale(loc);
+    if (nloc == (locale_t) 0)
+        errExit("duplocale");
+
+    for (p = argv[1]; *p; p++)
+        putchar(toupper_l(*p, nloc));
+
+    printf("\en");
+
+    freelocale(nloc);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfreelocale\fP(3), \fBnewlocale\fP(3), \fBsetlocale\fP(3), \fBuselocale\fP(3),
+\fBlocale\fP(5), \fBlocale\fP(7)

@@ -1,0 +1,185 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2003 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETGRENT_R 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getgrent_r, fgetgrent_r \- возвращает запись из файла групп (реентерабельные
+версии)
+.SH ОБЗОР
+.nf
+\fB#include <grp.h>\fP
+.PP
+\fBint getgrent_r(struct group *\fP\fIgbuf\fP\fB, char *\fP\fIbuf\fP\fB,\fP
+\fB               size_t \fP\fIbuflen\fP\fB, struct group **\fP\fIgbufp\fP\fB);\fP
+.PP
+\fBint fgetgrent_r(FILE *\fP\fIstream\fP\fB, struct group *\fP\fIgbuf\fP\fB, char *\fP\fIbuf\fP\fB,\fP
+\fB                size_t \fP\fIbuflen\fP\fB, struct group **\fP\fIgbufp\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.\" FIXME . The FTM requirements seem inconsistent here.  File a glibc bug?
+\fBgetgrent_r\fP(): _GNU_SOURCE
+.br
+\fBfgetgrent_r\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _SVID_SOURCE
+.SH ОПИСАНИЕ
+Функции \fBgetgrent_r\fP() и \fBfgetgrent_r\fP() являются реентерабельными
+версиями \fBgetgrent\fP(3) и \fBfgetgrent\fP(3). Первая читает следующую запись
+группы из потока, инициализированного \fBsetgrent\fP(3). Последняя читает
+следующую запись группы из \fIstream\fP.
+.PP
+Структура \fIgroup\fP определена в \fI<grp.h>\fP следующим образом:
+.PP
+.in +4n
+.EX
+struct group {
+    char   *gr_name;        /* имя группы */
+    char   *gr_passwd;      /* пароль группы */
+    gid_t   gr_gid;         /* ID группы */
+    char  **gr_mem;         /* массив, указателей
+                               имён членов группы, оканчивающийся NULL */
+};
+.EE
+.in
+.PP
+Подробней о полях этой структуры смотрите в \fBgroup\fP(5).
+.PP
+Нереентерабельные версии возвращают указатель на статическое хранилище, в
+котором хранятся другие указатели на имя группы, пароль и список
+членов. Реентерабельные функции, описанные здесь, возвращают всю информацию
+в буферах, предоставленных вызывающим. Основным буфером является \fIgbuf\fP, в
+котором может храниться \fIstruct group\fP. В дополнительном буфере \fIbuf\fP
+размера \fIbuflen\fP могут храниться дополнительные строки. Результат этих
+функций, прочитанная из потока \fIstruct group\fP, сохраняется в
+предоставляемый буфер \fI*gbuf\fP, и указатель на эту \fIstruct group\fP
+возвращается в \fI*gbufp\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0 и \fI*gbufp\fP указывает на
+\fIstruct group\fP. При ошибке возвращается значение ошибки и \fI*gbufp\fP равен
+NULL.
+.SH ОШИБКИ
+.TP 
+\fBENOENT\fP
+Больше записей нет.
+.TP 
+\fBERANGE\fP
+Недостаточно места в буфере. Попробуйте ещё раз с большим буфером.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw27
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetgrent_r\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:grent locale
+T{
+\fBfgetgrent_r\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+В приведённой выше таблице \fIgrent\fP в \fIrace:grent\fP означает, что если в
+нескольких нитях программы одновременно используются функции \fBsetgrent\fP(),
+\fBgetgrent\fP(), \fBendgrent\fP() или \fBgetgrent_r\fP(), то может возникнуть
+состязательность по данным.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU; они выполнены похожими на
+POSIX\-версию функции \fBgetpwnam_r\fP(3). В других системах используется
+прототип
+.PP
+.in +4n
+.EX
+struct group *getgrent_r(struct group *grp, char *buf,
+                         int buflen);
+.EE
+.in
+.PP
+или, лучше,
+.PP
+.in +4n
+.EX
+int getgrent_r(struct group *grp, char *buf, int buflen,
+               FILE **gr_fp);
+.EE
+.in
+.SH ЗАМЕЧАНИЯ
+Функция \fBgetgrent_r\fP() не совсем реентерабельна, так как она использует
+общую позицию чтения в потоке с другими нитями.
+.SH ПРИМЕР
+.EX
+#define _GNU_SOURCE
+#include <grp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define BUFLEN 4096
+
+int
+main(void)
+{
+    struct group grp, *grpp;
+    char buf[BUFLEN];
+    int i;
+
+    setgrent();
+    while (1) {
+        i = getgrent_r(&grp, buf, BUFLEN, &grpp);
+        if (i)
+            break;
+        printf("%s (%d):", grpp\->gr_name, grpp\->gr_gid);
+        for (i = 0; ; i++) {
+            if (grpp\->gr_mem[i] == NULL)
+                break;
+            printf(" %s", grpp\->gr_mem[i]);
+        }
+        printf("\en");
+    }
+    endgrent();
+    exit(EXIT_SUCCESS);
+}
+.EE
+.\" perhaps add error checking - should use strerror_r
+.\" #include <errno.h>
+.\" #include <stdlib.h>
+.\"         if (i) {
+.\"               if (i == ENOENT)
+.\"                     break;
+.\"               printf("getgrent_r: %s", strerror(i));
+.\"               exit(EXIT_FAILURE);
+.\"         }
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfgetgrent\fP(3), \fBgetgrent\fP(3), \fBgetgrgid\fP(3), \fBgetgrnam\fP(3),
+\fBputgrent\fP(3), \fBgroup\fP(5)

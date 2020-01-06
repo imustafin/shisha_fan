@@ -1,0 +1,88 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) IBM Corp. 2015
+.\" Author: Alexey Ishchuk <aishchuk@linux.vnet.ibm.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH S390_PCI_MMIO_WRITE 2 2017\-09\-15 "Руководство программиста Linux" 
+.SH ИМЯ
+s390_pci_mmio_write, s390_pci_mmio_read \- обмен данными со страницей памяти
+PCI MMIO
+.SH ОБЗОР
+.nf
+\fB#include <asm/unistd.h>\fP
+.PP
+\fBint s390_pci_mmio_write(unsigned long \fP\fImmio_addr\fP\fB,\fP
+\fB                        void *\fP\fIuser_buffer\fP\fB, size_t \fP\fIlength\fP\fB);\fP
+\fBint s390_pci_mmio_read(unsigned long \fP\fImmio_addr\fP\fB,\fP
+\fB                        void *\fP\fIuser_buffer\fP\fB, size_t \fP\fIlength\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBs390_pci_mmio_write\fP() записывает \fIlength\fP байт данных из
+буфера \fIuser_buffer\fP пользовательского пространства в память PCI MMIO по
+адресу, указанному в \fImmio_addr\fP. Системный вызов \fBs390_pci_mmio_read\fP()
+читает \fIlength\fP байт данных начиная с адреса \fImmio_addr\fP в памяти PCI MMIO
+и записывает их в буфер пользовательского пространства \fIuser_buffer\fP.
+.PP
+Данные системные вызовы должны использоваться вместо простых операций
+назначения данных, используемых для доступа к областям памяти PCI MMIO,
+отображенным в пользовательское пространство на платформе Linux System
+z. Адрес, указываемый в \fImmio_addr\fP, должен принадлежать отображению
+страницы памяти PCI MMIO в адресном пространстве вызывающего, а записываемые
+или читаемые данные не должны пересекать границу страницы. Значение
+\fIlength\fP не может быть больше размера системной страницы.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBs390_pci_mmio_write\fP() и \fBs390_pci_mmio_read\fP()
+возвращают 0. При ошибке возвращается \-1, а в \fIerrno\fP содержится один из
+кодов ошибки, перечисленных далее.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Некорректный адрес в \fImmio_addr\fP.
+.TP 
+\fBEFAULT\fP
+Адрес \fIuser_buffer\fP не ссылается на корректную точку в адресном
+пространстве вызывающего.
+.TP 
+\fBEINVAL\fP
+Некорректное значение аргумента \fIlength\fP.
+.TP 
+\fBENODEV\fP
+Поддержка PCI выключена.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти.
+.SH ВЕРСИИ
+Данные системные вызовы появились в Linux 3.19.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный системный вызов есть только в Linux и доступен только на архитектуре
+s390. Требуемая поддержка PCI доступна начиная с System z EC12.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данного системного вызова; запускайте его с помощью
+\fBsyscall\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsyscall\fP(2)

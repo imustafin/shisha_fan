@@ -1,0 +1,201 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) 1980, 1991 Regents of the University of California.
+.\" and Copyright (c) 2011, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)lseek.2	6.5 (Berkeley) 3/10/91
+.\"
+.\" Modified 1993-07-23 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1995-06-10 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 1996-10-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1998-01-17 by Michael Haardt
+.\"   <michael@cantor.informatik.rwth-aachen.de>
+.\" Modified 2001-09-24 by Michael Haardt <michael@moria.de>
+.\" Modified 2003-08-21 by Andries Brouwer <aeb@cwi.nl>
+.\" 2011-09-18, mtk, Added SEEK_DATA + SEEK_HOLE
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LSEEK 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+lseek \- изменяет файловое смещение, используемое при чтении/записи
+.SH ОБЗОР
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <unistd.h>\fP
+.PP
+\fBoff_t lseek(int \fP\fIfd\fP\fB, off_t \fP\fIoffset\fP\fB, int \fP\fIwhence\fP\fB);\fP
+.SH ОПИСАНИЕ
+Вызов \fBlseek\fP() изменяет файловое смещение в описании открытого файла,
+связанного с файловым дескрипторов \fIfd\fP, на значение аргумента \fIoffset\fP в
+соответствии с директивой \fIwhence\fP, которая может принимать одно из
+следующих значений:
+.TP 
+\fBSEEK_SET\fP
+Установить файловое смещение равным \fIoffset\fP (в байтах).
+.TP 
+\fBSEEK_CUR\fP
+Установить файловое смещение равным текущему положению плюс \fIoffset\fP (в
+байтах).
+.TP 
+\fBSEEK_END\fP
+Установить файловое смещение равным размеру файла плюс \fIoffset\fP (в байтах).
+.PP
+Вызов \fBlseek\fP() позволяет задавать смещение, которое будет находиться за
+существующим концом файла (но это не изменяет размер файла). Если позднее по
+этому смещению будут записаны данные, то последующее чтение в промежутке
+(«дырке») от конца файла до этого смещения, будет возвращать нулевые байты
+(\(aq\e0\(aq), пока в этот промежуток действительно не будут записаны
+данные.
+.SS "Перемещения по данным файла и промежутки"
+Начиная с версии 3.1, в Linux поддерживаются следующие дополнительные
+значения \fIwhence\fP:
+.TP 
+\fBSEEK_DATA\fP
+Подогнать файловое смещение к следующему расположению, большему или равному
+значению \fIoffset\fP, по которому в файле есть данные. Если значение \fIoffset\fP
+указывает на данные, то файловое смещение устанавливается в \fIoffset\fP.
+.TP 
+\fBSEEK_HOLE\fP
+Подогнать файловое смещение к следующему промежутку, большему или равному
+значению \fIoffset\fP. Если значение \fIoffset\fP указывает в середину промежутка,
+то файловое смещение устанавливается в \fIoffset\fP. Если перед \fIoffset\fP нет
+промежутка, то файловое смещение подгоняется к концу файла (т.е., это
+скрытый промежуток, который есть в конце любого файла).
+.PP
+В обоих, показанных выше, случаях, \fBlseek\fP() завершится с ошибкой, если
+\fIoffset\fP указывает за конец файла.
+.PP
+Эти операции позволяют приложениям отображать промежутки в разреженно
+выделенном файле. Это может быть полезно для таких приложений, как
+инструменты резервного копирования файлов, которые могут выиграть в месте
+при создании резервных копий и сохранить промежутки, если у них есть
+механизм их обнаружения.
+.PP
+.\" https://lkml.org/lkml/2011/4/22/79
+.\" http://lwn.net/Articles/440255/
+.\" http://blogs.oracle.com/bonwick/entry/seek_hole_and_seek_data
+Для поддержки этих операций промежуток представляется последовательностью
+нулей, которые (обычно) физически не занимают места на носителе. Однако
+файловая система может не сообщать о промежутках, поэтому эти операции — не
+гарантируемый механизм отображения пространства носителя в файл (более того,
+последовательность нулей, которая на самом деле была записана на носитель,
+может не посчитаться промежутком). В простейшей реализации, файловая система
+может поддержать эти операции так: при \fBSEEK_HOLE\fP всегда возвращать
+смещение конца файла, а при \fBSEEK_DATA\fP всегда возвращать значение
+\fIoffset\fP (т.е., даже если расположение, указанное \fIoffset\fP, является
+промежутком, это можно считать данными, состоящими из последовательности
+нулей).
+.PP
+Чтобы получить определения \fBSEEK_DATA\fP и \fBSEEK_HOLE\fP из
+\fI<unistd.h>\fP, нужно задать макрос тестирования свойств
+\fB_GNU_SOURCE\fP.
+.PP
+Операции \fBSEEK_HOLE\fP и \fBSEEK_DATA\fP поддерживаются следующими файловыми
+системами:
+.IP * 3
+Btrfs (начиная с Linux 3.1)
+.IP * 3
+.\" commit 93862d5e1ab875664c6cc95254fc365028a48bb1
+OCFS (начиная с Linux 3.2)
+.IP *
+XFS (начиная с Linux 3.5)
+.IP *
+ext4 (начиная с Linux 3.8)
+.IP *
+\fBtmpfs\fP(5)  (начиная с\ Linux 3.8)
+.IP *
+.\" commit 1c6dcbe5ceff81c2cf8d929646af675cd59fe7c0
+.\" commit 24bab491220faa446d945624086d838af41d616c
+NFS (начиная с Linux 3.18)
+.IP *
+.\" commit 0b5da8db145bfd44266ac964a2636a0cf8d7c286
+FUSE (начиная с Linux 4.5)
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBlseek\fP() возвращает получившееся в результате
+смещение в байтах от начала файла. При ошибке возвращается значение
+\fI(off_t)\ \-1\fP и в \fIerrno\fP записывается код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+\fIfd\fP не является открытым файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+.\" Some systems may allow negative offsets for character devices
+.\" and/or for remote filesystems.
+Неправильное значение \fIwhence\fP. Получается, что возвращаемое файловое
+смещение стало бы отрицательным или указывало бы за конец поверхности
+носителя.
+.TP 
+\fBENXIO\fP
+Значение \fIwhence\fP равно \fBSEEK_DATA\fP или \fBSEEK_HOLE\fP, а файловое смещение
+указывает за конец файла.
+.TP 
+\fBEOVERFLOW\fP
+.\" HP-UX 11 says EINVAL for this case (but POSIX.1 says EOVERFLOW)
+Результирующие файловое смещение не может быть представлено типом \fIoff_t\fP.
+.TP 
+\fBESPIPE\fP
+Значение \fIfd\fP связано с каналом, сокетом или FIFO.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.PP
+.\" FIXME . Review http://austingroupbugs.net/view.php?id=415 in the future
+Значения \fBSEEK_DATA\fP и \fBSEEK_HOLE\fP являются нестандартными расширениями,
+которые также есть в Solaris, FreeBSD и DragonFly BSD; их предложили
+включить в следующую редакцию POSIX (выпуск 8).
+.SH ЗАМЕЧАНИЯ
+Описание взаимосвязи между файловыми дескрипторами, открытыми файловыми
+описаниями и файлами смотрите в \fBopen\fP(2).
+.PP
+Если установлен флаг состояние файла \fBO_APPEND\fP в открытом файловом
+описании, то \fBwrite\fP(2) \fIвсегда\fP перемещает файловое смещение в конец
+файла, независимо от использования \fBlseek\fP().
+.PP
+Тип данных \fIoff_t\fP представляет собой знаковый целочисленный тип, определён
+в POSIX.1.
+.PP
+Некоторые устройства не могут выполнять смещения и в POSIX не указано какие
+устройства должны поддерживать \fBlseek\fP().
+.PP
+.\" Other systems return the number of written characters,
+.\" using SEEK_SET to set the counter. (Of written characters.)
+В Linux при использовании \fBlseek\fP() на устройствах терминалов возвращается
+ошибка \fBESPIPE\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdup\fP(2), \fBfallocate\fP(2), \fBfork\fP(2), \fBopen\fP(2), \fBfseek\fP(3),
+\fBlseek64\fP(3), \fBposix_fallocate\fP(3)

@@ -1,0 +1,124 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2001 Andries Brouwer <aeb@cwi.nl>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UNITS 7 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+units \- десятичные и двоичные приставки
+.SH ОПИСАНИЕ
+.SS "Десятичные приставки"
+В системе единиц СИ используются приставки, значения которых является
+степенью числа. В километре 1000 метров, а в мегаватте — 1000000 ватт. Далее
+показаны стандартные приставки.
+.RS
+.TS
+l l l.
+Приставка	Имя	Значение
+и	иокто	10^\-24 = 0.000000000000000000000001
+з	зепто	10^\-21 = 0.000000000000000000001
+а	атто	10^\-18 = 0.000000000000000001
+ф	фемто	10^\-15 = 0.000000000000001
+п	пико	10^\-12 = 0.000000000001
+н	нано	10^\-9  = 0.000000001
+мк	микро	10^\-6  = 0.000001
+м	милли	10^\-3  = 0.001
+с	санти	10^\-2  = 0.01
+д	деци	10^\-1  = 0.1
+да	дека	10^ 1  = 10
+г	гекто	10^ 2  = 100
+к	кило	10^ 3  = 1000
+М	мега	10^ 6  = 1000000
+Г	гига	10^ 9  = 1000000000
+Т	тера	10^12  = 1000000000000
+П	пета	10^15  = 1000000000000000
+Э	экса	10^18  = 1000000000000000000
+З	зетта	10^21  = 1000000000000000000000
+И	иотта	10^24  = 1000000000000000000000000
+.TE
+.RE
+.PP
+Для обозначения micro используется греческая буква мю. В кодировке ASCII,
+где она отсутствует, вместо неё часто используют латинскую u. Смотрите также
+.PP
+.RS
+.UR http://physics.nist.gov\:/cuu\:/Units\:/prefixes.html
+.UE
+.RE
+.SS "Двоичные префиксы"
+Двоичные префиксы походят на десятичные, но имеют дополнительную \(aqi\(aq
+(и «Ki» начинается с заглавной \(aqK\(aq). Имена формируются из первого
+звука имени десятичных префиксов примерно того же размера, за которым
+следует «bi» (от «binary» — «двоичный»).
+.RS
+.TS
+l l l.
+Приставка	Имя	Значение
+КиБ	киби	2^10 = 1024
+МиБ	меби	2^20 = 1048576
+ГиБ	гиби	2^30 = 1073741824
+ТиБ	теби	2^40 = 1099511627776
+ПиБ	пеби	2^50 = 1125899906842624
+ЭиБ	эксби	2^60 = 1152921504606846976
+.TE
+.RE
+.PP
+Смотрите также
+.PP
+.UR http://physics.nist.gov\:/cuu\:/Units\:/binary.html
+.UE
+.SS Обсуждение
+До введения двоичных префиксов довольно часто использовалось k=1000 и
+K=1024, также как и b=bit (бит), B=byte (байт). К сожалению, заглавная M уже
+занята, и не может быть использована как признак двоичности.
+.PP
+Поначалу это не имело большого значения, модули памяти и диски имели размер,
+равный степеням двойки, и все знали, что в таких случаях «килобайт» означает
+1024, а «мегабайт» — 1048576 байтов. Впрочем, некоторая путаница связанная с
+этим всё же была. После некоторых колебаний все производители дисков
+установили стандарт, по которому k=1000, M=1000\ к, G=1000\ М.
+.PP
+.\" also common: 14.4k modem
+Ситуация получилась запутанной: в модемах со скоростью 14k4 k=1000; в
+дискетах 1.44\ МБ M=1024000 и т. п. В 1998 году IEC принял стандарт, который
+определяет двоичные префиксы как указано выше, что позволяет людям быть
+точными и однозначными.
+.PP
+Таким образом, сегодня МБ = 1000000 \Б, а МиБ = 1048576 \Б.
+.PP
+В мире свободного программного обеспечения программы медленно переходят к
+таким обозначениям. Когда ядро Linux при загрузке выводит
+.PP
+.in +4n
+.EX
+hda: 120064896 sectors (61473 MB) w/2048KiB Cache
+.EE
+.in
+.PP
+то MB — это мегабайты, а KiB — кибибайты.

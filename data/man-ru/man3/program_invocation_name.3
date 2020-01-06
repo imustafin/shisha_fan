@@ -1,0 +1,60 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(PERMISSIVE_MISC)
+.\" Permission is hereby granted, free of charge, to any person obtaining
+.\" a copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\"
+.\" The above copyright notice and this permission notice shall be
+.\" included in all copies or substantial portions of the Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+.\" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+.\" CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+.\" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+.\" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INVOCATION_NAME 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+program_invocation_name, program_invocation_short_name \- имя, использованное
+для запуска вызвавшей программы
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+\fB#include <errno.h>\fP
+.PP
+\fBextern char *\fP\fIprogram_invocation_name\fP\fB;\fP
+\fBextern char *\fP\fIprogram_invocation_short_name\fP\fB;\fP
+.fi
+.SH ОПИСАНИЕ
+Переменная \fIprogram_invocation_name\fP содержит имя, которое было
+использовано для запуска вызвавшей программы. Это значение совпадает с
+\fIargv[0]\fP в \fImain\fP(); отличие в том, что \fIprogram_invocation_name\fP —
+глобальная переменная.
+.PP
+Переменная \fIprogram_invocation_short_name\fP содержит базовую часть имени,
+которое было использовано для запуска вызвавшей программы. То есть её
+значение совпадает с началом \fIprogram_invocation_name\fP до последней косой
+черты (/).
+.PP
+Эти переменные автоматически инициализируются glibc при запуске программы.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти переменные являются расширениями GNU, и они не должны использоваться в
+переносимых программах.
+.SH ЗАМЕЧАНИЯ
+В Linux файл \fI/proc/[number]/cmdline\fP содержит подобную информацию.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBproc\fP(5)

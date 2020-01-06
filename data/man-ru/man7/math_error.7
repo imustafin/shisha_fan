@@ -1,0 +1,173 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MATH_ERROR 7 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+math_error \- определение ошибок при выполнении математических функций
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+\fB#include <errno.h>\fP
+\fB#include <fenv.h>\fP
+.fi
+.SH ОПИСАНИЕ
+При возникновении ошибки большинство библиотечных функций возвращают
+специальное значение (например, \-1 или NULL). Так как математические
+функции, объявленные в \fI<math.h>\fP, обычно, возвращают число с
+плавающей запятой, то для выдачи ошибки используются другие способы. Есть
+два варианта вернуть сообщение об ошибке: старый — изменяя \fIerrno\fP; новый —
+используя механизм исключений плавающей запятой (с помощью
+\fBfeclearexcept\fP(3) и \fBfetestexcept\fP(3) как описано ниже), описанный в
+\fBfenv\fP(3).
+.PP
+Переносимая программа, которой требуется проверка на ошибки в математических
+функциях, должна обнулить \fIerrno\fP и выполнить вызов
+.PP
+.in +4n
+.EX
+feclearexcept(FE_ALL_EXCEPT);
+.EE
+.in
+.PP
+перед тем, как вызвать математическую функцию.
+.PP
+По возврату из математической функции, если переменная \fIerrno\fP ненулевая, а
+так же следующий вызов (смотрите \fBfenv\fP(3)) вернул ненулевое значение
+.PP
+.in +4n
+.EX
+fetestexcept(FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW |
+             FE_UNDERFLOW);
+.EE
+.in
+.PP
+.\" enum
+.\" {
+.\" FE_INVALID = 0x01,
+.\" __FE_DENORM = 0x02,
+.\" FE_DIVBYZERO = 0x04,
+.\" FE_OVERFLOW = 0x08,
+.\" FE_UNDERFLOW = 0x10,
+.\" FE_INEXACT = 0x20
+.\" };
+то ошибка произошла в математической функции.
+.PP
+Условия возникновения математических ошибок приведены ниже.
+.SS "Ошибка области"
+\fIОшибка области\fP возникает, когда математической функции передаётся
+аргумент, чьё значение выходит за границы области, ожидаемой функцией
+(например, передача отрицательного значения в функцию \fBlog\fP(3)). Когда
+возникает ошибка области, чаще всего, математические функции возвращают NaN
+(хотя некоторые функции в этом случае возвращают другое значение); \fIerrno\fP
+присваивается \fBEDOM\fP возникает исключение плавающей запятой «invalid»
+(\fBFE_INVALID\fP).
+.SS "Ошибка особой точки"
+\fIОшибка особой точки\fP возникает, когда результат математической функции
+должен быть равен бесконечности (например, логарифм 0 равен отрицательной
+бесконечности). Когда возникает ошибка особой точки функция возвращает
+значение (со знаком) \fBHUGE_VAL\fP, \fBHUGE_VALF\fP или \fBHUGE_VALL\fP, в
+зависимости от типа результата функции — \fIdouble\fP, \fIfloat\fP или \fIlong
+double\fP. Знак результата будет математически корректным для
+функции. Переменной \fIerrno\fP присваивается значение \fBERANGE\fP и возникает
+исключение плавающей запятой «divide\-by\-zero» (\fBFE_DIVBYZERO\fP).
+.SS "Ошибка диапазона"
+\fIОшибка диапазона\fP возникает, когда величина результата функции не может
+быть представлена типом результата функции. Возвращаемое значение функции
+зависит от того, было ли при ошибке диапазона переполнение или исчерпание.
+.PP
+Результат с плавающей запятой \fIпереполнен\fP, если он является конечным
+значением, но слишком большим для представления типом результата. При
+возникновении переполнения функция возвращает значение \fBHUGE_VAL\fP,
+\fBHUGE_VALF\fP или \fBHUGE_VALL\fP, в зависимости от того, каков тип результата
+функции —  \fIdouble\fP, \fIfloat\fP или \fIlong double\fP. Переменной \fIerrno\fP
+присваивается значение \fBERANGE\fP и возникает переполнение плавающей запятой
+«overflow» (\fBFE_OVERFLOW\fP).
+.PP
+Результат с плавающей запятой \fIпотерял значимость\fP, если он слишком мал для
+представления типом результата. При возникновении исчерпаемости
+математическая функция, обычно, возвращает 0.0 (в C99 сказано, что функция
+должна возвращать «определяемое реализацией» значение, чья величина не
+больше, чем самое маленькое положительное число заданного типа»). Переменной
+\fIerrno\fP может быть присвоено значение \fBERANGE\fP и может возникать
+переполнение плавающей запятой «overflow» (\fBFE_UNDERFLOW\fP).
+.PP
+Некоторые функции возвращают ошибку диапазона, ели значение аргумента или
+правильный результат функции был бы \fIсубнормальным\fP. Субнормальное значение
+— ненулевое значение, но его величина так мала, что не может быть
+представлена в нормализованном виде (т. е., есть 1 с самом значимом бите
+значащей части). Представление субнормального числа будет содержать один или
+более начальных нулей в значащей части.
+.SH ЗАМЕЧАНИЯ
+.\" See CONFORMANCE in the glibc 2.8 (and earlier) source.
+Идентификатор \fImath_errhandling\fP, определённый в C99 и POSIX.1, не
+поддерживается в glibc. Данный идентификатор предполагается для указания
+какой из двух способов использован для уведомления об ошибке (\fIerrno\fP,
+исключение, извлекаемое с помощью \fBfettestexcept\fP(3)). Стандарты требуют,
+чтобы использовался какой\-то один, но допускают быть доступным обоим. На
+данный момент (версия 2.8) ситуация в glibc запутанная. Большинство (но не
+все) функций вызывают при ошибке исключение. Некоторые также изменяют
+\fIerrno\fP. Несколько функций изменяют \fIerrno\fP, но не вызывают
+исключение. Очень малое количество функций не делают ни того, ни
+другого. Всё это описано в их справочных страницах.
+.PP
+.\" http://www.securecoding.cert.org/confluence/display/seccode/FLP32-C.+Prevent+or+detect+domain+and+range+errors+in+math+functions
+Чтобы при проверке ошибок избежать сложностей с использованием \fIerrno\fP и
+\fBfetestexcept\fP(3) часто советуют перед вызовом проверять аргументы на
+некорректные значения. Например, следующий код проверяет, что аргумент
+\fBlog\fP(3) не равен NaN и не равен нулю (ошибка особой точки) или меньше нуля
+(ошибка области):
+.PP
+.in +4n
+.EX
+double x, r;
+
+if (isnan(x) || islessequal(x, 0)) {
+    /* обработка NaN / ошибки особой точки / ошибки области */
+}
+
+r = log(x);
+.EE
+.in
+.PP
+Данная страница не применима к комплексным математическим функциям
+(описанным в \fI<complex.h>\fP), для которых в C99 and POSIX.1, обычно,
+не требуется возвращать ошибки.
+.PP
+Параметр \fBgcc\fP(1) \fI\-fno\-math\-errno\fP заставляет в исполняемых файлах
+вызывать реализации некоторых математических функций, которые быстрее
+стандартных, но не изменяющие \fIerrno\fP при ошибке (параметр \fBgcc\fP(1)
+\fI\-ffast\-math\fP также включает \fI\-fno\-math\-errno\fP.) Возникновение ошибки
+по\-прежнему можно проверить с помощью \fBfetestexcept\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgcc\fP(1), \fBerrno\fP(3), \fBfenv\fP(3), \fBfpclassify\fP(3), \fBINFINITY\fP(3),
+\fBisgreater\fP(3), \fBmatherr\fP(3), \fBnan\fP(3)
+.PP
+\fIinfo libc\fP

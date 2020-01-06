@@ -1,0 +1,63 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCTOB 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wctob \- пытается представить широкий символ в виде одного байта
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBint wctob(wint_t \fP\fIc\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBwctob\fP() проверяет, начиная из начального состояния может ли
+многобайтовое представление широкого символа \fIc\fP, состоять из одного
+байта. Если это так, то возвращается данный байт в виде \fIunsigned char\fP.
+.PP
+Никогда не используйте эту функцию. Она не поможет вам в написании
+корректных интернационализированных программ. Такие программы не должны
+различать многобайтные и однобайтные символы.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBwctob\fP() возвращает однобайтное представление широкого символа
+\fIc\fP, если оно существует, или \fBEOF\fP в ином случае.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwctob\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBwctob\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.PP
+Никогда не используйте эту функцию. Интернационализированные программы не
+должны различать многобайтные и однобайтные символы. Вместо неё используйте
+\fBwctomb\fP(3) или нитебезопасный аналог \fBwcrtomb\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbtowc\fP(3), \fBwcrtomb\fP(3), \fBwctomb\fP(3)

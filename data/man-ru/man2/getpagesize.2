@@ -1,0 +1,99 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2001 Andries Brouwer <aeb@cwi.nl>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETPAGESIZE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getpagesize \- определяет размер страницы памяти
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint getpagesize(void);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgetpagesize\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Начиная с glibc 2.19:
+.nf
+_DEFAULT_SOURCE || ! (_POSIX_C_SOURCE\ >=\ 200112L)
+.TP  4
+.fi
+В glibc с 2.12 по 2.19:
+.nf
+_BSD_SOURCE || ! (_POSIX_C_SOURCE\ >=\ 200112L)
+.TP  4
+.fi
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+До glibc 2.12: _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.PD
+.RE
+.ad b
+.SH ОПИСАНИЕ
+.\" .SH HISTORY
+.\" This call first appeared in 4.2BSD.
+Вызов \fBgetpagesize\fP() возвращает количество байтов в странице памяти, где
+«страница» представляет собой блок фиксированной длины, единица измерения
+при выделения памяти и файлового отображения, выполняемого с помощью
+\fBmmap\fP(2).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4, 4.4BSD, SUSv2. В SUSv2 вызов \fBgetpagesize\fP() отмечен как УСТАРЕВШИЙ,
+и был удалён из POSIX.1\-2001; в HP\-UX такого вызова нет.
+.SH ЗАМЕЧАНИЯ
+В переносимых программах вместо \fBgetpagesize\fP() следует использовать
+\fIsysconf(_SC_PAGESIZE)\fP:
+.PP
+.in +4n
+.EX
+#include <unistd.h>
+long sz = sysconf(_SC_PAGESIZE);
+.EE
+.in
+.PP
+(большинство систем позволяют использовать \fB_SC_PAGE_SIZE\fP вместо
+\fB_SC_PAGESIZE\fP.)
+.PP
+В Linux системный вызов \fBgetpagesize\fP() есть не на всех архитектурах. Если
+он есть, то он возвращает символ ядра \fBPAGE_SIZE\fP, чьё значение зависит от
+архитектуры и модели компьютера. Как правило, создаваемые двоичные файлы
+используются для всей архитектуры, а не для конкретной одной модели. Поэтому
+рекомендуется определять \fBPAGE_SIZE\fP не на стадии компиляции из файла
+заголовка, а при выполнении программы с помощью данной функции, по крайней
+мере на тех архитектурах (таких как sun), где зависимость от модели
+существует. В этом случае в библиотечные вызовы glibc 2.0 завершатся
+неудачно, так как её \fBgetpagesize\fP() возвращает статически определённое
+значение и не использует системный вызов. В glibc 2.1 это исправлено.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmmap\fP(2), \fBsysconf\fP(3)

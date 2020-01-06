@@ -1,0 +1,93 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Giorgio Ciucci (giorgio@crcc.it)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2001-11-28, by Michael Kerrisk, <mtk.manpages@gmail.com>
+.\"	Changed data type of proj_id; minor fixes
+.\"	aeb: further fixes; added notes.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FTOK 3 2019\-08\-02 GNU "Руководство программиста Linux"
+.SH ИМЯ
+ftok \- преобразует путь и идентификатор проекта в ключ System V IPC
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/ipc.h>\fP
+.fi
+.PP
+\fBkey_t ftok(const char *\fP\fIpathname\fP\fB, int \fP\fIproj_id\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функция \fBftok\fP() использует отличительные свойства (identity) файла с
+именем \fIpathname\fP (которое должно указывать на существующий и доступный
+файл) и младшие 8 бит аргумента \fIproj_id\fP (который должен быть не равен
+нулю) для генерации ключа System V IPC \fIkey_t\fP, который пригоден для работы
+с \fBmsgget\fP(2), \fBsemget\fP(2) или \fBshmget\fP(2).
+.PP
+Возвращаемое значение одинаково для всех имён, указывающих на один и тот же
+файл при одинаковом значении \fIproj_id\fP. Возвращаемое значение будет
+отличаться, когда (одновременно существующие) файлы или идентификаторы
+проекта различаются.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается сгенерированное значение \fIkey_t\fP. При
+ошибке возвращается \-1, а в переменную \fIerrno\fP записывается код ошибки
+согласно системному вызову \fBstat\fP(2).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBftok\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В некоторых старых системах прототип выглядел как:
+.PP
+.in +4n
+.EX
+\fBkey_t ftok(char *\fP\fIpathname\fP\fB, char \fP\fIproj_id\fP\fB);\fP
+.EE
+.in
+.PP
+В наши дни \fIproj_id\fP имеет тип \fIint\fP, хотя, как правило, по\-прежнему из
+него используется только 8 бит. Обычно, при вызове этой функции в качестве
+\fIproj_id\fP передаётся символ ASCII, именно поэтому поведение функции
+считается не определённым, если \fIproj_id\fP равен нулю.
+.PP
+Естественно, не гарантируется, что возвращаемый \fIkey_t\fP уникален. Обычно
+производится объединение указанного байта \fIproj_id\fP с младшими 16 битами
+номера inode и младшими 8 битам номера устройства в 32\-битный
+результат. Легко могут возникать повторения, например между файлами на
+\fI/dev/hda1\fP и файлами на \fI/dev/sda1\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmsgget\fP(2), \fBsemget\fP(2), \fBshmget\fP(2), \fBstat\fP(2), \fBsysvipc\fP(7)

@@ -1,0 +1,169 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2016, Oracle.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IOCTL\-FIDEDUPERANGE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ioctl_ficlonerange \- сделать некоторые данные одного файла общими с другим
+файлом
+.SH ОБЗОР
+.br
+\fB#include <sys/ioctl.h>\fP
+.br
+\fB#include <linux/fs.h>\fP
+.PP
+\fBint ioctl(int \fP\fIsrc_fd\fP\fB, FIDEDUPERANGE, struct file_dedupe_range
+*\fP\fIarg\fP\fB);\fP
+.SH ОПИСАНИЕ
+Если файловая система поддерживает общее файловое физическое хранилище между
+несколькими файлами, то эту операцию \fBioctl\fP(2) можно использовать для
+того, чтобы часть данных файла \fIsrc_fd\fP появилась в файле \fIdest_fd\fP в виде
+общего пространства на носителе, если данные файлов одинаковы
+(«дедупликация», deduplication). Оба файла должны располагаться в одной
+файловой системе. Это сокращает затраты на место, позволяя хранить в
+файловой системе только одну копию данных.Если выполняется запись в эту
+общую область, то файловая система должна гарантировать, что изменения будут
+видны только в файле, в который производится запись. Такое поведение часто
+называют как «копирование при записи» (copy on write).
+.PP
+Данный ioctl выполняет операцию «сравнения и создания общей области при
+совпадении» с не более \fIsrc_length\fP байт из файлового дескриптора \fIsrc_fd\fP
+по смещению \fIsrc_offset\fP. Данная информация передаётся в структуре
+следующего вида:
+.PP
+.in +4n
+.EX
+struct file_dedupe_range {
+    __u64 src_offset;
+    __u64 src_length;
+    __u16 dest_count;
+    __u16 reserved1;
+    __u32 reserved2;
+    struct file_dedupe_range_info info[0];
+};
+.EE
+.in
+.PP
+Дедупликация атомарна для одновременной записи, поэтому для получения
+корректной дедуплицированной копии не нужно получать блокировки.
+.PP
+Поля \fIreserved1\fP и \fIreserved2\fP должны быть равны нулю.
+.PP
+Назначения для операции дедупликации передаются в массиве в конце
+структуры. Количество назначений задаётся в \fIdest_count\fP, а информация о
+назначении задаётся в следующем виде:
+.PP
+.in +4n
+.EX
+struct file_dedupe_range_info {
+    __s64 dest_fd;
+    __u64 dest_offset;
+    __u64 bytes_deduped;
+    __s32 status;
+    __u32 reserved;
+};
+.EE
+.in
+.PP
+Целью каждой операции дедупликации является \fIsrc_length\fP байт в файловом
+дескрипторе \fIdest_fd\fP со смещением \fIlogical_offset\fP. Поле \fIreserved\fP
+должно быть равно нулю.На момент вызова \fIsrc_fd\fP должен быть открыт на
+чтение и, \fIdest_fd\fP должен быть открыт на запись. Сумма размеров структуры
+\fIfile_dedupe_range\fP и массива структур \fIfile_dedupe_range_info\fP не должна
+превышать системный размер страницы. Максимальный размер \fIsrc_length\fP
+зависит от файловой системы и, обычно равен 16\ МиБ. Это ограничение будет
+невидимо соблюдаться файловой системой. По соглашению, хранилище,
+используемое \fIsrc_fd\fP, отображается в \fIdest_fd\fP, а предыдущее содержимое в
+\fIdest_fd\fP освобождается.
+.PP
+При успешном выполнении ioctl в \fIbytes_deduped\fP возвращается количество
+дедуплицированных байт, а в \fIstatus\fP — код состояния операции
+дедупликации. Если не совпадает даже один байт из диапазона, то запрос
+дедупликации будет проигнорирован и \fIstatus\fP будет присвоено
+\fBFILE_DEDUPE_RANGE_DIFFERS\fP. При успешном выполнении код \fIstatus\fP
+изменяется на \fBFILE_DEDUPE_RANGE_SAME\fP, при ошибке — отрицательное значение
+кода, или \fBFILE_DEDUPE_RANGE_DIFFERS\fP, если данные не совпадают.
+.PP
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в значение
+ошибки.
+.PP
+.SH ОШИБКИ
+Возможные коды ошибок (помимо прочих):
+.TP 
+\fBEBADF\fP
+Дескриптор \fIsrc_fd\fP не открыт на чтение; \fIdest_fd\fP не открыт на запись или
+открыт только для добавления; файловая система, в которой находится
+\fIsrc_fd\fP, не поддерживает дедупликацию.
+.TP 
+\fBEINVAL\fP
+Файловая система не поддерживает дедупликацию диапазонов в заданных
+файлах. Эта ошибка также может возникнуть, если файловый дескриптор
+представляет устройство, FIFO или сокет. Обычно, для дисковых файловых
+систем требуются, чтобы аргументы смещения и длины были выровнены по
+основному размеру блока. В XFS и Btrfs нет поддержки дедупликации
+перекрывающихся диапазонов в одном и том же файле.
+.TP 
+\fBEISDIR\fP
+Один из файлов является каталогом и файловая система не поддерживает
+диапазоны для каталогов.
+.TP 
+\fBENOMEM\fP
+Ядро не смогло выделить достаточно памяти для выполнения операции или размер
+\fIdest_count\fP слишком большой из\-за того, что описание входного аргумента
+занимает больше одной страницы в памяти.
+.TP 
+\fBEOPNOTSUPP\fP
+Может возникать, если файловая система не поддерживает дедупликацию для
+файловых дескрипторов или когда файловый дескриптор ссылается на специальные
+иноды.
+.TP 
+\fBEPERM\fP
+Дескриптор \fIdest_fd\fP является неизменным.
+.TP 
+\fBETXTBSY\fP
+Один из файлов является файлом подкачки. Файлы подкачки не могут содержаться
+в совместных хранилищах.
+.TP 
+\fBEXDEV\fP
+Дескрипторы \fIdest_fd\fP и \fIsrc_fd\fP находятся на разных смонтированных
+файловых системах.
+.SH ВЕРСИИ
+Данная операция ioctl появилась в Linux 4.5. Раньше она называлась
+\fBBTRFS_IOC_FILE_EXTENT_SAME\fP и работала только в Btrfs.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный программный интерфейс существует только в Linux.
+.SH ЗАМЕЧАНИЯ
+Так как для операции копирования\-при\-записи требуется выделение нового
+пространства в хранилище, операция \fBfallocate\fP(2) может отменить совместное
+использование общих блоков для гарантии того, что последующие операции
+записи не завершатся ошибкой из\-за нехватки места на диске.
+.PP
+Некоторые файловые системы имеют ограничение на количество данных, которое
+может быть дедуплицировано за один вызов.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBioctl\fP(2)

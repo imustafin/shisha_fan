@@ -1,0 +1,141 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1990, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"	@(#)hash.3	8.6 (Berkeley) 8/18/94
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH HASH 3 2017\-09\-15 "" "Руководство программиста Linux"
+.UC 7
+.SH ИМЯ
+hash \- метод доступа к базе данных ассоциативных массивов
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>
+#include <db.h>\fP
+.fi
+.SH ОПИСАНИЕ
+\fIПримечание\fP: В этой странице описаны интерфейсы, предоставляемые glibc до
+версии 2.1. Начиная с версии 2.2, glibc больше не поддерживает эти
+интерфейсы. Вероятно, вы ищите API, предоставляемое библиотекой \fIlibdb\fP.
+.PP
+Функция \fBdbopen\fP(3) — это библиотечный интерфейс к файлам баз данных. Один
+из поддерживаемых форматов файлов — hash. Общее описание методов доступа к
+базам данных находится в \fBdbopen\fP(3). Эта справочная страница содержит
+только информацию, относящуюся к ассоциативным массивам.
+.PP
+Структура данных ассоциативных массивов (хэш) расширяемая и динамична.
+.PP
+Специальная структура метода доступа данных, к которой обращается
+\fBdbopen\fP(3), задана в \fI<db.h>\fP следующим образом:
+.PP
+.in +4n
+.EX
+typedef struct {
+    unsigned int       bsize;
+    unsigned int       ffactor;
+    unsigned int       nelem;
+    unsigned int       cachesize;
+    uint32_t         (*hash)(const void *, size_t);
+    int         lorder;
+} HASHINFO;
+.EE
+.in
+.PP
+Элементы этой структуры имеют следующее назначение:
+.TP  10
+\fIbsize\fP
+определяет размер корзины хэш\-таблицы, по умолчанию равный 256 байтам. Этот
+параметр может быть изменён, чтобы увеличить размер для таблиц,
+расположенных на диске, или таблиц с элементами большого размера.
+.TP 
+\fIffactor\fP
+указывает на желаемую плотность хэш\-таблицы. Плотность — это максимальное
+количество ключей, которые могут находиться в одной корзине, определяющей,
+на какую величину увеличивается или уменьшается таблица. Значение по
+умолчанию — 8.
+.TP 
+\fInelem\fP
+предполагаемый окончательный размер хэш\-таблицы. Если значение не указано,
+или установлено слишком маленьким, то размер хэш\-таблиц увеличивается каждый
+раз, когда добавляется новый ключ. Это может привести к снижению
+производительности. Значение по умолчанию — 1.
+.TP 
+\fIcachesize\fP
+предполагаемый максимальный размер кэша памяти в байтах. Эта величина
+\fIтолько рекомендация\fP, метод доступа скорее выделит больше памяти, чем
+завершится с ошибкой.
+.TP 
+\fIhash\fP
+пользовательская функция хэширования. Так как не существует функции, которая
+подходит для любых данных, пользователю может показаться, что встроенная
+хэш\-функция слишком проста для некоторых типов данных. Определяемая
+пользователем функция должна иметь два аргумента (указатель на строку байтов
+и длина) и возвращать 32\-битную величину, используемую как хэш\-значение.
+.TP 
+\fIlorder\fP
+порядок байт для целых чисел, хранящихся в метаданных базы данных. Значение
+должно представлять порядок байт в виде целом числе, например, для прямого
+порядка (big endian) будет использовано значение 4321. Если \fIlorder\fP равно
+0 (т. е. порядок не определён), то используется порядок байт машины. Если
+файл уже существует, то указываемое значение игнорируется и будет
+использоваться порядок байт, определённый при создании.
+.PP
+Если файл уже существует (и не задан флаг \fBO_TRUNC\fP), то значения,
+определённые в параметрах \fIbsize\fP, \fIffactor\fP, \fIlorder\fP и \fInelem\fP,
+игнорируются, и используются значения, которые были указаны при создании
+дерева.
+.PP
+Если определена хэш\-функция, то \fIhash_open\fP пытается определить, совпадает
+ли эта функция с той, что использовалась при создании файла, и завершается
+ошибкой, если это не так.
+.PP
+Обратно совместимый интерфейс, определённый в \fBdbm\fP(3) и \fBndbm\fP(3), также
+существует, но он не совместим с предыдущими реализациями по формату файлов.
+.SH ОШИБКИ
+Функции метода доступа \fIhash\fP могут завершиться с ошибкой и присвоить
+\fIerrno\fP любое значение из определённых для библиотеки функций \fBdbopen\fP(3).
+.SH ДЕФЕКТЫ
+Поддерживаются значения только с прямым и обратным порядком байт.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbtree\fP(3), \fBdbopen\fP(3), \fBmpool\fP(3), \fBrecno\fP(3)
+.PP
+\fIDynamic Hash Tables\fP, Per\-Ake Larson, Communications of the ACM, April
+1988.
+.PP
+\fIA New Hash Package for UNIX\fP, Margo Seltzer, USENIX Proceedings, Winter
+1991.

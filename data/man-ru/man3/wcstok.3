@@ -1,0 +1,84 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCSTOK 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wcstok \- разделяет широкосимвольную строку на элементы (токены)
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBwchar_t *wcstok(wchar_t *\fP\fIwcs\fP\fB, const wchar_t *\fP\fIdelim\fP\fB, wchar_t **\fP\fIptr\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBwcstok\fP() является эквивалентом функции \fBstrtok\fP(3) для
+широкосимвольных строк, но к ней добавлен аргумент для поддержки работы в
+нитях. Она может использоваться для разбиения широкосимвольной строки \fIwcs\fP
+на элементы, где элементом считается подстрока, не включающая в себя широкие
+символы из строки \fIdelim\fP.
+.PP
+Поиск начинается с \fIwcs\fP, если \fIwcs\fP не равно NULL, или с \fI*ptr\fP, если
+значение \fIwcs\fP равно NULL. Сначала пропускаются все разграничительные
+широкие символы, т.е. указатель «перепрыгивает» через все широкие символы,
+которые встречаются в \fIdelim\fP. Достигнув конца строки, \fBwcstok\fP()
+возвращает NULL, тем самым сообщая, что не было найдено ни одного элемента,
+и сохраняет соответствующее значение в \fI*ptr\fP. Таким образом, последующие
+вызовы \fBwcstok\fP() будут возвращать NULL. В противном случае функция
+\fBwcstok\fP() распознает начало элемента и возвращает указатель на него, но
+перед тем, как это сделать, она завершает нулём найденный элемент, заменяя
+следующий широкий символ, который встретился в \fIdelim\fP, на символ
+L\(aq\e0\(aq и обновляет \fI*ptr\fP так, что последующие вызовы будут
+продолжать поиск после найденного элемента.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBwcstok\fP() возвращает указатель на следующий элемент или NULL, если
+больше элементов не найдено.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwcstok\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Исходная широкосимвольная строка \fIwcs\fP может измениться в процессе работы
+функции.
+.SH ПРИМЕР
+Следующий код в ходе работы цикла выводит все элементы, содержащиеся в
+широкосимвольной строке.
+.PP
+.EX
+wchar_t *wcs = ...;
+wchar_t *token;
+wchar_t *state;
+for (token = wcstok(wcs, " \et\en", &state);
+    token != NULL;
+    token = wcstok(NULL, " \et\en", &state)) {
+    ...
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBstrtok\fP(3), \fBwcschr\fP(3)

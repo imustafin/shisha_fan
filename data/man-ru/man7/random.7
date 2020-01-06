@@ -1,0 +1,190 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2008, George Spelvin <linux@horizon.com>,
+.\" and Copyright (C) 2008, Matt Mackall <mpm@selenic.com>
+.\" and Copyright (C) 2016, Laurent Georget <laurent.georget@supelec.fr>
+.\" and Copyright (C) 2016, Nikos Mavrogiannopoulos <nmav@redhat.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume.
+.\" no responsibility for errors or omissions, or for damages resulting.
+.\" from the use of the information contained herein.  The author(s) may.
+.\" not have taken the same level of care in the production of this.
+.\" manual, which is licensed free of charge, as they might when working.
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" The following web page is quite informative:
+.\" http://www.2uo.de/myths-about-urandom/
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RANDOM 7 2017\-03\-13 Linux "Руководство программиста Linux"
+.SH ИМЯ
+random \- обзор интерфейсов получения случайных чисел
+.SH ОПИСАНИЕ
+Генератор случайных чисел ядра полагается на энтропию, собранную с драйверов
+устройств и других источников окружающего шума, чтобы задать начальное
+значение криптографически безопасный генератор псевдослучайных чисел
+(CSPRNG). При разработке главным параметром была безопасность, а не
+скорость.
+.PP
+Следующие интерфейсы предоставляют доступ к данным ядерного CSPRNG:
+.IP * 3
+Устройства \fI/dev/urandom\fP и \fI/dev/random\fP, описаны в \fBrandom\fP(4). Данные
+устройства доступны с первых версий Linux, а также они есть и во многих
+других системах.
+.IP *
+.\"
+Системный вызов, который есть только в Linux — \fBgetrandom\fP(2), доступен
+начиная с Linux 3.17. Данный вызов предоставляет доступ к источнику как у
+\fI/dev/urandom\fP (в этой странице упоминается как источник \fIurandom\fP) так и
+к источнику как у \fI/dev/random\fP (в этой странице упоминается как
+\fIrandom\fP). По умолчанию используется источник \fIurandom\fP; источник
+\fIrandom\fP выбирается при указании системному вызову флага \fBGRND_RANDOM\fP
+(функция \fBgetentropy\fP(3) предоставляет схожий, более переносимый интерфейс,
+основанный на \fBgetrandom\fP(2)).
+.SS "Инициализация пула энтропии"
+Ядро собирает биты энтропии из окружения. Когда собрано достаточное
+количество произвольных бит, пул энтропии считается инициализированным.
+.SS "Выбор источника случайных чисел"
+Если вы не генерируете долгосрочные ключи (и, скорее всего, и в этом
+случае), то, вероятно, не должны читать из устройства \fI/dev/random\fP или
+запускать \fBgetrandom\fP(2) с флагом \fBGRND_RANDOM\fP. Вместо этого читайте
+устройство \fI/dev/urandom\fP и запускайте \fBgetrandom\fP(2) без флага
+\fBGRND_RANDOM\fP. Алгоритмы шифрования, используемые для источника \fIurandom\fP,
+довольно консервативны, и поэтому их должно быть достаточно для любых нужд.
+.PP
+.\"
+Недостаток \fBGRND_RANDOM\fP и чтения из \fI/dev/random\fP в том, что эта операция
+может заблокировать выполнение на неопределённый период времени. Более того,
+работа с частично выполненными запросами, которые могут вернуться при
+использовании \fBGRND_RANDOM\fP или чтении \fI/dev/random\fP, увеличивает
+сложность кода.
+.SS "Монте\-Карло и другие вероятностные приложения выборки"
+.\"
+Использование этих интерфейсов для предоставления большого количества данных
+при моделировании Монте\-Карло или другим программам/алгоритмам, выполняющим
+вероятностную выборку, будет медленным. Кроме того, это излишне, так как
+таким приложениям не нужны криптографически безопасные случайные
+числа. Вместо этого используйте интерфейсы, описанные на этой странице,
+чтобы получить небольшое количество данных для запуска генератора
+псевдослучайных чисел в пространстве пользователя, который будет
+задействован для таких приложений.
+.SS "Сравнение getrandom, /dev/urandom и /dev/random"
+В следующую таблицу сведено поведение различных интерфейсов получения
+случайных чисел. Флаг \fBGRND_NONBLOCK\fP можно использовать для управления
+поведением блокирования \fBgetrandom\fP(2). В последней колонке таблицы
+показано, что может произойти на ранней стадии загрузки ОС, когда пул
+энтропии ещё не инициализирован.
+.ad l
+.TS
+allbox;
+lbw13 lbw12 lbw14 lbw18
+l l l l.
+Интерфейс	Пул	T{
+Возникновение
+\%блокировки
+T}	T{
+Поведение, когда пул ещё не готов
+T}
+T{
+\fI/dev/random\fP
+T}	T{
+Блокирующий пул
+T}	T{
+Если энтропии недостаточно, то блокирует до тех пор, пока не наберётся нужно количество энтропии
+T}	T{
+Блокирует, пока не наберётся нужно количество энтропии
+T}
+T{
+\fI/dev/urandom\fP
+T}	T{
+Данные CSPRNG
+T}	T{
+Никогда не блокируется
+T}	T{
+Возвращает данные из неинициализированного CSPRNG (может быть низкая энтропия и не подходить для шифрования)
+T}
+T{
+\fBgetrandom\fP()
+T}	T{
+Тоже, что и
+\fI/dev/urandom\fP
+T}	T{
+Не блокирует в ожидании пула
+T}	T{
+Блокирует до готовности пула
+T}
+T{
+\fBgetrandom\fP()
+\fBGRND_RANDOM\fP
+T}	T{
+Тоже, что и
+\fI/dev/random\fP
+T}	T{
+Если энтропии недостаточно, то блокирует до тех пор, пока не наберётся нужно количество энтропии
+T}	T{
+Блокирует до готовности пула
+T}
+T{
+\fBgetrandom\fP()
+\fBGRND_NONBLOCK\fP
+T}	T{
+Тоже, что и
+\fI/dev/urandom\fP
+T}	T{
+Не блокирует в ожидании пула
+T}	T{
+\fBEAGAIN\fP
+T}
+T{
+\fBgetrandom\fP()
+\fBGRND_RANDOM\fP
++
+\fBGRND_NONBLOCK\fP
+T}	T{
+Тоже, что и
+\fI/dev/random\fP
+T}	T{
+\fBEAGAIN\fP,
+если недостаточно энтропии
+T}	T{
+\fBEAGAIN\fP
+T}
+.TE
+.ad
+.\"
+.SS "Генерация ключей шифрования"
+Количество начального материала, требуемое для генерации ключей шифрования,
+равно эффективному размеру ключа. Например, 307 2\-битный закрытый ключ RSA
+или Diffie\-Hellman имеет эффективный размер ключа  бит (для его подбора
+требуется просмотреть 2^128 значений), поэтому генератору ключа нужно только
+128 бит (16 байт) начального материала из \fI/dev/random\fP.
+.PP
+.\"
+Так как разумно добавить некоторый запас прочности к выше указанному
+минимуму как защиту против недостатков в алгоритме CSPRNG, никакой доступный
+криптографический примитив сегодня не может обещать больше чем 256 бит
+безопасности, поэтому если какая\-то программа читает больше чем 256 бит (32
+байта) из пула случайных чисел ядра за вызов, или за разумный интервал
+повторного посева (не менее одной минуты), то это нужно считать признаком
+того, что шифрование в ней реализовано \fIНЕДОСТАТОЧНО\fP продуманно.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetrandom\fP(2), \fBgetauxval\fP(3), \fBgetentropy\fP(3), \fBrandom\fP(4),
+\fBurandom\fP(4), \fBsignal\fP(7)

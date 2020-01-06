@@ -1,0 +1,81 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt (michael@moria.de),
+.\"     Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 16:56:20 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Mon Oct 21 21:38:51 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" (and some more by aeb)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH HD 4 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+hd \- устройства для жёстких дисков MFM/IDE
+.SH ОПИСАНИЕ
+Устройства \fBhd*\fP — это блочные устройства для прямого доступа к жёстким
+дискам MFM/IDE. Для главного (master) диска на первичном контроллере IDE
+(старший номер 3) назначается имя \fBhda\fP; для зависимого (slave) диска —
+\fBhdb\fP. Для главного диска на вторичном контроллере (старший номер 22) —
+\fBhdc\fP, а для зависимого — \fBhdd\fP.
+.PP
+Названия блочных устройств IDE имеют вид \fBhd\fP\fIX\fP или \fBhd\fP\fIXP\fP, где \fIX\fP
+— буква, указывающая на физический диск, а \fIP\fP — номер, указывающий на
+раздел этого физического диска. Первая форма, \fBhd\fP\fIX\fP, используется для
+обращения ко всему диску. Номера разделов назначаются в порядке их
+обнаружения, и номера присваиваются только «не пустым», не расширенным
+разделам. Однако, номера с первого по четвертый присваиваются разделам,
+описанным в MBR («основным» (primary) разделам), независимо от того,
+используются ли они или являются ли расширенными (extended). Поэтому первым
+логическим разделом будет \fBhd\fP\fIX\fP\fB5\fP\&. Поддерживается как таблица
+разделов DOS, так и BSD\-disklabel. На IDE\-диске может быть не более 63\-х
+разделов.
+.PP
+Например, \fI/dev/hda\fP ссылается на весь первый физический диск IDE, а
+\fI/dev/hdb3\fP ссылается на третий, "основной", раздел DOS второго физического
+диска.
+.PP
+Файлы устройств, обычно, создаются следующим образом:
+.PP
+.in +4n
+.EX
+mknod \-m 660 /dev/hda b 3 0
+mknod \-m 660 /dev/hda1 b 3 1
+mknod \-m 660 /dev/hda2 b 3 2
+\&...
+mknod \-m 660 /dev/hda8 b 3 8
+mknod \-m 660 /dev/hdb b 3 64
+mknod \-m 660 /dev/hdb1 b 3 65
+mknod \-m 660 /dev/hdb2 b 3 66
+\&...
+mknod \-m 660 /dev/hdb8 b 3 72
+chown root:disk /dev/hd*
+.EE
+.in
+.SH ФАЙЛЫ
+\fI/dev/hd*\fP
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchown\fP(1), \fBmknod\fP(1), \fBsd\fP(4), \fBmount\fP(8)

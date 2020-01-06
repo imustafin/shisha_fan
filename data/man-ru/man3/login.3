@@ -1,0 +1,108 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Derived from text written by Martin Schulze (or taken from glibc.info)
+.\" and text written by Paul Thompson - both copyright 2002.
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LOGIN 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+login, logout \- добавление записей utmp и wtmp
+.SH ОБЗОР
+\fB#include <utmp.h>\fP
+.PP
+\fBvoid login(const struct utmp *\fP\fIut\fP\fB);\fP
+.PP
+\fBint logout(const char *\fP\fIut_line\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lutil\fP.
+.SH ОПИСАНИЕ
+В файл utmp записываются все, кто в данный момент пользуется системой. В
+файле wtmp записываются все входы и выходы пользователей. См \fButmp\fP(5).
+.PP
+Функция \fBlogin\fP() принимает указанные \fIstruct utmp\fP, \fIut\fP и записывает их
+в файлы utmp и wtmp.
+.PP
+Функция \fBlogout\fP() очищает запись в файле utmp.
+.SS "Особенности GNU"
+Если быть точнее, функция \fBlogin\fP() получает структуру \fIut\fP в качестве
+аргумента, заполняет поле \fIut\->ut_type\fP (если такое поле есть)
+значением \fBUSER_PROCESS\fP и поле \fIut\->ut_pid\fP (если такое поле есть)
+идентификатором вызывающего процесса (PID). После этого она пытается
+заполнить поле \fIut\->ut_line\fP. Функция берёт первый \fIstdin\fP, \fIstdout\fP,
+\fIstderr\fP, являющийся терминалом, и сохраняет соответствующий путь (за
+исключением \fI/dev/\fP спереди) в это поле, после чего записывает структуру в
+файл utmp. В случае, если имя терминала не будет обнаружено, данное поле
+будет заполнено «???», а структура не будет записана в файл utmp. После
+этого структура будет записана в файл wtmp.
+.PP
+Функция \fBlogout\fP() ищет в файле utmp запись, соответствующую аргументу
+\fIut_line\fP. Если запись находится, она обновляется заполнением нулям полей
+\fIut_name\fP и \fIut_host\fP, обновляется временная отметка в поле \fIut_tv\fP, а
+поле \fIut_type\fP (если такое поле есть) устанавливается в \fBDEAD_PROCESS\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBlogout\fP() возвращает 1, если запись была успешно записана в базу
+данных, и 0, если возникла ошибка.
+.SH ФАЙЛЫ
+.TP 
+\fI/var/run/utmp\fP
+база учётных записей пользователей, настраивается через \fB_PATH_UTMP\fP в
+\fI<paths.h>\fP
+.TP 
+\fI/var/log/wtmp\fP
+файл журнала учёта пользователей, настраивается через \fB_PATH_WTMP\fP в
+\fI<paths.h>\fP
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw20
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBlogin\fP(),
+.br
+\fBlogout\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:utent
+.br
+sig:ALRM timer
+T}
+.TE
+.sp 1
+В приведённой выше таблице \fIutent\fP в \fIrace:utent\fP означает, что если любая
+из функций \fBsetutent\fP(3), \fBgetutent\fP(3) или \fBendutent\fP(3) используется
+одновременно в нескольких нитях программы, то может возникнуть
+состязательность по данным. Эти функции вызываются из \fBlogin\fP() и
+\fBlogout\fP(), поэтому мы используем race:utent для напоминания.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Не является частью POSIX.1. Присутствует в BSD.
+.SH ЗАМЕЧАНИЯ
+Заметим, что поле \fIut_user\fP структуры \fIstruct utmp\fP в BSD называется
+\fIut_name\fP. Поэтому поле \fIut_name\fP определено как псевдоним \fIut_user\fP в
+\fI<utmp.h>\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetutent\fP(3), \fButmp\fP(5)

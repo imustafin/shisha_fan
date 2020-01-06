@@ -1,0 +1,155 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 walter harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" based on the description in glibc source and infopages
+.\"
+.\" Corrections and additions, aeb
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ARGZ_ADD 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+argz_add, argz_add_sep, argz_append, argz_count, argz_create,
+argz_create_sep, argz_delete, argz_extract, argz_insert, argz_next,
+argz_replace, argz_stringify \- функции для обработки списка argz
+.SH ОБЗОР
+.nf
+\fB#include <argz.h>\fP
+.PP
+\fBerror_t argz_add(char **\fP\fIargz\fP\fB, size_t *\fP\fIargz_len\fP\fB, const char *\fP\fIstr\fP\fB);\fP
+.PP
+\fBerror_t argz_add_sep(char **\fP\fIargz\fP\fB, size_t *\fP\fIargz_len\fP\fB,\fP
+\fB                     const char *\fP\fIstr\fP\fB, int \fP\fIdelim\fP\fB);\fP
+.PP
+\fBerror_t argz_append(char **\fP\fIargz\fP\fB, size_t *\fP\fIargz_len\fP\fB,\fP
+\fB                     const char *\fP\fIbuf\fP\fB, size_t \fP\fIbuf_len\fP\fB);\fP
+.PP
+\fBsize_t argz_count(const char *\fP\fIargz\fP\fB, size_t \fP\fIargz_len\fP\fB);\fP
+.PP
+\fBerror_t argz_create(char * const \fP\fIargv\fP\fB[], char **\fP\fIargz\fP\fB,\fP
+\fB                     size_t *\fP\fIargz_len\fP\fB);\fP
+.PP
+\fBerror_t argz_create_sep(const char *\fP\fIstr\fP\fB, int \fP\fIsep\fP\fB, char **\fP\fIargz\fP\fB,\fP
+\fB                     size_t *\fP\fIargz_len\fP\fB);\fP
+.PP
+\fBvoid argz_delete(char **\fP\fIargz\fP\fB, size_t *\fP\fIargz_len\fP\fB, char *\fP\fIentry\fP\fB);\fP
+.PP
+\fBvoid argz_extract(const char *\fP\fIargz\fP\fB, size_t \fP\fIargz_len\fP\fB, char  **\fP\fIargv\fP\fB);\fP
+.PP
+\fBerror_t argz_insert(char **\fP\fIargz\fP\fB, size_t *\fP\fIargz_len\fP\fB, char *\fP\fIbefore\fP\fB,\fP
+\fB                     const char *\fP\fIentry\fP\fB);\fP
+.PP
+\fBchar *argz_next(const char *\fP\fIargz\fP\fB, size_t \fP\fIargz_len\fP\fB, const char *\fP\fIentry\fP\fB);\fP
+.PP
+\fBerror_t argz_replace(char **\fP\fIargz\fP\fB, size_t *\fP\fIargz_len\fP\fB, const char *\fP\fIstr\fP\fB,\fP
+\fB                     const char *\fP\fIwith\fP\fB, unsigned int *\fP\fIreplace_count\fP\fB);\fP
+.PP
+\fBvoid argz_stringify(char *\fP\fIargz\fP\fB, size_t \fP\fIlen\fP\fB, int \fP\fIsep\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Эти функции есть только в glibc.
+.PP
+Вектор argz представляет собой указатель на символьный буфер и его
+длину. Данный символьный буфер следует считать массивом строк, разделённых
+байтами null (\(aq\e0\(aq). Если длина ненулевая, то последний байт в буфере
+должен быть null.
+.PP
+Эти функции предназначены для обработки векторов argz. Пара (null,0)
+представляет вектор argz и наоборот, векторы argz длиной 0 должны иметь
+указатель null. Размещение непустых векторов argz осуществляется функцией
+\fBmalloc\fP(3), а для высвобождения пространства можно использовать
+\fBfree\fP(3).
+.PP
+Функция \fBargz_add\fP() добавляет строку \fIst\fPr в конец массива \fI*argz\fP, и
+обновляет \fI*argz\fP и \fI*argz_len\fP.
+.PP
+Функция \fBargz_add_sep\fP() делает тоже самое, но разделяет строку \fIstr\fP на
+подстроки, разделяя их символом \fIdelim\fP. Например, это можно использовать
+при работе с путями поиска UNIX, где разделителем является \(aq:\(aq.
+.PP
+Функция \fBargz_append\fP() добавляет вектор argz (\fIbuf\fP,\ \fIbuf_len\fP) после
+(\fI*argz\fP,\ \fI*argz_len\fP) и обновляет \fI*argz\fP и \fI*argz_len\fP (таким
+образом, \fI*argz_len\fP будет увеличено на \fIbuf_len\fP).
+.PP
+Функция \fBargz_count\fP() подсчитывает количество строк, то есть количество
+байтов null в (\(aq\e0\(aq), в (\fIargz\fP,\ \fIargz_len\fP).
+.PP
+Функция \fBargz_create\fP() преобразует аргумент вектора \fIargv\fP в стиле UNIX,
+заканчивающийся \fI(char\ *)\ 0\fP, в вектор argz (\fI*argz\fP,\ \fI*argz_len\fP).
+.PP
+Функция \fBargz_create_sep\fP() преобразует строку \fIstr\fP, заканчивающуюся
+null, в вектор argz (\fI*argz\fP,\ \fI*argz_len\fP), разделяя её при каждом
+нахождении разделителя \fIsep\fP.
+.PP
+Функция \fBargz_delete\fP() удаляет подстроку, на которую указывает \fIentry\fP,
+из вектора argz (\fI*argz\fP,\ \fI*argz_len\fP) и обновляет \fI*argz\fP и
+\fI*argz_len\fP.
+.PP
+Функция \fBargz_extract\fP() является противоположностью \fBargz_create\fP(). Она
+берёт вектор argz (\fIargz\fP,\ \fIargz_len\fP) и заполняет массив, начиная с
+\fIargv\fP, указателями на подстроки и завершая его NULL, тем самым создавая
+вектор argv в стиле UNIX. Массив \fIargv\fP должен иметь пространство для
+\fIargz_count\fP(\fIargz\fP, \fIargz_len\fP) + 1 указателей.
+.PP
+Функция \fBargz_insert\fP() является противоположностью \fBargz_delete\fP(). Она
+вставляет аргумент \fIentry\fP с позиции \fIbefore\fP в вектор (\fI*argz\fP,\ \fI*argz_len\fP) и обновляет \fI*argz\fP и \fI*argz_len\fP. Если значение \fIbefore\fP
+равно NULL, то значение \fIentry\fP будет вставлено в конец.
+.PP
+Функция \fBargz_next\fP() предназначена для последовательного обхода вектора
+argz. Если значение \fIentry\fP равно NULL, то возвращается первый
+элемент. Иначе возвращается следующий элемент. Если следующего элемента нет,
+то возвращается NULL.
+.PP
+Функция \fBargz_replace\fP() заменяет каждую найденную строку \fIstr\fP на
+\fIwith\fP, изменяя размер argz при необходимости. Если значение
+\fIreplace_count\fP не равно NULL, то значение \fI*replace_count\fP будет
+увеличено на число замен.
+.PP
+Функция \fBargz_stringify\fP() является противоположностью
+\fBargz_create_sep\fP(). Она преобразует вектор argz в обычную строку, заменяя
+все байты null (\(aq\e0\(aq), за исключением последнего, значением \fIsep\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Все функции argz, в которых происходит выделение памяти, возвращают
+результат, имеющий тип \fIerror_t\fP: 0 — при успешном выполнении и \fBENOMEM\fP —
+при ошибке выделения памяти.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw33 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBargz_add\fP(),
+\fBargz_add_sep\fP(),
+.br
+\fBargz_append\fP(),
+\fBargz_count\fP(),
+.br
+\fBargz_create\fP(),
+\fBargz_create_sep\fP(),
+.br
+\fBargz_delete\fP(),
+\fBargz_extract\fP(),
+.br
+\fBargz_insert\fP(),
+\fBargz_next\fP(),
+.br
+\fBargz_replace\fP(),
+\fBargz_stringify\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции являются расширениями GNU. Используйте с осторожностью.
+.SH ДЕФЕКТЫ
+Векторы argz без завершающего байта null могут привести к ошибкам
+сегментирования.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBenvz_add\fP(3)

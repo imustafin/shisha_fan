@@ -1,0 +1,140 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2002, 2011 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RT_SIGQUEUEINFO 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+rt_sigqueueinfo, rt_tgsigqueueinfo \- ставит сигнал и данные в очередь
+.SH ОБЗОР
+.nf
+\fBint rt_sigqueueinfo(pid_t \fP\fItgid\fP\fB, int \fP\fIsig\fP\fB, siginfo_t *\fP\fIinfo\fP\fB);\fP
+.PP
+\fBint rt_tgsigqueueinfo(pid_t \fP\fItgid\fP\fB, pid_t \fP\fItid\fP\fB, int \fP\fIsig\fP\fB,\fP
+\fB                      siginfo_t *\fP\fIinfo\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточных функций для этих системных вызовов;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Системные вызовы \fBrt_sigqueueinfo\fP() и \fBrt_tgsigqueueinfo\fP() предоставляют
+низкоуровневый интерфейс для отправки сигнала с данными процессу или
+нити. Приёмник сигнала может получить сопутствующие данные, установив
+обработчик сигнала с помощью \fBsigaction\fP(2) с флагом \fBSA_SIGINFO\fP.
+.PP
+Данные системные вызовы не предназначены для использования непосредственно
+из приложения; они нужны для реализации библиотечных функций \fBsigqueue\fP(3)
+и \fBpthread_sigqueue\fP(3).
+.PP
+Системный вызов \fBrt_sigqueueinfo\fP() отправляет сигнал \fIsig\fP группе нитей с
+идентификатором \fItgid\fP (термин «группа нитей» является синонимом «процесс»,
+а \fItid\fP соответствует обычному идентификатору процесса UNIX). Сигнал будет
+доставлен произвольному члену группы нитей (т. е., одной из нитей, которая в
+этот момент не блокирует сигнал).
+.PP
+В аргументе \fIinfo\fP задаются сопутствующие сигналу данные. Этот аргумент
+является указателем на структуру типа \fIsiginfo_t\fP, описанную в
+\fBsigaction\fP(2) (и определённую в \fI<sigaction.h>\fP). Вызывающий
+должен заполнить следующие поля структуры:
+.TP 
+\fIsi_code\fP
+Значением должен быть один из кодов \fBSI_*\fP, перечисленных в файле исходного
+кода ядра Linux \fIinclude/asm\-generic/siginfo.h\fP. посылается любому
+процессу, но не самому вызывающему, то накладываются следующие ограничения:
+.RS
+.IP * 3
+Значение кода не может быть больше или равно нулю. В частности нельзя
+указывать \fBSI_USER\fP, используемый ядром для обозначения того, что сигнал
+послан \fBkill\fP(2), и нельзя указать \fBSI_KERNEL\fP, который используется для
+обозначения того, что сигнал сгенерирован ядром.
+.IP *
+.\" tkill(2) or
+Кодом не может быть (начиная с Linux 2.6.39) \fBSI_TKILL\fP, который
+используется ядром для обозначения того, что сигнал послан с помощью
+\fBtgkill\fP(2).
+.RE
+.TP 
+\fIsi_pid\fP
+Должно хранить идентификатор процесса, обычно PID отправителя.
+.TP 
+\fIsi_uid\fP
+Должно хранить идентификатор пользователя, обычно UID реального пользователя
+отправителя.
+.TP 
+\fIsi_value\fP
+Это поле хранит пользовательские данные, сопровождающие сигнал. Подробности
+смотрите в описании последнего аргумента (\fIunion sigval\fP) функции
+\fBsigqueue\fP(3).
+.PP
+Внутри ядра полю \fIsi_signo\fP устанавливается значение, переданное в \fIsig\fP,
+так что получатель сигнала может также получить его номер через это поле.
+.PP
+Системный вызов \fBrt_tgsigqueueinfo\fP() похож на \fBrt_sigqueueinfo\fP(), но
+посылает сигнал и данные одной нити, указываемой комбинацией \fItgid\fP —
+идентификатором группы нитей — и \fItid\fP — нити из этой группы.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти системные вызовы возвращают 0. В случае ошибки
+возвращается \-1, а \fIerrno\fP устанавливается в соответствующее значение
+ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Достигнуто ограничение на количество сигналов в очереди (подробней об этом
+смотрите в \fBsignal\fP(7)).
+.TP 
+\fBEINVAL\fP
+Некорректное значение \fIsig\fP, \fItgid\fP или \fItid\fP.
+.TP 
+\fBEPERM\fP
+Вызывающий не имеет прав для отправки сигнала по назначению. Требуемые права
+смотрите в \fBkill\fP(2).
+.TP 
+\fBEPERM\fP
+В \fItgid\fP указан процесс, отличный от вызывающего и значение
+\fIinfo\->si_code\fP некорректно.
+.TP 
+\fBESRCH\fP
+\fBrt_sigqueueinfo\fP(): Группа нитей \fItgid\fP не найдена.
+.PP
+\fBrt_tgsigqueinfo\fP(): Нить \fItid\fP из \fItgid\fP не найдена.
+.SH ВЕРСИИ
+Системный вызов \fBrt_sigqueueinfo\fP() был добавлен в Linux версии
+2.2. Системный вызов \fBrt_tgsigqueueinfo\fP() был добавлен в Linux версии
+2.6.31.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные системные вызовы есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Поскольку системные вызовы не предназначены для приложений, в glibc для них
+нет обёрточных функций. Используйте \fBsyscall\fP(2) в том маловероятном
+случае, если вы хотите вызывать их напрямую.
+.PP
+Как и в случае с \fBkill\fP(2), может быть использован сигнал null (0), чтобы
+проверить, существует ли указанный процесс или нить.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBsigaction\fP(2), \fBsigprocmask\fP(2), \fBtgkill\fP(2),
+\fBpthread_sigqueue\fP(3), \fBsigqueue\fP(3), \fBsignal\fP(7)

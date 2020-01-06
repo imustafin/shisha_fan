@@ -1,0 +1,82 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2009 Intel Corporation, Author Andi Kleen
+.\" Description based on comments in arch/x86/kernel/cpuid.c
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CPUID 4 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+cpuid \- устройство доступа к CPUID в процессорах x86
+.SH ОПИСАНИЕ
+CPUID предоставляет интерфейс для получения информации о процессоре x86.
+.PP
+Для перехода на нужный уровень CPUID достаточно выполнить на устройстве
+\fBlseek\fP(2) или \fBpread\fP(2); чтение происходит порциями по 16 байт. Для
+получения большего количества данных нужно повторить операцию чтения на
+последующих уровнях.
+.PP
+Младшие 32 бита позиции файла используются как входящее значение для
+регистра \fI%eax\fP, а старшие 32 бита как входящее значение для \fI%ecx\fP,
+последнее предназначено для "подсчёта" уровней \fIeax\fP, например \fIeax=4\fP.
+.PP
+Этот драйвер использует устройства \fI/dev/cpu/CPUNUM/cpuid\fP, где \fICPUNUM\fP
+указывает на младший номер, а в многопроцессорных машинах  \fICPUNUM\fP
+указывает на номер процессора, которые перечислены в \fI/proc/cpuinfo\fP.
+.PP
+Файл доступен на чтение только пользователю \fIroot\fP или членам группы
+\fIroot\fP.
+.SH ЗАМЕЧАНИЯ
+Инструкция CPUID может непосредственно выполняться программой с помощью
+встроенных в языки ассемблерных вставок. Однако это устройство предоставляет
+удобный доступ ко всем процессорам без изменения в программе.
+.PP
+Большинство информации \fIcpuid\fP можно получить в готовом виде из файла
+\fI/proc/cpuinfo\fP или подкаталогов
+\fI/sys/devices/system/cpu\fP. Непосредственное использование CPUID через это
+устройство нужно использовать только в специальных случаях.
+.PP
+Драйвер \fIcpuid\fP автоматически не загружается. Если ядро модульное, то нужно
+выполнять загрузку явно:
+.PP
+.in +4n
+.EX
+$ modprobe cpuid
+.EE
+.in
+.PP
+Функции CPUID с дополнительными входными регистра не поддерживаются.
+.PP
+Очень старые процессоры x86 не поддерживают CPUID.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcpuid\fP(1)
+.PP
+Intel Corporation, Intel 64 and IA\-32 Architectures Software Developer's
+Manual Volume 2A: Instruction Set Reference, A\-M, 3\-180 CPUID reference.
+.PP
+Intel Corporation, Intel Processor Identification and the CPUID Instruction,
+Application note 485.

@@ -1,0 +1,115 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2003 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CFREE 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+cfree \- освобождает выделенную память
+.SH ОБЗОР
+.nf
+.PP
+\fB#include <stdlib.h>\fP
+.PP
+/* в SunOS 4 */
+\fBint cfree(void *\fP\fIptr\fP\fB);\fP
+.PP
+/* в glibc или FreeBSD libcompat */
+\fBvoid cfree(void *\fP\fIptr\fP\fB);\fP
+.PP
+/* в SCO OpenServer */
+\fBvoid cfree(char *\fP\fIptr\fP\fB, unsigned \fP\fInum\fP\fB, unsigned \fP\fIsize\fP\fB);\fP
+.PP
+/* в Solaris watchmalloc.so.1 */
+\fBvoid cfree(void *\fP\fIptr\fP\fB, size_t \fP\fInelem\fP\fB, size_t \fP\fIelsize\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBcfree\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и старее:
+        _BSD_SOURCE || _SVID_SOURCE
+.SH ОПИСАНИЕ
+Эту функцию использовать нельзя. Используйте вместо неё \fBfree\fP(3). Начиная
+с версии 2.26, она удалена из glibc.
+.SS "cfree с 1 аргументом"
+В glibc функция \fBcfree\fP()  является синонимом \fBfree\fP(3), которая
+"добавлена для совместимости с SunOS".
+.PP
+В других системах  есть другие функции с таким же именем. Объявление функции
+приводится иногда в \fI<stdlib.h>\fP, а иногда \fI<malloc.h>\fP.
+.SS "cfree с 3 аргументами"
+В некоторых версиях SCO и Solaris есть версии malloc с \fBcfree\fP() с тремя
+аргументами, по аналогии с \fBcalloc\fP(3).
+.PP
+Если она нужна вам при переносе чего\-либо, добавьте
+.PP
+.in +4n
+.EX
+#define cfree(p, n, s) free((p))
+.EE
+.in
+.PP
+в свой файл.
+.PP
+Часто задается вопрос: "Могу ли я использовать \fBfree\fP(3) для освобождения
+памяти, выделенной с помощью \fBcalloc\fP(3), или нужно использовать
+\fBcfree\fP()?" Ответ: используйте \fBfree\fP(3).
+.PP
+В руководстве SCO написано: "Функция cfree доступна для соответствия
+стандарту iBCSe2, она просто вызывает free. Аргументы num и size функцией
+cfree не используются".
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Версия \fBcfree\fP() из SunOS (которая является синонимом \fBfree\fP(3))
+возвращает 1 в случае успеха и 0 \- в случае ошибки. В случае ошибки \fIerrno\fP
+устанавливается в значение \fBEINVAL\fP: значение \fIptr\fP не является указателем
+на блок, ранее выделенным с помощью одной из функций из семейства
+\fBmalloc\fP(3).
+.SH ВЕРСИИ
+.\" commit 025b33ae84bb8f15b2748a1d8605dca453fce112
+Функция \fBcfree\fP() была удалена из glibc версии 2.26.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBcfree\fP()
+T}	Безвредность в нитях	MT\-Safe /* в glibc */
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Версия \fBcfree\fP() с тремя аргументами, используемая в SCO, соответствует
+стандарту iBCSe2, Intel386 Binary Compatibility Specification, Edition 2.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmalloc\fP(3)

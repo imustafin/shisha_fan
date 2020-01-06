@@ -1,0 +1,93 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt (michael@moria.de),
+.\"     Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 16:59:10 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MEM 4 2015\-01\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+mem, kmem, port \- системная память, память ядра и порты системы
+.SH ОПИСАНИЕ
+Файл \fI/dev/mem\fP — это файл символьного устройства, представляющий образ
+физической памяти компьютера. Этот файл может быть использован для
+исследования системы (и даже для внесения в неё исправлений).
+.PP
+Адреса байтов в \fI/dev/mem\fP рассматриваются как адреса физической
+памяти. При ссылках на несуществующие адреса возвращаются ошибки.
+.PP
+Исследование системы или внесение в неё исправлений иногда приводят к
+непредвиденным результатам в том случае, если есть биты, которые разрешается
+только читать или только записывать.
+.PP
+Начиная с версии Linux 2.6.26 и в зависимости от архитектуры, параметр
+настройки ядра \fBCONFIG_STRICT_DEVMEM\fP ограничивает области, к которым можно
+получить доступ через этот файл. Например, на архитектуре x86 доступ к ОЗУ
+не разрешен, однако к отображенной в области PCI памяти доступ есть.
+.PP
+Обычно, этот файл создается так:
+.PP
+.in +4n
+.EX
+mknod \-m 660 /dev/mem c 1 1
+chown root:kmem /dev/mem
+.EE
+.in
+.PP
+Файл \fI/dev/kmem\fP идентичен файлу \fI/dev/mem\fP за исключением того, что
+обеспечивает доступ к виртуальной памяти ядра, а не к физической. Начиная с
+версии Linux 2.6.26, этот файл становится доступен только после включения
+параметра настройки ядра \fBCONFIG_DEVKMEM\fP.
+.PP
+Обычно, этот файл создается так:
+.PP
+.in +4n
+.EX
+mknod \-m 640 /dev/kmem c 1 2
+chown root:kmem /dev/kmem
+.EE
+.in
+.PP
+Файл \fI/dev/port\fP похож на \fI/dev/mem\fP, но предоставляет доступ к портам
+ввода\-вывода.
+.PP
+Обычно, этот файл создается так:
+.PP
+.in +4n
+.EX
+mknod \-m 660 /dev/port c 1 4
+chown root:kmem /dev/port
+.EE
+.in
+.SH ФАЙЛЫ
+\fI/dev/mem\fP
+.br
+\fI/dev/kmem\fP
+.br
+\fI/dev/port\fP
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchown\fP(1), \fBmknod\fP(1), \fBioperm\fP(2)

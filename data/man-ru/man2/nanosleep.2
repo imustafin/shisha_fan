@@ -1,0 +1,159 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) Markus Kuhn, 1996
+.\" and Copyright (C) Linux Foundation, 2008, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 1996-04-10  Markus Kuhn <mskuhn@cip.informatik.uni-erlangen.de>
+.\"             First version written
+.\" Modified, 2004-10-24, aeb
+.\" 2008-06-24, mtk
+.\"     Minor rewrites of some parts.
+.\"     NOTES: describe case where clock_nanosleep() can be preferable.
+.\"     NOTES: describe CLOCK_REALTIME versus CLOCK_NANOSLEEP
+.\"     Replace crufty discussion of HZ with a pointer to time(7).
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NANOSLEEP 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+nanosleep \- остановка работы процесса с более точным указанием периода
+.SH ОБЗОР
+\fB#include <time.h>\fP
+.PP
+\fBint nanosleep(const struct timespec *\fP\fIreq\fP\fB, struct timespec
+*\fP\fIrem\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBnanosleep\fP(): _POSIX_C_SOURCE\ >=\ 199309L
+.SH ОПИСАНИЕ
+\fBnanosleep\fP() приостанавливает работу вызывающей нити как минимум на время,
+заданное параметром \fI*req\fP, или до получения сигнала, который вызовет
+обработчик в вызывающей нити, или приведёт к завершению процесса.
+.PP
+Если вызов прерван обработчиком сигнала, то \fBnanosleep\fP() возвращает \-1,
+устанавливает \fIerrno\fP в значение \fBEINTR\fP и записывает оставшееся время в
+структуру, на которую указывает \fIrem\fP, если значение \fIrem\fP не равно
+NULL. Значение \fI*rem\fP можно использовать для повторения вызова
+\fBnanosleep\fP() и продления окончания ожидания интервала (но см. ЗАМЕЧАНИЯ).
+.PP
+Структура \fItimespec\fP позволяет задавать интервалы времени с точностью до
+наносекунды. Она определена следующим образом:
+.PP
+.in +4n
+.EX
+struct timespec {
+    time_t tv_sec;        /* секунды */
+    long   tv_nsec;       /* наносекунды */
+};
+.EE
+.in
+.PP
+Значение поля наносекунд должно находиться в диапазоне от 0 до 999999999.
+.PP
+По сравнению с \fBsleep\fP(3) и \fBusleep\fP(3), в \fBnanosleep\fP() есть следующие
+достоинства: он позволяет задавать более точные интервалы времени, в POSIX.1
+явно определено то, что он не влияет на сигналы, и позволяет более лёгким
+способом возобновить паузу после прерывания сигналом.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При удачной остановке на заданное время возвращаемое \fBnanosleep\fP() значение
+равно нулю. Если вызов прерван обработчиком сигнала или произошла ошибка, то
+возвращается \-1, а переменной \fIerrno\fP присваивается номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Проблема с копированием информации из пространства пользователя.
+.TP 
+\fBEINTR\fP
+Пауза была прервана сигналом, отправленным нити (смотрите
+\fBsignal\fP(7)). Оставшееся время записано в \fI*rem\fP для того, чтобы нить
+могла вызвать \fBnanosleep\fP() снова для возобновления паузы.
+.TP 
+\fBEINVAL\fP
+Значение поля \fItv_nsec\fP не находится в интервале от 0 до 999999999 или
+\fItv_sec\fP содержит отрицательное число.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Если интервал, указанный в \fIreq\fP, не кратен степени разрешения используемых
+часов (см. \fBtime\fP(7)), то интервал будет округлён до следующего кратного
+значения. Также, после окончания интервала приостановки может возникнуть
+задержка перед тем, как ЦП освободится снова для следующего выполнения
+вызывающей нити.
+.PP
+Тот факт, что \fBnanosleep\fP() вызывает приостановку на относительный
+интервал, может привести к проблемам, если вызов постоянно перезапускается
+после прерывания по сигналу, так как время между прерываниями и перезапуском
+вызова будет приводить к временному смещению полного завершения
+приостановки. Этой проблемы можно избежать, если использовать
+\fBclock_nanosleep\fP(2) с абсолютными величинами времени.
+.PP
+.\" See also http://thread.gmane.org/gmane.linux.kernel/696854/
+.\" Subject: nanosleep() uses CLOCK_MONOTONIC, should be CLOCK_REALTIME?
+.\" Date: 2008-06-22 07:35:41 GMT
+В POSIX.1 указано, что \fBnanosleep\fP() должен измерять время по часам
+\fBCLOCK_REALTIME\fP. Однако, в Linux время измеряется с помощью часов
+\fBCLOCK_MONOTONIC\fP. Это, скорее всего, не важно, так как в спецификации
+POSIX.1 для \fBclock_settime\fP(2) указано, что быстро происходящие изменения в
+\fBCLOCK_REALTIME\fP не должны влиять на \fBnanosleep\fP():
+.RS
+.PP
+Установка значения часов \fBCLOCK_REALTIME\fP с помощью \fBclock_settime\fP(2) не
+оказывает влияния на нити, которые находятся в состоянии простоя из\-за
+служб, работа которых основана на этих часах, включая функцию
+\fBnanosleep\fP(); ... В результате, интервал данных служб истечёт, когда
+истечёт запрошенный относительный интервал, независимо от нового или старого
+значения часов.
+.RE
+.SS "Старое поведение"
+Для поддержки приложений, которым требуется указывать более точное время
+простоя (например, чтобы управлять оборудованием, критичным к временным
+интервалам), \fBnanosleep\fP() выдерживает время простоя до 2\ мс с
+микросекундной точностью, если вызывается из нити, запланированной
+выполняться в реальном времени с помощью \fBSCHED_FIFO\fP или \fBSCHED_RR\fP. Это
+специальное расширение было удалено из ядра 2.5.39, и поэтому недоступно в
+Linux версии 2.6.0 и более новых ядрах.
+.SH ДЕФЕКТЫ
+Если программа, обрабатывающая сигналы и использующая \fBnanosleep\fP(),
+принимает сигналы с очень высокой частотой, то возникают задержки
+планирования и ошибки округления в ядерных подсчётах интервала сна и
+возвращается значение \fIостатка\fP, на которое можно уверенно \fIувеличивать\fP
+интервал при последующем перезапуске вызова \fBnanosleep\fP(). Чтобы избежать
+таких проблем используйте \fBclock_nanosleep\fP(2) с флагом \fBTIMER_ABSTIME\fP,
+чтобы спать до абсолютного конечного срока.
+.PP
+В Linux 2.4, если \fBnanosleep\fP() останавливается по сигналу (например,
+\fBSIGTSTP\fP), то после того, как нить продолжит работу по сигналу \fBSIGCONT\fP,
+вызов завершится неудачно с ошибкой \fBEINTR\fP. Если системный вызов после
+этого перезапускается, то время, которое нить провела в остановленном
+состоянии, \fIне\fP учитывается в интервале остановки. Эта проблема исправлена
+в Linux 2.6.0 и новее.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclock_nanosleep\fP(2), \fBrestart_syscall\fP(2), \fBsched_setscheduler\fP(2),
+\fBtimer_create\fP(2), \fBsleep\fP(3), \fBusleep\fP(3), \fBtime\fP(7)

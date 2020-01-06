@@ -1,0 +1,359 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1990, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"	@(#)dbopen.3	8.5 (Berkeley) 1/2/94
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DBOPEN 3 2017\-09\-15 "" "Руководство программиста Linux"
+.UC 7
+.SH ИМЯ
+dbopen \- методы доступа к базе данных
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <limits.h>\fP
+\fB#include <db.h>\fP
+\fB#include <fcntl.h>\fP
+.PP
+\fBDB *dbopen(const char *\fP\fIfile\fP\fB, int \fP\fIflags\fP\fB, int \fP\fImode\fP\fB, DBTYPE \fP\fItype\fP\fB,\fP
+\fB           const void *\fP\fIopeninfo\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fIПримечание\fP: В этой странице описаны интерфейсы, предоставляемые glibc до
+версии 2.1. Начиная с версии 2.2, glibc больше не поддерживает эти
+интерфейсы. Вероятно, вы ищите API, предоставляемое библиотекой \fIlibdb\fP.
+.PP
+\fBdbopen\fP() — это библиотека для взаимодействия с файлами баз
+данных. Поддерживаются форматы файлов btree, hashed и UNIX. Формат btree
+представляет собой отсортированную, сбалансированную древовидную
+структуру. Формат hashed — это гибкая, динамическая схема
+хэширования. Формат простого файла UNIX — поток байтов с записями постоянной
+или переменной длины. Сами форматы и формат файлов описываются детально в
+соответствующих справочных страницах \fBbtree\fP(3), \fBhash\fP(3) и \fBrecno\fP(3).
+.PP
+\fBdbopen\fP() открывает \fIfile\fP для чтения и/или записи. Файлы, не
+предназначенные для хранения на диске, могут быть созданы заданием параметру
+\fIfile\fP значения NULL.
+.PP
+.\"Three additional options may be specified by ORing
+.\"them into the
+.\".I flags
+.\"argument.
+.\".TP
+.\"DB_LOCK
+.\"Do the necessary locking in the database to support concurrent access.
+.\"If concurrent access isn't needed or the database is read-only this
+.\"flag should not be set, as it tends to have an associated performance
+.\"penalty.
+.\".TP
+.\"DB_SHMEM
+.\"Place the underlying memory pool used by the database in shared
+.\"memory.
+.\"Necessary for concurrent access.
+.\".TP
+.\"DB_TXN
+.\"Support transactions in the database.
+.\"The DB_LOCK and DB_SHMEM flags must be set as well.
+Значения аргументов \fIflags\fP и \fImode\fP те же, что у вызова \fBopen\fP(2),
+однако имеют значение только флаги \fBO_CREAT\fP, \fBO_EXCL\fP, \fBO_EXLOCK\fP,
+\fBO_NONBLOCK\fP, \fBO_RDONLY\fP, \fBO_RDWR\fP, \fBO_SHLOCK\fP и \fBO_TRUNC\fP. Открытие
+файла базы данных с \fBO_WRONLY\fP невозможно.
+.PP
+Аргумент \fItype\fP имеет тип \fIDBTYPE\fP (определён в файле заголовков
+\fI<db.h>\fP) и может быть равен \fBDB_BTREE\fP, \fBDB_HASH\fP или
+\fBDB_RECNO\fP.
+.PP
+Аргумент \fIopeninfo\fP является указателем на структуру метода доступа,
+описанную в справочной странице, посвящённой методам доступа. Если значение
+\fIopeninfo\fP равно NULL, то каждый метод доступа будет использовать установки
+по умолчанию для системы и метода доступа.
+.PP
+При успешном выполнении \fBdbopen\fP() возвращает указатель на структуру \fIDB\fP
+и NULL при ошибке. Структура \fIDB\fP определена в файле \fI<db.h>\fP и
+содержит, как минимум, следующие поля:
+.PP
+.in +4n
+.EX
+typedef struct {
+    DBTYPE type;
+    int (*close)(const DB *db);
+    int (*del)(const DB *db, const DBT *key, unsigned int flags);
+    int (*fd)(const DB *db);
+    int (*get)(const DB *db, DBT *key, DBT *data,
+               unsigned int flags);
+    int (*put)(const DB *db, DBT *key, const DBT *data,
+               unsigned int flags);
+    int (*sync)(const DB *db, unsigned int flags);
+    int (*seq)(const DB *db, DBT *key, DBT *data,
+               unsigned int flags);
+} DB;
+.EE
+.in
+.PP
+Эти элементы описывают тип базы данных и набор функций, выполняющих
+различные действия. Функции используют указатель на структуру, возвращаемый
+\fBdbopen\fP(), и иногда один или несколько указателей на структуры ключ/данные
+и на значения флагов.
+.TP 
+\fItype\fP
+Тип лежащего в основе метода доступа (и формат файла).
+.TP 
+\fIclose\fP
+Указатель на функцию, которая записывает любую кэшированную информацию на
+диск, освобождает занятые ресурсы и закрывает используемый файл(\-ы). Так как
+пары ключ/данные могут быть кэшированы в памяти, ошибка синхронизации файла
+при функциях \fIclose\fP или \fIsync\fP может привести к повреждению или потере
+данных. Функция \fIclose\fP возвращает \-1 при ошибках (меняя при этом,
+соответственно, значение переменной \fIerrno\fP) и 0 при успешном выполнении.
+.TP 
+\fIdel\fP
+Указатель на функцию для удаления пар ключ/данные из базы данных.
+.IP
+Значение параметра \fIflag\fP может быть следующим:
+.RS
+.TP 
+\fBR_CURSOR\fP
+Удаление записи, на которую ссылается курсор. Курсор предварительно должен
+быть инициализирован.
+.RE
+.IP
+Функция \fIdelete\fP возвращает \-1 при ошибке (изменяет \fIerrno\fP), 0 при
+успешном выполнении и 1, если указанного ключа \fIkey\fP нет в файле.
+.TP 
+\fIfd\fP
+Указатель на функцию, которая возвращает дескриптор файла, представляющий
+используемую базу данных. Дескриптор файла, ссылающийся на тот же файл,
+будет возвращаться всем процессам, которые вызывают \fBdbopen\fP() с этим
+именем файла \fIfile\fP. Этот дескриптор файла может быть использован как
+аргумент для блокирующих функций \fBfcntl\fP(2) и \fBflock\fP(2). Файловый
+дескриптор необязательно связывать с какими\-либо из файлов, лежащих в основе
+используемого метода доступа. Для баз данных в памяти файловые дескрипторы
+недоступны. Функция \fIfd\fP возвращает \-1 при ошибке (меняет при этом,
+соответственно, значение переменной \fIerrno\fP) или дескриптор файла при
+успешном выполнении.
+.TP 
+\fIget\fP
+Указатель на функцию, которая является интерфейсом для поиска по ключу в
+базе данных. Адрес и размер данных, связанных с указанным ключом \fIkey\fP,
+возвращается в структуре, указываемой \fIdata\fP. Функция \fIget\fP возвращает \-1
+при ошибке (меняя при этом, соответственно, значение переменной \fIerrno\fP), 0
+при успешном выполнении и 1, если ключа \fIkey\fP нет в файле.
+.TP 
+\fIput\fP
+Указатель на функцию, сохраняющую пары ключ/данные в базе данных.
+.IP
+Значение параметра \fIflag\fP может быть одним из следующих:
+.RS
+.TP 
+\fBR_CURSOR\fP
+Замена пары ключ/данные, на которую ссылается курсор. Курсор предварительно
+должен быть инициализирован.
+.TP 
+\fBR_IAFTER\fP
+Добавление данных сразу после тех данных, которые связаны с ключом \fIkey\fP;
+создание новой пары ключ/данные. Номер записи добавленной пары ключ/данные
+возвращается в структуре \fIkey\fP (применимо только в случае метода доступа
+\fBDB_RECNO\fP).
+.TP 
+\fBR_IBEFORE\fP
+Вставка данных перед данными, связанными с ключом \fIkey\fP; создание новой
+пары ключ/данные. Номер записи добавленной пары ключ/данные возвращается в
+структуре \fIkey\fP (применимо только в случае метода доступа \fBDB_RECNO\fP).
+.TP 
+\fBR_NOOVERWRITE\fP
+Добавление новой пары ключ/данные, только если ключ ещё не существовал.
+.TP 
+\fBR_SETCURSOR\fP
+Сохранение пары ключ/данные, установка или инициализация позиции курсора для
+ссылки на неё (применимо только в случае метода доступа \fBDB_BTREE\fP и
+\fBDB_RECNO\fP).
+.RE
+.IP
+Значение \fBR_SETCURSOR\fP доступно только в случае методов доступа \fBDB_BTREE\fP
+и \fBDB_RECNO\fP, поскольку они предполагают, что ключи имеют определённый
+порядок, который не изменяется.
+.IP
+Значения \fBR_IAFTER\fP и \fBR_IBEFORE\fP доступны только в случае метода доступа
+\fBDB_RECNO\fP, поскольку предполагается, что метод доступа позволяет создавать
+новые ключи. Это возможно, только если ключи отсортированы и независимы,
+например, они могут представлять собой номера записей.
+.IP
+Поведение по умолчанию функции \fIput\fP предусматривает ввод новой пары
+ключ/данные, заменяя при этом уже существующий ключ.
+.IP
+Функция \fIput\fP возвращает \-1 при ошибке (меняя при этом, соответственно,
+значение переменной \fIerrno\fP), 0 при успешном выполнении и 1, если значение
+\fIflag\fP равно \fBR_NOOVERWRITE\fP и ключ в файле уже существует.
+.TP 
+\fIseq\fP
+Указатель на функцию, которая является интерфейсом для последовательной
+выборки в базе данных. Адрес и размер ключа возвращается в структуре,
+определяемой \fIkey\fP, а адрес и размер данных — в структуре, определяемой
+\fIdata\fP.
+.IP
+Последовательная выборка пар ключ/данные может быть начата в любой момент, и
+позиция «курсора» не подвергнется изменениям при вызове функций \fIdel\fP,
+\fIget\fP, \fIput\fP или \fIsync\fP. Изменение базы данных в процессе
+последовательного просмотра отразится на просмотре, т. е. запись,
+вставленная позади курсора, не будет возвращена, пока не будет возвращена
+запись, вставленная перед курсором.
+.IP
+Значение флага \fBдолжно\fP быть равно одному из следующих значений:
+.RS
+.TP 
+\fBR_CURSOR\fP
+Возвращаются данные, связанные с указанным ключом. Отличается от функции
+\fIget\fP тем, что дополнительно происходит установка или инициализация
+курсора. Заметим, что при методе доступа \fBDB_BTREE\fP необязательно, чтобы
+возвращаемый ключ в точности соответствовал указанному. Возвращаемый ключ —
+наименьший ключ из больших или равных указанному ключу. При этом допускается
+частичное соответствие ключей и поиск их в диапазонах.
+.TP 
+\fBR_FIRST\fP
+Возвращается первая пара ключ/данные из базы данных, а курсор
+устанавливается или инициализируется для ссылки на него.
+.TP 
+\fBR_LAST\fP
+Возвращается последняя пара ключ/данные из базы данных, а курсор
+устанавливается или инициализируется для ссылки на него. Применимо только
+для методов доступа \fBDB_BTREE\fP и \fBDB_RECNO\fP.
+.TP 
+\fBR_NEXT\fP
+Возвращается пара ключ/данные, стоящая непосредственно после курсора. Если
+курсор ещё не был установлен, выполняется тоже, что при флаге \fBR_FIRST\fP.
+.TP 
+\fBR_PREV\fP
+Возвращается пара ключ/данные, стоящая непосредственно перед курсором. Если
+курсор ещё не был установлен, выполняется тоже, что при флаге
+\fBR_LAST\fP. Применимо только для методов доступа \fBDB_BTREE\fP и \fBDB_RECNO\fP.
+.RE
+.IP
+Флаги \fBR_LAST\fP и \fBR_PREV\fP подходят только для методов доступа \fBDB_BTREE\fP
+и \fBDB_RECNO\fP, поскольку при этом предполагается, что ключи расположены в
+строгом неизменном порядке.
+.IP
+Функция \fIseq\fP возвращает \-1 при ошибке (изменяя при этом значение
+переменной \fIerrno\fP), 0 при успешном выполнении и 1, если не обнаруживается
+пары ключ/данные, меньшей или большей по значению, чем указанный или текущий
+ключ. Если используется метод доступа \fBDB_RECNO\fP, а файл базы данных
+представляет собой специальный символьный файл (и нет доступных полных пар
+ключ/данные), то функция \fIseq\fP возвращает значение 2.
+.TP 
+\fIsync\fP
+Указатель на функцию, которая записывает любые кэшированные данные на
+диск. Если база данных находится только в памяти, функция \fIsync\fP не
+выполняет никаких действий и всегда выполняется без ошибок.
+.IP
+Значение параметра \fIflag\fP может быть следующим:
+.RS
+.TP 
+\fBR_RECNOSYNC\fP
+При методе доступа \fBDB_RECNO\fP этот флаг служит причиной применения функции
+\fIsync\fP к файлу btree, лежащему в основе файла recno, а не к самому файлу
+recno (см. поле \fIbfname\fP в справочной странице \fBrecno\fP(3)).
+.RE
+.IP
+Функция \fIsync\fP возвращает \-1 при ошибке (меняя при этом значение переменной
+\fIerrno\fP) или 0 при успешном выполнении.
+.SS "Пары ключ/данные"
+Доступ ко всем типам файлов основан на парах ключ/данные. Ключ и данные
+описываются следующей структурой данных:
+.PP
+.in +4n
+.EX
+typedef struct {
+    void  *data;
+    size_t size;
+} DBT;
+.EE
+.in
+.PP
+Элементы структуры \fBDBT\fP определяются так:
+.TP 
+\fIdata\fP
+Указатель на строку байтов.
+.TP 
+\fIsize\fP
+Размер строки байтов.
+.PP
+Байтовые строки ключа и данных могут ссылаться на строки практически
+неограниченной длины, хотя любые две из них должны помещаться в доступной
+памяти одновременно. Не забывайте, что методы доступа не гарантируют
+выравнивания байтовых строк.
+.SH ОШИБКИ
+Функция \fBdbopen\fP() может завершиться с ошибкой и присвоить переменной
+\fIerrno\fP значения, определённые в библиотечных функциях \fBopen\fP(2) и
+\fBmalloc\fP(3), а также дополнительно:
+.TP 
+\fBEFTYPE\fP
+Файл неверного формата.
+.TP 
+\fBEINVAL\fP
+Указанный параметр (функция хэширования, байт заполнения и т. д.) не
+совместим с текущими установками файла, не имеет смысла для данной функции
+(например, использование курсора без его предварительной инициализации), или
+имеется несоответствие версии файла и программного обеспечения.
+.PP
+Функция \fIclose\fP может завершиться с ошибкой и присвоить переменной \fIerrno\fP
+любое значение из определённых в библиотечных функциях \fBclose\fP(2),
+\fBread\fP(2), \fBwrite\fP(2), \fBfree\fP(3) или \fBfsync\fP(2).
+.PP
+Функции \fIdel\fP, \fIget\fP, \fIput\fP и \fIseq\fP могут некорректно завершаться с
+ошибкой и присвоить переменной \fIerrno\fP любое значение из определённых в
+библиотечных функциях \fBread\fP(2), \fBwrite\fP(2), \fBfree\fP(3) или \fBmalloc\fP(3).
+.PP
+Функция \fIfd\fP может завершиться с ошибкой и присвоить переменной \fIerrno\fP
+значение \fBENOENT\fP (для баз данных, находящихся в памяти).
+.PP
+Функции \fIsync\fP могут завершиться с ошибкой и присвоить \fIerrno\fP любое
+значение из определённых для библиотеки функций \fBfsync\fP(2).
+.SH ДЕФЕКТЫ
+Название типа \fBDBT\fP является сокращением от «data base thang» и
+используется в настоящее время, поскольку никто ещё не придумал подходящего
+для него имени, которое ранее нигде не применялось.
+.PP
+Доступ через дескриптор файла устарел и будет удалён в будущей версии
+интерфейса.
+.PP
+Ни один из методов доступа не предоставляет пользователю каких\-либо форм
+одновременного доступа, блокировок или транкзаций.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbtree\fP(3), \fBhash\fP(3), \fBmpool\fP(3), \fBrecno\fP(3)
+.PP
+\fILIBTP: Portable, Modular Transactions for UNIX\fP, Margo Seltzer, Michael
+Olson, USENIX proceedings, Winter 1992.

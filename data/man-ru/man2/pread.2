@@ -1,0 +1,111 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1999 Joseph Samuel Myers.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PREAD 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pread, pwrite \- чтение или запись информации из файлового дескриптора
+согласно заданному смещению
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBssize_t pread(int \fP\fIfd\fP\fB, void *\fP\fIbuf\fP\fB, size_t \fP\fIcount\fP\fB, off_t
+\fP\fIoffset\fP\fB);\fP
+.PP
+\fBssize_t pwrite(int \fP\fIfd\fP\fB, const void *\fP\fIbuf\fP\fB, size_t \fP\fIcount\fP\fB,
+off_t \fP\fIoffset\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.PD 0
+.ad l
+\fBpread\fP(), \fBpwrite\fP():
+.RS 4
+_XOPEN_SOURCE\ >=\ 500
+.br
+|| /* начиная с glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+\fBpread\fP() читает максимум \fIcount\fP байтов из файлового дескриптора \fIfd\fP,
+начиная со смещения \fIoffset\fP (от начала файла), в буфер, начиная с
+\fIbuf\fP. Текущая позиция файла не изменяется.
+.PP
+\fBpwrite\fP() записывает максимум \fIcount\fP байтов из буфера \fIbuf\fP в файловый
+дескриптор \fIfd\fP , начиная со смещения \fIoffset\fP. Текущая позиция файла не
+изменяется.
+.PP
+Файл, заданный в \fIfd\fP, должен позволять изменение смещения.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBpread\fP() возвращается количество считанных байт
+(ноль указывает на конец файла), а \fBpwrite\fP() — количество записанных байт.
+.PP
+Заметим, что для успешного выполнения не считается ошибкой передача меньшего
+количества байт чем запрошено (смотрите \fBread\fP(2) и \fBwrite\fP(2)).
+.PP
+При ошибке возвращается \-1, а в \fIerrno\fP содержится код ошибки.
+.SH ОШИБКИ
+Вызов \fBpread\fP() может завершиться неудачно и записать в \fIerrno\fP один из
+кодов ошибки, определённых для \fBread\fP(2) или \fBlseek\fP(2). Вызов \fBpwrite\fP()
+может завершиться неудачно и записать в \fIerrno\fP один из кодов ошибки,
+определённых для \fBwrite\fP(2) или \fBlseek\fP(2).
+.SH ВЕРСИИ
+Системные вызовы \fBpread\fP() и \fBpwrite\fP() были внесены в ядро Linux, начиная
+с версии 2.1.60; как элементы таблицы системных вызовов i386 были добавлены
+в ядро версии 2.1.69. Поддержка в библиотеке С (включая эмуляцию с помощью
+\fBlseek\fP(2) в старых ядрах, не имеющих соответствующих системных вызовов)
+была добавлена в glibc 2.1.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.\"
+Системные вызовы \fBpread\fP() и \fBpwrite\fP()  особенно полезны в многонитевых
+приложениях. Они позволяют нескольким нитям выполнять ввод\-вывод в один
+файловый дескриптор не учитывая изменений файлового смещения, сделанного
+другими нитями.
+.SS "Отличия между библиотекой C и ядром"
+В Linux нижележащие системные вызовы переименованы в ядре версии 2.6:
+\fBpread\fP() стал называться \fBpread64\fP(), а \fBpwrite\fP() \(em
+\fBpwrite64\fP(). Номера системных вызовов остались прежними. Обёрточные
+функции \fBpread\fP() и \fBpwrite\fP() в glibc скрывают данные переименование.
+.PP
+На некоторых 32\-битных архитектурах интерфейс этих системных вызовов
+отличается от описанного выше, по причинам указанным в \fBsyscall\fP(2).
+.SH ДЕФЕКТЫ
+.\" FIXME . https://bugzilla.kernel.org/show_bug.cgi?id=43178
+Согласно POSIX требуется, чтобы открытие файла с флагом \fBO_APPEND\fP не
+влияло на расположение, по которому \fBpwrite\fP() записывает данные. Однако в
+Linux, если файл открывается с флагом \fBO_APPEND\fP, \fBpwrite\fP() добавляет
+данные в конец файла, независимо от значения \fIoffset\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlseek\fP(2), \fBread\fP(2), \fBreadv\fP(2), \fBwrite\fP(2)

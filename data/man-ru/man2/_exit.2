@@ -1,0 +1,96 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Michael Haardt, Ian Jackson.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Wed Jul 21 23:02:38 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 2001-11-17, aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH _EXIT 2 2017\-05\-03 Linux "Руководство программиста Linux"
+.SH ИМЯ
+_exit, _Exit \- завершает вызывающий процесс
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBvoid _exit(int \fP\fIstatus\fP\fB);\fP
+
+\fB#include <stdlib.h>\fP
+.PP
+\fBvoid _Exit(int \fP\fIstatus\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fB_Exit\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fB_exit\fP() «безотлагательно» завершает вызывающий процесс. Все
+открытые дескрипторы файлов, принадлежащие процессу, закрываются. Все его
+дочерние процессы наследуются \fBinit\fP(1) (или ближайшим «собирающим»
+процессом, определённым вызовом \fBprctl\fP(2) с операцией
+\fBPR_SET_CHILD_SUBREAPER\fP).Родительскому процессу посылается сигнал
+\fBSIGCHLD\fP.
+.PP
+Значение \fIstatus & 0377\fP возвращается родительскому процессу как код
+завершаемого процесса; он может быть получен с помощью одной из функций
+семейства \fBwait\fP(2).
+.PP
+Функция \fB_Exit\fP() эквивалентна \fB_exit\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Эти функции не выполняют возврат.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD. Функция \fB_Exit\fP() была
+представлена в C99.
+.SH ЗАМЕЧАНИЯ
+Обсуждение эффектов при завершении работы, передачу кода выхода,
+зомби\-процессы, сигналы и т. п., смотрите в \fBexit\fP(3).
+.PP
+Функция \fB_exit\fP() подобна \fBexit\fP(3), но не вызывает никаких функций,
+зарегистрированных с помощью \fBatexit\fP(3) или \fBon_exit\fP(3). Открытые потоки
+посредством \fBstdio\fP(3) не сбрасываются. С другой стороны, \fB_exit\fP()
+закрывает открытые дескрипторы файлов, а это может привести к неопределенной
+задержке, так как происходит ожидание завершения вывода данных. Если
+задержка нежелательна, то может быть полезным перед вызовом \fB_exit\fP()
+вызывать функцию типа \fBtcflush\fP(3). Будет ли отмена ожидания ввод\-вывода, а
+также какие именно ожидающие операции ввода\-вывода будут завершены при
+вызове \fB_exit\fP, зависит от реализации.
+.SS "Отличия между библиотекой C и ядром"
+В glibc до версии 2.3, обёрточная функция \fB_exit\fP() вызывала системный
+вызов ядра с тем же именем. Начиная с glibc 2.3, обёрточная функция вызывает
+\fBexit_group\fP(2), чтобы завершить все нити процесса.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBexecve\fP(2), \fBexit_group\fP(2), \fBfork\fP(2), \fBkill\fP(2), \fBwait\fP(2),
+\fBwait4\fP(2), \fBwaitpid\fP(2), \fBatexit\fP(3), \fBexit\fP(3), \fBon_exit\fP(3),
+\fBtermios\fP(3)

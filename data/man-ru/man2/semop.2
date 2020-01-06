@@ -1,0 +1,324 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Giorgio Ciucci (giorgio@crcc.it)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1996-10-22, Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2002-01-08, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2003-04-28, Ernie Petrides <petrides@redhat.com>
+.\" Modified 2004-05-27, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified, 11 Nov 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Language and formatting clean-ups
+.\"	Added notes on /proc files
+.\" 2005-04-08, mtk, Noted kernel version numbers for semtimedop()
+.\" 2007-07-09, mtk, Added an EXAMPLE code segment.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SEMOP 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+semop, semtimedop \- операции с семафорами System V
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/ipc.h>\fP
+\fB#include <sys/sem.h>\fP
+.PP
+\fBint semop(int \fP\fIsemid\fP\fB, struct sembuf *\fP\fIsops\fP\fB, size_t \fP\fInsops\fP\fB);\fP
+.PP
+\fBint semtimedop(int \fP\fIsemid\fP\fB, struct sembuf *\fP\fIsops\fP\fB, size_t \fP\fInsops\fP\fB,\fP
+\fB               const struct timespec *\fP\fItimeout\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsemtimedop\fP(): _GNU_SOURCE
+.SH ОПИСАНИЕ
+С каждым семафором в наборе семафоров System\ V связаны следующие значения:
+.PP
+.in +4n
+.EX
+unsigned short  semval;   /* значение семафора */
+unsigned short  semzcnt;  /* # ожидает ноль */
+unsigned short  semncnt;  /* # ожидает увеличения */
+pid_t           sempid;   /* PID процесса, выполнявшегося последним
+.in
+.EE
+.PP
+Вызов \fBsemop\fP() производит операции над выбранными семафорами из набора
+семафоров \fIsemid\fP. Каждый из элементов \fInsops\fP в массиве, указанном в
+\fIsops\fP является структурой, которой задаётся операция, выполняемая над
+отдельным семафором. Элементы этой структуры имеют тип \fIstruct sembuf\fP,
+который содержит поля:
+.PP
+.in +4n
+.EX
+unsigned short sem_num;  /* номер семафора */
+short          sem_op;   /* операция над семафором */
+short          sem_flg;  /* флаги операции */
+.EE
+.in
+.PP
+Флаги в \fIsem_flg\fP могут иметь значения \fBIPC_NOWAIT\fP и \fBSEM_UNDO\fP. Если
+указан флаг \fBSEM_UNDO\fP, то при завершении процесса будет выполнена откат
+операции.
+.PP
+Набор операций из \fIsops\fP выполняется в \fIпорядке появления в массиве\fP и
+\fIявляется атомарным\fP, то есть выполняются или все операции, или ни
+одной. Поведение системного вызова при обнаружении невозможности
+немедленного выполнения операций зависит от наличия флага \fBIPC_NOWAIT\fP в
+полях \fIsem_flg\fP отдельных операций, как это описано далее.
+.PP
+Каждая операция выполняется над \fIsem_num\fP\-тым семафором из набора, где
+первый семафор имеет номер 0. Есть три типа операций, различающихся
+значением \fIsem_op\fP.
+.PP
+Если значение \fIsem_op\fP — положительное целое число, то оно добавляется к
+значению семафора (\fIsemval\fP). Если для операции стоит флаг \fBSEM_UNDO\fP, то
+система вычитает значение \fIsem_op\fP из значения регулировки (\fIsemadj\fP)
+семафора. Эта операция выполняется всегда и не переводит нить в режим
+ожидания. Вызывающий процесс должен иметь права на изменение набора
+семафоров.
+.PP
+Если значение \fIsem_op\fP равно нулю, то процесс должен иметь права на чтение
+набора семафоров. Эта операция «ожидания нуля»: если \fIsemval\fP равно нулю,
+то операция может выполнится сразу. Иначе, если в поле семафора \fIsem_flg\fP
+указан флаг \fBIPC_NOWAIT\fP, то \fBsemop\fP() завершается с ошибкой и \fIerrno\fP
+присваивается значение \fBEAGAIN\fP (и ни одна операция из \fIsops\fP не
+выполняется). Или же \fIsemzcnt\fP (счётчик нитей, ожидающих пока значение
+семафора не сравнялось с нулём) увеличивается на единицу, а нить переходит в
+режим ожидания пока не случится одно из:
+.IP \(bu 3
+Значение \fIsemval\fP станет равным 0, тогда значение \fIsemzcnt\fP уменьшается.
+.IP \(bu
+Набор семафоров удалится: \fBsemop\fP() завершается с ошибкой, а \fIerrno\fP
+присваивается значение \fBEIDRM\fP.
+.IP \(bu
+Вызывающая нить получит сигнал: значение \fIsemncnt\fP уменьшается и \fBsemop\fP()
+завершается с ошибкой, а \fIerrno\fP присваивается значение \fBEINTR\fP.
+.PP
+Если значение \fIsem_op\fP меньше нуля, то процесс должен иметь права на
+изменение набора семафоров. Если значение \fIsemval\fP больше или равно
+абсолютному значению \fIsem_op\fP, то операция может выполнятся сразу:
+абсолютное значение \fIsem_op\fP вычитается из \fIsemval\fP, и, если для этой
+операции установлен флаг \fBSEM_UNDO\fP, система добавляет абсолютное значение
+\fIsem_op\fP к значению регулировки (\fIsemadj\fP) семафора. Если абсолютное
+значение \fIsem_op\fP больше \fIsemval\fP, и в \fIsem_flg\fP указан \fBIPC_NOWAIT\fP, то
+\fBsemop\fP() завершается с ошибкой, а \fIerrno\fP присваивается значение
+\fBEAGAIN\fP (и ни одна операция из \fIsops\fP не выполняется). Иначе \fIsemncnt\fP
+(счётчик нитей, ожидающих увеличения значения семафора) увеличивается на
+единицу, а нить переходит в режим ожидания пока не случится одно из:
+.IP \(bu 3
+\fIsemval\fP становится больше или равно абсолютному значению \fIsem_op\fP:
+операция продолжается как описано выше.
+.IP \(bu
+Набор семафоров удалится из системы: \fBsemop\fP() завершается с ошибкой, а
+\fIerrno\fP присваивается значение \fBEIDRM\fP.
+.IP \(bu
+Вызывающая нить получит сигнал: значение \fIsemncnt\fP уменьшается и \fBsemop\fP()
+завершается с ошибкой, а \fIerrno\fP присваивается значение \fBEINTR\fP.
+.PP
+.\" and
+.\" .I sem_ctime
+При успешном выполнении значение \fIsempid\fP для каждого семафора, указанного
+в массиве, на который указывает \fIsops\fP, устанавливается равным
+идентификатору вызывающего процесса. Также \fIsem_otime\fP присваивается
+значение текущего времени.
+.SS semtimedop()
+Системный вызов \fBsemtimedop\fP() ведёт себя идентично \fBsemop\fP(), за
+исключением  того, что в случаях, когда вызывающая нить будет спать,
+длительность этого сна ограничена количеством времени, определяемым
+структурой \fItimespec\fP, чей адрес передаётся в аргументе \fItimeout\fP. Данное
+значение интервала будет округлено до точности системных часов, а из\-за
+задержки при планировании в ядре блокирующий интервал будет немного
+больше. Если достигнут указанный лимит времени, то \fBsemtimedop\fP()
+завершится с ошибкой, а \fIerrno\fP устанавливается в \fBEAGAIN\fP (и ни одна из
+операций в \fIsops\fP не выполняется). Если значение аргумента \fItimeout\fP равно
+NULL, то \fBsemtimedop\fP() ведёт себя аналогично \fBsemop\fP().
+.PP
+Заметим, что если \fBsemtimedop\fP() прерывается сигналом, то вызов завершается
+с ошибкой \fBEINTR\fP, а содержимое \fItimeout\fP не изменяется.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsemop\fP() и \fBsemtimedop\fP() возвращается 0; иначе
+возвращается \-1, а переменной \fIerrno\fP присваивается номер ошибки.
+.SH ОШИБКИ
+В случае возникновения ошибки \fIerrno\fP может принимать следующие значения:
+.TP 
+\fBE2BIG\fP
+Значение аргумента \fInsops\fP больше \fBSEMOPM\fP, максимального количества
+операций, которое может выполнить один системный вызов.
+.TP 
+\fBEACCES\fP
+Вызывающий процесс не имеет прав, требуемых для выполнения указанных
+операций над семафорами, и не имеет мандата \fBCAP_IPC_OWNER\fP, который
+управляет его пространством имён IPC.
+.TP 
+\fBEAGAIN\fP
+Операция не может быть выполнена немедленно и, либо \fBIPC_NOWAIT\fP был указан
+в \fIsem_flg\fP, либо истекло время лимита, определённое в \fItimeout\fP.
+.TP 
+\fBEFAULT\fP
+Адрес, указанный в \fIsops\fP или \fItimeout\fP, не доступен.
+.TP 
+\fBEFBIG\fP
+Для некоторых операций значение \fIsem_num\fP меньше нуля или больше или равно
+количеству семафоров в наборе.
+.TP 
+\fBEIDRM\fP
+Набор семафоров был удалён.
+.TP 
+\fBEINTR\fP
+Нить, находясь в режиме ожидания, получила сигнал; смотрите \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Набор семафоров не существует, или значение \fIsemid\fP меньше нуля, или
+\fInsops\fP имеет не положительное значение.
+.TP 
+\fBENOMEM\fP
+Для некоторых операций в поле \fIsem_flg\fP задан флаг \fBSEM_UNDO\fP, и система
+не может выделить достаточно памяти для структуры откатов.
+.TP 
+\fBERANGE\fP
+Для некоторых операций \fIsem_op+semval\fP больше чем \fBSEMVMX\fP, максимального
+значения \fIsemval\fP (зависит от реализации).
+.SH ВЕРСИИ
+Вызов \fBsemtimedop\fP() впервые появился в Linux 2.5.52, а затем был перенесён
+в ядро версии 2.4.22. Поддержка в glibc для \fBsemtimedop\fP() впервые
+появилась в версии 2.3.3.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents additional error conditions EINVAL, EFBIG, ENOSPC.
+POSIX.1\-2001, POSIX.1\-2008, SVr4.
+.SH ЗАМЕЧАНИЯ
+.\" Like Linux, the FreeBSD man pages still document
+.\" the inclusion of these header files.
+Включение файлов \fI<sys/types.h>\fP и \fI<sys/ipc.h>\fP не
+требуется в Linux или любых версий POSIX. Однако, некоторые старые
+реализации требуют включения данных заголовочных файлов, и это также
+требуется по SVID. В приложениях, которые нужно перенести на такие старые
+системы, может потребоваться включить данных заголовочные файлы.
+.PP
+Структуры процесса \fIsem_undo\fP не наследуются потомками, созданными через
+\fBfork\fP(2), но они наследуются при выполнении системного вызова
+\fBexecve\fP(2).
+.PP
+Вызов \fBsemop\fP() никогда автоматически не перезапускается после прерывания
+обработчиком сигнала, независимо от установки флага \fBSA_RESTART\fP при
+настройке обработчика сигнала.
+.PP
+Значение регулировки семафора (\fIsemadj\fP) есть в каждом процессе. Это целое
+число — простой (отрицательный) счётчик всех операций над семафорами, для
+которых установлен флаг \fBSEM_UNDO\fP. В каждом процессе есть список значений
+\fIsemadj\fP — по одному значению на каждый семафор, у которых установлен флаг
+\fBSEM_UNDO\fP. При завершении процесса. каждое из значений \fIsemadj\fP семафора
+добавляется к соответствующему семафору, достигая таким образом эффекта
+выполнения операций процесса над семафорами (но смотрите раздел
+ДЕФЕКТЫ). Когда значение семафора явно устанавливается с помощью запроса
+\fBSETVAL\fP или \fBSETALL\fP вызовом \fBsemctl\fP(2), то соответствующие значения
+\fIsemadj\fP во всех процессах очищаются. Флаг \fBCLONE_SYSVSEM\fP \fBclone\fP(2)
+позволяет нескольким процессам совместно использовать список \fIsemadj\fP;
+подробности смотрите в \fBclone\fP(2).
+.PP
+Значения \fIsemval\fP, \fIsempid\fP, \fIsemzcnt\fP и \fIsemnct\fP семафора можно
+получить с помощью соответствующих вызовов \fBsemctl\fP(2).
+.SS "Ограничения семафоров"
+Ниже приведены лимиты ресурсов наборов семафоров, влияющие на вызов
+\fBsemop\fP():
+.TP 
+\fBSEMOPM\fP
+.\" commit e843e7d2c88b7db107a86bd2c7145dc715c058f4
+.\" This /proc file is not available in Linux 2.2 and earlier -- MTK
+.\" See comment in Linux 3.19 source file include/uapi/linux/sem.h
+Максимальное количество операций, разрешённых для одного вызова
+\fBsemop\fP(). До версии Linux 3.19, значение по умолчанию было 3. Начиная с
+Linux 3.19, значение по умолчанию равно 500. В Linux это ограничение можно
+прочитать и изменить через третье поле
+\fI/proc/sys/kernel/sem\fP. \fIЗамечание\fP: это ограничение не должно превышать
+1000, так как есть риск, что \fBsemop\fP(2) завершится с ошибкой из\-за
+фрагментации памяти ядра при выделении памяти при копировании массива
+\fIsops\fP.
+.TP 
+\fBSEMVMX\fP
+Максимально допустимое значение \fIsemval\fP: зависит от реализации (32767).
+.PP
+Реализация не накладывает существенных ограничений на максимальное значение
+(\fBSEMAEM\fP), на которое можно изменить значение семафора при выходе,
+максимальное количество системных структур откатываемых операций (\fBSEMMNU\fP)
+и максимальное количество элементов отката системных параметров на процесс.
+.SH ДЕФЕКТЫ
+При завершении процесса его набор связанных структур \fIsemadj\fP используется
+для отката выполненных действий над семафорами, для которых был установлен
+флаг \fBSEM_UNDO\fP. Это повышает сложность: если одно (или более) этих
+изменений семафоров привело бы в результате к попытке уменьшить значение
+семафора ниже нуля, что должно быть сделано в реализации? Одним из возможных
+решений была бы блокировка до тех пор, пока не выполнятся все изменения
+семафоров. Однако это нежелательно, так как это привело бы к блокированию
+процесса на неопределённый срок при его завершении. Другим вариантом
+является игнорирование сразу всех изменений семафоров (в некоторой степени,
+аналогично завершению с ошибкой, когда для операции с семафором указан
+\fBIPC_NOWAIT\fP). В Linux используется третий вариант: уменьшение значения
+семафора до тех пор, пока это возможно ( т.е. до нуля) и разрешение
+немедленного завершения процесса.
+.PP
+.\" The bug report:
+.\" http://marc.theaimsgroup.com/?l=linux-kernel&m=110260821123863&w=2
+.\" the fix:
+.\" http://marc.theaimsgroup.com/?l=linux-kernel&m=110261701025794&w=2
+В ядрах 2.6.x, где x <= 10, есть дефект, из\-за которого при определённых
+обстоятельствах нить, ожидающая установления значения семафора равного нулю,
+не будет разбужен когда значение станет равным нулю. Этот дефект исправлен в
+ядре 2.6.11.
+.SH ПРИМЕР
+В следующем фрагменте кода используется \fBsemop\fP() для атомарного ожидания
+момента, когда значение семафора 0 станет равным нулю и последующего
+увеличения значения семафора на единицу.
+.PP
+.in +4n
+.EX
+struct sembuf sops[2];
+int semid;
+
+/* код для установки \fIsemid\fP не показан */
+
+sops[0].sem_num = 0;        /* применяем к семафору 0 */
+    sops[0].sem_op = 0;     /* ждём значения, равного 0 */
+    sops[0].sem_flg = 0;
+
+sops[1].sem_num = 0;        /* применяем к семафору 0 */
+    sops[1].sem_op = 1;     /* увеличиваем значение на 1 */
+    sops[1].sem_flg = 0;
+
+if (semop(semid, sops, 2) == \-1) {
+    perror("semop");
+    exit(EXIT_FAILURE);
+}
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclone\fP(2), \fBsemctl\fP(2), \fBsemget\fP(2), \fBsigaction\fP(2),
+\fBcapabilities\fP(7), \fBsem_overview\fP(7), \fBsysvipc\fP(7), \fBtime\fP(7)

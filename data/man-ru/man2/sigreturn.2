@@ -1,0 +1,113 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2008, 2014, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Created   Sat Aug 21 1995     Thomas K. Dyas <tdyas@eden.rutgers.edu>
+.\" Modified Tue Oct 22 22:09:03 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" 2008-06-26, mtk, added some more detail on the work done by sigreturn()
+.\" 2014-12-05, mtk, rewrote all of the rest of the original page
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGRETURN 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sigreturn, rt_sigreturn \- выполняет возврат из обработчика сигнала и очищает
+кадр стека
+.SH ОБЗОР
+\fBint sigreturn(...);\fP
+.SH ОПИСАНИЕ
+.\" See arch/x86/kernel/signal.c::__setup_frame() [in 3.17 source code]
+Если ядро Linux обнаруживает, что неблокированный сигнал ожидает обработки
+процессом, то при следующем переключении в пользовательский режим в этом
+процессе (например, при возврате из системного вызова или когда процесс
+перепланируется на ЦП), оно создаёт новый кадр в стеке пользовательского
+пространства, где сохраняет различные части контекста процесса (состояние
+слова процессора, регистры, маску сигналов и настройки стека сигналов).
+.PP
+Также ядро делает так, что при переходе в пользовательский режим вызывается
+обработчик сигналов и при возврате из обработчика управление передаётся
+части кода пользовательского пространства, называемого «сигнальным
+батутом»(signal trampoline). Код сигнального батута, в свою очередь,
+вызывает \fBsigreturn\fP().
+.PP
+Вызов \fBsigreturn\fP() очищает всё что накопилось — изменяет маску сигнала
+процесса, переключает стеки сигналов (см. \fBsigaltstack\fP(2)) — чтобы вызвать
+обработчик сигнала. Используя информацию, которая была ранее сохранена в
+стеке пользовательского пространства, \fBsigreturn\fP() восстанавливает маску
+сигналов процесса, переключает стеки и восстанавливает контекст процесса
+(регистры и флаги процессора, включая указатель стека и инструкций), так что
+процесс непосредственно возобновляет исполнение с точки где был прерван
+сигналом.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Вызов \fBsigreturn\fP() не возвращает значений.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Во многих системах UNIX есть системный вызов \fBsigreturn\fP() или его
+эквивалент. Однако этот вызов отсутствует в POSIX, и в разных системах он
+работает по\-разному.
+.SH ЗАМЕЧАНИЯ
+.\" See sysdeps/unix/sysv/linux/sigreturn.c and
+.\" signal/sigreturn.c in the glibc source
+Вызов \fBsigreturn\fP() существует только для реализации обработчиков
+сигналов. \fBНикогда\fP не вызывайте его напрямую (на самом деле, простая
+обёртка \fBsigreturn\fP() в библиотеке GNU C просто вернёт \-1 и присвоит
+\fIerrno\fP значение \fBENOSYS\fP). Содержимое аргументов (если есть),
+передаваемое \fBsigreturn\fP(), для каждой архитектуры своё (на некоторых
+архитектурах, например x86\-64, у \fBsigreturn\fP() нет аргументов, так как вся
+требуемая информация доступна из кадра стека, который был создан ядром ранее
+в стеке пользовательского пространства).
+.PP
+.\" See, for example, sysdeps/unix/sysv/linux/i386/sigaction.c and
+.\" sysdeps/unix/sysv/linux/x86_64/sigaction.c in the glibc (2.20) source.
+Когда\-то системы UNIX помещали код сигнального перехода в пользовательский
+стек. В настоящее время страницы пользовательского стека защищены и в них
+невозможно выполнить код. Поэтому в современных системах Linux, в
+зависимости от архитектуры, код хранится в \fBvdso\fP(7) или в библиотеке C. В
+последнем случае обёрточная функция \fBsigaction\fP(2) библиотеки C информирует
+ядро о расположении кода помещая его адрес в поле \fIsa_restorer\fP структуры
+\fIsigaction\fP и устанавливает флаг \fBSA_RESTORER\fP в поле \fIsa_flags\fP.
+.PP
+Сохранённая информация контекста процесса помещается в структуру
+\fIucontext_t\fP (смотрите \fI<sys/ucontext.h>\fP). Эта структура видима
+внутри обработчика сигнала как третий аргумент обработчика, установленного
+\fBsigaction\fP(2) с флагом \fBSA_SIGINFO\fP.
+.PP
+.\"
+В некоторых других системах UNIX работа сигнального батута несколько
+отличается. В частности, в некоторых системах при переходе в
+пользовательский режим ядро передаёт управление батуту (а не обработчику
+сигнала) и код батута вызывает обработчик сигнала (и затем вызывает
+\fBsigreturn\fP() после завершения работы обработчика).
+.SS "Отличия между библиотекой C и ядром"
+.\"
+Первоначальное название системного вызова в Linux было
+\fBsigreturn\fP(). Однако с добавлением сигналов реального времени в Linux 2.2
+для поддержки увеличенного типа \fIsigset_t\fP был добавлен новый системный
+вызов \fBrt_sigreturn\fP(). Библиотека GNU C скрывает это от нас, прозрачно
+используя \fBrt_sigreturn\fP(), если он есть в ядре.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBrestart_syscall\fP(2), \fBsigaltstack\fP(2), \fBsignal\fP(2),
+\fBgetcontext\fP(3), \fBsignal\fP(7), \fBvdso\fP(7)

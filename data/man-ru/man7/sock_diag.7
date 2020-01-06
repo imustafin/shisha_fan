@@ -1,0 +1,733 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2016 Pavel Emelyanov <xemul@virtuozzo.com>
+.\" Copyright (c) 2016 Dmitry V. Levin <ldv@altlinux.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SOCK_DIAG 7 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sock_diag \- возвращает информацию о сокетах
+.SH ОБЗОР
+.nf
+\fB#include <sys/socket.h>\fP
+\fB#include <linux/sock_diag.h>\fP
+\fB#include <linux/unix_diag.h>\fP /* для доменных сокетов UNIX */
+\fB#include <linux/inet_diag.h>\fP /* для сокетов IPv4 и IPv6 */
+.PP
+\fBdiag_socket = socket(AF_NETLINK, \fP\fIsocket_type\fP\fB, NETLINK_SOCK_DIAG);\fP
+.fi
+.SH ОПИСАНИЕ
+Подсистема sock_diag netlink предоставляет механизм получения информации о
+сокетах различных семейств адресов из ядра. Данная подсистема может
+использоваться для получения информации об отдельных сокетах или запрашивать
+список сокетов.
+.PP
+В запросе вызывающий может указать дополнительную информацию, которую
+хочется узнать о сокетах, например, информацию о памяти  или характерную
+семейству адресов.
+.PP
+Когда запрашивается список сокетов вызывающий может задать фильтры, которые
+будут применены ядром для выбора возвращаемого набора сокетов. В настоящее
+время, фильтровать сокеты можно только по состоянию (соединён, слушает и
+т. д.).
+.PP
+.\"
+Заметим, что sock_diag возвращает только сокеты  с именем; то есть, явно
+привязанные сокеты с помощью \fBbind\fP(2) или автоматически привязанные к
+адресу сокеты (например, с помощью \fBconnect\fP(2)). Данный набор сокетов
+совпадает со списком в \fI/proc/net/unix\fP, \fI/proc/net/tcp\fP, \fI/proc/net/udp\fP
+и т. п.
+.SS Запрос
+Запрос начинается с заголовка \fIstruct nlmsghdr\fP, описанного в
+\fBnetlink\fP(7), в котором поле \fInlmsg_type\fP равно \fBSOCK_DIAG_BY_FAMILY\fP. За
+ним следует заголовок, соответствующий семейству адресов, начинающийся с
+общей части, используемой для всех семейств адресов:
+.PP
+.in +4n
+.EX
+struct sock_diag_req {
+    __u8 sdiag_family;
+    __u8 sdiag_protocol;
+};
+.EE
+.in
+.PP
+Поля этой структуры имеют следующее назначение:
+.TP 
+\fIsdiag_family\fP
+Семейство адресов. Должна быть указана соответствующая константа \fBAF_*\fP.
+.TP 
+\fIsdiag_protocol\fP
+Зависит от \fIsdiag_family\fP. Должна быть указана соответствующая константа
+\fBIPPROTO_*\fP при \fBAF_INET\fP и \fBAF_INET6\fP, и 0 в остальных случаях.
+.PP
+.\"
+Если в поле \fInlmsg_flags\fP заголовка \fIstruct nlmsghdr\fP установлен флаг
+\fBNLM_F_DUMP\fP, то это означает, что запрашивается список сокетов; в
+противном случае запрашивается информация об конкретном сокете.
+.SS Ответ
+Ответ начинается с заголовка \fIstruct nlmsghdr\fP, за которым следует массив
+объектов, соответствующих семейству адресов. Массив доступен через
+стандартные макросы из \fBNLMSG_*\fP программного интерфейса \fBnetlink\fP(3).
+.PP
+.\"
+Каждый объект представляет собой список NLA (атрибутов netlink), которые
+доступны через макросы \fBRTA_*\fP программного интерфейса \fBrtnetlink\fP(3).
+.SS "Доменные сокеты UNIX"
+Запрос доменных сокетов UNIX описывается в следующей структуре:
+.PP
+.in +4n
+.EX
+struct unix_diag_req {
+    __u8    sdiag_family;
+    __u8    sdiag_protocol;
+    __u16   pad;
+    __u32   udiag_states;
+    __u32   udiag_ino;
+    __u32   udiag_show;
+    __u32   udiag_cookie[2];
+};
+.EE
+.in
+.PP
+Поля этой структуры имеют следующее назначение:
+.TP 
+\fIsdiag_family\fP
+Семейство адресов; должно быть равно \fBAF_UNIX\fP.
+.PP
+\fIsdiag_protocol\fP
+.PD 0
+.TP 
+.PD
+\fIpad\fP
+Эти поля должны быть равны 0.
+.TP 
+\fIudiag_states\fP
+Битовая маска, описывающая фильтр состояний сокетов. Будут возвращены только
+сокеты с состояниями из этой маски. Игнорируется, если запрашивается
+конкретный сокет. Поддерживаемые значения:
+.PP
+.RS 12
+1 << \fBTCP_ESTABLISHED\fP
+.PP
+1 << \fBTCP_LISTEN\fP
+.RE
+.TP 
+\fIudiag_ino\fP
+Номер иноды при запросе конкретного сокета. Игнорируется, если запрашивается
+список сокетов.
+.TP 
+\fIudiag_show\fP
+Набор флагов, определяющий тип возвращаемой информации. Каждый запрашиваемый
+тип информации возвращается в виде атрибута netlink, описанного ниже:
+.RS
+.TP 
+\fBUDIAG_SHOW_NAME\fP
+Атрибут, возвращаемый в ответе на этот запрос — \fBUNIX_DIAG_NAME\fP. Полезные
+данные, связанные с этим атрибутом — путь, с которым был связан сокет
+(последовательность байт длиной до \fBUNIX_PATH_MAX\fP).
+.TP 
+\fBUDIAG_SHOW_VFS\fP
+Атрибут, возвращаемый в ответе на этот запрос — \fBUNIX_DIAG_VFS\fP. Полезные
+данные, связанные с этим атрибутом представляются следующей структурой:
+.IP
+.in +4n
+.EX
+struct unix_diag_vfs {
+    __u32 udiag_vfs_dev;
+    __u32 udiag_vfs_ino;
+};
+.EE
+.in
+.IP
+Поля этой структуры имеют следующее назначение:
+.RS
+.TP 
+\fIudiag_vfs_dev\fP
+Номер устройства, соответствующего иноде сокета на диске.
+.TP 
+\fIudiag_vfs_ino\fP
+Номер иноды, соответствующей иноде сокета на диске.
+.RE
+.TP 
+\fBUDIAG_SHOW_PEER\fP
+Атрибут, возвращаемый в ответе на этот запрос — \fBUNIX_DIAG_PEER\fP. Полезные
+данные, связанные с этим атрибутом — значение __u32, представляющее номер
+иноды ответной стороны. Данный атрибут возвращается только для соединённых
+сокетов.
+.TP 
+\fBUDIAG_SHOW_ICONS\fP
+Атрибут, возвращаемый в ответе на этот запрос — \fBUNIX_DIAG_ICONS\fP. Полезные
+данные, связанные с этим атрибутом — значения __u32, представляющие номера
+инод сокетов, которые переданы вызову \fBconnect\fP(2), но ещё не были
+обработаны \fBaccept\fP(2). Данный атрибут возвращается, если запрашивается
+список сокетов.
+.TP 
+\fBUDIAG_SHOW_RQLEN\fP
+Атрибут, возвращаемый в ответе на этот запрос — \fBUNIX_DIAG_RQLEN\fP. Полезные
+данные, связанные с этим атрибутом представляются следующей структурой:
+.IP
+.in +4n
+.EX
+struct unix_diag_rqlen {
+    __u32 udiag_rqueue;
+    __u32 udiag_wqueue;
+};
+.EE
+.in
+.IP
+Поля этой структуры имеют следующее назначение:
+.RS
+.TP 
+\fIudiag_rqueue\fP
+Для слушающих сокетов: количество ожидающих подключений. Этому значению
+равна длина массива, связанного с атрибутом ответа \fBUNIX_DIAG_ICONS\fP.
+.IP
+Для сокетов с установленным соединением: количество данных во входящей
+очереди.
+.TP 
+\fIudiag_wqueue\fP
+Для слушающих сокетов: длина недодела (backlog), равная значению,
+переданному во втором аргументе \fBlisten\fP(2).
+.IP
+Для сокетов с установленным соединением: количество памяти, доступной при
+отправке.
+.RE
+.TP 
+\fBUDIAG_SHOW_MEMINFO\fP
+Атрибут, возвращаемый в ответе на этот запрос —
+\fBUNIX_DIAG_MEMINFO\fP. Полезные данные, связанные с этим атрибутом
+представляют собой массив значений с типом __u32,описанный далее в
+подразделе «Информация о памяти сокетов».
+.PP
+Следующие атрибуты возвращаются для любого запроса:
+.TP 
+\fBUNIX_DIAG_SHUTDOWN\fP
+Полезные данные, связанные с этим атрибутом, имеют тип __u8 и представляют
+биты состояния из \fBshutdown\fP(2).
+.RE
+.TP 
+\fIudiag_cookie\fP
+Массив скрытых идентификаторов, которые можно использовать вместе с
+\fIudiag_ino\fP для указания определённого сокета. Игнорируется при запросе
+списка сокетов, а также когда все его элементы равны \-1.
+.PP
+Ответ на запрос о доменных сокетах UNIX представляется в виде массива
+.PP
+.in +4n
+.EX
+struct unix_diag_msg {
+    __u8    udiag_family;
+    __u8    udiag_type;
+    __u8    udiag_state;
+    __u8    pad;
+    __u32   udiag_ino;
+    __u32   udiag_cookie[2];
+};
+.EE
+.in
+.PP
+и следует за атрибутами netlink.
+.PP
+Поля этой структуры имеют следующее назначение:
+.TP 
+\fIudiag_family\fP
+Данное поле имеет то же значение что в \fIstruct unix_diag_req\fP.
+.TP 
+\fIudiag_type\fP
+Может быть \fBSOCK_PACKET\fP, \fBSOCK_STREAM\fP или \fBSOCK_SEQPACKET\fP.
+.TP 
+\fIudiag_state\fP
+Может быть \fBTCP_LISTEN\fP или \fBTCP_ESTABLISHED\fP.
+.TP 
+\fIpad\fP
+Это поле равно 0.
+.TP 
+\fIudiag_ino\fP
+Номер иноды сокета.
+.TP 
+\fIudiag_cookie\fP
+.\"
+Массив скрытых идентификаторов, которые можно использовать в последующих
+запросах.
+.SS "Сокеты IPv4 и IPv6"
+Запрос сокетов IPv4 и IPv6 описывается в следующей структуре:
+.PP
+.in +4n
+.EX
+struct inet_diag_req_v2 {
+    __u8    sdiag_family;
+    __u8    sdiag_protocol;
+    __u8    idiag_ext;
+    __u8    pad;
+    __u32   idiag_states;
+    struct inet_diag_sockid id;
+};
+.EE
+.in
+.PP
+где \fIstruct inet_diag_sockid\fP определена как:
+.PP
+.in +4n
+.EX
+struct inet_diag_sockid {
+    __be16  idiag_sport;
+    __be16  idiag_dport;
+    __be32  idiag_src[4];
+    __be32  idiag_dst[4];
+    __u32   idiag_if;
+    __u32   idiag_cookie[2];
+};
+.EE
+.in
+.PP
+Поля \fIstruct inet_diag_req_v2\fP:
+.TP 
+\fIsdiag_family\fP
+Должно быть равно \fBAF_INET\fP или \fBAF_INET6\fP для сокетов IPv4 или IPv6,
+соответственно.
+.TP 
+\fIsdiag_protocol\fP
+Должно быть равно \fBIPPROTO_TCP\fP, \fBIPPROTO_UDP\fP или \fBIPPROTO_UDPLITE\fP.
+.TP 
+\fIidiag_ext\fP
+Набор флагов, определяющий тип возвращаемой расширенной информации. Каждый
+запрашиваемый тип информации возвращается в виде атрибута netlink,
+описанного ниже:
+.RS
+.TP 
+\fBINET_DIAG_TOS\fP
+Полезные данные, связанные с этим атрибутом, имеют тип __u8 и представляют
+TOS сокета.
+.TP 
+\fBINET_DIAG_TCLASS\fP
+Полезные данные, связанные с этим атрибутом, имеют тип __u8 и представляют
+TClass сокета. Только для сокетов IPv6. Для сокетов LISTEN и CLOSE эти
+данные следуют за атрибутом \fBINET_DIAG_SKV6ONLY\fP с значением полезных
+данных (тип __u8), описывающим является ли сокет только IPv6 или нет.
+.TP 
+\fBINET_DIAG_MEMINFO\fP
+Полезные данные, связанные с этим атрибутом представляются следующей
+структурой:
+.IP
+.in +4n
+.EX
+struct inet_diag_meminfo {
+    __u32 idiag_rmem;
+    __u32 idiag_wmem;
+    __u32 idiag_fmem;
+    __u32 idiag_tmem;
+};
+.EE
+.in
+.IP
+Поля этой структуры имеют следующее назначение:
+.RS
+.TP  12
+\fIidiag_rmem\fP
+Количество данных в приёмной очереди.
+.TP 
+\fIidiag_wmem\fP
+Количество данных, помещённых в очередь TCP и ещё не отправленных.
+.TP 
+\fIidiag_fmem\fP
+Объём памяти, запланированной для использования в будущем (только TCP).
+.TP 
+\fIidiag_tmem\fP
+Количество данных в очереди отправки.
+.RE
+.TP 
+\fBINET_DIAG_SKMEMINFO\fP
+Полезные данные, связанные с этим атрибутом представляют собой массив
+значений с типом __u32,описанный далее в подразделе «Информация о памяти
+сокетов».
+.TP 
+\fBINET_DIAG_INFO\fP
+Полезные данные, связанные с этим атрибутом, относятся к определённому
+семейству адресов. Для сокетов TCP объект имеет тип \fIstruct tcp_info\fP.
+.TP 
+\fBINET_DIAG_CONG\fP
+Полезные данные, связанные с этим атрибутом, представляют собой строку,
+описывающую используемый алгоритм контроля перегрузки. Только для сокетов
+TCP.
+.RE
+.TP 
+\fIpad\fP
+Должно равняться 0.
+.TP 
+\fIidiag_states\fP
+Битовая маска, описывающая фильтр состояний сокета. Будут возвращены только
+сокеты с состояниями из этой маски. Игнорируется, если запрашивается
+конкретный сокет.
+.TP 
+\fIid\fP
+Идентификатор объекта сокета, использующийся при запросах дампа, в опросах
+отдельных сокетов и возвращается в каждом ответе. В отличие от доменных
+сокетов UNIX, сокеты IPv4 и IPv6 опознаются по адресам и портам. Все
+значения указываются в сетевом порядке байт.
+.PP
+Поля \fIstruct inet_diag_sockid\fP:
+.TP 
+\fIidiag_sport\fP
+Порт отправителя.
+.TP 
+\fIidiag_dport\fP
+Порт получателя.
+.TP 
+\fIidiag_src\fP
+Адрес отправителя.
+.TP 
+\fIidiag_dst\fP
+Адрес получателя.
+.TP 
+\fIidiag_if\fP
+Интерфейсный номер к которому привязан сокет.
+.TP 
+\fIidiag_cookie\fP
+Массив скрытых идентификаторов, которые можно использовать вместе с другими
+полями этой структуры для указания определённого сокета. Игнорируется при
+запросе списка сокетов, а также когда все его элементы равны \-1.
+.PP
+Ответ на запрос о сокетах IPv4 или IPv6 представляется в виде массива
+.PP
+.in +4n
+.EX
+struct inet_diag_msg {
+    __u8    idiag_family;
+    __u8    idiag_state;
+    __u8    idiag_timer;
+    __u8    idiag_retrans;
+
+    struct inet_diag_sockid id;
+
+    __u32   idiag_expires;
+    __u32   idiag_rqueue;
+    __u32   idiag_wqueue;
+    __u32   idiag_uid;
+    __u32   idiag_inode;
+};
+.EE
+.in
+.PP
+и следует за атрибутами netlink.
+.PP
+Поля этой структуры имеют следующее назначение:
+.TP 
+\fIidiag_family\fP
+Это тоже поле что и в \fIstruct inet_diag_req_v2\fP.
+.TP 
+\fIidiag_state\fP
+Обозначает состояние сокета как в \fIstruct inet_diag_req_v2\fP.
+.TP 
+\fIidiag_timer\fP
+Для сокетов TCP это поле описывает тип активного в данный момент таймера
+сокета. Задаётся одной из следующих констант:
+.IP
+.PD 0
+.RS 12
+.TP 
+\fB0\fP
+таймер не активен
+.TP 
+\fB1\fP
+таймер повторной передачи
+.TP 
+\fB2\fP
+таймер поддержания соединения
+.TP 
+\fB3\fP
+таймер TIME_WAIT
+.TP 
+\fB4\fP
+таймер проверки нулевым окном
+.RE
+.PD
+.IP
+Для сокетов не TCP, значение этого поля равно 0.
+.TP 
+\fIidiag_retrans\fP
+Если \fIidiag_timer\fP содержит 1, 2 и 4, то это поле содержит количество
+повторных передач. При других значениях \fIidiag_timer\fP это поле равно 0.
+.TP 
+\fIidiag_expires\fP
+Для сокетов TCP, имеющих активный таймер, это поле описывает его время
+окончания в миллисекундах. Для других сокетов значение этого поля равно 0.
+.TP 
+\fIidiag_rqueue\fP
+Для слушающих сокетов: количество ожидающих подключений.
+.IP
+Для других сокетов: количество данных во входящей очереди.
+.TP 
+\fIidiag_wqueue\fP
+Для слушающих сокетов: длина недодела (backlog).
+.IP
+Для других сокетов: количество памяти, доступной при отправке.
+.TP 
+\fIidiag_uid\fP
+Идентификатор пользователя, владеющего сокетом.
+.TP 
+\fIidiag_inode\fP
+.\"
+Номер иноды сокета.
+.SS "Информация о памяти сокетов"
+Полезные данные, связанные с атрибутами netlink \fBUNIX_DIAG_MEMINFO\fP и
+\fBINET_DIAG_SKMEMINFO\fP, представляют собой массив следующих значений с типом
+__u32:
+.TP 
+\fBSK_MEMINFO_RMEM_ALLOC\fP
+Количество данных в приёмной очереди.
+.TP 
+\fBSK_MEMINFO_RCVBUF\fP
+Приёмный буфер сокета, заданный \fBSO_RCVBUF\fP.
+.TP 
+\fBSK_MEMINFO_WMEM_ALLOC\fP
+Количество данных в очереди отправки.
+.TP 
+\fBSK_MEMINFO_SNDBUF\fP
+Буфер отправки сокета, заданный \fBSO_SNDBUF\fP.
+.TP 
+\fBSK_MEMINFO_FWD_ALLOC\fP
+Объём памяти, запланированной для использования в будущем (только TCP).
+.TP 
+\fBSK_MEMINFO_WMEM_QUEUED\fP
+Количество данных, помещённых в очередь TCP, но ещё не отправленных.
+.TP 
+\fBSK_MEMINFO_OPTMEM\fP
+Объем памяти, выделенный для служебных нужд сокета (например, для сокетного
+фильтра).
+.TP 
+\fBSK_MEMINFO_BACKLOG\fP
+Количество пакетов в памяти недодела (не обработанных).
+.SH ВЕРСИИ
+Программный интерфейс \fBNETLINK_INET_DIAG\fP появился в Linux 2.6.14 и
+поддерживал только сокеты \fBAF_INET\fP и \fBAF_INET6\fP. В Linux 3.3 он был
+переименован в \fBNETLINK_SOCK_DIAG\fP и появилась поддержка сокетов
+\fBAF_UNIX\fP.
+.PP
+Программный интерфейс \fBUNIX_DIAG_MEMINFO\fP и \fBINET_DIAG_SKMEMINFO\fP появился
+в Linux 3.6.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Программный интерфейс NETLINK_SOCK_DIAG есть только в Linux.
+.SH ПРИМЕР
+Следующий пример программы печатает номер иноды, номер иноды противоположной
+стороны и имена всех доменных сокетов UNIX в текущем пространстве имён.
+.PP
+.EX
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
+#include <linux/sock_diag.h>
+#include <linux/unix_diag.h>
+
+static int
+send_query(int fd)
+{
+    struct sockaddr_nl nladdr = {
+        .nl_family = AF_NETLINK
+    };
+    struct
+    {
+        struct nlmsghdr nlh;
+        struct unix_diag_req udr;
+    } req = {
+        .nlh = {
+            .nlmsg_len = sizeof(req),
+            .nlmsg_type = SOCK_DIAG_BY_FAMILY,
+            .nlmsg_flags = NLM_F_REQUEST | NLM_F_DUMP
+        },
+        .udr = {
+            .sdiag_family = AF_UNIX,
+            .udiag_states = \-1,
+            .udiag_show = UDIAG_SHOW_NAME | UDIAG_SHOW_PEER
+        }
+    };
+    struct iovec iov = {
+        .iov_base = &req,
+        .iov_len = sizeof(req)
+    };
+    struct msghdr msg = {
+        .msg_name = (void *) &nladdr,
+        .msg_namelen = sizeof(nladdr),
+        .msg_iov = &iov,
+        .msg_iovlen = 1
+    };
+
+    for (;;) {
+        if (sendmsg(fd, &msg, 0) < 0) {
+            if (errno == EINTR)
+                continue;
+
+            perror("sendmsg");
+            return \-1;
+        }
+
+        return 0;
+    }
+}
+
+static int
+print_diag(const struct unix_diag_msg *diag, unsigned int len)
+{
+    if (len < NLMSG_LENGTH(sizeof(*diag))) {
+        fputs("короткий ответ\en", stderr);
+        return \-1;
+    }
+    if (diag\->udiag_family != AF_UNIX) {
+        fprintf(stderr, "неожиданное семейство %u\en", diag\->udiag_family);
+        return \-1;
+    }
+
+    struct rtattr *attr;
+    unsigned int rta_len = len \- NLMSG_LENGTH(sizeof(*diag));
+    unsigned int peer = 0;
+    size_t path_len = 0;
+    char path[sizeof(((struct sockaddr_un *) 0)\->sun_path) + 1];
+
+    for (attr = (struct rtattr *) (diag + 1);
+             RTA_OK(attr, rta_len); attr = RTA_NEXT(attr, rta_len)) {
+        switch (attr\->rta_type) {
+        case UNIX_DIAG_NAME:
+            if (!path_len) {
+                path_len = RTA_PAYLOAD(attr);
+                if (path_len > sizeof(path) \- 1)
+                    path_len = sizeof(path) \- 1;
+                memcpy(path, RTA_DATA(attr), path_len);
+                path[path_len] = '\e0';
+            }
+            break;
+
+        case UNIX_DIAG_PEER:
+            if (RTA_PAYLOAD(attr) >= sizeof(peer))
+                peer = *(unsigned int *) RTA_DATA(attr);
+            break;
+        }
+    }
+
+    printf("инода=%u", diag\->udiag_ino);
+
+    if (peer)
+        printf(", другая сторона=%u", peer);
+
+    if (path_len)
+        printf(", имя=%s%s", *path ? "" : "@",
+                *path ? path : path + 1);
+
+    putchar('\en');
+    return 0;
+}
+
+static int
+receive_responses(int fd)
+{
+    long buf[8192 / sizeof(long)];
+    struct sockaddr_nl nladdr = {
+        .nl_family = AF_NETLINK
+    };
+    struct iovec iov = {
+        .iov_base = buf,
+        .iov_len = sizeof(buf)
+    };
+    int flags = 0;
+
+    for (;;) {
+        struct msghdr msg = {
+            .msg_name = (void *) &nladdr,
+            .msg_namelen = sizeof(nladdr),
+            .msg_iov = &iov,
+            .msg_iovlen = 1
+        };
+
+        ssize_t ret = recvmsg(fd, &msg, flags);
+
+        if (ret < 0) {
+            if (errno == EINTR)
+                continue;
+
+            perror("recvmsg");
+            return \-1;
+        }
+        if (ret == 0)
+            return 0;
+
+        const struct nlmsghdr *h = (struct nlmsghdr *) buf;
+
+        if (!NLMSG_OK(h, ret)) {
+            fputs("!NLMSG_OK\en", stderr);
+            return \-1;
+        }
+
+        for (; NLMSG_OK(h, ret); h = NLMSG_NEXT(h, ret)) {
+            if (h\->nlmsg_type == NLMSG_DONE)
+                return 0;
+
+            if (h\->nlmsg_type == NLMSG_ERROR) {
+                const struct nlmsgerr *err = NLMSG_DATA(h);
+
+                if (h\->nlmsg_len < NLMSG_LENGTH(sizeof(*err))) {
+                    fputs("NLMSG_ERROR\en", stderr);
+                } else {
+                    errno = \-err\->error;
+                    perror("NLMSG_ERROR");
+                }
+
+                return \-1;
+            }
+
+            if (h\->nlmsg_type != SOCK_DIAG_BY_FAMILY) {
+                fprintf(stderr, "неожиданный nlmsg_type %u\en",
+                        (unsigned) h\->nlmsg_type);
+                return \-1;
+            }
+
+            if (print_diag(NLMSG_DATA(h), h\->nlmsg_len))
+                return \-1;
+        }
+    }
+}
+
+int
+main(void)
+{
+    int fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_SOCK_DIAG);
+
+    if (fd < 0) {
+        perror("socket");
+        return 1;
+    }
+
+    int ret = send_query(fd) || receive_responses(fd);
+
+    close(fd);
+    return ret;
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBnetlink\fP(3), \fBrtnetlink\fP(3), \fBnetlink\fP(7), \fBtcp\fP(7)

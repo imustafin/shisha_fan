@@ -1,0 +1,249 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1990, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-10-21 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1998-2000 by Andi Kleen to match Linux 2.2 reality
+.\" Modified 2002-04-23 by Roger Luethi <rl@hellgate.ch>
+.\" Modified 2004-06-17 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" 2008-12-04, mtk, Add documentation of accept4()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ACCEPT 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+accept, accept4 \- принять соединение на сокете
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP          /* См. ЗАМЕЧАНИЯ */
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint accept(int \fP\fIsockfd\fP\fB, struct sockaddr *\fP\fIaddr\fP\fB, socklen_t *\fP\fIaddrlen\fP\fB);\fP
+
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint accept4(int \fP\fIsockfd\fP\fB, struct sockaddr *\fP\fIaddr\fP\fB,\fP
+\fB            socklen_t *\fP\fIaddrlen\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBaccept\fP() используется с сокетами, ориентированными на
+установление соединения (\fBSOCK_STREAM\fP, \fBSOCK_SEQPACKET\fP). Она извлекает
+первый запрос на соединение из очереди ожидающих соединений прослушивающего
+сокета, \fIsockfd\fP, создаёт новый подключенный сокет и и возвращает новый
+файловый дескриптор, указывающий на сокет. Новый сокет более не находится в
+слушающем состоянии. Исходный сокет \fIsockfd\fP не изменяется при этом вызове.
+.PP
+Аргумент \fIsockfd\fP \(em это сокет, который был создан с помощью
+\fBsocket\fP(2), привязанный к локальному адресу с помощью \fBbind\fP(2), и
+прослушивающий соединения после \fBlisten\fP(2).
+.PP
+Аргумент \fIaddr\fP \(em это указатель на структуру \fIsockaddr\fP. В эту
+структуру помещается адрес ответной стороны в том виде, в каком он известен
+на коммуникационном уровне. Точный формат адреса, возвращаемого в параметре
+\fIaddr\fP, определяется семейством адресов сокета (см. \fBsocket\fP(2) и
+справочную страницу по соответствующему протоколу). Если \fIaddr\fP равен NULL,
+то ничего не помещается; в этом случае \fIaddrlen\fP не используется и также
+должен быть NULL.
+.PP
+Через аргумент \fIaddrlen\fP осуществляется возврат результата: вызывающая
+сторона должна указать в нём размер (в байтах) структуры, на которую
+указывает \fIaddr\fP; при возврате он будет содержать реальный размер адреса
+ответной стороны.
+.PP
+Возвращаемый адрес обрезается, если предоставленный буфер окажется слишком
+маленьким; в этом случае в \fIaddrlen\fP будет возвращено значение большее чем
+было в вызове.
+.PP
+Если в очереди нет ожидающих запросов на соединение, и на сокет не помечен
+как неблокирующий, то \fBaccept\fP() заблокирует вызвавшую программу до
+появления соединения. Если сокет помечен как неблокирующий, а в очереди нет
+запросов на соединение, то \fBaccept\fP() завершится с ошибкой \fBEAGAIN\fP или
+\fBEWOULDBLOCK\fP.
+.PP
+Для того, чтобы получать уведомления о входящих соединениях на сокете, можно
+использовать \fBselect\fP(2), \fBpoll\fP(2) или \fBepoll\fP(7). Когда поступает
+запрос на новое соединение, доставляется доступное для чтения событие и
+после этого можно вызывать \fBaccept\fP(), чтобы получить сокет для этого
+соединения. Можно также настроить сокет так, чтобы он посылал сигнал
+\fBSIGIO\fP, когда на нём происходит какая\-либо активность; смотрите
+\fBsocket\fP(7).
+.PP
+Если \fIflags\fP равно 0, то вызов \fBaccept4\fP() равнозначен
+\fBaccept\fP(). Следующие значения могут быть побитово сложены в \fIflags\fP для
+получения различного поведения:
+.TP  16
+\fBSOCK_NONBLOCK\fP
+Устанавливает флаг состояния файла \fBO_NONBLOCK\fP для нового открытого
+файлового описания (смотрите \fBopen\fP(2)), на которое ссылается новый
+файловый дескриптор. Использование данного флага делает ненужными
+дополнительные вызовы \fBfcntl\fP(2) для достижения того же результата.
+.TP 
+\fBSOCK_CLOEXEC\fP
+Устанавливает флаг close\-on\-exec (\fBFD_CLOEXEC\fP) для нового открытого
+файлового дескриптора. Смотрите описание флага \fBO_CLOEXEC\fP в \fBopen\fP(2) для
+того, чтобы узнать как это может пригодиться.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные системные вызовы возвращают неотрицательное
+целое, являющееся файловым дескриптором принятого сокета. В случае ошибки
+возвращается \-1, \fIerrno\fP устанавливается в соответствующее значение, а
+\fIaddrlen\fP не изменяется.
+.SS "Обработка ошибок"
+В реализации Linux \fBaccept\fP() (и \fBaccept4\fP()) передаёт уже ожидающие
+сетевые ошибки на новый сокет, как код ошибки из вызова \fBaccept\fP(). Это
+поведение отличается от других реализаций BSD\-сокетов. Для надёжной работы
+приложения должны отслеживать сетевые ошибки, которые могут появиться при
+работе с протоколом \fBaccept\fP() и обрабатывать их как \fBEAGAIN\fP повторно
+выполняя вызов. В случае TCP/IP такими ошибками являются \fBENETDOWN\fP,
+\fBEPROTO\fP, \fBENOPROTOOPT\fP, \fBEHOSTDOWN\fP, \fBENONET\fP, \fBEHOSTUNREACH\fP,
+\fBEOPNOTSUPP\fP и \fBENETUNREACH\fP.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP или \fBEWOULDBLOCK\fP
+.\" Actually EAGAIN on Linux
+Сокет помечен как неблокирующий и нет ни одного соединения, которое можно
+было бы принять. В POSIX.1\-2001 и POSIX.1\-2008 допускается в этих случаях
+возврат ошибки и не требуется, чтобы эти константы имели одинаковое
+значение, поэтому переносимое приложение должно проверять обе возможности.
+.TP 
+\fBEBADF\fP
+Значение \fIsockfd\fP не является открытым файловым дескриптором.
+.TP 
+\fBECONNABORTED\fP
+Соединение было прервано.
+.TP 
+\fBEFAULT\fP
+Аргумент \fIaddr\fP не находится в пользовательском пространстве адресов с
+возможностью записи.
+.TP 
+\fBEINTR\fP
+Системный вызов прервал сигналом, который поступил до момента прихода
+допустимого соединения; см. \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Сокет не слушает соединения или недопустимое значение \fIaddrlen\fP (например,
+отрицательное).
+.TP 
+\fBEINVAL\fP
+(\fBaccept4\fP()) недопустимое значение в \fIflags\fP.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOBUFS\fP, \fBENOMEM\fP
+Не хватает свободной памяти. Это зачастую означает, что выделение памяти
+ограничено размерами буфера сокетов, а не системной памятью.
+.TP 
+\fBENOTSOCK\fP
+Файловый дескриптор \fIsockfd\fP указывает не на каталог.
+.TP 
+\fBEOPNOTSUPP\fP
+Тип сокета, на который ссылается дескриптор, отличается от \fBSOCK_STREAM\fP.
+.TP 
+\fBEPROTO\fP
+Ошибка протокола.
+.PP
+Также, Linux \fBaccept\fP() может завершиться с ошибкой если:
+.TP 
+\fBEPERM\fP
+Правила межсетевого экрана запрещают соединение.
+.PP
+Вдобавок, могут также возвращаться сетевые ошибки на новом сокете и ошибки,
+могущие возникнуть в протоколе. Различные ядра Linux могут возвращать другие
+ошибки, например, \fBENOSR\fP, \fBESOCKTNOSUPPORT\fP, \fBEPROTONOSUPPORT\fP,
+\fBETIMEDOUT\fP. Значение ошибки \fBERESTARTSYS\fP можно увидеть при трассировке.
+.SH ВЕРСИИ
+Системный вызов \fBaccept4\fP() доступен в Linux начиная с версии 2.6.28;
+поддержка в glibc доступна начиная с версии 2.10.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" The BSD man page documents five possible error returns
+.\" (EBADF, ENOTSOCK, EOPNOTSUPP, EWOULDBLOCK, EFAULT).
+.\" POSIX.1-2001 documents errors
+.\" EAGAIN, EBADF, ECONNABORTED, EINTR, EINVAL, EMFILE,
+.\" ENFILE, ENOBUFS, ENOMEM, ENOTSOCK, EOPNOTSUPP, EPROTO, EWOULDBLOCK.
+.\" In addition, SUSv2 documents EFAULT and ENOSR.
+\fBaccept\fP(): POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.4BSD, (\fBaccept\fP() впервые
+появился в 4.2BSD).
+.PP
+\fBaccept4\fP() является нестандартным расширением Linux.
+.PP
+.\" Some testing seems to show that Tru64 5.1 and HP-UX 11 also
+.\" do not inherit file status flags -- MTK Jun 05
+В Linux новый сокет, возвращаемый \fBaccept\fP(), \fIне\fP наследует файловые
+флаги состояния такие как \fBO_NONBLOCK\fP и \fBO_ASYNC\fP от прослушивающего
+сокета. Это поведение отличается от каноническое реализации сокетов
+BSD. Переносимые программы не должны полагаться на наследуемость файловых
+флагов состояния или её отсутствия и всегда должны устанавливать на сокете,
+полученном от \fBaccept\fP(), все требуемые флаги.
+.SH ЗАМЕЧАНИЯ
+В POSIX.1\-2001 не требуется включение \fI<sys/types.h>\fP, и этот
+заголовочный файл не требуется в Linux. Однако, некоторые старые (BSD)
+реализации требуют данный файл, и в переносимых приложениях для
+предосторожности, вероятно, он будет включён.
+.PP
+Возможно не всегда будет ожидание подключения после доставки \fBSIGIO\fP; или
+\fBselect\fP(2), \fBpoll\fP(2) или \fBepoll\fP(7) вернут событие доступности чтения,
+так как подключение может быть удалено из\-за асинхронной сетевой ошибкой или
+другая нить была вызвала раньше \fBaccept\fP(). Это это случается, то вызов
+блокируется, ожидая следующего прибытия подключения. Чтобы быть уверенным,
+что \fBaccept\fP() никогда не заблокируется, сокету \fIsockfd\fP необходимо
+установить флаг \fBO_NONBLOCK\fP (см. \fBsocket\fP(7)).
+.PP
+.\"
+Для определённых протоколов, которые требуют явного подтверждения, например,
+DECnet, \fBaccept\fP() можно рассматривать просто как извлечение из очереди
+следующего запроса на соединение, не подразумевающее
+подтверждение. Подтверждение, в свою очередь, произойдет при следующем
+чтении или записи в новом файловом дескрипторе, а отказ от соединения может
+произойти при закрытии нового сокета. В настоящее время, под Linux такую
+семантику имеет только DECnet.
+.SS "Тип socklen_t"
+.\" such as Linux libc4 and libc5, SunOS 4, SGI
+.\" SunOS 5 has 'size_t *'
+В первоначальной реализации сокетов в BSD (и в других системах) третий
+аргумент \fBaccept\fP() объявлялся как \fIint\ *\fP. В стандарте черновика
+POSIX.1g захотели изменить его на \fIsize_t\ *\fP. В поздних версиях стандарта
+POSIX и в glibc 2.x используется \fIsocklen_t\ *\fP.
+.SH ПРИМЕР
+См. \fBbind\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbind\fP(2), \fBconnect\fP(2), \fBlisten\fP(2), \fBselect\fP(2), \fBsocket\fP(2),
+\fBsocket\fP(7)

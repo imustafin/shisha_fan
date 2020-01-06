@@ -1,0 +1,206 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Michael Haardt, Ian Jackson.
+.\"		and Copyright (C) 2006, 2014 Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1993-07-24 by Rik Faith
+.\" Modified 1996-04-26 by Nick Duffek <nsd@bbc.com>
+.\" Modified 1996-11-06 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1997-01-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYMLINK 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+symlink, symlinkat \- создаёт новое имя для файла
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBint symlink(const char *\fP\fItarget\fP\fB, const char *\fP\fIlinkpath\fP\fB);\fP
+
+\fB#include <fcntl.h>           \fP/* определения констант of AT_* */
+\fB#include <unistd.h>\fP
+.PP
+\fBint symlinkat(const char *\fP\fItarget\fP\fB, int \fP\fInewdirfd\fP\fB, const char *\fP\fIlinkpath\fP\fB);\fP
+.PP
+.fi
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBsymlink\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500 || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* в версии glibc <= 2.19: */ _BSD_SOURCE
+.RE
+.PP
+\fBsymlinkat\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_ATFILE_SOURCE
+.RE
+.ad b
+.PD
+.SH ОПИСАНИЕ
+Вызов \fBsymlink\fP() создаёт символьную ссылку с именем \fIlinkpath\fP, которая
+содержит строку \fItarget\fP.
+.PP
+Символьные ссылки интерпретируются «на лету», как будто бы содержимое ссылки
+было подставлено вместо пути, по которому идёт поиск файла или каталога.
+.PP
+Символьные ссылки могут содержать компоненты пути \fI..\fP, которые (если
+используются в начале ссылки) ссылаются на родительский каталог того
+каталога, в котором находится ссылка.
+.PP
+Символьная ссылка (также известная как «мягкая ссылка») может указывать как
+на существующий, так и на несуществующий файлы; в последнем случае такая
+ссылка называется повисшей (dangling).
+.PP
+Права доступа символьной ссылки не имеют значения; принадлежность
+определённому владельцу игнорируется при переходе по ссылке, но проверяется
+при удалении или переименовании ссылки, а также ссылки в каталог с
+установленным закрепляющим (sticky) битом (\fBS_ISVTX\fP).
+.PP
+Если \fIlinkpath\fP существует, то он \fIне\fP будет перезаписан.
+.SS symlinkat()
+Системный вызов \fBsymlinkat\fP() работает также как системный вызов
+\fBsymlink\fP(), за исключением случаев, описанных здесь.
+.PP
+Если в \fIlinkpath\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fInewdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBsymlink\fP()).
+.PP
+Если в \fIlinkpath\fP задан относительный путь и значение \fInewdirfd\fP равно
+\fBAT_FDCWD\fP, то \fIlinkpath\fP рассматривается относительно текущего рабочего
+каталога вызывающего процесса (как \fBsymlink\fP()).
+.PP
+Если в \fIlinkpath\fP задан абсолютный путь, то \fInewdirfd\fP игнорируется.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Нет прав на запись в каталог, содержащийся в \fIlinkpath\fP, или в одном из
+каталогов в \fIlinkpath\fP не разрешён поиск (смотрите также
+\fBpath_resolution\fP(7)).
+.TP 
+\fBEDQUOT\fP
+Исчерпана пользовательская квота на ресурсы файловой системы. Ресурсами
+могут быть иноды или дисковые блоки, в зависимости от реализации файловой
+системы.
+.TP 
+\fBEEXIST\fP
+\fIlinkpath\fP уже существует.
+.TP 
+\fBEFAULT\fP
+Значение \fItarget\fP или \fIlinkpath\fP указывают за пределы доступного адресного
+пространства.
+.TP 
+\fBEIO\fP
+Произошла ошибка ввода\-вывода.
+.TP 
+\fBELOOP\fP
+Во время определения \fIlinkpath\fP встретилось слишком много символьных
+ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fItarget\fP или \fIlinkpath\fP.
+.TP 
+\fBENOENT\fP
+Компонент пути \fIlinkpath\fP не существует или является повисшей символьной
+ссылкой или значение \fItarget\fP или \fIlinkpath\fP равно пустой строке.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOSPC\fP
+На устройстве, содержащем файл, нет места для создания нового элемента
+каталога.
+.TP 
+\fBENOTDIR\fP
+Компонент пути, использованный как каталог в \fIlinkpath\fP, в действительности
+таковым не является.
+.TP 
+\fBEPERM\fP
+Файловая система, содержащая \fIlinkpath\fP, не поддерживает создание
+символьных ссылок.
+.TP 
+\fBEROFS\fP
+\fIlinkpath\fP расположен в файловой системе, доступной только для чтения.
+.PP
+В \fBsymlinkat\fP() дополнительно могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+Значение \fInewdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBENOENT\fP
+Значение \fIlinkpath\fP является относительным путём и \fInewdirfd\fP ссылается на
+каталог, который был удалён.
+.TP 
+\fBENOTDIR\fP
+Значение \fIlinkpath\fP содержит относительный путь и \fInewdirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог.
+.SH ВЕРСИИ
+Системный вызов \fBsymlinkat\fP() был добавлен в ядро Linux версии 2.6.16;
+поддержка в glibc доступна с версии 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents additional error codes EDQUOT and ENOSYS.
+.\" See
+.\" .BR open (2)
+.\" re multiple files with the same name, and NFS.
+\fBsymlink\fP(): SVr4, 4.3BSD, POSIX.1\-2001, POSIX.1\-2008.
+.PP
+\fBsymlinkat\fP(): POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Не выполняется проверка \fItarget\fP.
+.PP
+При удаление имени, на который ссылается символьная ссылка, произойдёт
+удаление файла (если только у него нет других жёстких ссылок). Если такое
+поведение нежелательно, используйте \fBlink\fP(2).
+.SS "Замечания по glibc"
+В старых ядрах, где \fBsymlinkat\fP() отсутствует, обёрточная функция glibc
+использует \fBsymlink\fP(). Если \fIlinkpath\fP является относительным путём, то
+glibc собирает путь относительно символической ссылки в \fI/proc/self/fd\fP,
+которая соответствует аргументу \fInewdirfd\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBln\fP(1), \fBnamei\fP(1), \fBlchown\fP(2), \fBlink\fP(2), \fBlstat\fP(2), \fBopen\fP(2),
+\fBreadlink\fP(2), \fBrename\fP(2), \fBunlink\fP(2), \fBpath_resolution\fP(7),
+\fBsymlink\fP(7)

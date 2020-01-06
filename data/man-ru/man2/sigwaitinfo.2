@@ -1,0 +1,158 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2002 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGWAITINFO 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sigwaitinfo, sigtimedwait, rt_sigtimedwait \- синхронное ожидание запрошенных
+сигналов
+.SH ОБЗОР
+.nf
+\fB#include <signal.h>\fP
+.PP
+\fBint sigwaitinfo(const sigset_t *\fP\fIset\fP\fB, siginfo_t *\fP\fIinfo\fP\fB);\fP
+.PP
+\fBint sigtimedwait(const sigset_t *\fP\fIset\fP\fB, siginfo_t *\fP\fIinfo\fP\fB, \fP
+\fB                 const struct timespec *\fP\fItimeout\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsigwaitinfo\fP(), \fBsigtimedwait\fP(): _POSIX_C_SOURCE\ >=\ 199309L
+.SH ОПИСАНИЕ
+\fBsigwaitinfo\fP() приостанавливает исполнение вызывающий нити до тех пор,
+пока не будет ожидаться один из сигналов из набора \fIset\fP (если один из
+сигналов в \fIset\fP уже ожидает обработки вызывающей нитью, то
+\fBsigwaitinfo\fP() завершит работу немедленно с возвратом информации об этом
+сигнале).
+.PP
+\fBsigwaitinfo\fP() удаляет сигнал из списка сигналов ожидающих обработки и
+возвращает номер сигнала как результат работы функции. Если аргумент \fIinfo\fP
+не равен NULL, то в буфер, на который он указывает, записывается структура
+типа \fIsiginfo_t\fP (см. \fBsigaction\fP(2)), содержащая информацию о сигнале.
+.PP
+Если в \fIset\fP ожидают обработки несколько сигналов, то сигнал, который
+получит \fBsigwaitinfo\fP(), определяется согласно обычным правилам
+очерёдности; подробней смотрите в \fBsignal\fP(7).
+.PP
+Системный вызов \fBsigtimedwait\fP() работает аналогично \fBsigwaitinfo\fP(), за
+исключением того, что он имеет дополнительный аргумент \fItimeout\fP, задающий
+интервал,  на который приостанавливается процесс в ожидании сигнала. Данное
+значение интервала будет округлено до точности системных часов, а из\-за
+задержки при планировании в ядре блокирующий интервал будет немного
+больше. Этот аргумент имеет следующий тип:
+.PP
+.in +4n
+.EX
+struct timespec {
+    long    tv_sec;         /* секунды */
+    long    tv_nsec;        /* наносекунды */
+}
+.EE
+.in
+.PP
+Если оба поля структуры равны 0, то исполняется опрос: \fBsigtimedwait\fP()
+немедленно завершает работу, либо с информацией о сигнале, предназначенном
+вызывающему, либо с ошибкой, если ни один из сигналов в наборе \fIset\fP не
+ожидает обработки.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При нормальном завершении работы \fBsigwaitinfo\fP() и \fBsigtimedwait\fP()
+возвращают номер сигнала (т.е. значение больше нуля). При ошибках оба вызова
+возвращают \-1 и переменная \fIerrno\fP устанавливается соответственно ошибке.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Ни одного сигнала в указанном наборе \fIset\fP не появилось для обработки за
+время \fItimeout\fP, указанном для \fBsigtimedwait\fP().
+.TP 
+\fBEINTR\fP
+Ожидание было прервано обработчиком сигнала; см. \fBsignal\fP(7). (Этот
+обработчик был для другого сигнала, не из набора \fIset\fP.)
+.TP 
+\fBEINVAL\fP
+Значение \fItimeout\fP некорректно.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+При обычном использовании вызывающая программа блокирует сигналы в наборе
+\fIset\fP через предыдущий вызов \fBsigprocmask\fP(2) (для того, чтобы не
+сработали обработчики по умолчанию этих сигналов, если они появятся для
+обработки между последующими вызовами \fBsigwaitinfo\fP() или
+\fBsigtimedwait\fP()) и не устанавливает обработчики для этих сигналов. В
+многонитевых программах сигнал должен быть заблокирован во всех нитях, чтобы
+предотвратить возврат сигнала нити, отличной от той, которая вызвала
+\fBsigwaitinfo\fP() или \fBsigtimedwait\fP()).
+.PP
+Набор сигналов, ожидающих обработки в заданной нити, представляет собой
+объединение набора сигналов, ожидающих обработки именно в этой нити и набора
+сигналов, ожидающих обработки всем процессом (см. \fBsignal\fP(7)).
+.PP
+Попытки ожидания \fBSIGKILL\fP и \fBSIGSTOP\fP просто игнорируются.
+.PP
+Если несколько нитей процесса заблокированы в ожидании одного сигнала(ов) в
+\fBsigwaitinfo\fP() или \fBsigtimedwait\fP(), то только одна нить действительно
+получит сигнал, если он станет доступен для ожидания всему процессу; какая
+именно нить примет сигнал неизвестно.
+.PP
+Вызовы \fBsigwaitinfo\fP() и \fBsigtimedwait\fP() нельзя использовать для приёма
+сигналов, генерируемых синхронно, например сигнала \fBSIGSEGV\fP при доступе по
+неправильному адресу памяти, или сигнала \fBSIGFPE\fP при математических
+ошибках. Такие сигналы можно поймать только через обработчик сигнала.
+.PP
+.\"
+POSIX оставляет неопределённое значение NULL в аргументе \fItimeout\fP для
+\fBsigtimedwait\fP(), допуская возможность того, что он имеет такое же
+значение, как и у вызова \fBsigwaitinfo\fP(), и в самом деле это именно так в
+Linux.
+.SS "Отличия между библиотекой C и ядром"
+В Linux, \fBsigwaitinfo\fP() реализована в виде библиотечной функции,
+использующей \fBsigtimedwait\fP().
+.PP
+Обёрточные функции glibc для \fBsigwaitinfo\fP() и \fBsigtimedwait\fP() просто
+игнорируют попытки ожидания двух сигналов реального времени, которые
+используются внутри реализации NPTL. Подробности смотрите в \fBnptl\fP(7).
+.PP
+.\"
+Первоначально, системный вызов Linux назывался \fBsigtimedwait\fP(). Однако, с
+добавлением сигналов реального времени в Linux 2.2, 32\-битный аргумент
+\fIsigset_t\fP неизменяемого размера, поддерживаемый этим системным вызовом, не
+мог больше использоваться. В результате был добавлен новый системный вызов
+\fBrt_sigtimedwait\fP() с увеличенным типом \fIsigset_t\fP. У нового системного
+вызова появился четвёртый аргумент, \fIsize_t sigsetsize\fP, в котором
+указывается размер (в байтах) набора сигналов \fIset\fP. В настоящее время
+значение этого аргумента должно быть равно \fIsizeof(sigset_t)\fP (иначе
+возникает ошибка \fBEINVAL\fP). Обёрточная функция glibc \fBsigtimedwait\fP()
+скрывает это и вызывает \fBrt_sigtimedwait\fP(), если он есть в ядре.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBsigaction\fP(2), \fBsignal\fP(2), \fBsignalfd\fP(2), \fBsigpending\fP(2),
+\fBsigprocmask\fP(2), \fBsigqueue\fP(3), \fBsigsetops\fP(3), \fBsigwait\fP(3),
+\fBsignal\fP(7), \fBtime\fP(7)

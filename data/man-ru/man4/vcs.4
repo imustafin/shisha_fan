@@ -1,0 +1,164 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1995 James R. Van Zandt <jrv@vanzandt.mv.com>
+.\" Sat Feb 18 09:11:07 EST 1995
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified, Sun Feb 26 15:08:05 1995, faith@cs.unc.edu
+.\" 2007-12-17, Samuel Thibault <samuel.thibault@ens-lyon.org>:
+.\"     document the VT_GETHIFONTMASK ioctl
+.\" "
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH VCS 4 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+vcs, vcsa \- память виртуальной консоли
+.SH ОПИСАНИЕ
+\fI/dev/vcs0\fP представляет собой символьное устройство со старшим номером 7 и
+младшим 0, обычно имеет права доступа 0644 и принадлежит
+root:tty. Устройство указывает на память отображаемого в данный момент
+виртуального консольного терминала.
+.PP
+\fI/dev/vcs[1\-63]\fP представляют собой символьные устройства виртуальных
+консольных терминалов, имеют старший номер 7 и младшие от 1 до 63, обычно
+имеют права доступа 0644 и принадлежат root:tty. \fI/dev/vcsa[0\-63]\fP
+представляют собой  те же устройства, но имеют атрибуты в виде чисел типа
+\fIunsigned short\fP (с порядком байт узла) и приставкой из четырех байтов,
+задающих размеры экрана и положение курсора: \fIlines\fP, \fIcolumns\fP, \fIx\fP,
+\fIy\fP.  (\fIx\fP = \fIy\fP = 0 означает верхний левый угол экрана.)
+.PP
+При загрузке шрифта с 512 символами значение 9\-го бита можно получить через
+\fBioctl\fP(2) с помощью операции \fBVT_GETHIFONTMASK\fP (доступна в ядрах Linux
+версии 2.6.18 и новее) над \fI/dev/tty[1\-63]\fP; третий аргумент \fBioctl\fP(2)
+содержит указатель на \fIunsigned short\fP, куда возвращается результат.
+.PP
+Эти устройства заменяют операции \fBioctl\fP(2) по снятию снимка экрана
+\fBioctl_console\fP(2), и позволяют системному администратору контролировать
+доступ с помощью файловой системы.
+.PP
+Устройства для первых восьми виртуальных консолей могут быть созданы с
+помощью следующих команд:
+.PP
+.in +4n
+.EX
+for x in 0 1 2 3 4 5 6 7 8; do
+    mknod \-m 644 /dev/vcs$x c 7 $x;
+    mknod \-m 644 /dev/vcsa$x c 7 $[$x+128];
+done
+chown root:tty /dev/vcs*
+.EE
+.in
+.PP
+Запросы \fBioctl\fP(2) не поддерживаются.
+.SH ФАЙЛЫ
+\fI/dev/vcs[0\-63]\fP
+.br
+.\" .SH AUTHOR
+.\" Andries Brouwer <aeb@cwi.nl>
+\fI/dev/vcsa[0\-63]\fP
+.SH ВЕРСИИ
+Впервые появились в версии ядра Linux 1.1.92.
+.SH ПРИМЕР
+Вы можете сделать снимок экрана vt3, переключившись на vt1 и написав
+.PP
+.in +4n
+.EX
+cat /dev/vcs3 >foo
+.EE
+.in
+.PP
+Заметим, что вывод не будет содержать символов новой строки, поэтому может
+потребоваться дополнительная обработка, например
+.PP
+.in +4n
+.EX
+fold \-w 81 /dev/vcs3 | lpr
+.EE
+.in
+.PP
+или (жуть)
+.PP
+.in +4n
+.EX
+setterm \-dump 3 \-file /proc/self/fd/1
+.EE
+.in
+.PP
+Устройство \fI/dev/vcsa0\fP используется для поддержки дисплея Брайля.
+.PP
+Эта программа выводит символ и атрибуты экрана, находящиеся под курсором на
+второй виртуальной консоли, и затем меняет цвет фона в том же месте.
+.PP
+.EX
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/vt.h>
+
+int
+main(void)
+{
+    int fd;
+    char *device = "/dev/vcsa2";
+    char *console = "/dev/tty2";
+    struct {unsigned char lines, cols, x, y;} scrn;
+    unsigned short s;
+    unsigned short mask;
+    unsigned char attrib;
+    int ch;
+
+    fd = open(console, O_RDWR);
+    if (fd < 0) {
+        perror(console);
+        exit(EXIT_FAILURE);
+    }
+    if (ioctl(fd, VT_GETHIFONTMASK, &mask) < 0) {
+        perror("VT_GETHIFONTMASK");
+        exit(EXIT_FAILURE);
+    }
+    (void) close(fd);
+    fd = open(device, O_RDWR);
+    if (fd < 0) {
+        perror(device);
+        exit(EXIT_FAILURE);
+    }
+    (void) read(fd, &scrn, 4);
+    (void) lseek(fd, 4 + 2*(scrn.y*scrn.cols + scrn.x), SEEK_SET);
+    (void) read(fd, &s, 2);
+    ch = s & 0xff;
+    if (s & mask)
+        ch |= 0x100;
+    attrib = ((s & ~mask) >> 8);
+    printf("ch=0x%03x attrib=0x%02x\en", ch, attrib);
+    s ^= 0x1000;
+    (void) lseek(fd, \-2, SEEK_CUR);
+    (void) write(fd, &s, 2);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBioctl_console\fP(2), \fBtty\fP(4), \fBttyS\fP(4), \fBgpm\fP(8)

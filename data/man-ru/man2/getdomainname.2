@@ -1,0 +1,108 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1997-08-25 by Nicolás Lichtmaier <nick@debian.org>
+.\" Modified 2004-06-17 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2008-11-27 by mtk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETDOMAINNAME 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getdomainname, setdomainname \- получить/установить имя домена NIS
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint getdomainname(char *\fP\fIname\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.br
+\fBint setdomainname(const char *\fP\fIname\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBgetdomainname\fP(), \fBsetdomainname\fP():
+.nf
+.\"		commit 266865c0e7b79d4196e2cc393693463f03c90bd8
+    начиная с glibc 2.21:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и 2.20:
+        _DEFAULT_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+    до glibc 2.19, включительно:
+        _BSD_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+.fi
+.ad
+.SH ОПИСАНИЕ
+Данные функции используются для получения или изменения имени домена NIS
+узла системы. Точнее говоря, они работают с именем домена NIS, связанным с
+пространством имён UTS вызывающего процесса.
+.PP
+\fBsetdomainname\fP() изменяет доменное имя на значение, указанное в массиве
+символов \fIname\fP. В аргументе \fIlen\fP задаётся количество байт в \fIname\fP. (То
+есть \fIname\fP может не завершаться байтом с null.)
+.PP
+\fBgetdomainname\fP() возвращает доменное имя с null на конце в массиве
+символов \fIname\fP, который имеет длину \fIlen\fP байт. Если для доменного имени
+с null на конце требуется больше чем \fIlen\fP байт, то \fBgetdomainname\fP()
+возвращает первые \fIlen\fP байт (glibc) или возвращает ошибку (libc).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+\fBsetdomainname\fP() может завершиться со следующими ошибками:
+.TP 
+\fBEFAULT\fP
+\fIname\fP указывает за пределы пользовательского адресного пространства.
+.TP 
+\fBEINVAL\fP
+Значение \fIlen\fP отрицательно или слишком большое.
+.TP 
+\fBEPERM\fP
+У вызывающего нет мандата \fBCAP_SYS_ADMIN\fP в пользовательском пространстве
+имён, связанном с его пространством имён UTS (смотрите \fBnamespaces\fP(7)).
+.PP
+\fBgetdomainname\fP() может завершиться со следующими ошибками:
+.TP 
+\fBEINVAL\fP
+Для \fBgetdomainname\fP() в libc: значение \fIname\fP равно NULL или \fIname\fP
+длиннее чем \fIlen\fP байт.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" But they appear on most systems...
+В POSIX нет этих вызовов.
+.SH ЗАМЕЧАНИЯ
+Начиная с Linux 1.0, длина доменного имени, включая завершающий байт с null,
+ограничена 64 байтами. В более старых ядрах ограничение было 8 байт.
+.PP
+На большинстве архитектур Linux (включая x86), системный вызов
+\fBgetdomainname\fP() отсутствует; вместо него в библиотеке glibc реализована
+функция \fBgetdomainname\fP(), которая возвращает копию поля \fIdomainname\fP,
+которую возвращает вызов \fBuname\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgethostname\fP(2), \fBsethostname\fP(2), \fBuname\fP(2), \fButs_namespaces\fP(7)

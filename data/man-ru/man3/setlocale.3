@@ -1,0 +1,155 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\" and Copyright 1999 by Bruno Haible (haible@clisp.cons.org)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 18:20:12 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Tue Jul 15 16:49:10 1997 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified Sun Jul  4 14:52:16 1999 by Bruno Haible (haible@clisp.cons.org)
+.\" Modified Tue Aug 24 17:11:01 1999 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified Tue Feb  6 03:31:55 2001 by Andries Brouwer (aeb@cwi.nl)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETLOCALE 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+setlocale \- задаёт текущую локаль
+.SH ОБЗОР
+.nf
+\fB#include <locale.h>\fP
+.PP
+\fBchar *setlocale(int \fP\fIcategory\fP\fB, const char *\fP\fIlocale\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBsetlocale\fP() используется для назначения или запроса текущей
+локали программы.
+.PP
+Если \fIlocale\fP не равно NULL, то текущая локаль программы изменяется
+согласно переданным аргументам. Аргументом \fIcategory\fP определяется какую
+часть текущей локали программы нужно изменить.
+.TS
+lB lB
+lB l.
+Категория	Назначение
+\fBLC_ALL\fP	Локаль целиком
+\fBLC_ADDRESS\fP	T{
+Форматирование адресов и
+.br
+элементов, относящихся к географии (*)
+T}
+\fBLC_COLLATE\fP	Сортировка строк
+\fBLC_CTYPE\fP	Классы символов
+\fBLC_IDENTIFICATION\fP	Метаданные, описывающие локаль (*)
+\fBLC_MEASUREMENT\fP	T{
+Настройки, относящиеся к единицам измерения
+.br
+(метрические или системы мер США) (*)
+T}
+\fBLC_MESSAGES\fP	Локализированные сообщения на родном языке
+\fBLC_MONETARY\fP	Форматирование значений денежных единиц
+\fBLC_NAME\fP	Форматирование приветствий людей (*)
+\fBLC_NUMERIC\fP	Форматирование не денежных числовых значений
+\fBLC_PAPER\fP	Настройки стандартных размеров бумаги (*)
+\fBLC_TELEPHONE\fP	Форматы, используемые в телефонных службах (*) 
+\fBLC_TIME\fP	Форматирование значений дат и времени 
+.TE
+.PP
+Категории, помеченные в таблице звёздочкой, являются расширениями
+GNU. Дополнительную информацию об этих категориях локали смотрите в
+\fBlocale\fP(7).
+.PP
+Аргумент \fIlocale\fP — это указатель на строку символов, содержащую требуемую
+настройку \fIcategory\fP.  Эта строка может быть понятной константой «C» или
+«da_DK» (смотрите ниже), или строкой со скрытым форматом, которую вернул
+другой вызов \fBsetlocale\fP().
+.PP
+Если \fIlocale\fP — пустая строка, \fB""\fP, то любая часть локали, которую
+требуется изменить, будет задана исходя из переменных окружения. Как это
+происходит — зависит от реализации. В glibc, во\-первых (независимо от
+\fIcategory\fP), просматривается переменная окружения \fBLC_ALL\fP, затем
+переменная окружения с именем как у категории (смотрите таблицу выше), и в
+конце учитывается переменная окружения \fBLANG\fP. Используется первая
+найденная переменная окружения. Если её значение некорректно определяет
+локаль, то локаль не изменяется и \fBsetlocale\fP() возвращает NULL.
+.PP
+Локали \fB"C"\fP или \fB"POSIX"\fP являются переносимыми локалями; они существуют
+во всех соответствующих системах.
+.PP
+Имя локали, обычно, состоит из \fIязыка\fP[_\fIтерритории\fP][\fIтаблицы
+символов\fP][@\fIмодификатора\fP], где \fIязык\fP — код языка согласно ISO 639,
+\fIтерритория\fP — код страны согласно ISO 3166 и \fIтаблица символов\fP — набор
+символов или кодировка типа \fBISO\-8859\-1\fP или \fBUTF\-8\fP. Список
+поддерживаемых локалей можно получить по команде «locale \-a» (смотрите
+\fBlocale\fP(1)).
+.PP
+Если \fIlocale\fP равно NULL, то только возвращается текущая локаль и ничего не
+меняется.
+.PP
+При запуске основной программы по умолчанию выбирается переносимая локаль
+\fB"C"\fP. Программу можно сделать переносимой для всех локалей вызвав
+.PP
+.in +4n
+.EX
+setlocale(LC_ALL, "");
+.EE
+.in
+.PP
+после инициализации программы, используя информацию об установках локали,
+полученную из вызова \fBlocaleconv\fP(3), используя многобайтные или
+широкосимвольные функции при обработке текста, если \fBMB_CUR_MAX > 1\fP и
+используя \fBstrcoll\fP(3), \fBwcscoll\fP(3) или \fBstrxfrm\fP(3), \fBwcsxfrm\fP(3) для
+сравнения строк.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsetlocale\fP() возвращает строку со скрытым
+форматом, которая соответствует набору локали. Эта строка может находиться в
+статическом хранилище. Строка возвращается таким образом, что последующий
+вызов с этой строкой и связанной с ней категорией, восстанавливают эту часть
+локали процесса. Если вызов не может быть выполнен, то возвращается значение
+NULL.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw26
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsetlocale\fP()
+T}	Безвредность в нитях	MT\-Unsafe const:locale env
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99.
+.PP
+В стандарте C определены только следующие категории: \fBLC_ALL\fP,
+\fBLC_COLLATE\fP, \fBLC_CTYPE\fP, \fBLC_MONETARY\fP, \fBLC_NUMERIC\fP и \fBLC_TIME\fP. В
+POSIX.1 добавлена \fBLC_MESSAGES\fP. Остальные категории являются расширением
+GNU.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlocale\fP(1), \fBlocaledef\fP(1), \fBisalpha\fP(3), \fBlocaleconv\fP(3),
+\fBnl_langinfo\fP(3), \fBrpmatch\fP(3), \fBstrcoll\fP(3), \fBstrftime\fP(3),
+\fBcharsets\fP(7), \fBlocale\fP(7)

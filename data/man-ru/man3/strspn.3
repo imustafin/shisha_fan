@@ -1,0 +1,76 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 17:57:50 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STRSPN 3 2015\-08\-08 "" "Руководство программиста Linux"
+.SH ИМЯ
+strspn, strcspn \- определение длины префикса подстроки
+.SH ОБЗОР
+.nf
+\fB#include <string.h>\fP
+.PP
+\fBsize_t strspn(const char *\fP\fIs\fP\fB, const char *\fP\fIaccept\fP\fB);\fP
+.PP
+\fBsize_t strcspn(const char *\fP\fIs\fP\fB, const char *\fP\fIreject\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBstrspn\fP() вычисляет длину (в байтах) начального сегмента строки
+\fIs\fP, состоящего только из байт строки \fIaccept\fP.
+.PP
+Функция \fBstrcspn\fP() вычисляет длину начального сегмента строки \fIs\fP,
+состоящего только из байт, не указанных в строке \fIreject\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBstrspn\fP() возвращает количество байт в начальном сегменте \fIs\fP,
+который составляют байты из \fIaccept\fP.
+.PP
+Функция \fBstrcspn\fP() возвращает количество байт в начальном сегменте \fIs\fP,
+состоящем только из символов, не указанных в \fIreject\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw19 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstrspn\fP(),
+\fBstrcspn\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4, 4.3BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBindex\fP(3), \fBmemchr\fP(3), \fBrindex\fP(3), \fBstrchr\fP(3), \fBstring\fP(3),
+\fBstrpbrk\fP(3), \fBstrsep\fP(3), \fBstrstr\fP(3), \fBstrtok\fP(3), \fBwcscspn\fP(3),
+\fBwcsspn\fP(3)

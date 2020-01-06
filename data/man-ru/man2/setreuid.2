@@ -1,0 +1,177 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1991 The Regents of the University of California.
+.\" and Copyright (C) 2009, 2010, 2014, 2015, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)setregid.2	6.4 (Berkeley) 3/10/91
+.\"
+.\" Modified Sat Jul 24 09:08:49 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Portions extracted from linux/kernel/sys.c:
+.\"             Copyright (C) 1991, 1992  Linus Torvalds
+.\"             May be distributed under the GNU General Public License
+.\" Changes: 1994-07-29 by Wilf <G.Wilford@ee.surrey.ac.uk>
+.\"          1994-08-02 by Wilf due to change in kernel.
+.\"          2004-07-04 by aeb
+.\"          2004-05-27 by Michael Kerrisk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETREUID 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+setreuid, setregid \- устанавливает действительный и/или эффективный
+идентификатор пользователя или группы
+.SH ОБЗОР
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <unistd.h>\fP
+.PP
+\fBint setreuid(uid_t \fP\fIruid\fP\fB, uid_t \fP\fIeuid\fP\fB);\fP
+.br
+\fBint setregid(gid_t \fP\fIrgid\fP\fB, gid_t \fP\fIegid\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsetreuid\fP(), \fBsetregid\fP():
+.RS 4
+.ad l
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE
+.ad
+.RE
+.SH ОПИСАНИЕ
+Вызов \fBsetreuid\fP() устанавливает действительный и эффективный идентификатор
+пользователя вызывающего процесса.
+.PP
+Если указываемое значение действительного или эффективного идентификатора
+пользователя равно \-1, то система не изменяет его.
+.PP
+Непривилегированные процессы могут изменять эффективный идентификатор
+пользователя на действующий, эффективный или сохранённый идентификатор
+пользователя.
+.PP
+Непривилегированные пользователи могут изменять действительный идентификатор
+пользователя на эффективный или действительный идентификатор пользователя.
+.PP
+Если установлен действительный идентификатор пользователя (т. е., значение
+\fIruid\fP не равно \-1) или установлено значение эффективного идентификатора
+пользователя в отличное от предыдущего значения действительного
+идентификатора пользователя, то значение сохранённого идентификатора
+пользователя будет установлено в новое значение эффективного идентификатора
+пользователя.
+.PP
+Аналогично \fBsetregid\fP() меняет действующий и эффективный идентификаторы
+группы вызывающего процесса, и всё описанное выше для пользователя
+справедливо и для группы.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.PP
+\fIЗамечание\fP: есть случаи, когда \fBsetreuid\fP() может завершиться с ошибкой
+даже когда UID вызывающего равен 0; это серьёзная ошибка безопасности — не
+проверять возвращаемое значение \fBsetreuid\fP().
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Вызов изменил бы настоящего реальный UID вызывающего (т. е. \fIruid\fP не
+совпадает с реальным UID вызывающего), но возникла временная ошибка при
+выделении памяти под необходимые структуры ядра.
+.TP 
+\fBEAGAIN\fP
+Значение \fIruid\fP не совпадает с реальным UID вызывающего и этот вызов создал
+был превышение количества процессов, принадлежащих пользователю с реальным
+ID \fIruid\fP сверх ограничителя ресурсы \fBRLIMIT_NPROC\fP вызывающего. Начиная с
+Linux 3.1 эта ошибка больше не возникает (но корректное приложение должно
+проверять эту ошибку); смотрите описание \fBEAGAIN\fP в \fBexecve\fP(2).
+.TP 
+\fBEINVAL\fP
+Один или более целевых идентификаторов пользователя или группы некорректны в
+этом пользовательском пространстве имён.
+.TP 
+\fBEPERM\fP
+Вызывающий процесс не имеет прав (Linux: не имеет необходимого мандата в
+своём пространстве имён пользователя: \fBCAP_SETUID\fP при вызове \fBsetreuid\fP()
+или мандата \fBCAP_SETGID\fP при вызове \fBsetregid\fP()), а требуемые изменения
+не относятся к следующим: 1) взаимозамене эффективного идентификатора на
+действительный идентификатор пользователя (группы); 2) установке значения
+одного идентификатора в значение другого; 3) замене эффективного
+идентификатора пользователя (группы) на сохранённый идентификатор
+пользователя (группы).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.3BSD (\fBsetreuid\fP() и \fBsetregid\fP() впервые
+появились в 4.2BSD).
+.SH ЗАМЕЧАНИЯ
+Установка эффективного идентификатора пользователя (группы) в значение
+сохранённого идентификатора возможна с версии Linux 1.1.37 (1.1.38).
+.PP
+В POSIX.1 не определены все варианты изменения идентификаторов, разрешённые
+в Linux непривилегированным процессам. Вызов \fBsetreuid\fP() может изменить
+значение эффективного пользовательского идентификатора на действительный или
+сохранённый пользовательский идентификатор и не определено, может ли
+непривилегированный процесс установить действительный пользовательский
+идентификатор равным действительному, эффективному или сохранённому
+пользовательскому идентификатору. Вызов \fBsetregid\fP() может изменить
+действительный идентификатор группы на значение сохранённого идентификатора
+группы, а эффективный идентификатор группы — на значение действительного или
+сохранённого идентификатора группы. Действующие правила о разрешённых
+изменениях идентификаторов отличаются в разных реализациях.
+.PP
+В POSIX.1 ничего не сказано о работе этих вызовов над сохранённым
+идентификатором пользователя и группы.
+.PP
+.\"
+Первоначальные версии системных вызовов \fBsetreuid\fP() и \fBsetregid\fP() в
+Linux поддерживали только 16\-битные идентификаторы пользователей и
+групп. Позднее в Linux 2.4 были добавлены вызовы \fBsetreuid32\fP() и
+\fBsetregid32\fP(), поддерживающие 32\-битные идентификаторы. В glibc обёрточные
+функции \fBsetreuid\fP() и \fBsetregid\fP() работают одинаково вне зависимости от
+версий ядра.
+.SS "Отличия между библиотекой C и ядром"
+На уровне ядра ID пользователя и группы являются атрибутами нити. Однако в
+POSIX требуется, чтобы все нити в процессе имели одинаковые права. В
+реализации нитей NPTL требования POSIX реализованы через обёрточные функции
+для различных системных вызовов, которые изменяют UID и GID процесса. В этих
+функциях (включая \fBsetreuid\fP() и \fBsetregid\fP()) используется алгоритмы на
+основе сигналов, которые следят за тем, что когда у одной нити изменяются
+права, эти изменения выполняются и для остальных нитей процесса. Подробное
+описание смотрите в \fBnptl\fP(7).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetgid\fP(2), \fBgetuid\fP(2), \fBseteuid\fP(2), \fBsetgid\fP(2), \fBsetresuid\fP(2),
+\fBsetuid\fP(2), \fBcapabilities\fP(7), \fBcredentials\fP(7), \fBuser_namespaces\fP(7)

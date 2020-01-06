@@ -1,0 +1,227 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2010 Intel Corporation, Author: Andi Kleen
+.\" and Copyright 2014, Vivek Goyal <vgoyal@redhat.com>
+.\" and Copyright (c) 2015, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH KEXEC_LOAD 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+kexec_load, kexec_file_load \- загружает новое ядро для выполнения в будущем
+.SH ОБЗОР
+.nf
+\fB#include <linux/kexec.h>\fP
+.PP
+\fBlong kexec_load(unsigned long \fP\fIentry\fP\fB, unsigned long \fP\fInr_segments\fP\fB,\fP
+\fB                struct kexec_segment *\fP\fIsegments\fP\fB, unsigned long \fP\fIflags\fP\fB);\fP
+.PP
+\fBlong kexec_file_load(int \fP\fIkernel_fd\fP\fB, int \fP\fIinitrd_fd\fP\fB,\fP
+\fB                    unsigned long \fP\fIcmdline_len\fP\fB, const char *\fP\fIcmdline\fP\fB,\fP
+\fB                    unsigned long \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточных функций для этих системных вызовов;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Системный вызов \fBkexec_load\fP() загружает новое ядро, которое можно
+запустить позже с помощью \fBreboot\fP(2).
+.PP
+Аргумент \fIflags\fP представляет собой битовую маску, которая управляет
+работой вызова. В \fIflags\fP можно указать следующие значения:
+.TP 
+\fBKEXEC_ON_CRASH\fP (начиная с Linux 2.6.13)
+Запускать новое ядро автоматически после аварии системы. Данное «аварийное
+ядро» загружено в область зарезервированной памяти, которая определена во
+время загрузки с помощью параметра командной строки ядра
+\fIcrashkernel\fP. Область данной зарезервированной памяти экспортируется в
+пространство пользователя через файл \fI/proc/iomem\fP, в элемент с меткой
+«Crash kernel». Приложение в пользовательском пространстве может
+проанализировать этот файл и подготовить список сегментов (смотрите далее),
+которые определяют эту зарезервированную память в качестве приёмника. Если
+данный флаг установлен, то ядро проверяет входят ли сегменты назначения,
+указанные в \fIsegments\fP, в зарезервированную область.
+.TP 
+\fBKEXEC_PRESERVE_CONTEXT\fP (начиная с Linux 2.6.27)
+Сохранять аппаратное и программное состояния перед выполнением нового
+ядра. Может использоваться для перевода системы в состояние ожидания
+(suspend). Этот флаг доступен только, если ядро было собрано с параметром
+\fBCONFIG_KEXEC_JUMP\fP, и работает только, если значение \fInr_segments\fP больше
+0.
+.PP
+В старших битах (соответствуют маске 0xffff0000) \fIflags\fP задаётся
+архитектура, на которой будет выполняться ядро. Константой (через OR)
+\fBKEXEC_ARCH_DEFAULT\fP задаётся использование текущей архитектуры; также есть
+другие константы, описывающие архитектуры: \fBKEXEC_ARCH_386\fP,
+\fBKEXEC_ARCH_68K\fP, \fBKEXEC_ARCH_X86_64\fP, \fBKEXEC_ARCH_PPC\fP,
+\fBKEXEC_ARCH_PPC64\fP, \fBKEXEC_ARCH_IA_64\fP, \fBKEXEC_ARCH_ARM\fP,
+\fBKEXEC_ARCH_S390\fP, \fBKEXEC_ARCH_SH\fP, \fBKEXEC_ARCH_MIPS\fP и
+\fBKEXEC_ARCH_MIPS_LE\fP.Архитектура должна быть работоспособна на ЦП системы.
+.PP
+В аргументе \fIentry\fP задаётся физический адрес точки входа в образе ядра. В
+аргументе \fInr_segments\fP задаётся количество сегментов, на которые указывает
+указатель \fIsegments\fP; ядро введено (произвольно) ограничение в 16
+сегментов. В аргументе \fIsegments\fP задаётся массив структур
+\fIkexec_segment\fP, который определяет разметку ядра:
+.PP
+.in +4n
+.EX
+struct kexec_segment {
+    void   *buf;        /* буфер в пользовательском пространстве */
+    size_t  bufsz;      /* размер буфера в пользовательском пространстве */
+    void   *mem;        /* физический адрес ядра */
+    size_t  memsz;      /* размер ядра */
+};
+.EE
+.in
+.PP
+Образ ядра, определённый \fIsegments\fP, копируется из вызывающего процесса в
+обычную память или в зарезервированную память (если определён
+\fBKEXEC_ON_CRASH\fP). Сначала ядро выполняет различные проверки информации,
+переданной в \fIsegments\fP. Если всё в порядке, то ядро копирует сегмент
+данных в память ядра. Каждый сегмент, указанный в \fIsegments\fP, копируется
+следующим образом:
+.IP * 3
+Значения \fIbuf\fP и \fIbufsz\fP определяют область памяти в виртуальном адресном
+пространстве вызывающего, который является источником копирования. Значение
+\fIbufsz\fP может не превышать значение в поле \fImemsz\fP.
+.IP *
+Значения \fImem\fP и \fImemsz\fP определяют физическое адресное пространство —
+приёмник копии. Значения, задаваемые в обоих полях, должны быть кратны
+размеру системной страницы.
+.IP *
+\fIbufsz\fP байт копируется из буфера источника в буфер назначения ядра. Если
+\fIbufsz\fP меньше чем \fImemsz\fP, то оставшиеся байты в буфере ядра заполняются
+нулями.
+.PP
+При обычной работе kexec (т. е., флаг не установлен \fBKEXEC_ON_CRASH\fP)
+сегмент данных загружен в любую доступную память и перемещение выполняется в
+конечное назначение во время перезагрузки kexec (например, при выполнении
+команды \fBkexec\fP(8) с параметром \fI\-e\fP).
+.PP
+При панике kexec (т. е., флаг \fBKEXEC_ON_CRASH\fP установлен)сегмент данных
+загружен в зарезервированную память на момент вызова, и, после падения
+(crash), механизм kexec просто передаёт управление ядру.
+.PP
+Системный вызов \fBkexec_load\fP() доступен только, если ядро было собрано с
+параметром \fBCONFIG_KEXEC\fP.
+.SS kexec_file_load()
+Системный вызов \fBkexec_file_load\fP() подобен \fBkexec_load\fP(), но имеет
+другой набор параметров. Он читает загружаемое ядро из файла, на который
+указывает файловый дескриптор \fIkernel_fd\fP, а initrd (начальный диск RAM)
+будет загружен из файла, на который указывает файловый дескриптор
+\fIinitrd_fd\fP. Параметр \fIcmdline\fP является указателем на буфер, содержащий
+командную строку для нового ядра. В параметре \fIcmdline_len\fP указывает
+размер буфера. Последний байт буфера должен быть null (\(aq\e0\(aq).
+.PP
+Аргумент \fIflags\fP представляет собой битовую маску, которая изменяет
+поведение вызова. В \fIflags\fP можно указать следующие значения:
+.TP 
+\fBKEXEC_FILE_UNLOAD\fP
+Выгрузить загруженное в данный момент ядро.
+.TP 
+\fBKEXEC_FILE_ON_CRASH\fP
+Загрузить новое ядро в область памяти зарезервированную под аварийное ядро
+(как для \fBKEXEC_ON_CRASH\fP). Ядро запускается, если отказывает работающее в
+данный момент ядро.
+.TP 
+\fBKEXEC_FILE_NO_INITRAMFS\fP
+Загрузка initrd/initramfs не обязательна. Установите данный флаг, если не
+нужно загружать initramfs. Если флаг установлен, то значение, передаваемое в
+\fIinitrd_fd\fP игнорируется.
+.PP
+.\" See also http://lwn.net/Articles/603116/
+Системный вызов \fBkexec_file_load\fP() был добавлен для поддержки систем, где
+загрузка «kexec» должна быть ограничена только подписанными ядрами. Данный
+системный вызов доступен только, если ядро собрано с параметром
+\fBCONFIG_KEXEC_FILE\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти системные вызовы возвращают 0. При ошибке
+возвращается \-1, а в \fIerrno\fP содержится код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEADDRNOTAVAIL\fP
+.\" See kernel/kexec.::sanity_check_segment_list in the 3.19 kernel source
+Указаны флаги \fBKEXEC_ON_CRASH\fP, но область, заданная полями \fImem\fP и
+\fImemsz\fP одного из элементов \fIsegments\fP, находится за пределами диапазона
+памяти, зарезервированного для аварийного ядра.
+.TP 
+\fBEADDRNOTAVAIL\fP
+Значение в поле \fImem\fP или \fImemsz\fP в одном из элементов \fIsegments\fP не
+кратно размеру системной страницы.
+.TP 
+\fBEBADF\fP
+Значение \fIkernel_fd\fP или \fIinitrd_fd\fP не является правильным файловым
+дескриптором.
+.TP 
+\fBEBUSY\fP
+Уже загружено другое аварийное ядро или аварийное ядро уже используется.
+.TP 
+\fBEINVAL\fP
+Значение \fIflags\fP неверно.
+.TP 
+\fBEINVAL\fP
+Значение поля \fIbufsz\fP одного из элементов \fIsegments\fP превышает значение в
+соответствующем поле \fImemsz\fP.
+.TP 
+\fBEINVAL\fP
+Значение \fInr_segments\fP превышает \fBKEXEC_SEGMENT_MAX\fP (16).
+.TP 
+\fBEINVAL\fP
+Два или более буфера назначения ядра перекрываются.
+.TP 
+\fBEINVAL\fP
+Значение в \fIcmdline[cmdline_len\-1]\fP не равно \(aq\e0\(aq.
+.TP 
+\fBEINVAL\fP
+Файл, на который ссылается \fIkernel_fd\fP или \fIinitrd_fd\fP, пуст (нулевой
+длины).
+.TP 
+\fBENOEXEC\fP
+Значение \fIkernel_fd\fP не указывает на открытый файл, или ядро не может
+загрузить этот файл. В настоящее время, файл должен быть в формате и
+содержать ядро x86, которое можно загрузить в память выше 4\ ГиБ (смотрите
+файл исходного кода ядра \fIDocumentation/x86/boot.txt\fP).
+.TP 
+\fBENOMEM\fP
+Невозможно выделить память.
+.TP 
+\fBEPERM\fP
+Вызывающий не имеет мандата \fBCAP_SYS_BOOT\fP.
+.SH ВЕРСИИ
+Системный вызов \fBkexec_load\fP() впервые появился в Linux 2.6.13. Системный
+вызов \fBkexec_file_load\fP() впервые появился в Linux 3.17.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные системные вызовы есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+В настоящее время в glibc нет поддержки данных системных вызовов. Вызывайте
+их через \fBsyscall\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBreboot\fP(2), \fBsyscall\fP(2), \fBkexec\fP(8)
+.PP
+Файлы исходного кода ядра \fIDocumentation/kdump/kdump.txt\fP и
+\fIDocumentation/admin\-guide/kernel\-parameters.txt\fP

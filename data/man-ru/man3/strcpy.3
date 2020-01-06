@@ -1,0 +1,163 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 18:06:49 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Fri Aug 25 23:17:51 1995 by Andries Brouwer (aeb@cwi.nl)
+.\" Modified Wed Dec 18 00:47:18 1996 by Andries Brouwer (aeb@cwi.nl)
+.\" 2007-06-15, Marc Boyer <marc.boyer@enseeiht.fr> + mtk
+.\"     Improve discussion of strncpy().
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STRCPY 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+strcpy, strncpy \- копирование строки
+.SH ОБЗОР
+.nf
+\fB#include <string.h>\fP
+.PP
+\fBchar *strcpy(char *\fP\fIdest\fP\fB, const char *\fP\fIsrc\fP\fB);\fP
+.PP
+\fBchar *strncpy(char *\fP\fIdest\fP\fB, const char *\fP\fIsrc\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBstrcpy\fP() копирует строку (включая завершающий нулевой байт
+\(aq\e0\(aq), указанную в указателе \fIsrc\fP, в буфер, указанный в указателе
+\fIdest\fP. Строки не могут пересекаться, а строка в назначении \fIdest\fP должна
+быть достаточно большой, чтобы принять копию. \fIБерегитесь переполнения
+буфера\fP (См. ОШИБКИ)!
+.PP
+Функция \fBstrncpy\fP() сходна, за исключением того, что скопировано будет
+только первые \fIn\fP байт из \fIsrc\fP.  \fBВнимание\fP: если в первых \fIn\fP байт из
+\fIsrc\fP не окажется нулевого байта, то строка в \fIdest\fP также не будет
+завершена нулевым байтом.
+.PP
+Если длина \fIsrc\fP меньше \fIn\fP, \fBstrncpy\fP() дописывает в  \fIdest\fP нулевые
+байты, чтобы убедиться, что всего было записано \fIn\fP байт.
+.PP
+Простейшей реализацией \fBstrncpy\fP() может быть:
+.PP
+.in +4n
+.EX
+char *
+strncpy(char *dest, const char *src, size_t n)
+{
+    size_t i;
+
+    for (i = 0; i < n && src[i] != \(aq\e0\(aq; i++)
+        dest[i] = src[i];
+    for ( ; i < n; i++)
+        dest[i] = \(aq\e0\(aq;
+
+    return dest;
+}
+.EE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBstrcpy\fP() и \fBstrncpy\fP() возвращают указатель на скопированную
+строку \fIdest\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw19 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstrcpy\fP(),
+\fBstrncpy\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Некоторые программисты считают \fBstrncpy\fP() неэффективной и склонной к
+ошибкам. Если программист точно знает (в том числе с помощью проверок в
+коде), что размер \fIdest\fP больше \fIsrc\fP, то \fBstrcpy\fP() может быть
+использована.
+.PP
+Единственным правильным (и предполагаемым) использованием \fBstrncpy\fP()
+является копирование C\-строки в буфер фиксированной длины с одновременной
+проверкой того, что буфер не переполнен и неиспользованные байты в буфере
+назначения обнулены (для исключения возможной утечки информации в случае,
+если буфер будет записан на носитель или передан другому процессу через
+межпроцессовое общение).
+.PP
+Если в первых \fIn\fP байт \fIsrc\fP не будет завершающего нулевого байта,
+\fBstrncpy\fP() создаст ничем не ограниченную строку в \fIdest\fP. Если размер
+\fIbuf\fP равен \fIbuflen\fP, вы можете принудительно завершить строку с помощью
+следующего кода:
+.PP
+.in +4n
+.EX
+if (buflen > 0) {
+    strncpy(buf, str, buflen \- 1);
+    buf[buflen \- 1]= \(aq\e0\(aq;
+}
+.EE
+.in
+.PP
+.\"
+Конечно же, вышеприведенный пример не учитывает того, что если размер \fIsrc\fP
+больше \fIbuflen\ \-\ 1\fP байт, при копировании в \fIdest\fP будет потеряна часть
+информации.
+.SS strlcpy()
+В некоторых системах (BSD, Solaris и других) есть следующая функция:
+.PP
+    size_t strlcpy(char *dest, const char *src, size_t size);
+.PP
+.\" http://static.usenix.org/event/usenix99/full_papers/millert/millert_html/index.html
+.\"     "strlcpy and strlcat - consistent, safe, string copy and concatenation"
+.\"     1999 USENIX Annual Technical Conference
+.\" https://lwn.net/Articles/506530/
+Эта функция подобна \fBstrncpy\fP(), но копирует не более \fIsize\-1\fP байт в
+\fIdest\fP, всегда добавляет конечный байт null и не дополняет назначение
+(помимо этого) байтами null. В данной функции исправлены некоторые проблемы
+\fBstrcpy\fP() и \fBstrncpy\fP(), но вызывающий по\-прежнему должен обрабатывать
+возможность потери данных, если значение \fIsize\fP окажется слишком
+мало. Возвращаемое значение функции — длина \fIsrc\fP, что позволяет легко
+обнаружить усечение: если возвращаемое значение больше или равно \fIsize\fP, то
+выполнялось усечение. Если потеря данных неприемлема, то вызывающий
+\fIдолжен\fP или проверять аргументы перед вызовом, или проверять возвращаемое
+значение. Функция \fBstrlcpy\fP() отсутствует в glibc и не стандартизована в
+POSIX, но доступна в Linux из библиотеки \fIlibbsd\fP.
+.SH ДЕФЕКТЫ
+Если строка назначения \fBstrcpy\fP() недостаточно велика, то может случиться
+всё что угодно. Переполнение буферных строк фиксированной длины является
+излюбленным методом взломщиков для захвата управления машиной. Каждый раз
+когда программа читает или копирует данные в буфер, сначала нужно проверять
+достаточно ли места. Это может необязательным, если вы можете доказать, что
+переполнение невозможно, но будьте осторожны: со временем программы могут
+измениться и невозможное станет возможным.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbcopy\fP(3), \fBmemccpy\fP(3), \fBmemcpy\fP(3), \fBmemmove\fP(3), \fBstpcpy\fP(3),
+\fBstpncpy\fP(3), \fBstrdup\fP(3), \fBstring\fP(3), \fBwcscpy\fP(3), \fBwcsncpy\fP(3)

@@ -1,0 +1,242 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C), 1995, Graeme W. Wilford. (Wilf.)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Wed Jun 14 16:10:28 BST 1995 Wilf. (G.Wilford@ee.surrey.ac.uk)
+.\" Tiny change in formatting - aeb, 950812
+.\" Modified 8 May 1998 by Joseph S. Myers (jsm28@cam.ac.uk)
+.\"
+.\" show the synopsis section nicely
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH REGEX 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+regcomp, regexec, regerror, regfree \- функции регулярных выражений POSIX
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <regex.h>\fP
+.PP
+\fBint regcomp(regex_t *\fP\fIpreg\fP\fB, const char *\fP\fIregex\fP\fB, int \fP\fIcflags\fP\fB);\fP
+.PP
+\fBint regexec(const regex_t *\fP\fIpreg\fP\fB, const char *\fP\fIstring\fP\fB, size_t \fP\fInmatch\fP\fB,\fP
+\fB            regmatch_t \fP\fIpmatch[]\fP\fB, int \fP\fIeflags\fP\fB);\fP
+.PP
+\fBsize_t regerror(int \fP\fIerrcode\fP\fB, const regex_t *\fP\fIpreg\fP\fB, char *\fP\fIerrbuf\fP\fB,\fP
+\fB                size_t \fP\fIerrbuf_size\fP\fB);\fP
+.PP
+\fBvoid regfree(regex_t *\fP\fIpreg\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+.SS "Компилирование регулярных выражений POSIX"
+Функция \fBregcomp\fP() используется для компиляции регулярного выражения в
+формат, который подходит для последующих поисков с помощью \fBregexec\fP().
+.PP
+\fBregcomp\fP() передаётся указатель на область хранения буферного шаблона
+\fIpreg\fP, указатель на заканчивающуюся null строку \fIregex\fP и флаги
+\fIcflags\fP, используемые для определения типа компиляции.
+.PP
+Все поиски регулярных выражений должны выполняться с помощью
+скомпилированного буферного шаблона, поэтому \fBregexec\fP() должна всегда
+вызываться с адресом буферного шаблона, инициализированного функцией
+\fBregcomp\fP().
+.PP
+Значение \fIcflags\fP может состоять из поразрядного \fBor\fP нуля или нескольких
+следующих значений:
+.TP 
+\fBREG_EXTENDED\fP
+Использовать синтаксис расширенных регулярных выражений POSIX во время
+интерпретации \fIregex\fP. Если не включён этот флаг, то используется синтаксис
+простых регулярных выражений POSIX.
+.TP 
+\fBREG_ICASE\fP
+Не учитывать регистр. Последующие поиски \fBregexec\fP() с использованием
+данного буферного шаблона не будут зависеть от регистра.
+.TP 
+\fBREG_NOSUB\fP
+Не сообщать положение совпадений. Параметры \fInmatch\fP и \fIpmatch\fP для
+\fBregexec\fP() игнорируются, если данный буферный шаблон был скомпилирован с
+этим включённым флагом.
+.TP 
+\fBREG_NEWLINE\fP
+Операторы совпадения с любым символом не совпадают с символом новой строки.
+.IP
+Список несовпадающих символов (\fB[^...]\fP) без символа новой строки не
+совпадает с новой строкой.
+.IP
+Оператор сравнения по началу строки (\fB^\fP) совпадает с пустой строкой сразу
+после новой строки независимо от того, что \fIeflags\fP, флаги выполнения
+\fBregexec\fP(), содержат \fBREG_NOTBOL\fP.
+.IP
+Оператор сравнения по концу строки ($) совпадает с пустой строкой до символа
+начала строки независимо от того, что \fIeflags\fP содержит \fBREG_NOTEOL\fP.
+.SS "Сравнение с регулярным выражением POSIX"
+Функция \fBregexec\fP() используется для сравнения строки, завершающейся null,
+с предварительно обработанным буферным шаблоном \fIpreg\fP. Аргументы \fInmatch\fP
+и \fIpmatch\fP используются для предоставления информации о местонахождении
+любых совпадений. Значение \fIeflags\fP может быть поразрядным \fBИЛИ\fP одного
+или обоих значений \fBREG_NOTBOL\fP и \fBREG_NOTEOL\fP. Данные значения определяют
+поведение процесса сравнения так, как описано ниже.
+.TP 
+\fBREG_NOTBOL\fP
+Оператор сравнения по началу строки всегда завершается с ошибкой (но
+смотрите описанный выше флаг компиляции \fBREG_NEWLINE\fP). Этот флаг может
+использоваться, когда в \fBregexec\fP() передаются отдельные части строки, и
+начало такой строки в данном случае не должно интерпретироваться как начало
+новой строки.
+.TP 
+\fBREG_NOTEOL\fP
+Оператор сравнения по концу строки всегда завершается с ошибкой (но смотрите
+описанный выше флаг компиляции \fBREG_NEWLINE\fP).
+.TP 
+\fBREG_STARTEND\fP
+Использовать \fIpmatch[0]\fP на входной строке начиная с байта
+\fIpmatch[0].rm_so\fP и заканчивая перед байтом \fIpmatch[0].rm_eo\fP. Это
+позволяет искать встроенные байты NUL и избегать выполнения \fBstrlen\fP(3) для
+длинных строк. Здесь не используется \fInmatch\fP на входных данных и не
+изменяется обработка \fBREG_NOTBOL\fP или \fBREG_NEWLINE\fP. Этот флаг является
+расширением BSD и отсутствует в POSIX.
+.SS "Байтовые смещения"
+Если \fBREG_NOSUB\fP не установлен при компиляции буферного шаблона, то
+возможно получать информацию о положении совпадений. Значение \fIpmatch\fP
+должно быть определено так, чтобы иметь, по крайней мере, \fInmatch\fP
+элементов. Они заполняются \fBregexec\fP() адресами внутристрочных
+совпадений. Смещения подвыражения, начинающегося с \fIi\fP\-й открытой скобки,
+сохраняется в \fIpmatch[i]\fP. Адрес совпадения всего регулярного выражения
+сохраняется в \fIpmatch[0]\fP (заметим, что чтобы вернуть смещения совпадений
+\fIN\fP подвыражений, значение \fInmatch\fP должно быть не менее \fIN+1\fP). Любые
+неиспользованные элементы структуры будут содержать значение \-1.
+.PP
+Структура \fIregmatch_t\fP, являющаяся типом \fIpmatch\fP, определена в
+\fI<regex.h>\fP:
+.PP
+.in +4n
+.EX
+typedef struct {
+    regoff_t rm_so;
+    regoff_t rm_eo;
+} regmatch_t;
+.EE
+.in
+.PP
+Каждый элемент \fIrm_so\fP, не равный \-1, показывает начальное смещение
+следующего совпадения наибольшей подстроки внутри заданной
+строки. Относительный элемент \fIrm_eo\fP указывает на смещение конца
+совпадения, которое является первым символом после совпавшего текста.
+.SS "Сообщение об ошибках POSIX"
+Функция \fBregerror\fP используется для преобразования кодов ошибок, которые
+могут быть получены от \fBregcomp\fP() и \fBregexec\fP(), в строки сообщений об
+ошибках.
+.PP
+В \fBregerror\fP передаются: код ошибки \fIerrcode\fP, буферный шаблон \fIpreg\fP,
+указатель на символьный буфер строки \fIerrbuf\fP и размер буфера строки
+\fIerrbuf_size\fP. Функция возвращает размер \fIerrbuf\fP, который требуется для
+сохранения сообщения об ошибке в виде строки, оканчивающейся null. Если и
+\fIerrbuf\fP, и \fIerrbuf_size\fP не равны нулю, то \fIerrbuf\fP заполняется первыми
+\fIerrbuf_size \- 1\fP символами сообщения об ошибке и завершается байтом null
+(\(aq\e0\(aq).
+.SS "Освобождение буфера шаблона POSIX"
+Функция \fBregfree\fP() освобождает память, отведённую буферному шаблону
+\fIpreg\fP во время процесса компиляции с помощью \fBregcomp\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBregcomp\fP() возвращает ноль при успешной компиляции или в противном
+случае код ошибки.
+.PP
+Функция \fBregexec\fP() возвращает ноль при совпадении или \fBREG_NOMATCH\fP, если
+совпадений не было.
+.SH ОШИБКИ
+Функция \fBregcomp\fP() может возвращать следующие ошибки:
+.TP 
+\fBREG_BADBR\fP
+Неправильное использование оператора обратных ссылок.
+.TP 
+\fBREG_BADPAT\fP
+Неправильное использование операторов шаблона, таких, как операторы группы
+или списка.
+.TP 
+\fBREG_BADRPT\fP
+Неправильное использование операторов повторения, например, использование
+«*» в качестве первого символа.
+.TP 
+\fBREG_EBRACE\fP
+Непарные скобки в операторах интервала.
+.TP 
+\fBREG_EBRACK\fP
+Непарные квадратные скобки в операторах списка.
+.TP 
+\fBREG_ECOLLATE\fP
+Неправильный элемент сортировки.
+.TP 
+\fBREG_ECTYPE\fP
+Неизвестное имя класса символов.
+.TP 
+\fBREG_EEND\fP
+Потенциальная ошибка. Не определена в POSIX.2.
+.TP 
+\fBREG_EESCAPE\fP
+Конечная обратная косая черта.
+.TP 
+\fBREG_EPAREN\fP
+Непарные круглые скобки в операторах группировки.
+.TP 
+\fBREG_ERANGE\fP
+Неправильное использование оператора области: например, конец области
+появляется прежде её начала.
+.TP 
+\fBREG_ESIZE\fP
+Скомпилированное регулярное выражение требует буферный шаблон размером,
+большим 64\ Кб. Это не определено в POSIX.2.
+.TP 
+\fBREG_ESPACE\fP
+Для процедур регулярных выражений закончилась память.
+.TP 
+\fBREG_ESUBREG\fP
+Неправильная обратная ссылка на подвыражение.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw20 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBregcomp\fP(),
+\fBregexec\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+T{
+\fBregerror\fP()
+T}	Безвредность в нитях	MT\-Safe env
+T{
+\fBregfree\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgrep\fP(1), \fBregex\fP(7)
+.PP
+Раздел руководства glibc \fIRegular Expressions\fP

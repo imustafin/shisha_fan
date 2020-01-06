@@ -1,0 +1,74 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ISWALNUM 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+iswalnum \- проверяет, является ли символ широким цифро\-буквенным символом
+.SH ОБЗОР
+.nf
+\fB#include <wctype.h>\fP
+.PP
+\fBint iswalnum(wint_t \fP\fIwc\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBiswalnum\fP() является эквивалентом функции \fBisalnum\fP(3), но для
+широких символов. Она проверяет, является ли \fIwc\fP широким символом,
+принадлежащим классу широких символов «alnum».
+.PP
+Класс широких символов «alnum» является подклассом класса широких символов
+«graph» и, следовательно, подклассом класса широких символов «print».
+.PP
+Будучи подклассом класса широких символов «print», «alnum» не пересекается с
+классом широких символов «cntrl».
+.PP
+Будучи подклассом класса широких символов «graph», «alnum» не пересекается с
+классом широких символов «space» и его подклассом «blank».
+.PP
+Класс широких символов «alnum» не пересекается с классом широких символов
+«punct».
+.PP
+Класс широких символов «alnum» — объединение широких символьных классов
+«alpha» и «digit». Поэтому в него также входит класс широких символов
+«xdigit».
+.PP
+Класс широких символов «alnum» всегда содержит (как минимум) буквы от «A» до
+«Z», от «a» до «z» и цифры от «0» до «9».
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBiswalnum\fP() возвращает ненулевое значение, если \fIwc\fP является
+широким символом, принадлежащим классу широких символов «alnum». В других
+случаях возвращается 0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBiswalnum\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBiswalnum\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBisalnum\fP(3), \fBiswctype\fP(3)

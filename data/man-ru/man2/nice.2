@@ -1,0 +1,107 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt <drew@cs.colorado.edu>, March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-11-04 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2001-06-04 by aeb
+.\" Modified 2004-05-27 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NICE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+nice \- изменяет приоритет процесса
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint nice(int \fP\fIinc\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBnice\fP():
+_XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.SH ОПИСАНИЕ
+Вызов \fBnice\fP() добавляет значение аргумента \fIinc\fP к значению уступчивости
+(nice) вызвавшей нити (большее значение уступчивости означает меньший
+приоритет).
+.PP
+Диапазон значений уступчивости: от +19 (низкий приоритет) до \-20 (высокий
+приоритет). Попытки установить значение уступчивости вне этого диапазона
+срезаются до значения из этого диапазона.
+.PP
+Обычно, только привилегированный процесс может понижать значение
+уступчивости (т. е., повышать приоритет). Однако начиная с Linux 2.6.12
+непривилегированный процесс может понизить значение уступчивости процесса
+назначения, у которого установлено подходящее мягкое ограничение
+\fBRLIMIT_NICE\fP; подробности смотрите в \fBgetrlimit\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается новое значение nice (но см. ЗАМЕЧАНИЯ
+далее). В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в
+соответствующее значение.
+.PP
+При успешном выполнении с полным основанием может вернуть \-1. Для
+обнаружения ошибки перед вызовом присвойте \fIerrno\fP значение 0 и проверьте,
+что оно не равно нулю после возврата \fBnice\fP() значения \-1.
+.SH ОШИБКИ
+.TP 
+\fBEPERM\fP
+Вызывающий процесс пытается увеличить свой приоритет, указав отрицательное
+значение \fIinc\fP, но не имеет для этого прав. В Linux для этого требуется
+мандат \fBCAP_SYS_NICE\fP (но смотрите обсуждение ограничение ресурса
+\fBRLIMIT_NICE\fP в \fBsetrlimit\fP(2)).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents an additional
+.\" .B EINVAL
+.\" error code.
+POSIX.1\-2001, POSIX.1\-2008, SVr, 43BSD. Однако системный вызов и функция
+(g)libc (до glibc 2.2.4) возвращали нестандартное значение, смотрите далее.
+.SH ЗАМЕЧАНИЯ
+Дополнительную информацию о значении уступчивости смотрите в \fBsched\fP(7).
+.PP
+.\"
+\fIЗамечание\fP: дополнительное свойство «autogroup» из Linux 2.6.38 означает,
+что значение уступчивости во многих случаях больше не работает как
+обычно. Подробней смотрите в \fBsched\fP(7).
+.SS "Отличия между библиотекой C и ядром"
+В POSIX.1 указано, что \fBnice\fP() должен возвращать новое значение
+уступчивости. Однако, системный вызов Linux при успешном выполнении
+возвращает 0. Таким же образом поступает обёрточная функция \fBnice\fP() из
+glibc 2.2.3 и старее.
+.PP
+Начиная с glibc 2.2.4, обёрточная функция \fBnice\fP() из glibc, поступает в
+соответствии с POSIX.1, вызывая \fBgetpriority\fP(2) для получения нового
+значения уступчивости, которое возвращается вызывающему.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBnice\fP(1), \fBrenice\fP(1), \fBfork\fP(2), \fBgetpriority\fP(2), \fBgetrlimit\fP(2),
+\fBsetpriority\fP(2), \fBcapabilities\fP(7), \fBsched\fP(7)

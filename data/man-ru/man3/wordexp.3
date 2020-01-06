@@ -1,0 +1,188 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2003 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WORDEXP 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+wordexp, wordfree \- дополняет слово как оболочка posix
+.SH ОБЗОР
+\fB#include <wordexp.h>\fP
+.PP
+\fBint wordexp(const char *\fP\fIs\fP\fB, wordexp_t *\fP\fIp\fP\fB, int \fP\fIflags\fP\fB);\fP
+.PP
+\fBvoid wordfree(wordexp_t *\fP\fIp\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBwordexp\fP(), \fBwordfree\fP(): _XOPEN_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBwordexp\fP() выполняет раскрытие строки \fIs\fP также, как это делается
+в оболочке командной строки, и возвращает результат в структуре, на которую
+указывает \fIp\fP. Тип данных \fIwordexp_t\fP — структура, которая содержит, по
+крайней мере, поля \fIwe_wordc\fP, \fIwe_wordv\fP и \fIwe_offs\fP. Поле \fIwe_wordc\fP
+имеет тип \fIsize_t\fP и содержит количество слов в раскрытой \fIs\fP. Поле
+\fIwe_wordv\fP имеет тип \fIchar\ **\fP и указывает на массив найденных слов. Поле
+\fIwe_offs\fP имеет тип \fIsize_t\fP и (в зависимости от \fIflags\fP, см. далее)
+используется для указания количества начальных элементов в массиве
+\fIwe_wordv\fP, которые должны быть заполнены NULL.
+.PP
+Функция \fBwordfree\fP() освобождает ранее выделенную память. Более точно, она
+не освобождает память своего аргумента, а освобождает память, занятую под
+массив \fIwe_wordv\fP и строки, которые в нём содержатся.
+.SS "Строковый аргумент"
+Так как дополнение производится согласно правилам оболочки командной строки
+(см. \fBsh\fP(1)) по преобразованию параметров в команду, строка \fIs\fP не должна
+содержать символы, которые запрещено передавать в параметрах команд
+оболочки. В частности, не должно быть неэкранированных символов новой строки
+или |, &, ;, <, >, (, ), {, } вне контекста подстановки команды или
+параметра.
+.PP
+Если аргумент \fIs\fP содержит слово, которое начинается с символа комментария
+#, находящегося не в кавычках, то такая ситуация является неопределённой, и
+непонятно, нужно ли игнорировать слово или все слова, или не считать #
+символом комментария.
+.SS Дополнение
+Дополнение выполняется в несколько этапов: дополнение тильды (замена ~user
+на домашний каталог пользователя), подстановка переменной (замена $FOO
+значением переменной окружения FOO), подстановка команды (замена $(команда)
+или \`команда\` результатом выполнения команды), арифметические действия,
+разделение на поля, подстановка шаблонных символов (wildcard), удаление
+кавычек.
+.PP
+Результат дополнения специальных параметров ($@, $*, $#, $?, $\-, $$, $!, $0)
+не определён.
+.PP
+Разделение на поля выполняется с помощью переменной окружения $IFS. Если она
+не установлена, то разделителями полей считаются пробел, табуляция и символ
+новой строки.
+.SS "Массив результата"
+Массив \fIwe_wordv\fP содержит найденные слова и заканчивается NULL.
+.SS "Аргумент флагов"
+Аргумент \fIflag\fP представляет собой побитовое объединяющее ИЛИ следующих
+значений:
+.TP 
+\fBWRDE_APPEND\fP
+Добавлять найденные слова в массив, полученный в результате предыдущего
+вызова.
+.TP 
+\fBWRDE_DOOFFS\fP
+Вставить \fIwe_offs\fP начальных NULL в массив \fIwe_wordv\fP (они не считаются в
+конечном \fIwe_wordc\fP).
+.TP 
+\fBWRDE_NOCMD\fP
+Не выполнять подстановку команд.
+.TP 
+\fBWRDE_REUSE\fP
+Аргумент \fIp\fP получен от предыдущего вызова \fBwordexp\fP(), и функция
+\fBwordfree\fP() не была вызвана. Повторно использовать выделенное
+пространство.
+.TP 
+\fBWRDE_SHOWERR\fP
+Обычно, во время подстановки команды вывод \fIstderr\fP перенаправляется в
+\fI/dev/null\fP. Этим флагом задаётся отмена такого перенаправления \fIstderr\fP.
+.TP 
+\fBWRDE_UNDEF\fP
+Считать ошибкой, если не определена раскрываемая переменная оболочки.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается одно из
+следующих пяти значений:
+.TP 
+\fBWRDE_BADCHAR\fP
+Недопустимое появление символа новой строки или одного из символов |, &, ;,
+<, >, (, ), {, }.
+.TP 
+\fBWRDE_BADVAL\fP
+Указана неопределённая переменная оболочки и установлен флаг \fBWRDE_UNDEF\fP.
+.TP 
+\fBWRDE_CMDSUB\fP
+Запрошена подстановка команды, но установлен флаг \fBWRDE_NOCMD\fP, указывающий
+считать это ошибкой.
+.TP 
+\fBWRDE_NOSPACE\fP
+Не хватает памяти.
+.TP 
+\fBWRDE_SYNTAX\fP
+Синтаксическая ошибка оболочки, например незакрытая скобка или кавычка.
+.SH ВЕРСИИ
+Функции \fBwordexp\fP() и \fBwordfree\fP() определены в glibc начиная с версии
+2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw30
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwordexp\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:utent const:env
+.br
+env sig:ALRM timer locale
+T}
+T{
+\fBwordfree\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+В приведённой выше таблице \fIutent\fP в \fIrace:utent\fP означает, что если любая
+из функций \fBsetutent\fP(3), \fBgetutent\fP(3) или \fBendutent\fP(3) используется
+одновременно в нескольких нитях программы, то может возникнуть
+состязательность по данным. Эти функции вызываются из \fBwordexp\fP(), поэтому
+мы используем race:utent для напоминания.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ПРИМЕР
+Результатом следующего примера будет таким же что и при выполнении команды
+«ls [a\-c]*.c».
+.PP
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+#include <wordexp.h>
+
+int
+main(int argc, char **argv)
+{
+    wordexp_t p;
+    char **w;
+    int i;
+
+    wordexp("[a\-c]*.c", &p, 0);
+    w = p.we_wordv;
+    for (i = 0; i < p.we_wordc; i++)
+        printf("%s\en", w[i]);
+    wordfree(&p);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfnmatch\fP(3), \fBglob\fP(3)

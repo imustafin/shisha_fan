@@ -1,0 +1,270 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1991 The Regents of the University of California.
+.\" And Copyright (C) 2011 Guillem Jover <guillem@hadrons.org>
+.\" And Copyright (C) 2006, 2014 Michael Kerrisk
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)readlink.2	6.8 (Berkeley) 3/10/91
+.\"
+.\" Modified Sat Jul 24 00:10:21 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Tue Jul  9 23:55:17 1996 by aeb
+.\" Modified Fri Jan 24 00:26:00 1997 by aeb
+.\" 2011-09-20, Guillem Jover <guillem@hadrons.org>:
+.\"     Added text on dynamically allocating buffer + example program
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH READLINK 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+readlink, readlinkat \- считывает значение символьной ссылки
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBssize_t readlink(const char *\fP\fIpathname\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fIbufsiz\fP\fB);\fP
+
+\fB#include <fcntl.h>           \fP/* определения констант of AT_* */
+\fB#include <unistd.h>\fP
+.PP
+\fBssize_t readlinkat(int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB,\fP
+\fB                   char *\fP\fIbuf\fP\fB, size_t \fP\fIbufsiz\fP\fB);\fP
+.PP
+.fi
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBreadlink\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500 || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* в версиях glibc <= 2.19: */ _BSD_SOURCE
+.RE
+.PP
+\fBreadlinkat\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_ATFILE_SOURCE
+.RE
+.ad b
+.PD
+.SH ОПИСАНИЕ
+Вызов \fBreadlink\fP() помещает содержимое символьной ссылки \fIpathname\fP в
+буфер \fIbuf\fP размером \fIbufsiz\fP. \fBreadlink\fP() не добавляет в \fIbuf\fP байт
+null. Если буфер слишком мал для хранения всего содержимого, то содержимое
+будет урезано (без выдачи ошибки, до длины в \fIbufsiz\fP символов).
+.SS readlinkat()
+Системный вызов \fBreadlinkat\fP() работает также как системный вызов
+\fBreadlink\fP(), за исключением случаев, описанных здесь.
+.PP
+Если в \fIpathname\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBreadlink\fP()).
+.PP
+Если в \fIpathname\fP задан относительный путь и \fIdirfd\fP равно специальному
+значению \fBAT_FDCWD\fP, то \fIpathname\fP рассматривается относительно текущего
+рабочего каталога вызывающего процесса (как \fBreadlink\fP()).
+.PP
+Если в \fIpathname\fP задан абсолютный путь, то \fIdirfd\fP игнорируется.
+.PP
+.\" commit 65cfc6722361570bfe255698d9cd4dccaf47570d
+Начиная с Linux .6.39, \fIpathname\fP может быть пустой строкой; при этом вызов
+выполняет действие с символьной ссылкой, на которую ссылается \fIdirfd\fP
+(должна получаться с помощью вызова \fBopen\fP(2) с флагами \fBO_PATH\fP и
+\fBO_NOFOLLOW\fP).
+.PP
+Смотрите в \fBopenat\fP(2) объяснение необходимости \fBreadlinkat\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти вызовы возвращают количество байт, помещённых в
+\fIbuf\fP (если возвращаемое значение равно \fIbufsiz\fP, то возможно произошло
+обрезание). В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+В одном из каталогов префикса пути не разрешён поиск (см. также
+\fBpath_resolution\fP(7).
+.TP 
+\fBEFAULT\fP
+\fIbuf\fP выходит за пределы адресного пространства, выделенного процессу.
+.TP 
+\fBEINVAL\fP
+.\" At the glibc level, bufsiz is unsigned, so this error can only occur
+.\" if bufsiz==0.  However, the in the kernel syscall, bufsiz is signed,
+.\" and this error can also occur if bufsiz < 0.
+.\" See: http://thread.gmane.org/gmane.linux.man/380
+.\" Subject: [patch 0/3] [RFC] kernel/glibc mismatch of "readlink" syscall?
+Аргумент \fIbufsiz\fP содержит отрицательное значение.
+.TP 
+\fBEINVAL\fP
+Указанный файл (т. е., последний компонент имени файла \fIpathname\fP) не
+является символьной ссылкой.
+.TP 
+\fBEIO\fP
+При чтении файловой системы произошла ошибка ввода\-вывода.
+.TP 
+\fBELOOP\fP
+Во время определения pathname встретилось слишком много символьных ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента pathname или его части.
+.TP 
+\fBENOENT\fP
+Указанный файл не существует.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOTDIR\fP
+Компонент в префиксе пути не является каталогом.
+.PP
+В \fBreadlinkat\fP() дополнительно могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+\fIdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBENOTDIR\fP
+Значение \fIpathname\fP содержит относительный путь и \fIdirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог.
+.SH ВЕРСИИ
+Системный вызов \fBreadlinkat\fP() был добавлен в ядро Linux версии 2.6.16;
+поддержка в glibc доступна с версии 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBreadlink\fP(): 4.4BSD (\fBreadlink\fP() появился в 4.2BSD), POSIX.1\-2001,
+POSIX.1\-2008.
+.PP
+\fBreadlinkat\fP(): POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В версиях glibc до glibc 2.4 включительно, тип результата \fBreadlink\fP() был
+объявлен как \fIint\fP. В настоящее время типом возвращаемого результата
+является \fIssize_t\fP, как (теперь) это требуется по POSIX.1\-2001.
+.PP
+Буфера с фиксированным размером может не хватить для хранения содержимого
+символьной ссылки. Требуемый размер буфера можно получить как значение
+\fIstat.st_size\fP, возвращаемое на ссылку вызовом \fBlstat\fP(2). Однако,
+количество байт, записанное \fBreadlink\fP() и \fBreadlinkat\fP(), должно быть
+проверено, так как требуется убедиться, что размер символьной ссылки не
+увеличился между вызовами. Динамическое выделение буфера для \fBreadlink\fP() и
+\fBreadlinkat\fP() также поможет решить проблему с переносимостью, которая
+возникает, когда для размера буфера используется \fIPATH_MAX\fP, но согласно
+POSIX для этой константы не гарантируется, что она определена , если система
+не имеет такого ограничения.
+.SS "Замечания по glibc"
+В старых ядрах, где \fBreadlinkat\fP() отсутствует, обёрточная функция glibc
+использует \fBreadlink\fP(). Если \fIpathname\fP является относительным путём, то
+glibc собирает путь относительно символической ссылки в \fI/proc/self/fd\fP,
+которая соответствует аргументу \fIdirfd\fP.
+.SH ПРИМЕР
+Следующая программа динамически выделяет буфер, необходимый \fBreadlink\fP(),
+из информации, предоставленной \fBlstat\fP(2), или использует буфер размером
+\fBPATH_MAX\fP, если \fBlstat\fP(2) вернул нулевой размер.
+.PP
+.EX
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+    struct stat sb;
+    char *buf;
+    ssize_t nbytes, bufsiz;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s <путь>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    if (lstat(argv[1], &sb) == \-1) {
+        perror("lstat");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Добавляем единицу к размеру ссылки, так чтобы можно было определить
+       обрезанность буфера, возвращаемого readlink(). */
+
+    bufsiz = sb.st_size + 1;
+
+    /* У некоторых символьных ссылок в (например) /proc и /sys
+       значение \(aqst_size\(aq равно нулю. В этом случае используется
+       PATH_MAX как «достаточный» размер. */
+
+    if (sb.st_size == 0)
+        bufsiz = PATH_MAX;
+
+    buf = malloc(bufsiz);
+    if (buf == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+
+    nbytes = readlink(argv[1], buf, bufsiz);
+    if (nbytes == \-1) {
+        perror("readlink");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("\(aq%s\(aq указывает на \(aq%.*s\(aq\en", argv[1], (int) nbytes, buf);
+
+    /* Если возвращаемое значение равно размеру буфера, то
+       ссылка назначения больше чем ожидалось (возможно, из\-за того,
+       что цель изменилась между вызовом lstat() и readlink()).
+       Предупреждаем пользователя о том, что цель может быть
+       обрезана. */
+
+    if (nbytes == bufsiz)
+        printf("(Возвращённый буфер мог быть обрезан)\en");
+
+    free(buf);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBreadlink\fP(1), \fBlstat\fP(2), \fBstat\fP(2), \fBsymlink\fP(2), \fBrealpath\fP(3),
+\fBpath_resolution\fP(7), \fBsymlink\fP(7)

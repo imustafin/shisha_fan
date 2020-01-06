@@ -1,0 +1,158 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2010, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LIO_LISTIO 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+lio_listio \- запускает список запросов ввода\-вывода на выполнение
+.SH ОБЗОР
+.nf
+\fB#include <aio.h>\fP
+.PP
+\fBint lio_listio(int \fP\fImode\fP\fB, struct aiocb *const \fP\fIaiocb_list\fP\fB[],\fP
+\fB               int \fP\fInitems\fP\fB, struct sigevent *\fP\fIsevp\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBlio_listio\fP() запускает на выполнение список операций
+ввода\-вывода, описанных в массиве \fIaiocb_list\fP.
+.PP
+Значение операции \fImode\fP может быть одним из следующих:
+.TP  12
+\fBLIO_WAIT\fP
+Вызов не завершается до тех пор, пока не будут выполнены все
+операции. Аргумент \fIsevp\fP игнорируется.
+.TP 
+\fBLIO_NOWAIT\fP
+Операции ввода\-вывода ставятся в очередь на обработку и вызов
+завершается. После выполнения всех операций ввода\-вывода посылается
+асинхронное уведомление, задаваемое в аргументе \fIsevp\fP; подробности
+смотрите в \fBsigevent\fP(7). Если значение \fIsevp\fP равно NULL, то асинхронные
+уведомления не посылается.
+.PP
+Аргумент \fIaiocb_list\fP представляет собой массив указателей на структуры
+\fIaiocb\fP, в которых описаны операции ввода\-вывода. Эти операции выполняются
+в произвольном порядке. В аргументе \fInitems\fP указывается размер массива
+\fIaiocb_list\fP. Указатели null в \fIaiocb_list\fP игнорируются.
+.PP
+В каждом управляющем блоке в \fIaiocb_list\fP в поле \fIaio_lio_opcode\fP задаётся
+выполняемая операция ввода вывода; значения:
+.TP  10
+\fBLIO_READ\fP
+Выполнить операцию чтения. Операция ставится в очередь как вызов
+\fBaio_read\fP(3) с указанным управляющим блоком.
+.TP 
+\fBLIO_WRITE\fP
+Выполнить операцию записи. Операция ставится в очередь как вызов
+\fBaio_write\fP(3) с указанным управляющим блоком.
+.TP 
+\fBLIO_NOP\fP
+Игнорировать управляющий блок.
+.PP
+Остальные поля в каждом управляющем блоке имеют то же назначение, что и для
+\fBaio_read\fP(3) и \fBaio_write\fP(3). Поля \fIaio_sigevent\fP в каждом управляющем
+блоке могут использоваться для указания уведомлений по отдельным операциям
+ввода\-вывода (смотрите \fBsigevent\fP(7)).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При значении \fImode\fP равным \fBLIO_NOWAIT\fP функция \fBlio_listio\fP() возвращает
+0, если все операции ввода\-вывода были поставлены в очередь. В противном
+случае возвращается \-1 и в \fIerrno\fP содержится код ошибки.
+.PP
+При значении \fImode\fP равным \fBLIO_WAIT\fP функция \fBlio_listio\fP() возвращает
+0, если все операции ввода\-вывода были выполнены без ошибок. В противном
+случае возвращается \-1 и в \fIerrno\fP содержится код ошибки.
+.PP
+В возвращаемом \fBlio_listio\fP() состоянии предоставляется информация только о
+самом вызове, а не об отдельных операция ввода\-вывода. Одна или несколько
+операций ввода\-вывода могут завершиться с ошибкой, но это не повлияет на
+выполнение остальных операций. Состояние отдельный операций ввода\-вывода в
+\fIaiocb_list\fP можно определить с помощью \fBaio_error\fP(3). После завершения
+операции её результат можно получить с помощью \fBaio_return\fP(3). Отдельные
+операции ввода\-вывода могут завершиться с ошибкой по причинам, описанным в
+\fBaio_read\fP(3) и \fBaio_write\fP(3).
+.SH ОШИБКИ
+Функция \fBlio_listio\fP() может завершиться с ошибкой по следующим причинам:
+.TP 
+\fBEAGAIN\fP
+Не хватает ресурсов.
+.TP 
+\fBEAGAIN\fP
+.\" Doesn't happen in glibc(?)
+Количество операций ввода\-вывода, указанное в \fInitems\fP, превысило
+ограничение \fBAIO_MAX\fP.
+.TP 
+\fBEINTR\fP
+Значение \fImode\fP равно \fBLIO_WAIT\fP и был получен сигнал до завершения всех
+операций ввода\-вывода; смотрите \fBsignal\fP(7) (это может быть даже один из
+асинхронных сигналов о завершении ввода\-вывода).
+.TP 
+\fBEINVAL\fP
+.\" Doesn't happen in glibc(?)
+Неправильное значение \fImode\fP, или значение \fInitems\fP превышает ограничение
+\fBAIO_LISTIO_MAX\fP.
+.TP 
+\fBEIO\fP
+.\" e.g., ioa_reqprio or aio_lio_opcode was invalid
+Одна или более операций, указанных в \fIaiocb_list\fP, завершились с
+ошибкой. Приложение может проверить состояние каждой операции с помощью
+\fBaio_return\fP(3).
+.PP
+Если вызов \fBlio_listio\fP() завершился с ошибкой \fBEAGAIN\fP, \fBEINTR\fP или
+\fBEIO\fP, то некоторые операции из \fIaiocb_list\fP могли всё же начаться. Если
+вызов \fBlio_listio\fP() завершился по другой причине, то ни одна из операций
+ввода\-вывода не началась.
+.SH ВЕРСИИ
+Функция \fBlio_listio\fP() доступна в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBlio_listio\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.\" or the control block of the operation
+Рекомендуется обнулять управляющие блоки перед использованием. Управляющие
+блоки не должны изменяться пока выполняются операции ввода\-вывода. Нельзя
+читать или писать в буферные области во время выполнения операций, иначе
+результат непредсказуем. Используемые области памяти должны оставаться
+корректными (valid).
+.PP
+Одновременное выполнение операций ввода\-вывода через совместно используемую
+структуру \fIaiocb\fP приводит к непредсказуемым результатам.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaio_cancel\fP(3), \fBaio_error\fP(3), \fBaio_fsync\fP(3), \fBaio_return\fP(3),
+\fBaio_suspend\fP(3), \fBaio_write\fP(3), \fBaio\fP(7)

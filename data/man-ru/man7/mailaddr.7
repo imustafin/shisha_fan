@@ -1,0 +1,117 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1987 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\"	@(#)mailaddr.7	6.5 (Berkeley) 2/14/89
+.\"
+.\" Extensively rewritten by Arnt Gulbrandsen <agulbra@troll.no>.  My
+.\" changes are placed under the same copyright as the original BSD page.
+.\"
+.\" Adjusted by Arnt Gulbrandsen <arnt@gulbrandsen.priv.no> in 2004 to
+.\" account for changes since 1995. Route-addrs are now even less
+.\" common, etc. Some minor wording improvements. Same copyright.
+.\"
+.\" %%%LICENSE_START(PERMISSIVE_MISC)
+.\" Redistribution and use in source and binary forms are permitted
+.\" provided that the above copyright notice and this paragraph are
+.\" duplicated in all such forms and that any documentation,
+.\" advertising materials, and other materials related to such
+.\" distribution and use acknowledge that the software was developed
+.\" by the University of California, Berkeley.  The name of the
+.\" University may not be used to endorse or promote products derived
+.\" from this software without specific prior written permission.
+.\" THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+.\" IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+.\" WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MAILADDR 7 2017\-05\-03 Linux "Руководство пользователя Linux"
+.UC 5
+.SH ИМЯ
+mailaddr \- описание формата почтового адреса
+.SH ОПИСАНИЕ
+.nh
+В этой странице кратко описываются почтовые адреса SMTP, используемые в
+Интернете. Общий формат этих адресов:
+.PP
+  пользователь@домен
+.PP
+где «домен» это иерархический список поддоменов, разделённых
+точками. Примеры корректных записей одного адреса:
+.PP
+  john.doe@monet.example.com
+.br
+  John Doe <john.doe@monet.example.com>
+.br
+  john.doe@monet.example.com (John Doe)
+.PP
+Доменная часть («monet.example.com») является доменом, который принимает
+почту. Это может быть узел (и в прошлом, обычно, это так и было), а может и
+нет. В доменной части не учитывает регистр букв.
+.PP
+Локальная часть («john.doe») — это, часто, имя пользователя, но точное
+значение определяется локальным программным обеспечением. Иногда, здесь
+важен регистр букв, хотя это необычно. Если вы видите, что локальная часть
+выглядит бессмысленно, то, обычно,это из\-за того, что существует шлюз между
+внутренней почтовой системой электронной почты и сетью, примеры:
+.PP
+  "surname/admd=telemail/c=us/o=hp/prmd=hp"@some.where
+.br
+  USER%SOMETHING@some.where
+.br
+  machine!machine!name@some.where
+.br
+  I2461572@some.where
+.PP
+(здесь показан, соответственно, шлюз X.400, шлюз в произвольную внутреннюю
+почтовую систему без поддержки Интернета, шлюз UUCP и перенаправляющая
+пользователям политика).
+.PP
+Часть настоящего имени («John Doe») может указываться перед <> или в
+конце в () (строго говоря, такое размещение неравнозначно, но описание
+отличий лежит за границами этой страницы). Имя может быть заключено в "",
+например, если содержит «.»:
+.PP
+  "John Q. Doe" <john.doe@monet.example.com>
+.SS Сокращение
+.PP
+Некоторые почтовые системы позволяют пользователям не указывать доменное
+имя. Например, пользователи в example.com могут указать «john.doe@monet»,
+чтобы отправить письмо John Doe. \fIТак делать не рекомендуется.\fP Иногда это
+работает, но вы не должны на это полагаться.
+.SS Route\-addrs
+.PP
+В прошлом, иногда было нужно перенаправлять сообщение через несколько узлов,
+чтобы оно дошло до назначения. Адреса, в которых задаются ретрансляторы,
+называются «route\-addrs». Для них используется синтаксис:
+.PP
+  <@узелА,@узелБ:пользователь@узелВ>
+.PP
+Здесь указывается, что сообщение должно быть послано узлуА, потом узлуБ и,
+наконец узлуВ. Многие узлы игнорируют route\-addrs и посылают сообщение
+напрямую узлуВ.
+.PP
+В настоящее время использование route\-addrs выглядит очень необычно. Иногда
+их можно встретить в старых почтовых архивах. Обычно, для определения
+действительного адреса можно игнорировать всё, кроме части
+«пользователь@узелВ».
+.SS Postmaster
+.PP
+Для каждого сайта необходим пользователь или псевдоним, называемый
+«postmaster», которому можно сообщать о проблемах в почтовой системе. В
+адресе «postmaster» не учитывается регистр символов.
+.SH ФАЙЛЫ
+\fI/etc/aliases\fP
+.br
+\fI~/.forward\fP
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmail\fP(1), \fBaliases\fP(5), \fBforward\fP(5), \fBsendmail\fP(8)
+.PP
+.UR http://www.ietf.org\:/rfc\:/rfc5322.txt
+IETF RFC\ 5322
+.UE

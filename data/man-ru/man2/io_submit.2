@@ -1,0 +1,201 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2003 Free Software Foundation, Inc.
+.\" and Copyright (C) 2017 Goldwyn Rodrigues <rgoldwyn@suse.de>
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" This file is distributed according to the GNU General Public License.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IO_SUBMIT 2 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+io_submit \- отправляет асинхронные блоки ввода\-вывода для обработки
+.SH ОБЗОР
+.nf
+\fB#include <linux/aio_abi.h>\fP          /* определяет необходимые типы */
+.PP
+\fBint io_submit(aio_context_t \fP\fIctx_id\fP\fB, long \fP\fInr\fP\fB, struct iocb **\fP\fIiocbpp\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+.PP
+Системный вызов \fBio_submit\fP() ставит в очередь \fInr\fP запросов блоков
+ввода\-вывода для обработки в контексте AIO \fIctx_id\fP. Значение \fIiocbpp\fP
+должно быть массивом из \fInr\fP управляющих блоков AIO, которые будут
+отправлены в контекст \fIctx_id\fP.
+.PP
+Структура \fIiocb\fP (блок управления вводом\-выводом), определённая в
+\fIlinux/aio_abi.h\fP, описывает параметры, которыми управляется операция
+ввода\-вывода.
+.PP
+.in +4n
+.EX
+#include <linux/aio_abi.h>
+
+struct iocb {
+    __u64   aio_data;
+    __u32   PADDED(aio_key, aio_rw_flags);
+    __u16   aio_lio_opcode;
+    __s16   aio_reqprio;
+    __u32   aio_fildes;
+    __u64   aio_buf;
+    __u64   aio_nbytes;
+    __s64   aio_offset;
+    __u64   aio_reserved2;
+    __u32   aio_flags;
+    __u32   aio_resfd;
+};
+.EE
+.in
+.PP
+Поля этой структуры имеют следующее назначение:
+.TP 
+\fIaio_data\fP
+Эти данные копируются в поле \fIdata\fP структуры \fIio_event\fP при завершении
+ввода\-вывода (смотрите \fBio_getevents\fP(2)).
+.TP 
+\fIaio_key\fP
+Внутреннее поле, используется ядром. Не изменяйте это поле после вызова
+\fBio_submit\fP().
+.TP 
+\fIaio_rw_flags\fP
+Флаги чтения\-записи, передаваемые со структурой. Возможные значения:
+.RS
+.TP 
+\fBRWF_APPEND\fP (начиная с Linux 4.16)
+.\" commit e1fc742e14e01d84d9693c4aca4ab23da65811fb
+Добавить данный в конец файла. Смотрите описание флага с таким же именем в
+\fBpwritev2\fP(2), а также описание \fBO_APPEND\fP в \fBopen\fP(2). Поле
+\fIaio_offset\fP игнорируется. Файловое смещение не изменяется.
+.TP 
+\fBRWF_DSYNC\fP (начиная с Linux 4.13)
+Операция записи завершается согласно требованиям целостности данных
+синхронизированного ввода\-вывода. Смотрите описание флага с тем же именем в
+\fBpwritev2\fP(2), а также описание \fBO_DSYNC\fP в \fBopen\fP(2).
+.TP 
+\fBRWF_HIPRI\fP (начиная с Linux 4.13)
+Запрос с высоким приоритетом; опросить, если возможно
+.TP 
+\fBRWF_NOWAIT\fP (начиная с Linux 4.14)
+Не ждать, если ввод\-вывод блокирует операции, такие как выделение файловых
+блоков, очистка грязной страницы, блокировку мьютексов или вызывает
+перегрузку блочного устройства внутри ядра. Если имеется что\-то из этого, то
+управляющий блок возвращается немедленно со значением \fB\-EAGAIN\fP в поле
+\fIres\fP структуры \fIio_event\fP (смотрите \fBio_getevents\fP(2)).
+.TP 
+\fBRWF_SYNC\fP (начиная с Linux 4.13)
+Операция записи завершается согласно требованиям целостности файла
+синхронизированного ввода\-вывода. Смотрите описание флага с тем же именем в
+\fBpwritev2\fP(2), а также описание \fBO_SYNC\fP в \fBopen\fP(2).
+.RE
+.TP 
+\fIaio_lio_opcode\fP
+Тип ввода\-вывода, выполняемый структурой \fIiocb\fP. Возможные значения,
+определены перечислением в \fIlinux/aio_abi.h\fP:
+.IP
+.in +4
+.EX
+enum {
+    IOCB_CMD_PREAD = 0,
+    IOCB_CMD_PWRITE = 1,
+    IOCB_CMD_FSYNC = 2,
+    IOCB_CMD_FDSYNC = 3,
+    IOCB_CMD_NOOP = 6,
+    IOCB_CMD_PREADV = 7,
+    IOCB_CMD_PWRITEV = 8,
+};
+.EE
+.in
+.TP 
+\fIaio_reqprio\fP
+Определяет приоритет запросов.
+.TP 
+\fIaio_fildes\fP
+Файловый дескриптор, над которым будут выполняться операции ввода\-вывода.
+.TP 
+\fIaio_buf\fP
+Буфер, используемый для пересылки данных при операции чтения или записи.
+.TP 
+\fIaio_nbytes\fP
+Размер буфера, на который указывает \fIaio_buf\fP.
+.TP 
+\fIaio_offset\fP
+Файловое смещение, начиная с которого будут выполняться операции
+ввода\-вывода.
+.TP 
+\fIaio_flags\fP
+Набор флагов, связанный со структурой \fIiocb\fP. Допускаемые значения:
+.RS
+.TP 
+\fBIOCB_FLAG_RESFD\fP
+Управление асинхронным вводом\-выводом должно сигнализировать файловому
+дескриптору в \fIaio_resfd\fP после выполнения.
+.TP 
+\fBIOCB_FLAG_IOPRIO\fP (начиная с Linux 4.18)
+.\" commit d9a08a9e616beeccdbd0e7262b7225ffdfa49e92
+Считать поле \fIaio_reqprio\fP как \fBIOPRIO_VALUE\fP, определённое в
+\fIlinux/ioprio.h\fP.
+.RE
+.TP 
+\fIaio_resfd\fP
+Файловый дескриптор для сигнализации завершения асинхронного ввода\-вывода.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBio_submit\fP() возвращает количество отправленных
+\fIiocb\fP (может быть меньше \fInr\fP или 0, если \fInr\fP равно нулю). Случаи
+ошибок описаны в ЗАМЕЧАНИЯХ.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Недостаточно ресурсов для постановки в очередь \fIiocb\fP.
+.TP 
+\fBEBADF\fP
+Некорректный файловый дескриптор, указанный в первом \fIiocb\fP.
+.TP 
+\fBEFAULT\fP
+Одна из структур данных указывает на некорректные данные.
+.TP 
+\fBEINVAL\fP
+Некорректен контекст AIO, указанный \fIctx_id\fP. Значение \fInr\fP меньше
+0. Значение \fIiocb\fP в \fI*iocbpp[0]\fP некорректно инициализировано, указанная
+операция некорректна для файлового дескриптора в \fIiocb\fP или некорректное
+значение в поле \fIaio_reqprio\fP.
+.TP 
+\fBENOSYS\fP
+Вызов \fBio_submit\fP() не реализован для этой архитектуры.
+.TP 
+\fBEPERM\fP
+Поле \fIaio_reqprio\fP содержит класс \fBIOPRIO_CLASS_RT\fP, но представляющий
+контекст не имеет мандата \fBCAP_SYS_ADMIN\fP.
+.SH ВЕРСИИ
+.PP
+Асинхронные системные вызовы ввода\-вывода впервые появились в Linux 2.5.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.PP
+Вызов \fBio_submit\fP() есть только в Linux, и он не должен использоваться в
+переносимых программах.
+.SH ЗАМЕЧАНИЯ
+.\" http://git.fedorahosted.org/git/?p=libaio.git
+В glibc нет обёрточной функции для данного системного вызова. Вы можете
+вызвать его с помощью \fBsyscall\fP(2). Но лучше воспользоваться обёрточной
+функцией \fBio_submit\fP() из библиотеки \fIlibaio\fP.
+.PP
+.\" But glibc is confused, since <libaio.h> uses 'io_context_t' to declare
+.\" the system call.
+Заметим, что в обёрточной функции \fIlibaio\fP используется другой тип
+(\fIio_context_t\fP) аргумента \fIctx_id\fP. Также заметим, что \fIlibaio\fP не
+следует соглашениям обычной библиотеки C для возврата ошибок: при ошибке она
+возвращает отрицательный номер ошибки (из списка в разделе ОШИБКИ). Если
+системный вызов вызывается с помощью \fBsyscall\fP(2), то возвращаемое значение
+следует обычным соглашениям для указания на ошибку: возвращается \-1 и в
+\fIerrno\fP записывается (положительное) значение возникшей ошибки.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBio_cancel\fP(2), \fBio_destroy\fP(2), \fBio_getevents\fP(2), \fBio_setup\fP(2),
+\fBaio\fP(7)
+.\" .SH AUTHOR
+.\" Kent Yoder.

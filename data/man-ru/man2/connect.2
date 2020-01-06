@@ -1,0 +1,219 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\" Portions extracted from /usr/include/sys/socket.h, which does not have
+.\" any authorship information in it.  It is probably available under the GPL.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\" Other portions are from the 6.9 (Berkeley) 3/10/91 man page:
+.\"
+.\" Copyright (c) 1983 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"     This product includes software developed by the University of
+.\"     California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1997-01-31 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1998, 1999 by Andi Kleen
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CONNECT 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+connect \- инициирует соединение на сокете
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP          /* Смотрите ЗАМЕЧАНИЯ */
+.br
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint connect(int \fP\fIsockfd\fP\fB, const struct sockaddr *\fP\fIaddr\fP\fB,\fP
+\fB            socklen_t \fP\fIaddrlen\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBconnect\fP() устанавливает соединение с сокетом, заданным
+файловый дескриптором \fIsockfd\fP, ссылающимся на адрес \fIaddr\fP. Аргумент
+\fIaddrlen\fP определяет размер \fIaddr\fP. Формат адреса в \fIaddr\fP определяется
+адресным пространством сокета \fIsockfd\fP; подробнее можно узнать в
+\fBsocket\fP(2).
+.PP
+Если сокет \fIsockfd\fP имеет тип \fBSOCK_DGRAM\fP, то адрес \fIaddr\fP является
+адресом по умолчанию, куда посылаются датаграммы, и единственным адресом,
+откуда они принимаются.  Если сокет имеет тип \fBSOCK_STREAM\fP или
+\fBSOCK_SEQPACKET\fP, то данный системный вызов попытается установить
+соединение с другим сокетом, заданным параметром \fIaddr\fP.
+.PP
+Обычно сокеты с протоколами, основанными на соединении, могут устанавливать
+соединение \fBconnect\fP() только один раз; сокеты с протоколами без
+установления соединения могут использовать \fBconnect\fP()  многократно, чтобы
+изменить адрес назначения. Сокеты без установления соединения могут
+прекратить связь с другим сокетом, установив член \fIsa_family\fP структуры
+\fIsockaddr\fP в \fBAF_UNSPEC\fP (в Linux поддерживается, начиная с ядра версии
+2.2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если соединение или привязка прошла успешно, возвращается ноль. При ошибке
+возвращается \-1, а \fIerrno\fP устанавливается должным образом.
+.SH ОШИБКИ
+Ниже приведены только общие ошибки сокетов. Могут также появляться коды
+ошибок, существующие в конкретном домене.
+.TP 
+\fBEACCES\fP
+Для доменных сокетов UNIX, которые идентифицируются по имени пути: нет прав
+на запись в файл сокета, или в одном из каталогов пути запрещён
+поиск. (См. также \fBpath_resolution\fP(7).)
+.TP 
+\fBEACCES\fP, \fBEPERM\fP
+Пользователь попытался соединиться с широковещательным адресом, не установив
+широковещательный флаг на сокете или же запрос на соединение завершился
+неудачно из\-за правила локального межсетевого экрана.
+.TP 
+\fBEADDRINUSE\fP
+Локальный адрес уже используется.
+.TP 
+\fBEADDRNOTAVAIL\fP
+(доменные сокеты Интернета) Сокет, указанный \fIsockfd\fP, ранее не был
+привязан к адресу и при попытке привязать его к эфемеридному порту, было
+определено, что все номера в диапазоне эфемеридных портов уже
+используются. Смотрите обсуждение \fI/proc/sys/net/ipv4/ip_local_port_range\fP
+в \fBip\fP(7).
+.TP 
+\fBEAFNOSUPPORT\fP
+Адрес имеет некорректное семейство адресов в поле \fIsa_family\fP.
+.TP 
+\fBEAGAIN\fP
+Для неблокирующих доменных сокетов UNIX сокет не блокируется и соединение не
+может быть выполнено немедленно. Для других семейств сокетов в кэше
+маршрутизации недостаточно элементов.
+.TP 
+\fBEALREADY\fP
+Сокет является неблокирующим, а предыдущая попытка установить соединение ещё
+не завершилась.
+.TP 
+\fBEBADF\fP
+Значение \fIsockfd\fP не является правильным открытым файловым дескриптором.
+.TP 
+\fBECONNREFUSED\fP
+Вызов \fBconnect\fP() не нашёл слушающий удалённый адрес для потокового сокета.
+.TP 
+\fBEFAULT\fP
+Адрес структуры сокета находится за пределами пользовательского адресного
+пространства.
+.TP 
+\fBEINPROGRESS\fP
+Сокет является неблокирующим, а соединение не может быть установлено
+немедленно (доменные сокеты UNIX вместо этого возвращают ошибку
+\fBEAGAIN\fP). Можно использовать \fBselect\fP(2) или \fBpoll\fP(2), чтобы закончить
+соединение, установив ожидание возможности записи в сокет. После того, как
+\fBselect\fP(2) сообщит о такой возможности, используйте \fBgetsockopt\fP(2),
+чтобы прочитать флаг \fBSO_ERROR\fP на уровне \fBSOL_SOCKET\fP, чтобы определить,
+успешно ли завершился \fBconnect\fP() (в этом случае \fBSO_ERROR\fP равен нулю)
+или неудачно (тогда \fBSO_ERROR\fP равен одному из обычных кодов ошибок,
+перечисленных здесь, и объясняет причину неудачи).
+.TP 
+\fBEINTR\fP
+.\" For TCP, the connection will complete asynchronously.
+.\" See http://lkml.org/lkml/2005/7/12/254
+Системный вызов был прерван пойманным сигналом; см. \fBsignal\fP(7).
+.TP 
+\fBEISCONN\fP
+Соединение на сокете уже произошло.
+.TP 
+\fBENETUNREACH\fP
+Сеть недоступна.
+.TP 
+\fBENOTSOCK\fP
+Файловый дескриптор \fIsockfd\fP указывает не на каталог.
+.TP 
+\fBEPROTOTYPE\fP
+Тип сокета не поддерживается запрошенным протоколом связи. Это ошибка может
+возникать при попытке подключить доменный датаграммный сокет UNIX к
+потоковому сокету.
+.TP 
+\fBETIMEDOUT\fP
+Произошел тайм\-аут во время ожидания соединения. Сервер, возможно, очень
+занят и не может принимать новые соединения. Заметьте, что для IP\-сокетов
+тайм\-аут может быть очень длинным, если на сервере разрешено использование
+syncookies.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents the additional
+.\" general error codes
+.\" .BR EADDRNOTAVAIL ,
+.\" .BR EINVAL ,
+.\" .BR EAFNOSUPPORT ,
+.\" .BR EALREADY ,
+.\" .BR EINTR ,
+.\" .BR EPROTOTYPE ,
+.\" and
+.\" .BR ENOSR .
+.\" It also
+.\" documents many additional error conditions not described here.
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.4BSD, (\fBconnect()\fP впервые появился
+4.2BSD).
+.SH ЗАМЕЧАНИЯ
+В POSIX.1 не требуется включение \fI<sys/types.h>\fP, и этот
+заголовочный файл не требуется в Linux. Однако, для некоторых старых
+реализаций (BSD) требует данный файл, и в переносимых приложениях для
+предосторожности, вероятно, лучше его указать.
+.PP
+Описание типа \fIsocklen_t\fP смотрите в \fBaccept\fP(2).
+.PP
+Если вызов \fBconnect\fP() завершается с ошибкой, то состояние сокета считается
+неопределённым. Переносимые приложения должны закрывать сокет и для
+переподключения создавать новый.
+.SH ПРИМЕР
+Пример использования \fBconnect\fP() показан в \fBgetaddrinfo\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaccept\fP(2), \fBbind\fP(2), \fBgetsockname\fP(2), \fBlisten\fP(2), \fBsocket\fP(2),
+\fBpath_resolution\fP(7)

@@ -1,0 +1,174 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2000 Sam Varshavchik <mrsam@courier-mta.com>
+.\" and Copyright (c) 2008 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References: RFC 2553
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INET_PTON 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+inet_pton \- преобразует адреса IPv4 и IPv6 из текстового вида в двоичный
+формат
+.SH ОБЗОР
+.nf
+\fB#include <arpa/inet.h>\fP
+.PP
+\fBint inet_pton(int \fP\fIaf\fP\fB, const char *\fP\fIsrc\fP\fB, void *\fP\fIdst\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Данная функция преобразует строку символов \fIsrc\fP в структуру сетевого
+адреса сетевого семейства адресов  \fIaf\fP, а затем копирует полученную
+структуру по адресу \fIdst\fP. Значение аргумента \fIaf\fP должно быть равно
+\fBAF_INET\fP или \fBAF_INET6\fP. Значение \fIdst\fP записывается в сетевом порядке
+байт.
+.PP
+В настоящее время поддерживаются следующие семейства адресов:
+.TP 
+\fBAF_INET\fP
+Значение \fIsrc\fP указывает на строку символов, содержащую сетевой адрес IPv4
+в точечном формате «\fIddd.ddd.ddd.ddd\fP», где \fIddd\fP — десятичное число в
+диапазоне от 0 до 255, состоящее максимум из трёх цифр. Адрес преобразуется
+в \fIstruct in_addr\fP и копируется в \fIdst\fP, размер которой должен быть равен
+\fIsizeof(struct in_addr)\fP (4) байтам (32 бита).
+.TP 
+\fBAF_INET6\fP
+Значение \fIsrc\fP указывает на строку символов, содержащую сетевой адрес
+IPv6. Адрес преобразуется в \fIstruct in6_addr\fP и копируется в \fIdst\fP, размер
+которой должен быть равен \fIsizeof(struct in6_addr)\fP (16) байтам (128
+бит). Допустимые форматы адресов IPv6:
+.RS
+.IP 1. 3
+Предпочтительный формат — \fIx:x:x:x:x:x:x:x\fP. Он состоит из восьми
+шестнадцатеричных чисел, каждое из которых представляет 16\-битное значение
+(т. е., каждый \fIx\fP может содержать до 4 шестнадцатеричных цифр).
+.IP 2.
+Серия непрерывных нулевых значений в предпочтительном формате может
+сокращённо записываться как \fI::\fP. В адресе допускается только одно
+появление \fI::\fP. Например, адрес интерфейса обратной петли
+\fI0:0:0:0:0:0:0:1\fP может быть сокращён до \fI::1\fP. Шаблонный адрес, состоящий
+из всех нулей, может быть записан как \fI::\fP.
+.IP 3.
+Альтернативный формат — полезен для записи IPv4\-отображённых адресов
+IPv6. Этот формат имеет вид \fIx:x:x:x:x:x:d.d.d.d\fP, где шесть начальных \fIx\fP
+представляют собой шестнадцатеричные значения, которые определяют шесть
+наиболее значимых 16\-битных частей адреса (т. е., 96 бит), а символами \fId\fP
+выражается значение в точечно\-десятичном формате, которое определяет
+наименее значимые 32 бита адреса. Пример адреса: \fI::FFFF:204.152.189.116\fP.
+.RE
+.IP
+Дополнительную информацию о представлении адресов IPv6 смотрите в RFC 2373.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBinet_pton\fP() возвращает 1 (адрес
+преобразован). Функция возвращает 0, если \fIsrc\fP не содержит строку
+символов, представляющую правильный сетевой адрес для указанного семейства
+адресов. Если  \fIaf\fP не содержит допустимого значения семейства адресов, то
+возвращается \-1 и \fIerrno\fP присваивается значение \fBEAFNOSUPPORT\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBinet_pton\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В отличие от \fBinet_aton\fP(3) и \fBinet_addr\fP(3), \fBinet_pton\fP() поддерживает
+адреса IPv6. Но стоит отметить, что \fBinet_pton\fP() работает только с
+адресами IPv4 в точечно\-десятичном формате, в то время как \fBinet_aton\fP(3) и
+\fBinet_addr\fP(3) поддерживают более распространённый формат чисел\-с\-точками
+(numbers\-and\-dots notation) (шестнадцатеричный и восьмеричный формат чисел,
+и форматы, которые не требуют явного указания всех четырёх
+байт). Программный интерфейс, который понимает одновременно адреса и IPv6, и
+IPv4 в формате чисел\-с\-точками, смотрите \fBgetaddrinfo\fP(3).
+.SH ДЕФЕКТЫ
+При \fBAF_INET6\fP не распознаются адреса IPv4. В этом случае в \fIsrc\fP должен
+указываться IPv4\-отображённый адрес IPv6.
+.SH ПРИМЕР
+Представленная ниже программа показывает использование \fBinet_pton\fP() и
+\fBinet_ntop\fP(3). Пример работы программы:
+.PP
+.in +4n
+.EX
+$\fB ./a.out i6 0:0:0:0:0:0:0:0\fP
+::
+$\fB ./a.out i6 1:0:0:0:0:0:0:8\fP
+1::8
+$\fB ./a.out i6 0:0:0:0:0:FFFF:204.152.189.116\fP
+::ffff:204.152.189.116
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <arpa/inet.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int
+main(int argc, char *argv[])
+{
+    unsigned char buf[sizeof(struct in6_addr)];
+    int domain, s;
+    char str[INET6_ADDRSTRLEN];
+
+    if (argc != 3) {
+        fprintf(stderr,
+          "Использование: %s {i4|i6|<число>} строка\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    domain = (strcmp(argv[1], "i4") == 0) ? AF_INET :
+             (strcmp(argv[1], "i6") == 0) ? AF_INET6 : atoi(argv[1]);
+
+    s = inet_pton(domain, argv[2], buf);
+    if (s <= 0) {
+        if (s == 0)
+            fprintf(stderr, "Неверный формат представления");
+        else
+            perror("inet_pton");
+        exit(EXIT_FAILURE);
+    }
+
+    if (inet_ntop(domain, buf, str, INET6_ADDRSTRLEN) == NULL) {
+        perror("inet_ntop");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("%s\en", str);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetaddrinfo\fP(3), \fBinet\fP(3), \fBinet_ntop\fP(3)

@@ -1,0 +1,144 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1996 Free Software Foundation, Inc.
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" This file is distributed according to the GNU General Public License.
+.\" %%%LICENSE_END
+.\"
+.\" 2006-02-09, some reformatting by Luc Van Oostenryck; some
+.\" reformatting and rewordings by mtk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH QUERY_MODULE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+query_module \- запросить ядро о различных параметрах, касающихся модулей
+.SH ОБЗОР
+.nf
+\fB#include <linux/module.h>\fP
+.PP
+\fBint query_module(const char *\fP\fIname\fP\fB, int \fP\fIwhich\fP\fB, void *\fP\fIbuf\fP\fB,\fP
+\fB                 size_t \fP\fIbufsize\fP\fB, size_t *\fP\fIret\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В заголовочных файлах glibc этой системный вызов отсутствует;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+\fIЗамечание\fP: Данный системный вызов доступен только в ядрах до Linux 2.6.
+.PP
+\fBquery_module\fP() запрашивает информацию у ядра о загружаемых
+модулях. Возвращаемая информация помещается в буфер, указанный в
+\fIbuf\fP. Вызывающий должен указать размер \fIbuf\fP в \fIbufsize\fP. Смысл и формат
+возвращаемой информации зависит от операции, задаваемой в \fIwhich\fP. Для
+некоторых операций требуется заполнить \fIname\fP для указания на уже
+загруженный модуль, для некоторых в \fIname\fP можно указать NULL, что
+указывает на получения свойства ядра.
+.PP
+В \fIwhich\fP можно указать следующие значения:
+.TP 
+\fB0\fP
+Завершается успешно, если ядро поддерживает \fBquery_module\fP(). Используется
+для проверки доступности системного вызова.
+.TP 
+\fBQM_MODULES\fP
+.\" ret is set on ENOSPC
+Возвращает имена всех загруженных модулей. Возвращаемый буфер содержит
+последовательность строк, оканчивающихся null; в \fIret\fP указано количество
+модулей.
+.TP 
+\fBQM_DEPS\fP
+.\" ret is set on ENOSPC
+Возвращает имена всех модулей, используемых указанным модулем. Возвращаемый
+буфер содержит последовательность строк, оканчивающихся null; в \fIret\fP
+указано количество модулей.
+.TP 
+\fBQM_REFS\fP
+.\" ret is set on ENOSPC
+Возвращает имена всех модулей, использующих указанный модуль. Это обратная
+по отношению к \fBQM_DEPS\fP операция. Возвращаемый буфер содержит
+последовательность строк, оканчивающихся null; в \fIret\fP указано количество
+модулей.
+.TP 
+\fBQM_SYMBOLS\fP
+.\" ret is set on ENOSPC
+Возвращает символы и значения, экспортируемые ядром или указанным
+модулем. Возвращаемый буфер содержит массив структур следующего формата:
+.IP
+.in +4n
+.EX
+struct module_symbol {
+    unsigned long value;
+    unsigned long name;
+};
+.EE
+.in
+.IP
+завершаемого строками, оканчивающимися null. Значение \fIname\fP содержит
+смещение строки в знаках относительно начала \fIbuf\fP; в \fIret\fP указано
+количество символов.
+.TP 
+\fBQM_INFO\fP
+Возвращает различную информацию об указанном модуле. Формат результата в
+буфере:
+.IP
+.in +4n
+.EX
+struct module_info {
+    unsigned long address;
+    unsigned long size;
+    unsigned long flags;
+};
+.EE
+.in
+.IP
+где \fIaddress\fP — это адрес ядра, где располагается модуль, \fIsize\fP — размер
+модуля в байтах, \fIflags\fP — маска \fBMOD_RUNNING\fP, \fBMOD_AUTOCLEAN\fP и т. п.,
+показывающая текущее состояние модуля (смотрите файл исходного кода ядра
+Linux \fIinclude/linux/module.h\fP). В \fIret\fP указан размер структуры
+\fImodule_info\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается ноль. В случае ошибки возвращается \-1,
+а \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Одно из значений в \fIname\fP, \fIbuf\fP или \fIret\fP находится вне доступного
+программного адресного пространства.
+.TP 
+\fBEINVAL\fP
+.\" Not permitted with QM_DEPS, QM_REFS, or QM_INFO.
+Неправильное значение \fIwhich\fP; \fIname\fP равно NULL (указывающее "параметры
+ядра"), но оно не разрешено для указанного значения \fIwhich\fP.
+.TP 
+\fBENOENT\fP
+Модуль с именем, указанным в \fIname\fP, не существует.
+.TP 
+\fBENOSPC\fP
+Указанный размер буфера слишком мал. В \fIret\fP возвращается минимальный
+необходимый размер.
+.TP 
+\fBENOSYS\fP
+\fBquery_module\fP() не поддерживается в этой версии ядра (например, в 2.6 или
+более поздних).
+.SH ВЕРСИИ
+.\" Removed in Linux 2.5.48
+Данный системный вызов есть только в Linux до версии 2.4; он был удалён в
+Linux 2.6.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBquery_module\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Некоторую информацию, которая была ранее доступна через \fBquery_module\fP(),
+можно получить из \fI/proc/modules\fP, \fI/proc/kallsyms\fP и файлов из каталога
+\fI/sys/modules\fP.
+.PP
+Системный вызов \fBquery_module\fP() не поддерживается glibc. В заголовочных
+файлах glibc он не объявлен, но в недавнем прошлом glibc экспортировал ABI
+для этого системного вызова. Поэтому чтобы получить данный системный вызов
+достаточно вручную объявить интерфейс в своём коде; или же вы можете вызвать
+его через \fBsyscall\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcreate_module\fP(2), \fBdelete_module\fP(2), \fBget_kernel_syms\fP(2),
+\fBinit_module\fP(2), \fBlsmod\fP(8), \fBmodinfo\fP(8)

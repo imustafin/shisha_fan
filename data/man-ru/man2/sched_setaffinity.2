@@ -1,0 +1,314 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2002 Robert Love
+.\" and Copyright (C) 2006, 2015 Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 2002-11-19 Robert Love <rml@tech9.net> - initial version
+.\" 2004-04-20 mtk - fixed description of return value
+.\" 2004-04-22 aeb - added glibc prototype history
+.\" 2005-05-03 mtk - noted that sched_setaffinity may cause thread
+.\"	migration and that CPU affinity is a per-thread attribute.
+.\" 2006-02-03 mtk -- Major rewrite
+.\" 2008-11-12, mtk, removed CPU_*() macro descriptions to a
+.\" separate CPU_SET(3) page.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SCHED_SETAFFINITY 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sched_setaffinity, sched_getaffinity \- устанавливает и получает процессорную
+маску увязывания для нити
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <sched.h>\fP
+.PP
+\fBint sched_setaffinity(pid_t \fP\fIpid\fP\fB, size_t \fP\fIcpusetsize\fP\fB,\fP
+\fB                      const cpu_set_t *\fP\fImask\fP\fB);\fP
+.PP
+\fBint sched_getaffinity(pid_t \fP\fIpid\fP\fB, size_t \fP\fIcpusetsize\fP\fB,\fP
+\fB                      cpu_set_t *\fP\fImask\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Процессорной маской увязывания нити задаётся набор процессоров, на которых
+разрешено выполняться нити. В многопроцессорных системах задание
+процессорной маски увязывания можно использовать для получения большей
+производительности. Например, выделение специального процессора определённой
+нити (т.е., задание в процессорной маске увязывания для нити одного ЦП и
+исключение этого ЦП из процессорных масок увязывания для остальных нитей)
+обеспечивает максимальную скорость выполнения этой нити. Ограничение для
+нити одним ЦП также исключает сокращение производительности в следствие
+недостоверности данных кэша, которая возникает, когда нить прекращает
+выполнение на одном ЦП и затем продолжает выполнение на другом.
+.PP
+Маска увязывания ЦП представляется в виде структуры \fIcpu_set_t\fP, «набором
+процессоров», на которую указывает \fImask\fP. В \fBCPU_SET\fP(3) описаны макросы
+для изменения набора ЦП.
+.PP
+Вызов \fBsched_setaffinity\fP() устанавливает маску увязывания ЦП \fImask\fP для
+нити, чей ID указан в \fIpid\fP. Если значение \fIpid\fP равно нулю, то
+используется вызывающая нить. В аргументе \fIcpusetsize\fP задаётся количество
+данных (в байтах), на которые указывает \fImask\fP. Обычно его значение
+указывается как \fIsizeof(cpu_set_t)\fP.
+.PP
+Если нить, указанная в \fIpid\fP, в данный момент не выполняется на одном из
+ЦП, заданном в \fImask\fP, то эта нить переносится на один из процессоров,
+назначаемых \fImask\fP.
+.PP
+Вызов \fBsched_getaffinity\fP() записывает в структуру \fIcpu_set_t\fP, на которую
+указывает \fImask\fP, значение маски увязывания ЦП для нити, чей ID указан в
+\fIpid\fP. В аргументе \fIcpusetsize\fP задаётся размер \fImask\fP (в байтах). Если
+значение \fIpid\fP равно нулю, то возвращается маска вызывающей нити.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsched_setaffinity\fP() и \fBsched_getaffinity\fP()
+возвращается 0 (но смотрите «различия в библиотеке C/ядре» ниже, где
+показано при каких условиях \fBsched_getaffinity\fP() возвращает разные
+значения). При ошибке возвращается \-1, и в \fIerrno\fP записывается
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Указан некорректный адрес памяти.
+.TP 
+\fBEINVAL\fP
+В маске увязывания ЦП \fImask\fP указаны процессоры, которых физически нет в
+системе, и которые разрешены нити согласно любым ограничениям, которые могут
+налагаться \fIcpuset\fP cgroups или механизмом «cpuset», описанном в
+\fBcpuset\fP(7).
+.TP 
+\fBEINVAL\fP
+(\fBsched_getaffinity\fP() и, в ядрах до 2.6.9, \fBsched_setaffinity\fP())
+Значение \fIcpusetsize\fP меньше размера маски увязывания, используемой в ядре.
+.TP 
+\fBEPERM\fP
+(\fBsched_setaffinity\fP()) Вызывающая нить не имеет достаточно
+прав. Вызывающему требуется иметь эффективный пользовательский ID равный
+реальному пользовательскому ID или эффективному пользовательскому ID нити,
+указанной в \fIpid\fP, или он должен обладать мандатом \fBCAP_SYS_NICE\fP в
+пространстве имён пользователя нити \fIpid\fP.
+.TP 
+\fBESRCH\fP
+Нить с идентификатором \fIpid\fP не найдена.
+.SH ВЕРСИИ
+Системные вызовы увязывания ЦП появились в ядре Linux версии
+2.5.8. Обёрточные функции появились в glibc 2.3. Первоначально, в интерфейсе
+glibc присутствовал аргумент \fIcpusetsize\fP, имевший тип \fIunsigned int\fP. В
+glibc 2.3.3 аргумент \fIcpusetsize\fP был удалён, но появился вновь в glibc
+2.3.4 с типом \fIsize_t\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные системные вызовы есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+После вызова \fBsched_setaffinity\fP() набор процессоров, на которых
+действительно будет выполняться нить, вычисляется пересечением набора из
+аргумента \fImask\fP и набором процессоров, присутствующих в системе. В
+дальнейшем, система может ограничить набор процессоров нити, если
+задействован механизм «cpuset», описанный в \fBcpuset\fP(7). Эти ограничения на
+действительный набор процессоров, используемых для нити, без уведомления
+налагаются ядром.
+.PP
+Есть несколько способов определения количества процессоров в системе: по
+содержимому \fI/proc/cpuinfo\fP; с помощью \fBsysconf\fP(3) получить значение
+параметров \fB_SC_NPROCESSORS_CONF\fP и \fB_SC_NPROCESSORS_ONLN\fP; посчитать
+количество подкаталогов cpu в \fI/sys/devices/system/cpu/\fP.
+.PP
+В \fBsched\fP(7) приведено описание схемы планирования Linux.
+.PP
+Маска увязывания является атрибутом нити, которая может изменяться
+независимо для каждой нити в группе нитей. В аргументе \fIpid\fP можно
+передавать значение, возвращаемое вызовом \fBgettid\fP(2). При значении \fIpid\fP
+равным 0 будет установлен атрибут вызывающей нити, а при передаче значения,
+возвращаемого вызовом \fBgetpid\fP(2), устанавливается атрибут главной нити
+группы нитей (при работе с программным интерфейсом POSIX используйте функцию
+\fBpthread_setaffinity_np\fP(3) вместо \fBsched_setaffinity\fP()).
+.PP
+Параметр начальной загрузки \fIisolcpus\fP можно использовать для изоляции
+одного и более ЦП во время загрузки, и ни один процесс не будет запланирован
+к выполнению на этих ЦП. После использования этого параметра единственный
+способ запланировать процессы на изолированных ЦП — использовать
+\fBsched_setaffinity\fP()  или механизм \fBcpuset\fP(7). Подробности смотрите в
+файле исходного кода ядра
+\fIDocumentation/admin\-guide/kernel\-parameters.txt\fP. Согласно тексту файла,
+\fIisolcpus\fP является предпочтительным механизмом изоляции ЦП (по сравнению с
+ручным увязыванием ЦП всех процессов в системе).
+.PP
+Потомок, создаваемый с помощью \fBfork\fP(2), наследует маску увязывания
+ЦП. Маска увязывания сохраняется при вызове \fBexecve\fP(2).
+.SS "Отличия между библиотекой C и ядром"
+В данной справочной странице описан интерфейс glibc для вызовов увязывания
+ЦП. Интерфейс реальных системных вызов чуть отличается: аргумент \fImask\fP
+имеет тип \fIunsigned long\ *\fP, отражая факт того, что используемая
+реализация наборов ЦП представляет собой просто битовую маску.
+.PP
+При успешном выполнении ядерный системный вызов \fBsched_getaffinity\fP()
+возвращает количество скопированных в буфер \fImask\fP байт; минимальным
+значением будет \fIcpusetsize\fP и размер (в байтах) типа данных \fIcpumask_t\fP,
+который используется в ядре для представления процессорной битовой маски.
+.SS "Работа систем с масками увязывания ЦП большого размера"
+.\" FIXME . See https://sourceware.org/bugzilla/show_bug.cgi?id=15630
+.\" and https://sourceware.org/ml/libc-alpha/2013-07/msg00288.html
+Лежащие в основе системные вызовы (которые представляют маски ЦП в виде
+маски битов с типом \fIunsigned long\ *\fP) не накладывают ограничений на
+размер маски ЦП. Однако, тип данных \fIcpu_set_t\fP, используемый в glibc,
+имеет постоянный размер 128 байт, то есть максимальный номер представляемых
+ЦП равен 1023. Если ядерная маска увязывания ЦП больше 1024, то вызовы вида:
+.PP
+    sched_getaffinity(pid, sizeof(cpu_set_t), &mask);
+.PP
+завершается ошибкой \fBEINVAL\fP; ошибка выдаётся подлежащим системным вызовом
+в случае, когда размер \fImask\fP, указанный в \fIcpusetsize\fP, меньше чем размер
+маски увязывания используемой ядром (в зависимости от топологии ЦП системы,
+ядерная маска увязывания может быть значительно больше, чем количество
+активных ЦП в системе).
+.PP
+При работе в системах с ядерными масками увязывания ЦП большого размера,
+место под аргумент \fImask\fP должно выделяться динамически (смотрите
+\fBCPU_ALLOC\fP(3)). В настоящее время единственный способ сделать это —
+определить размер требуемой маски с помощью вызовов \fBsched_getaffinity\fP() с
+увеличиваемым размером маски (пока вызов не перестанет выдавать ошибку
+\fBEINVAL\fP).
+.PP
+Учтите, что \fBCPU_ALLOC\fP(3) может выделить несколько больший набор ЦП, чем
+запрашивается (так как наборы ЦП реализованы как битовые маски, выделяемые в
+объёмах \fIsizeof(long)\fP). Следовательно, \fBsched_getaffinity\fP() может задать
+биты за границами запрашиваемого выделяемого размера, так как ядро видит
+несколько дополнительных бит. Поэтому вызывающий должен пройтись по всем
+возвращённым битам, считая установленные и остановиться при достижении
+значения, полученного от \fBCPU_COUNT\fP(3) (а не останавливаться на количестве
+запрошенных к выделению бит).
+.SH ПРИМЕР
+Программа, представленная ниже, создаёт дочерний процесс. Затем родитель и
+потомок назначают выполнение себя на указанных ЦП и выполняют одинаковые
+циклы, которые выполняются на ЦП какое\-то время. Перед завершением, родитель
+ждёт завершения потомка. Программа имеет три аргумента командной строки:
+номер ЦП для родителя, номер ЦП для потомка и количество итераций цикла,
+который будут выполнять оба процесса.
+.PP
+В примере работы, показанном ниже, количество реального времени и времени
+использованного ЦП при работе программы, будет зависеть он меж ядерного
+кэширования и будут ли процессы использовать одинаковый ЦП.
+.PP
+Сначала запустим \fBlscpu\fP(1) для определения, что эта система (x86) имеет по
+два потока выполнения в двух ЦП:
+.PP
+.in +4n
+.EX
+$ \fBlscpu | egrep \-i 'core.*:|socket'\fP
+Thread(s) per core:    2
+Core(s) per socket:    2
+Socket(s):             1
+.EE
+.in
+.PP
+Затем запустим подсчёт времени выполнения программы для трёх случаев: оба
+процесс выполняются на одном ЦП; оба процесса выполняются на разных ЦП
+одного ядра; оба процесса выполняются на разных ЦП разных ядер.
+.PP
+.in +4n
+.EX
+$ \fBtime \-p ./a.out 0 0 100000000\fP
+real 14.75
+user 3.02
+sys 11.73
+$ \fBtime \-p ./a.out 0 1 100000000\fP
+real 11.52
+user 3.98
+sys 19.06
+$ \fBtime \-p ./a.out 0 3 100000000\fP
+real 7.89
+user 3.29
+sys 12.07
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <sched.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    cpu_set_t set;
+    int parentCPU, childCPU;
+    int nloops, j;
+
+    if (argc != 4) {
+        fprintf(stderr, "Использование: %s parent\-cpu child\-cpu num\-loops\en",
+                argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    parentCPU = atoi(argv[1]);
+    childCPU = atoi(argv[2]);
+    nloops = atoi(argv[3]);
+
+    CPU_ZERO(&set);
+
+    switch (fork()) {
+    case \-1:            /* Ошибка */
+        errExit("fork");
+
+    case 0:             /* потомок */
+        CPU_SET(childCPU, &set);
+
+        if (sched_setaffinity(getpid(), sizeof(set), &set) == \-1)
+            errExit("sched_setaffinity");
+
+        for (j = 0; j < nloops; j++)
+            getppid();
+
+        exit(EXIT_SUCCESS);
+
+    default:            /* родитель */
+        CPU_SET(parentCPU, &set);
+
+        if (sched_setaffinity(getpid(), sizeof(set), &set) == \-1)
+            errExit("sched_setaffinity");
+
+        for (j = 0; j < nloops; j++)
+            getppid();
+
+        wait(NULL);     /* ждём завершения потомка */
+        exit(EXIT_SUCCESS);
+    }
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBlscpu\fP(1), \fBnproc\fP(1), \fBtaskset\fP(1), \fBclone\fP(2), \fBgetcpu\fP(2),
+\fBgetpriority\fP(2), \fBgettid\fP(2), \fBnice\fP(2), \fBsched_get_priority_max\fP(2),
+\fBsched_get_priority_min\fP(2), \fBsched_getscheduler\fP(2),
+\fBsched_setscheduler\fP(2), \fBsetpriority\fP(2), \fBCPU_SET\fP(3),
+\fBget_nprocs\fP(3), \fBpthread_setaffinity_np\fP(3), \fBsched_getcpu\fP(3),
+\fBcapabilities\fP(7), \fBcpuset\fP(7), \fBsched\fP(7), \fBnumactl\fP(8)

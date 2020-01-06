@@ -1,0 +1,92 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 19:32:25 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GCVT 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+gcvt \- преобразовать число с плавающей точкой в строку
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBchar *gcvt(double \fP\fInumber\fP\fB, int \fP\fIndigit\fP\fB, char *\fP\fIbuf\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgcvt\fP():
+.ad l
+.PD 0
+.RS 4
+.TP  4
+Начиная с glibc 2.12:
+.nf
+(_XOPEN_SOURCE\ >=\ 500) ! (_POSIX_C_SOURCE\ >=\ 200112L)
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версии glibc <= 2.19: */ _SVID_SOURCE
+.fi
+.TP  4
+До glibc 2.12:
+.\"    || _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED
+_SVID_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.RE
+.PD
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBgcvt\fP() преобразует \fInumber\fP в строку ASCII (с null в конце)
+минимальной длины и сохраняет результат в \fIbuf\fP. Она выдаёт \fIndigit\fP цифр
+со знаком в F или E формате, описанных в \fBprintf\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBgcvt\fP() возвращает адрес строки, на которую указывает \fIbuf\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgcvt\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Отмечена в POSIX.1\-2001 как УСТАРЕВШАЯ. В POSIX.1\-2008 спецификация
+\fBgcvt\fP() удалена, вместо них рекомендуется использовать \fBsprintf\fP(3)
+(однако \fBsnprintf\fP(3) может быть предпочтительнее).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBecvt\fP(3), \fBfcvt\fP(3), \fBsprintf\fP(3)

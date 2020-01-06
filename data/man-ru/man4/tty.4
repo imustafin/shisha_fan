@@ -1,0 +1,63 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt (michael@moria.de),
+.\"     Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1993-07-24 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 2003-04-07 by Michael Kerrisk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TTY 4 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+tty \- управляющий терминал
+.SH ОПИСАНИЕ
+Файл \fI/dev/tty\fP является символьным файлом со старшим номером 5 и младшим
+номером 0, обычно имеет права доступа 0666 и принадлежит
+root:tty. Используется как синоним управляющего терминала процесса (если
+есть).
+.PP
+В дополнении к запросам \fBioctl\fP(2), поддерживаемым устройством, на которое
+указывает \fBtty\fP, также поддерживается вызов \fBioctl\fP(2) \fBTIOCNOTTY\fP.
+.SS TIOCNOTTY
+Отсоединить вызывающий процесс от его управляющего терминала.
+.PP
+Если процесс является лидером сеанса, то использующей терминал группе
+процессов (foreground process group) будут посланы сигналы \fBSIGHUP\fP и
+\fBSIGCONT\fP, и все процессы в текущем сеансе потеряют свои управляющие tty.
+.PP
+Вызов \fBioctl\fP(2) может работать только с дескрипторами файлов, которые
+подключены к \fI/dev/tty\fP. Это используется процессами служб, когда они
+запущены пользователем с терминала. Процесс пытается открыть
+\fI/dev/tty\fP. Если это удаётся, то он отсоединяется от терминала с помощью
+\fBTIOCNOTTY\fP; если же операция не удалась, то очевидно, что процесс не
+присоединён к терминалу и отсоединение не требуется.
+.SH ФАЙЛЫ
+\fI/dev/tty\fP
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchown\fP(1), \fBmknod\fP(1), \fBioctl\fP(2), \fBioctl_console\fP(2), \fBioctl_tty\fP(2),
+\fBtermios\fP(3), \fBttyS\fP(4), \fBvcs\fP(4), \fBpty\fP(7), \fBagetty\fP(8),
+\fBmingetty\fP(8)

@@ -1,0 +1,256 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2019, Microchip Technology Inc. and its subsidiaries
+.\" Copyright (C) 2016-2018, Microsemi Corporation
+.\" Copyright (C) 2016, PMC-Sierra, Inc.
+.\" Written by Kevin Barnett <kevin.barnett@microsemi.com>
+.\"
+.\" %%%LICENSE_START(GPLv2_ONELINE)
+.\" Licensed under GNU General Public License version 2 (GPLv2)
+.\" %%%LICENSE_END
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SMARTPQI 4 2017\-10\-19 Linux "Руководство программиста Linux"
+.SH ИМЯ
+smartpqi \- драйвер Microsemi Smart Family SCSI
+.SH ОБЗОР
+.SY "modprobe smartpqi"
+[\fBdisable_device_id_wildcards=\fP{\fB0\fP|\fB1\fP}]
+[\fBdisable_heartbeat=\fP{\fB0\fP|\fB1\fP}] [\fBdisable_ctrl_shutdown=\fP{\fB0\fP|\fB1\fP}]
+[\fBlockup_action=\fP{\fBnone\fP|\fBreboot\fP|\fBpanic\fP}]
+[\fBexpose_ld_first=\fP{\fB0\fP|\fB1\fP}] [\fBhide_vsep=\fP{\fB0\fP|\fB1\fP}]
+.YS
+.SH ОПИСАНИЕ
+\fBsmartpqi\fP — это драйвер SCSI для контроллеров Microsemi Smart Family.
+.SS "Поддерживаемые операции \f[BI]ioctl\fB\/()"
+Для совместимости с приложениями, написанными для драйверов \fBcciss\fP(4) и
+\fBhpsa\fP(4), многие операции \fBioctl\fP(2), поддерживаемые в драйвере \fBhpsa\fP,
+также поддерживаются драйвером \fBsmartpqi\fP(4) (но не все). Структуры данных,
+используемые в операциях, описаны в файле исходного кода ядра Linux
+\fIinclude/linux/cciss_ioctl.h\fP.
+.TP 
+\fBCCISS_DEREGDISK\fP, \fBCCISS_REGNEWDISK\fP, \fBCCISS_REGNEWD\fP
+Это операции выполняют ту же работу — заставляют драйвер искать новые
+устройства. Это тоже самое, как если выполнить запись в атрибут \fIrescan\fP
+конкретного узла \fBsmartpqi\fP.
+.TP 
+\fBCCISS_GETPCIINFO\fP
+Возвращает домен PCI, шину, устройство, функцию и «board ID» (ID подсистемы
+PCI).
+.TP 
+\fBCCISS_GETDRIVVER\fP
+Возвращает версию драйвера в виде четырёх байт в формате:
+.IP
+.in +4n
+.EX
+(основная_версия << 28) | (дополнительная_версия << 24) |
+        (выпуск << 16) | редакция
+.EE
+.in
+.TP 
+\fBCCISS_PASSTHRU\fP
+Позволить передачу команд BMIC и CISS напрямую в контроллер.
+.SS "Параметры загрузки"
+.TP 
+\fBdisable_device_id_wildcards=\fP{\fB0\fP|\fB1\fP}
+Отключить поддержку, совпадающих с шаблоном идентификаторов
+устройств. Значение по умолчанию равно 0.
+.TP 
+\fBdisable_heartbeat=\fP{\fB0\fP|\fB1\fP}
+Отключить поддержку сторожевой проверки (heartbeat check). Этот параметр
+используется для отладки. Значение по умолчанию равно 0, что оставляет
+активной поддержку сторожевой проверки.
+.TP 
+\fBdisable_ctrl_shutdown=\fP{\fB0\fP|\fB1\fP}
+Отключить поддержку по выключению контроллера в ответ на события его
+блокировки. Значение по умолчанию равно 0.
+.TP 
+\fBlockup_action=\fP{\fBnone\fP|\fBreboot\fP|\fBpanic\fP}
+Задаёт действие, которое выполняет драйвер, когда обнаруживается блокировка
+контроллера. Действие по умолчанию равно \fBnone\fP.
+.TS
+l l
+---
+l l.
+параметр	действие
+\fBnone\fP	отключить только контроллер (offline)
+\fBreboot\fP	перезагрузить систему
+\fBpanic\fP	вызвать панику системы
+.TE
+.TP 
+\fBexpose_ld_first=\fP{\fB0\fP|\fB1\fP}
+Этот параметр включает поддержку доступа к логическим устройствам в системе
+раньше физических устройств. Значение по умолчанию равно 0.
+.TP 
+\fBhide_vsep=\fP{\fB0\fP|\fB1\fP}
+Этот параметр включает отключение на узле доступа к виртуальному
+SEP. Обычно, это относится к напрямую подключаемым устройствам. Значение по
+умолчанию равно 0.
+.SH ФАЙЛЫ
+.SS "Узлы устройства"
+Логические диски доступны через драйвер дисков SCSI (\fIsd\fP), ленточные
+устройства — через драйвер лент SCSI (\fIst\fP), а контроллеры RAID — через
+общий драйвер SCSI (\fIsg\fP); имена узлов устройств называются \fI/dev/sd\fP*,
+\fI/dev/st\fP* и \fI/dev/sg\fP*, соответственно.
+.SS "Файлы в \f[BI]/sys\fB, относящиеся к атрибутам узла SmartPQI"
+.TP 
+\fI/sys/class/scsi_host/host\fP*\fI/rescan\fP
+Атрибут \fIrescan\fP узла только для записи. Факт записи заставляет драйвер
+выполнить сканирование на предмет появления новых, изменившихся или
+удалённых устройств (например, подключаемых на ходу ленточных накопителей
+или только что настроенных или удалённых логических дисков и т. д.) и
+уведомить прослойку (midlayer) SCSI об обнаруженных изменениях. Обычно,
+пересканирование выполняется автоматически при изменении состава
+оборудования, поэтому, обычно, пользователь не должен выполнять запись в
+этот файл. Такое действие может быть полезным при подключении на ходу
+устройств, таких как ленточные накопители или хранилища с уже настроенными
+логическими дисками.
+.TP 
+\fI/sys/class/scsi_host/host\fP*\fI/version\fP
+Атрибут узла \fIversion\fP доступен только для чтения. Он содержит версию
+драйвера и микропрограммы контроллера.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+$ \fBcat /sys/class/scsi_host/host1/version\fP
+driver: 1.1.2\-126
+firmware: 1.29\-112
+.EE
+.in
+.TP 
+\fI/sys/class/scsi_host/host\fP*\fI/lockup_action\fP
+Атрибут узла \fIlockup_action\fP доступен на чтение/запись. Он заставляет
+драйвер выполнять определённое действие при маловероятном событии —
+обнаружении блокировки контроллера. Смотрите в разделе \fBПАРАМЕТРЫ\fP описание
+значений \fIlockup_action\fP.
+.TP 
+\fI/sys/class/scsi_host/host*/driver_version\fP
+Атрибут \fIdriver_version\fP доступен только для чтения. В данном атрибуте
+хранится версия драйвера smartpqi.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+$ \fBcat /sys/class/scsi_host/host1/driver_version\fP
+1.1.2\-126
+.EE
+.in
+.TP 
+\fI/sys/class/scsi_host/host*/firmware_version\fP
+Атрибут \fIfirmware_version\fP доступен только для чтения. Он содержит версию
+микропрограммы контроллера.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+$ \fBcat /sys/class/scsi_host/host1/firmware_version\fP
+1.29\-112
+.EE
+.in
+.TP 
+\fI/sys/class/scsi_host/host*/model\fP
+Атрибут \fImodel\fP доступен только для чтения. Он содержит маркировочную
+строку модели контроллера.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+$ \fBcat /sys/class/scsi_host/host1/model\fP
+1100\-16i
+.EE
+.in
+.TP 
+\fI/sys/class/scsi_host/host*/serial_number\fP
+Атрибут \fIserial_number\fP доступен только для чтения. Он содержит уникальный
+маркировочный номер контроллера.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+$ \fBcat /sys/class/scsi_host/host1/serial_number\fP
+6A316373777
+.EE
+.in
+.TP 
+\fI/sys/class/scsi_host/host*/vendor\fP
+Атрибут \fIvendor\fP доступен только для чтения. Он содержит маркировочную
+строку производителя контроллера.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+$ \fBcat /sys/class/scsi_host/host1/vendor\fP
+Adaptec
+.EE
+.in
+.SS "Файлы в \f[BI]/sys\fB, относящиеся к атрибутам диска SmartPQI"
+В определениях файла ниже символ \fIc\fP означает номер соответствующего
+контроллера SCSI, \fIb\fP — номер шины, \fIt\fP — номер цели, \fIl\fP — номер
+логического элемента (LUN).
+.TP 
+\fI/sys/class/scsi_disk/\fPc\fI:\fPb\fI:\fPt\fI:\fPl\fI/device/raid_level\fP
+Атрибут \fIraid_level\fP доступен только для чтения. В данном атрибуте хранится
+уровень RAID каждого логического диска.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+$ \fBcat /sys/class/scsi_disk/4:0:0:0/device/raid_level\fP
+RAID 0
+.EE
+.in
+.TP 
+\fI/sys/class/scsi_disk/c\fP:\fIb\fP:\fIt\fP:\fIl/device/sas_address\fP
+Атрибут \fIsas_address\fP доступен только для чтения. В данном атрибуте
+хранится уникальный идентификатор диска.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+$ \fBcat /sys/class/scsi_disk/1:0:3:0/device/sas_address\fP
+0x5001173d028543a2
+.EE
+.in
+.TP 
+\fI/sys/class/scsi_disk/c\fP:\fIb\fP:\fIt\fP:\fIl/device/ssd_smart_path_enabled\fP
+Атрибут \fIssd_smart_path_enabled\fP доступен только для чтения. Он имеется у
+томов с включённым ioaccel (ioaccel — альтернативный путь доступа для
+драйвера, который позволяет драйверу посылать запросы ввода\-вывода напрямую
+устройству SCSI минуя микропрограмму контроллера. Это увеличивает
+производительность. Данный метод используется для дисков HBA и логических
+томов на SSD). Содержит 1, если ioaccel включён для тома и 0 в противном
+случае.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+$ \fBcat /sys/class/scsi_disk/1:0:3:0/device/ssd_smart_path_enabled\fP
+0
+.EE
+.in
+.SH ВЕРСИИ
+Драйвер \fBsmartpqi\fP()  впервые появился в Linux версии 4.9.
+.SH ЗАМЕЧАНИЯ
+.SS Настройка
+Описание настройки контроллера Microsemi Smart Family смотрите в руководстве
+пользователя на контроллер, которое можно найти поискав нужный контроллер на
+странице
+.UR https://storage.microsemi.com/
+.UE .
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcciss\fP(4), \fBhpsa\fP(4), \fBsd\fP(4), \fBst\fP(4)
+.PP
+Файл \fIDocumentation/ABI/testing/sysfs\-bus\-pci\-devices\-cciss\fP в дереве
+исходного кода ядра Linux.

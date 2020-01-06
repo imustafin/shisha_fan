@@ -1,0 +1,100 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1987, 1990, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)hostname.7	8.2 (Berkeley) 12/30/93
+.\" $FreeBSD: src/share/man/man7/hostname.7,v 1.7 2004/07/03 18:29:23 ru Exp $
+.\"
+.\" 2008-06-11, mtk, Taken from FreeBSD 6.2 and modified for Linux.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH HOSTNAME 7 2019\-05\-09 Linux "Руководство программиста Linux"
+.SH ИМЯ
+hostname \- определение имени узла
+.SH ОПИСАНИЕ
+Имена узлов (hostnames) представляют собой домены; домен — это иерархический
+список поддоменов, перечисленных через точку; например, имя машины «monet» в
+поддомене «example» домена «com» записывалось бы в виде «monet.example.com».
+.PP
+Каждый элемент имени узла должен быть от 1 до 63 символов, а полное имя
+узла, включая точки, может быть не более 253 символов. Допустимые символы в
+именах: буквы \fBASCII\fP(7) от \fIa\fP до \fIz\fP, цифры от \fI0\fP до \fI9\fP и символ
+переноса (\-). Имя узла не может начинаться с переноса.
+.PP
+Имена узлов часто используются клиентскими и серверными программами, которые
+перед использованием, обычно, должны преобразовать имя в адрес (эта задача,
+обычно, выполняется \fBgetaddrinfo\fP(3) или устаревшей \fBgethostbyname\fP(3)).
+.PP
+Имена узлов в glibc преобразуются инфраструктурой NSS согласно настройке
+\fBhosts\fP в  файле \fBnsswitch.conf\fP. Определитель имён на основе DNS (в NSS —
+служебный модуль \fBdns\fP) работает по следующему алгоритму:
+.PP
+Если имя состоит из одного компонента, то есть не содержит точки, и если в
+значении переменной окружения \fBHOSTALIASES\fP указано имя файла, то в этом
+файле выполняется поиск строки, совпадающей с именем узла. Файл должен
+содержать строки, которые состоят из двух частей, разделённых пробелом; в
+первой части задаётся псевдоним узла, а во второй — полное имя узла, которое
+используется вместо псевдонима. Если при поиске без учёта регистра найден
+искомый узел в первой части, то обработка останавливается и для поиска
+используется имя из второй части.
+.PP
+Если искомое имя оканчивается точкой, то эта точка удаляется и оставшееся
+имя ищется без дальнейшей обработки.
+.PP
+Если искомое имя не оканчивается точкой, то оно ищется со всеми доменами из
+списка до первого совпадения. По умолчанию, список поиска сначала содержит
+локальный домен, затем его родительские домены, имеющие не менее 2
+компонентов в имени (от длинных к коротким). Например, в домене
+cs.example.com имя lithium.cchem сначала будет искаться как
+lithium.cchem.cs.example, а затем как
+lithium.cchem.example.com. lithium.cchem.com не будет искаться, так как в
+локальном домене остался только один компонент. Путь поиска по умолчанию
+можно изменить через системный файл настройки (смотрите \fBresolver\fP(5)).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetaddrinfo\fP(3), \fBgethostbyname\fP(3), \fBnsswitch.conf\fP(5), \fBresolver\fP(5),
+\fBmailaddr\fP(7), \fBnamed\fP(8)
+.PP
+.UR http://www.ietf.org\:/rfc\:/rfc1123.txt
+IETF RFC\ 1123
+.UE
+.PP
+.UR http://www.ietf.org\:/rfc\:/rfc1178.txt
+IETF RFC\ 1178
+.UE
+.\" .SH HISTORY
+.\" Hostname appeared in
+.\" 4.2BSD.

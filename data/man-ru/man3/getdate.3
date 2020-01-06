@@ -1,0 +1,270 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2001 walter harms (walter.harms@informatik.uni-oldenburg.de)
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified, 2001-12-26, aeb
+.\" 2008-09-07, mtk, Various rewrites; added an example program.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETDATE 3 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+getdate, getdate_r \- разделяет строку дата+время на отдельные части
+.SH ОБЗОР
+\fB#include <time.h>\fP
+.PP
+\fBstruct tm *getdate(const char *\fP\fIstring\fP\fB);\fP
+.PP
+\fBextern int getdate_err;\fP
+.PP
+\fB#include <time.h>\fP
+.PP
+\fBint getdate_r(const char *\fP\fIstring\fP\fB, struct tm *\fP\fIres\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgetdate\fP():
+.ad l
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+.RE
+.br
+\fBgetdate_r\fP():
+.ad l
+.RS 4
+_GNU_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBgetdate\fP() преобразует строковое представление даты и времени из
+буфера, на который указывает \fIstring\fP в разделённое на компоненты
+время. Разделённое время сохраняется в структуре \fItm\fP и указатель на неё
+возвращается в качестве результата. Структура \fItm\fP находится в статической
+области и, таким образом, будет перезаписана при следующих вызовах
+\fBgetdate\fP().
+.PP
+В отличие от \fBstrptime\fP(3), (которая имеет аргумент \fIformat\fP), функция
+\fBgetdate\fP() использует форматы, содержащиеся в файле, полный путь к
+которому содержится в переменной окружения \fBDATEMSK\fP. Первая строка файла,
+которая совпадает с полученной входной строкой, будет использована для
+преобразования.
+.PP
+Проверка на совпадение производится без учета регистра. Лишние пробелы как в
+шаблоне, так и в преобразуемой строке игнорируются.
+.PP
+Описатели преобразования, которые могут быть указаны в шаблоне,
+соответствуют используемым в \fBstrptime\fP(3). Кроме того, понимается ещё один
+описатель POSIX.1\-2001:
+.TP 
+\fB%Z\fP
+.\" FIXME Is it (still) true that %Z is not supported in glibc?
+.\" Looking at the glibc 2.21 source code, where the implementation uses
+.\" strptime(), suggests that it might be supported.
+Имя часового пояса. Не реализован в glibc.
+.PP
+Если указан \fB%Z\fP, то структура с разделённым временем инициализируется
+значениями в соответствие с текущим временем указанного часового пояса. В
+противном случае, структура инициализируется разделённым временем в
+соответствии с текущим местным временем (как при вызове \fBlocaltime\fP(3)).
+.PP
+Если указан только день недели, то берётся ближайший день или завтрашний.
+.PP
+Если указан только месяц (и не указан год), то берётся первый месяц,
+эквивалентный заданному, или следующий. Если не указан день, то это будет
+первый день месяца.
+.PP
+Если не указаны часы, минуты и секунды, то берётся текущий час, минута и
+секунда.
+.PP
+Если не указана дата, но мы знаем час, то будет взят первый час, равный
+заданному, начиная с текущего часа.
+.PP
+Функция \fBgetdate_r\fP() является расширением GNU и предоставляет
+реентерабельную версию \fBgetdate\fP(). Она не использует глобальную переменную
+для сообщения об ошибках и статический буфер для возвращаемого разделённого
+времени, она возвращает ошибки как результат функции, а разделённое время
+возвращается в выделенном вызывающем буфере, на который указывает аргумент
+\fIres\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBgetdate\fP() возвращает указатель на \fIstruct tm\fP. В
+противном случае возвращается NULL, а глобальная переменная \fIgetdate_err\fP
+содержит один из номеров ошибок, перечисленных ниже. Изменения \fIerrno\fP не
+определены.
+.PP
+При успешном выполнении \fBgetdate_r\fP() возвращает 0; при ошибке возвращается
+одно из значений ошибки, перечисленных далее.
+.SH ОШИБКИ
+Следующие ошибки возвращаются в \fIgetdate_err\fP (для \fBgetdate\fP()) или как
+результат функции (для \fBgetdate_r\fP()):
+.TP  4n
+\fB1\fP
+Переменная окружения \fBDATEMSK\fP не определена или её значение — пустая
+строка.
+.TP 
+\fB2\fP
+Файл шаблонов, заданный  \fBDATEMSK\fP, не может быть открыт на чтение.
+.TP 
+\fB3\fP
+.\" stat()
+Не удалось получить информацию о состоянии файла.
+.TP 
+\fB4\fP
+Файл шаблонов не является обычным файлом.
+.TP 
+\fB5\fP
+Произошла ошибка при чтении файла шаблонов.
+.TP 
+\fB6\fP
+.\" Error 6 doesn't seem to occur in glibc
+Не удалось выделить память (недостаточно памяти).
+.TP 
+\fB7\fP
+В файле нет строки, совпавшей с входной.
+.TP 
+\fB8\fP
+Неверный формат входной строки.
+.SH ОКРУЖЕНИЕ
+.TP 
+\fBDATEMSK\fP
+Файл, содержащий шаблоны форматирования.
+.TP 
+\fBTZ\fP, \fBLC_TIME\fP
+Переменные, используемые \fBstrptime\fP(3).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetdate\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:getdate env locale
+T{
+\fBgetdate_r\fP()
+T}	Безвредность в нитях	MT\-Safe env locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В описании POSIX.1 для \fBstrptime\fP(3) содержится преобразуемые описатели
+использующие модификатор \fB%E\fP или \fB%O\fP, хотя эти описатели не указаны для
+\fBgetdate\fP(). В glibc, \fBgetdate\fP() реализована посредством \fBstrptime\fP(3),
+таким образом поддерживаются все возможные описатели.
+.SH ПРИМЕР
+Программа, представленная далее, вызывает \fBgetdate\fP() для каждого своего
+аргумента командной строки и при каждом вызове печатаются значения полей
+полученной структуры \fItm\fP. Следующий сеанс показывает работу программы:
+.PP
+.in +4n
+.EX
+$\fB TFILE=$PWD/tfile\fP
+$\fB echo \(aq%A\(aq > $TFILE \fP      # полное название дня недели
+$\fB echo \(aq%T\(aq >> $TFILE\fP      # дата ISO (YYYY\-MM\-DD)
+$\fB echo \(aq%F\(aq >> $TFILE\fP      # время (HH:MM:SS)
+$\fB date\fP
+$\fB export DATEMSK=$TFILE\fP
+$\fB ./a.out Tuesday \(aq2009\-12\-28\(aq \(aq12:22:33\(aq\fP
+Sun Sep  7 06:03:36 CEST 2008
+Call 1 ("Tuesday"):
+    tm_sec   = 36
+    tm_min   = 3
+    tm_hour  = 6
+    tm_mday  = 9
+    tm_mon   = 8
+    tm_year  = 108
+    tm_wday  = 2
+    tm_yday  = 252
+    tm_isdst = 1
+Call 2 ("2009\-12\-28"):
+    tm_sec   = 36
+    tm_min   = 3
+    tm_hour  = 6
+    tm_mday  = 28
+    tm_mon   = 11
+    tm_year  = 109
+    tm_wday  = 1
+    tm_yday  = 361
+    tm_isdst = 0
+Call 3 ("12:22:33"):
+    tm_sec   = 33
+    tm_min   = 22
+    tm_hour  = 12
+    tm_mday  = 7
+    tm_mon   = 8
+    tm_year  = 108
+    tm_wday  = 0
+    tm_yday  = 250
+    tm_isdst = 1
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int
+main(int argc, char *argv[])
+{
+    struct tm *tmp;
+    int j;
+
+    for (j = 1; j < argc; j++) {
+        tmp = getdate(argv[j]);
+
+        if (tmp == NULL) {
+            printf("Ошибка вызова %d; getdate_err = %d\en",
+                   j, getdate_err);
+            continue;
+        }
+
+        printf("Вызов %d (\e"%s\e"):\en", j, argv[j]);
+        printf("    tm_sec   = %d\en", tmp\->tm_sec);
+        printf("    tm_min   = %d\en", tmp\->tm_min);
+        printf("    tm_hour  = %d\en", tmp\->tm_hour);
+        printf("    tm_mday  = %d\en", tmp\->tm_mday);
+        printf("    tm_mon   = %d\en", tmp\->tm_mon);
+        printf("    tm_year  = %d\en", tmp\->tm_year);
+        printf("    tm_wday  = %d\en", tmp\->tm_wday);
+        printf("    tm_yday  = %d\en", tmp\->tm_yday);
+        printf("    tm_isdst = %d\en", tmp\->tm_isdst);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBtime\fP(2), \fBlocaltime\fP(3), \fBsetlocale\fP(3), \fBstrftime\fP(3), \fBstrptime\fP(3)

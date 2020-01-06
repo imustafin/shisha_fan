@@ -1,0 +1,109 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" sd.4
+.\" Copyright 1992 Rickard E. Faith (faith@cs.unc.edu)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SD 4 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sd \- драйвер для дисковых накопителей SCSI
+.SH ОБЗОР
+.nf
+\fB#include <linux/hdreg.h>        \fP/* для HDIO_GETGEO */
+\fB#include <linux/fs.h>           \fP/* для BLKGETSIZE и BLKRRPART */
+.fi
+.SH НАСТРОЙКА
+Эти блочные устройства именуются согласно следующему формату: \fBsd\fP\fIlp,\fP
+где \fIl\fP \(em буква, обозначающая физический накопитель, а \fIp\fP \(em номер
+раздела на этом физическом накопителе. Часто номер раздела \fIp\fP бывает
+пропущен, тогда устройство соответствует полностью всему накопителю.
+.PP
+Файлам устройств дисков SCSI присвоен старший номер 8, а младшие номера
+устройств рассчитываются как (16 * \fIномер_накопителя\fP) + \fIномер_раздела\fP,
+где \fIномер_накопителя\fP \(em это номер физического накопителя в порядке
+обнаружения, а \fIномер_раздела\fP:
+.IP +3
+раздел 0 \(em накопитель полностью
+.IP
+разделы 1\(en4 —«первичные» разделы DOS
+.IP
+разделы 5\(en8 — «расширенные» (или «логические») разделы DOS
+.PP
+Например, устройство \fI/dev/sda\fP будет иметь старший номер 8, младший 0 и
+указывать на первый накопитель SCSI в системе; устройство \fI/dev/sdb3\fP будет
+иметь старший номер 8, младший 19 и указывать на третий "первичный" раздел
+DOS на втором накопителе SCSI.
+.PP
+В настоящий момент поддерживаются только блочные устройства. Устройства для
+прямого доступа (raw) пока не реализованы.
+.SH ОПИСАНИЕ
+Доступны следующие вызовы \fIioctl\fP:
+.TP 
+\fBHDIO_GETGEO\fP
+Возвращает параметры диска из BIOS в виде следующей структуры:
+.PP
+.in +4n
+.EX
+struct hd_geometry {
+    unsigned char  heads;
+    unsigned char  sectors;
+    unsigned short cylinders;
+    unsigned long  start;
+};
+.EE
+.in
+.IP
+Указатель на эту структуру передаётся ioctl(2) в виде параметра.
+.IP
+Информация, возвращаемая в параметре, представляет собой геометрию дискового
+накопителя \fIкак это понимается в DOS!\fP Эта геометрия \fIне\fP является
+физической геометрией накопителя. Однако, она используется при составлении
+таблицы разделов накопителя, и требуется для удобства при работе с
+\fBfdisk\fP(1), \fBefdisk\fP(1) и \fBlilo\fP(1). Если информация о геометрии диска
+недоступна, все поля структуры равны нулю.
+.TP 
+\fBBLKGETSIZE\fP
+Возвращает размер устройства в секторах. Параметр \fBioctl\fP(2) должен быть
+указателем на \fIlong\fP.
+.TP 
+\fBBLKRRPART\fP
+Заставляет перечитать таблицы разделов на диске SCSI. Используется без
+параметра.
+.IP
+Также поддерживаются операции SCSI через \fBioctl\fP(2). Если \fBioctl\fP(2)
+требуется параметр и он равен NULL, то \fBioctl\fP(2) завершается ошибкой
+\fBEINVAL\fP.
+.SH ФАЙЛЫ
+.TP 
+\fI/dev/sd[a\-h]\fP
+устройство целиком
+.TP 
+\fI/dev/sd[a\-h][0\-8]\fP
+отдельные блочные разделы
+.\".SH SEE ALSO
+.\".BR scsi (4)

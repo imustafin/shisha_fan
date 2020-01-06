@@ -1,0 +1,86 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Contributed by Niki A. Rahimi, LTC Security Development
+.\" narahimi@us.ibm.com
+.\"
+.\" %%%LICENSE_START(FREELY_REDISTRIBUTABLE)
+.\" May be freely distributed and modified.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PCICONFIG_READ 2 2016\-07\-17 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pciconfig_read, pciconfig_write, pciconfig_iobase \- работа с информацией
+устройства PCI
+.SH ОБЗОР
+.nf
+\fB#include <pci.h>\fP
+.PP
+\fBint pciconfig_read(unsigned long \fP\fIbus\fP\fB, unsigned long \fP\fIdfn\fP\fB,\fP
+\fB          unsigned long \fP\fIoff\fP\fB, unsigned long \fP\fIlen\fP\fB, void *\fP\fIbuf\fP\fB);\fP
+\fBint pciconfig_write(unsigned long \fP\fIbus\fP\fB, unsigned long \fP\fIdfn\fP\fB,\fP
+\fB          unsigned long \fP\fIoff\fP\fB, unsigned long \fP\fIlen\fP\fB, void *\fP\fIbuf\fP\fB);\fP
+\fBint pciconfig_iobase(long \fP\fIwhich\fP\fB, unsigned long \fP\fIbus\fP\fB,\fP
+\fB          unsigned long \fP\fIdevfn\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+.PP
+Всё взаимодействие с устройствами PCI, в основном, уже выполнено в ядре на
+уровне PCI, и поэтому данные вызовы, обычно, ненужны при вызове из
+пользовательского пространства.
+.TP 
+\fBpciconfig_read\fP()
+Выполняет чтение в буфер \fIbuf\fP из устройства \fIdev\fP со смещением \fIoff\fP.
+.TP 
+\fBpciconfig_write\fP()
+Выполняет запись буфера \fIbuf\fP в устройство \fIdev\fP со смещением \fIoff\fP.
+.TP 
+\fBpciconfig_iobase\fP()
+Принимает пару шина/функция_устройства и возвращает физический адрес или
+смещения в памяти (для таких вещей как prep, это 0xc0000000), базы
+ввода\-вывода для циклов PIO, или промежутки (holes) ISA, если они есть.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.TP 
+\fBpciconfig_read\fP()
+При успешном выполнении возвращается ноль. В случае ошибки возвращается \-1,
+а \fIerrno\fP устанавливается в соответствующее значение.
+.TP 
+\fBpciconfig_write\fP()
+При успешном выполнении возвращается ноль. В случае ошибки возвращается \-1,
+а \fIerrno\fP устанавливается в соответствующее значение.
+.TP 
+\fBpciconfig_iobase\fP()
+Возвращает информацию о расположении различных областей ввода\-вывода в
+физической памяти согласно значению \fIwhich\fP. Значениями \fIwhich\fP могут
+быть: \fBIOBASE_BRIDGE_NUMBER\fP, \fBIOBASE_MEMORY\fP, \fBIOBASE_IO\fP,
+\fBIOBASE_ISA_IO\fP, \fBIOBASE_ISA_MEM\fP.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Неправильное значение \fIlen\fP. Не применимо к \fBpciconfig_iobase\fP().
+.TP 
+\fBEIO\fP
+Ошибка ввода\-вывода.
+.TP 
+\fBENODEV\fP
+Для \fBpciconfig_iobase\fP() значение «рукава (hose)» равно NULL. Для других
+вызовов не удаётся найти слот.
+.TP 
+\fBENOSYS\fP
+Данные вызовы в системе не реализованы (не определён макрос \fBCONFIG_PCI\fP).
+.TP 
+\fBEOPNOTSUPP\fP
+Данное значение верно только для \fBpciconfig_iobase\fP(). Возвращается, если
+указано неверное значение \fIwhich\fP.
+.TP 
+\fBEPERM\fP
+Пользователь не имеет мандата \fBCAP_SYS_ADMIN\fP. Не применимо к
+\fBpciconfig_iobase\fP().
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные вызовы есть только в Linux, они доступны начиная с версии
+2.0.26/2.1.11.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcapabilities\fP(7)

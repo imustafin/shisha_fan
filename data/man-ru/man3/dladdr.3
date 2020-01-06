@@ -1,0 +1,218 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2015 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" and Copyright (C) 2008 Petr Baudis <pasky@suse.cz> (dladdr caveat)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DLADDR 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+dladdr, dladdr1 \- транслирует адрес в информацию о символе
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP
+\fB#include <dlfcn.h>\fP
+.PP
+\fBint dladdr(void *\fP\fIaddr\fP\fB, Dl_info *\fP\fIinfo\fP\fB);\fP
+.PP
+\fBint dladdr1(void *\fP\fIaddr\fP\fB, Dl_info *\fP\fIinfo\fP\fB, void **\fP\fIextra_info\fP\fB, int \fP\fIflags\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-ldl\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBdladdr\fP() определяет, в каком из загруженных общих объектов
+приложения расположен адрес, указанный в \fIaddr\fP. Если объект находится, то
+\fBdladdr\fP() возвращает информацию об общем объекте и символе, который
+относится к адресу \fIaddr\fP. Данная информация возвращается в виде структуры
+\fIDl_info\fP:
+.PP
+.in +4n
+.EX
+typedef struct {
+    const char *dli_fname;  /* путь к общему объекту, который
+                               содержит адрес */
+    void       *dli_fbase;  /* начальный адрес, по которому расположен
+                               общий объект */
+    const char *dli_sname;  /* имя символа, к которому относится
+                               адрес \fIaddr\fP */
+    void       *dli_saddr;  /* точный адрес символа с
+                               именем \fIdli_sname\fP */
+} Dl_info;
+.EE
+.in
+.PP
+Если символ, соответствующий адресу \fIaddr\fP, не найден, то \fIdli_sname\fP и
+\fIdli_saddr\fP устанавливаются в NULL.
+.PP
+Функция \fBdladdr1\fP() подобна \fBdladdr\fP(), но возвращает дополнительную
+информацию в аргументе \fIextra_info\fP. Возвращаемая информация зависит от
+значения, указанного в \fIflags\fP, которое может быть одним из:
+.TP 
+\fBRTLD_DL_LINKMAP\fP
+Возвратить указатель на карту ссылок для совпадающего файла. Аргумент
+\fIextra_info\fP указывает на указатель на структуру \fIlink_map\fP (т. е.,
+\fIstruct link_map\ **\fP), определённую в \fI<link.h>\fP так:
+.IP
+.in +4n
+.EX
+struct link_map {
+    ElfW(Addr) l_addr;  /* разница между
+                           адресом в файле ELF и
+                           адресом в памяти */
+    char      *l_name;  /* абсолютный путь, где
+                           был найден объект */
+    ElfW(Dyn) *l_ld;    /* динамический раздел
+                           общего объекта */
+    struct link_map *l_next, *l_prev;
+                        /* цепочка загруженных объектов */
+
+    /* дополнительные поля, зависящие от
+       реализации */
+};
+.EE
+.in
+.TP 
+\fBRTLD_DL_SYMENT\fP
+Возвращает указатель на элемент символьной таблицы ELF с совпадающим
+символом. Аргумент \fIextra_info\fP — указатель на символьный указатель:
+\fIconst ElfW(Sym) **\fP. Макрос \fIElfW\fP() преобразует этот аргумент в имя типа
+данных ELF, подходящее для аппаратной архитектуры. Например, на 64\-битной
+платформе \fIElfW(Sym)\fP возвращает имя типа данных \fIElf64_Sym\fP, которое
+определено в \fI<elf.h>\fP так:
+.IP
+.in +4n
+.EX
+typedef struct  {
+    Elf64_Word    st_name;     /* имя символа */
+    unsigned char st_info;     /* тип символа и привязка */
+    unsigned char st_other;    /* видимость символа */
+    Elf64_Section st_shndx;    /* номер раздела */
+    Elf64_Addr    st_value;    /* значение символа */
+    Elf64_Xword   st_size;     /* размер символа */
+} Elf64_Sym;
+.EE
+.in
+.IP
+Поле \fIst_name\fP — номер в строковой таблице.
+.IP
+В поле \fIst_info\fP закодирован тип и привязка символа. Тип можно извлечь с
+помощью макроса \fBELF64_ST_TYPE(st_info)\fP (или \fBELF32_ST_TYPE()\fP, на
+32\-битных платформах), который возвращает одно из следующих значений:
+.in +4n
+.TS
+lb lb
+lb l.
+Значение	Описание
+STT_NOTYPE	тип символа не указан
+STT_OBJECT	символ является объектом данных
+STT_FUNC	символ является объектом кода
+STT_SECTION	символ, связанный с разделом
+STT_FILE	имя символа является именем файла
+STT_COMMON	символ является объектом общих данных
+STT_TLS	символ является объектом локальных данных нити
+STT_GNU_IFUNC	символ является объектом скрытого кода
+.TE
+.in
+.IP
+Привязку символа можно извлечь из поля \fIst_info\fP с помощью макроса
+\fBELF64_ST_BIND(st_info)\fP (или \fBELF32_ST_BIND()\fP, на 32\-битных платформах),
+который возвращает одно из следующих значений:
+.in +4n
+.TS
+lb lb
+lb l.
+Значение	Описание
+STB_LOCAL	локальный символ
+STB_GLOBAL	глобальный символ
+STB_WEAK	символ со слабой привязкой
+STB_GNU_UNIQUE	уникальный символ
+.TE
+.in
+.IP
+В поле \fIst_other\fP содержится значение видимости символа, которую можно
+извлечь с помощью макроса  \fBELF64_ST_VISIBILITY(st_info)\fP (или
+\fBELF32_ST_VISIBILITY()\fP, на 32\-битных платформах), который возвращает одно
+из следующих значений:
+.in +4n
+.TS
+lb lb
+lb l.
+Значение	Описание
+STV_DEFAULT	правила видимости символов по умолчанию
+STV_INTERNAL	скрытый класс, зависящий от процессора
+STV_HIDDEN	Символ недоступен в других модулях
+STV_PROTECTED	невыгружаемый, не экспортируется
+.TE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают ненулевое значение. Если
+адрес, указанный в \fIaddr\fP, мог бы совпасть с общим объектом, но не с
+символом в общем объекте, то полям \fIinfo\->dli_sname\fP и
+\fIinfo\->dli_saddr\fP присваивается значение NULL.
+.PP
+.\" According to the FreeBSD man page, dladdr1() does signal an
+.\" error via dlerror() for this case.
+Если адрес, указанный \fIaddr\fP, мог бы совпасть с общим объектом, то эти
+функции возвращают 0. В этом случае сообщение об ошибке \fIне\fP доступно через
+\fBdlerror\fP(3).
+.SH ВЕРСИИ
+Функция \fBdladdr\fP() есть в glibc 2.0 и новее. Функция \fBdladdr1\fP() впервые
+появилась в glibc 2.3.3.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw19 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBdladdr\fP(),
+\fBdladdr1\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции являются нестандартными расширениями GNU, которые также
+присутствуют в Solaris.
+.SH ДЕФЕКТЫ
+Иногда указатели на функции, передаваемые в \fBdladdr\fP(), могут вас
+удивить. На некоторых архитектурах (в частности, i386\- и x86\-64),
+\fIdli_fname\fP и \fIdli_fbase\fP могут указывать на объект, из которого
+вызывалась функция \fBdladdr\fP(), даже если функция, использовавшаяся как
+аргумент, должна быть из динамически скомпонованной библиотеки.
+.PP
+Проблема в том, что указатель на функцию по прежнему ищется во время
+компиляции, но всего лишь указывает на раздел \fIplt\fP (таблицу компоновки
+процедур) первоначального объекта (которая размещает вызов после запроса
+динамического компоновщика на поиск символа). Чтобы обойти это, вы можете
+попробовать скомпилировать независимый от размещения код: в этом случае
+компилятор больше не сможет подготовить указатель во время компиляции и
+\fBgcc\fP(1) создаст код, который просто загрузит конечный адрес символа из
+\fIgot\fP (глобальной таблицы смещений) при запуске до передачи его в
+\fBdladdr\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdl_iterate_phdr\fP(3), \fBdlinfo\fP(3), \fBdlopen\fP(3), \fBdlsym\fP(3), \fBld.so\fP(8)

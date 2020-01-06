@@ -1,0 +1,97 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_ATTR_SETSTACKADDR 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_attr_setstackaddr, pthread_attr_getstackaddr \- изменяет/возвращает
+атрибут адреса стека у объекта атрибутов нити
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_attr_setstackaddr(pthread_attr_t *\fP\fIattr\fP\fB, void *\fP\fIstackaddr\fP\fB);\fP
+\fBint pthread_attr_getstackaddr(const pthread_attr_t *\fP\fIattr\fP\fB, void **\fP\fIstackaddr\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Данные функции устарели: \fBне используйте их\fP. Используйте
+\fBpthread_attr_setstack\fP(3) и \fBpthread_attr_getstack\fP(3).
+.PP
+Функция \fBpthread_attr_setstackaddr\fP() изменяет атрибут адреса стека нити в
+объекте атрибутов нити, на который указывает \fIattr\fP, в значение
+\fIstackaddr\fP. Данным атрибутом задаётся расположение стека, который будет
+использоваться нитью, созданной с учётом объекта атрибутов нити \fIattr\fP.
+.PP
+Значение \fIstackaddr\fP должно указывать на буфер из, по крайней мере,
+\fBPTHREAD_STACK_MIN\fP байт, который был выделен вызывающим. Страницы
+выделенного буфера должны быть доступны на чтение и запись.
+.PP
+Функция \fBpthread_attr_getstackaddr\fP() возвращает атрибут адреса стека у
+объекта атрибутов нити, на который указывает \fIattr\fP, в буфер на который
+указывает \fIstackaddr\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+Ошибок не предполагается (тем не менее, приложения должны обрабатывать
+возможную ошибку возврата).
+.SH ВЕРСИИ
+Эти функции доступны в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw28 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_attr_setstackaddr\fP(),
+\fBpthread_attr_getstackaddr\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+В POSIX.1\-2001 эта функция определена, но объявлена устаревшей. В
+POSIX.1\-2008 спецификация этих функций удалена.
+.SH ЗАМЕЧАНИЯ
+\fIНе используйте эти функции!\fP Они не являются переносимыми, так как не
+предоставляют возможности указать направление роста или диапазон
+стека. Например, для архитектур со стеком растущим вниз, в \fIstackaddr\fP
+указывается следующий адрес за \fIсамым верхним\fP адресом выделяемой области
+стека, Однако для архитектур со стеком растущим вверх, в \fIstackaddr\fP
+указывается \fIсамый нижний\fP адрес выделяемой области стека. area. В отличие
+от этого, значение \fIstackaddr\fP, используемое \fBpthread_attr_setstack\fP(3) и
+\fBpthread_attr_getstack\fP(3), всегда является указателем на самый нижний
+адрес в выделяемой области стека (а в аргументе \fIstacksize\fP указывается
+диапазон стека).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthread_attr_init\fP(3), \fBpthread_attr_setstack\fP(3),
+\fBpthread_attr_setstacksize\fP(3), \fBpthread_create\fP(3), \fBpthreads\fP(7)

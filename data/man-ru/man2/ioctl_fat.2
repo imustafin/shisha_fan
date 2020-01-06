@@ -1,0 +1,428 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2014, Heinrich Schuchardt <xypron.glpk@gmx.de>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume
+.\" no responsibility for errors or omissions, or for damages resulting
+.\" from the use of the information contained herein.  The author(s) may
+.\" not have taken the same level of care in the production of this
+.\" manual, which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IOCTL\-FAT 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ioctl_fat \- управление файловой системой FAT
+.SH ОБЗОР
+.nf
+\fB#include <linux/msdos_fs.h>\fP
+\fB#include <sys/ioctl.h>\fP
+.PP
+\fBint ioctl(int \fP\fIfd\fP\fB, FAT_IOCTL_GET_ATTRIBUTES, uint32_t *\fP\fIattr\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, FAT_IOCTL_SET_ATTRIBUTES, uint32_t *\fP\fIattr\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, FAT_IOCTL_GET_VOLUME_ID, uint32_t *\fP\fIid\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, VFAT_IOCTL_READDIR_BOTH,\fP
+\fB          struct __fat_dirent[2] \fP\fIentry\fP\fB);\fP
+\fBint ioctl(int \fP\fIfd\fP\fB, VFAT_IOCTL_READDIR_SHORT,\fP
+\fB          struct __fat_dirent[2] \fP\fIentry\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBioctl\fP(2) можно использовать для чтения и записи
+метаданных файловых систем FAT, которые недоступны через другие системные
+вызовы.
+.SS "Чтение и установка файловых атрибутов"
+У файлов и каталогов и в файловой системе FAT есть битовая маска атрибутов,
+которую можно прочитать с помощью \fBFAT_IOCTL_GET_ATTRIBUTES\fP и записать с
+\fBFAT_IOCTL_SET_ATTRIBUTES\fP.
+.PP
+Аргумент \fIfd\fP содержит файловый дескриптор файла или каталога. Для создания
+файлового дескриптора достаточно вызвать \fBopen\fP(2) с флагом \fBO_RDONLY\fP.
+.PP
+Аргумент \fIattr\fP содержит указатель на битовую маску. Назначение битов в
+маске:
+.TP 
+\fBATTR_RO\fP
+Данный бит означает, что файл или каталог доступен только для чтения.
+.TP 
+\fBATTR_HIDDEN\fP
+Данный бит означает, что файл или каталог скрыт.
+.TP 
+\fBATTR_SYS\fP
+Данный бит означает, что файл является системным.
+.TP 
+\fBATTR_VOLUME\fP
+Данный бит означает, что файл является меткой тома. Данный атрибут доступен
+только для чтения.
+.TP 
+\fBATTR_DIR\fP
+Данный бит означает, что это каталог. Данный атрибут доступен только для
+чтения.
+.TP 
+\fBATTR_ARCH\fP
+Данный бит означает, что файл или каталог должны архивироваться. Он
+устанавливается при создании или изменении файла. Он сбрасывается системой
+архивирования.
+.PP
+Нулевое значение \fBATTR_NONE\fP можно использовать для указания, что все биты
+атрибутов не установлены.
+.SS "Чтение идентификатора тома"
+Файловые системы FAT маркируются идентификатором тома. Идентификатор тома
+может быть прочитан с помощью \fBFAT_IOCTL_GET_VOLUME_ID\fP.
+.PP
+Аргумент \fIfd\fP может быть файловым дескриптором файла или каталога файловой
+системы. Для создания файлового дескриптора достаточно вызвать \fBopen\fP(2) с
+флагом \fBO_RDONLY\fP.
+.PP
+Аргумент \fIid\fP — это указатель на поле, которое будет заполнено ID
+тома. Обычно, идентификатор тома выдаётся пользователю как группа из двух
+16\-битных полей:
+.PP
+.in +4n
+.EX
+printf("Volume ID %04x\-%04x\en", id >> 16, id & 0xFFFF);
+.EE
+.in
+.SS "Чтение коротких имён файлов каталога"
+Файл или каталог файловой системы FAT всегда имеет короткое имя файла,
+состоящее из не более чем 8 заглавных букв, необязательной точки и до 3
+заглавных букв расширения файла. Если реальное имя файла не следует такой
+схеме, то оно сохраняется как длинное имя файла — до 255 символов UTF\-16.
+.PP
+Короткие имена файлов в каталоге можно прочитать с помощью
+\fBVFAT_IOCTL_READDIR_SHORT\fP. С помощью \fBVFAT_IOCTL_READDIR_BOTH\fP можно
+прочитать как короткие так и длинные имена файлов.
+.PP
+Аргумент \fIfd\fP должен содержать файловый дескриптор каталога. Для создания
+файлового дескриптора достаточно вызвать \fBopen\fP(2) с флагом
+\fBO_RDONLY\fP. Файловый дескриптор можно использовать только однажды для
+обхода всех элементов каталога повторными вызовами \fBioctl\fP(2).
+.PP
+Параметр \fIinfo\fP представляет собой двухэлементный массив структур
+следующего вида:
+.PP
+.in +4n
+.EX
+struct __fat_dirent {
+    long            d_ino;
+    __kernel_off_t  d_off;
+    uint32_t short  d_reclen;
+    char            d_name[256];
+};
+.EE
+.in
+.PP
+Первый элемент массива содержит короткое имя файла. Во втором содержится
+длинное имя файла.
+.PP
+Поля \fId_ino\fP и \fId_off\fP заполняются только для длинных имён. Поле \fId_ino\fP
+содержит номер inode каталога. Поле \fId_off\fP содержит смещение записи файла
+в каталоге. Так как эти поля недоступны для коротких имён, пользовательский
+код должен просто игнорировать их.
+.PP
+В поле \fId_reclen\fP содержится длина имени файла из поля \fId_name\fP. Для
+сохранения обратной совместимости длина 0 для короткого имени указывает на
+достижение конца каталога. Однако предпочтительным методом определения конца
+каталога является проверка возвращаемого \fBioctl\fP(2) значения. Если длинное
+имя не существует, то поле \fId_reclen\fP устанавливается в 0 и \fId_name\fP —
+строка символов длиной 0 для длинного имени файла.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в значение
+ошибки.
+.PP
+При использовании \fBVFAT_IOCTL_READDIR_BOTH\fP и \fBVFAT_IOCTL_READDIR_SHORT\fP
+возвращается значение 1, означающее, что был прочитан новый элемент каталога
+и 0, когда достигнут конец каталога.
+.SH ОШИБКИ
+.TP 
+\fBENOENT\fP
+Данная ошибка может возвращаться при \fBVFAT_IOCTL_READDIR_BOTH\fP и
+\fBVFAT_IOCTL_READDIR_SHORT\fP, если файловый дескриптор \fIfd\fP указывает на на
+удалённый, но ещё открытый каталог.
+.TP 
+\fBENOTDIR\fP
+Данная ошибка может возвращаться при \fBVFAT_IOCTL_READDIR_BOTH\fP и
+\fBVFAT_IOCTL_READDIR_SHORT\fP, если файловый дескриптор \fIfd\fP не указывает на
+каталог.
+.TP 
+\fBENOTTY\fP
+Файловый дескриптор \fIfd\fP указывает не на объект в файловой системе FAT.
+.PP
+Дополнительные значения ошибок смотрите в \fBioctl\fP(2).
+.SH ВЕРСИИ
+\fBVFAT_IOCTL_READDIR_BOTH\fP и \fBVFAT_IOCTL_READDIR_SHORT\fP впервые появились в
+Linux 2.0.
+.PP
+.\" just before we got Git history
+\fBFAT_IOCTL_GET_ATTRIBUTES\fP и \fBFAT_IOCTL_SET_ATTRIBUTES\fP впервые появились
+в Linux 2.6.12.
+.PP
+.\" commit 6e5b93ee55d401f1619092fb675b57c28c9ed7ec
+\fBFAT_IOCTL_GET_VOLUME_ID\fP появился в версии 3.11 ядра Linux.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный программный интерфейс существует только в Linux.
+.SH ПРИМЕР
+.SS "Переключение флага архивирования"
+В следующей программе показано использование \fBioctl\fP(2) для изменения
+атрибутов файлов. Программа читает и показывает атрибут архивирования
+файла. После изменения значения атрибута на противоположный, программа
+читает и показывает атрибут ещё раз.
+.PP
+Пример сеанса работы программы с файлом \fI/mnt/user/foo\fP:
+.PP
+.in +4n
+.EX
+# ./toggle_fat_archive_flag /mnt/user/foo
+Флаг архивирования установлен
+Переключение флага архивирования
+Флаг архивирования сброшен
+.EE
+.in
+.SS "Исходный код программы (toggle_fat_archive_flag.c)"
+\&
+.EX
+#include <fcntl.h>
+#include <linux/msdos_fs.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
+/*
+ * Читает атрибуты файла в файловой системе FAT.
+ * Выводит состояние флага архивирования.
+ */
+static uint32_t
+readattr(int fd)
+{
+    uint32_t attr;
+    int ret;
+
+    ret = ioctl(fd, FAT_IOCTL_GET_ATTRIBUTES, &attr);
+    if (ret == \-1) {
+        perror("ioctl");
+        exit(EXIT_FAILURE);
+    }
+
+    if (attr & ATTR_ARCH)
+        printf("Флаг архивирования установлен\en");
+    else
+        printf("Флаг архивирования сброшен\en");
+
+    return attr;
+}
+
+int
+main(int argc, char *argv[])
+{
+    uint32_t attr;
+    int fd;
+    int ret;
+
+    if (argc != 2) {
+        printf("Использование: %s ИМЯ_ФАЙЛА\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    fd = open(argv[1], O_RDONLY);
+    if (fd == \-1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    /*
+     * Читает и показывает атрибуты файлов в FAT.
+     */
+    attr = readattr(fd);
+
+    /*
+     * Инвертирует атрибут архивирования.
+     */
+    printf("Переключение флага архивирования\en");
+    attr ^= ATTR_ARCH;
+
+    /*
+     * Записывает изменённые атрибуты файлов в FAT.
+     */
+    ret = ioctl(fd, FAT_IOCTL_SET_ATTRIBUTES, &attr);
+    if (ret == \-1) {
+        perror("ioctl");
+        exit(EXIT_FAILURE);
+    }
+
+    /*
+     * Читает и показывает атрибуты файлов в FAT.
+     */
+    readattr(fd);
+
+    close(fd);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.\"
+.SS "Чтение идентификатора тома"
+Следующий пример кода демонстрирует использование \fBioctl\fP(2) для вывода
+идентификатора тома файловой системы FAT.
+.PP
+Пример сеанса работы программы с файлом \fI/mnt/user\fP:
+.PP
+.in +4n
+.EX
+$ ./display_fat_volume_id /mnt/user
+Volume ID 6443\-6241
+.EE
+.in
+.SS "Исходный код программы (display_fat_volume_id.c)"
+\&
+.EX
+#include <fcntl.h>
+#include <linux/msdos_fs.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+    uint32_t id;
+    int fd;
+    int ret;
+
+    if (argc != 2) {
+        printf("Использование: %s ИМЯ_ФАЙЛА\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    fd = open(argv[1], O_RDONLY);
+    if (fd == \-1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    /*
+     * Читает ID тома.
+     */
+    ret = ioctl(fd, FAT_IOCTL_GET_VOLUME_ID, &id);
+    if (ret == \-1) {
+        perror("ioctl");
+        exit(EXIT_FAILURE);
+    }
+
+    /*
+     * Форматирует вывод в виде двух групп по 16 бит каждая.
+     */
+    printf("Volume ID %04x\-%04x\en", id >> 16, id & 0xFFFF);
+
+    close(fd);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.\"
+.SS "Вывод содержимого каталога"
+Следующий пример кода демонстрирует использование \fBioctl\fP(2) для вывода
+содержимого каталога.
+.PP
+Пример сеанса работы программы с файлом \fI/mnt/user\fP:
+.PP
+.in +4n
+.EX
+$ \fB./fat_dir /mnt/user\fP
+\[char46] \-> \*(rq
+\[char46]. \-> \*(rq
+ALONGF~1.TXT \-> 'a long filename.txt'
+UPPER.TXT \-> \*(rq
+LOWER.TXT \-> 'lower.txt'
+.EE
+.in
+.\"
+.SS "Исходный код программы"
+.in +4n
+.EX
+#include <fcntl.h>
+#include <linux/msdos_fs.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+    struct __fat_dirent entry[2];
+    int fd;
+    int ret;
+
+    if (argc != 2) {
+        printf("Использование: %s КАТАЛОГ\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    /*
+     * Открывает файловый дескриптор каталога.
+     */
+    fd = open(argv[1], O_RDONLY | O_DIRECTORY);
+    if (fd == \-1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    for (;;) {
+
+        /*
+         * Читает следующий элемент из каталога.
+         */
+        ret = ioctl( fd, VFAT_IOCTL_READDIR_BOTH, entry);
+
+        /*
+         * Если произошла ошибка, то возвращает \-1.
+         * Если достигнут конец каталога, то
+         * возвращает 0.
+         * Для обратной совместимости при достижении конца каталога
+         * также d_reclen == 0.
+         */
+        if (ret < 1)
+            break;
+
+        /*
+         * Выводит короткое и длинное имя.
+         */
+        printf("%s \-> '%s'\en", entry[0].d_name, entry[1].d_name);
+    }
+
+    if (ret == \-1) {
+        perror("VFAT_IOCTL_READDIR_BOTH");
+        exit(EXIT_FAILURE);
+    }
+
+    /*
+     * Закрывает файловый дескриптор.
+     */
+    close(fd);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBioctl\fP(2)

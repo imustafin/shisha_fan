@@ -1,0 +1,131 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Ian Redfern (redferni@logica.com)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     FreeBSD 4.4 man pages
+.\"
+.\" Minor additions, aeb, 2013-06-21
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ETHER_ATON 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+ether_aton, ether_ntoa, ether_ntohost, ether_hostton, ether_line,
+ether_ntoa_r, ether_aton_r \- процедуры для работы с адресами ethernet
+.SH ОБЗОР
+.nf
+\fB#include <netinet/ether.h>\fP
+.PP
+\fBchar *ether_ntoa(const struct ether_addr *\fP\fIaddr\fP\fB);\fP
+.PP
+\fBstruct ether_addr *ether_aton(const char *\fP\fIasc\fP\fB);\fP
+.PP
+\fBint ether_ntohost(char *\fP\fIhostname\fP\fB, const struct ether_addr *\fP\fIaddr\fP\fB);\fP
+.PP
+\fBint ether_hostton(const char *\fP\fIhostname\fP\fB, struct ether_addr *\fP\fIaddr\fP\fB);\fP
+.PP
+\fBint ether_line(const char *\fP\fIline\fP\fB, struct ether_addr *\fP\fIaddr\fP\fB,\fP
+\fB               char *\fP\fIhostname\fP\fB);\fP
+.PP
+/* расширения GNU */
+.br
+\fBchar *ether_ntoa_r(const struct ether_addr *\fP\fIaddr\fP\fB, char *\fP\fIbuf\fP\fB);\fP
+.PP
+\fBstruct ether_addr *ether_aton_r(const char *\fP\fIasc\fP\fB,\fP
+\fB                                struct ether_addr *\fP\fIaddr\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBether_aton\fP() преобразует 48\-битный адрес узла Ethernet \fIasc\fP из
+стандартной записи в виде шестнадцатеричных\-символов\-и\-двоеточий в двоичный
+код с сетевым порядком расположения байтов и возвращает указатель на него в
+статически выделенном буфере, который могут изменить любые последующие
+вызовы. Функция \fBether_aton\fP() возвращает NULL, если адрес некорректен.
+.PP
+Функция \fBether_ntoa\fP() преобразует адрес узла Ethernet \fIaddr\fP, заданный
+значением с сетевым порядком байтов, в строку в стандартной форме записи в
+виде шестнадцатеричных\-символов\-и\-двоеточий. Строка возвращается в
+статически выделяемом буфере, который перезаписывается при последующих
+вызовах.
+.PP
+Функция \fBether_ntohost\fP() для заданного адреса Ethernet ищет
+соответствующее имя узла в файле \fI/etc/ethers\fP и возвращает ненулевое
+значение, если оно не может быть найдено.
+.PP
+Функция \fBether_hostton\fP() для заданного имени узла ищет соответствующий
+адрес Ethernet в файле \fI/etc/ethers\fP и возвращает ненулевое значение, если
+он не может быть найден.
+.PP
+Функция \fBether_line\fP() обрабатывает строку в формате файла \fI/etc/ethers\fP
+(адрес Ethernet, пробельный символ, имя узла; комментарий начинается с
+\(aq#\(aq) и возвращает пару адрес/имя узла, или ненулевое значение, если
+строка не может быть обработана. Буфер, на который указывает \fIhostname\fP,
+должен быть достаточно большим, чтобы вместить, например, строку \fIline\fP.
+.PP
+Функции \fBether_ntoa_r\fP() и \fBether_aton_r\fP() являются безопасными для
+использования в нитях аналогами \fBether_ntoa\fP() и \fBether_aton\fP()
+соответственно, и не используют статических буферов.
+.PP
+Структура \fIether_addr\fP определена в \fI<net/ethernet.h>\fP:
+.PP
+.in +4n
+.EX
+struct ether_addr {
+    uint8_t ether_addr_octet[6];
+}
+.EE
+.in
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw33 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBether_aton\fP(),
+\fBether_ntoa\fP()
+T}	Безвредность в нитях	MT\-Unsafe
+T{
+\fBether_ntohost\fP(),
+\fBether_hostton\fP(),
+\fBether_line\fP(),
+\fBether_ntoa_r\fP(),
+\fBether_aton_r\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.3BSD, SunOS.
+.SH ДЕФЕКТЫ
+.\" The fix was presumably commit c0a0f9a32c8baa6ab93d00eb42d92c02e9e146d7
+.\" which was in glibc 2.3
+В glibc 2.2.5 и старее реализация \fBether_line\fP() некорректна.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBethers\fP(5)

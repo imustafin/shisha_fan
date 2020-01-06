@@ -1,0 +1,542 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2009 Bill O. Gallmeister (bgallmeister@gmail.com)
+.\" and Copyright 2010 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux glibc source code
+.\"     POSIX 1003.1-2004 documentation
+.\"     (http://www.opengroup.org/onlinepubs/009695399)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH POSIX_SPAWN 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+posix_spawn, posix_spawnp \- порождает процесс
+.SH ОБЗОР
+.nf
+\fB#include <spawn.h>\fP
+.PP
+\fBint posix_spawn(pid_t *\fP\fIpid\fP\fB, const char *\fP\fIpath\fP\fB,\fP
+\fB                const posix_spawn_file_actions_t *\fP\fIfile_actions\fP\fB,\fP
+\fB                const posix_spawnattr_t *\fP\fIattrp\fP\fB,\fP
+\fB                char *const \fP\fIargv[]\fP\fB, char *const \fP\fIenvp[]\fP\fB);\fP
+.PP
+\fBint posix_spawnp(pid_t *\fP\fIpid\fP\fB, const char *\fP\fIfile\fP\fB,\fP
+\fB                const posix_spawn_file_actions_t *\fP\fIfile_actions\fP\fB,\fP
+\fB                const posix_spawnattr_t *\fP\fIattrp\fP\fB,\fP
+\fB                char *const \fP\fIargv[]\fP\fB, char *const \fP\fIenvp[]\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функции \fBposix_spawn\fP() и \fBposix_spawnp\fP() используются для создания новых
+дочерних процессов, которые выполняют указываемый файл. Эти функции были
+определены в POSIX для стандартизации метода создания новых процессов на
+машинах, у которых нет возможности поддержки системного вызова \fBfork\fP(2). К
+таким машинах, обычно, относятся встраиваемые системы без поддержки MMU.
+.PP
+Функции \fBposix_spawn\fP() и \fBposix_spawnp\fP() предоставляют комбинацию
+возможностей \fBfork\fP(2) и \fBexec\fP(3) с некоторыми необязательными
+обслуживающими действиями в дочернем процессе перед \fBexec\fP(3). Эти функции
+не служат заменой системных вызовов \fBfork\fP(2) и \fBexecve\fP(2). Фактически,
+они предоставляют только часть функций системных вызовов.
+.PP
+Единственным отличием между \fBposix_spawnp\fP() и \fBposix_spawnp\fP() является
+способ, которым в них указывается исполняемый дочерним процессом файл. В
+\fBposix_spawn\fP() исполняемый файл задаётся в виде пути (которое может быть
+абсолютным или относительным). В \fBposix_spawnp\fP() исполняемый файл задаётся
+в виде имени файла; система ищет этот файл в списке каталогов, указанных в
+\fBPATH\fP (также, как это делает \fBexecvp\fP(3)). Кроме данного отличия далее на
+этой странице всё описание \fBposix_spawn\fP() также относится и к
+\fBposix_spawnp\fP().
+.PP
+Остальные аргументы функций:
+.IP * 3
+Аргумент \fIpid\fP указывает на буфер, в котором возвращается ID нового
+дочернего процесса.
+.IP *
+Аргумент \fIfile_actions\fP указывает на \fIобъект файловых действий при
+создании\fP, в котором задаются действия с файлом, выполняемые в потомке между
+шагами \fBfork\fP(2) и \fBexec\fP(3). Данный объект инициализируется и заполняется
+перед вызовом \fBposix_spawn\fP() с помощью функций
+\fBposix_spawn_file_actions_init\fP(3) и \fBposix_spawn_file_actions_*\fP().
+.IP *
+Аргумент \fIattrp\fP указывает на \fIобъект атрибутов\fP, в котором задаются
+различные атрибуты создаваемого дочернего процесса. Данный объект
+инициализируется и заполняется перед вызовом \fBposix_spawn\fP() с помощью
+функций \fBposix_spawnattr_init\fP(3) и \fBposix_spawnattr_*\fP().
+.IP *
+В аргументах \fIargv\fP и \fIenvp\fP задаётся список аргументов и окружения для
+программы, выполняемой в дочернем процессе, как для \fBexecve\fP(2).
+.PP
+Далее функции описаны в виде трёх ступенчатого процесса: шаг \fBfork\fP(), шаг
+перед \fBexec\fP() (выполняется в потомке) и шаг \fBexec\fP() (выполняется в
+потомке).
+.SS "Шаг fork()"
+Функция \fBposix_spawn\fP() начинает работу с вызова \fBfork\fP(2) или, возможно,
+\fBvfork\fP(2) (смотрите ниже).
+.PP
+PID нового дочернего процесса помещается в \fI*pid\fP. После этого функция
+\fBposix_spawn\fP() возвращает управление родительскому процессу.
+.PP
+Соответственно, родитель может использовать один из системных вызовов,
+описанных в \fBwait\fP(2), для проверки состояния дочернего процесса. Если
+потомок завершится с ошибкой в любом из служебных шагов, описанных далее,
+или возникнет ошибка при выполнении желаемого файла, то он завершит работу с
+кодом состояния 127.
+.PP
+Дочерний процесс создаётся с помощью \fBvfork\fP(2), а не \fBfork\fP(2) в любом из
+следующих случаев:
+.IP * 3
+элемент \fIspawn\-flags\fP объекта атрибутов, на который указывает \fIattrp\fP,
+содержит определённый в GNU флаг \fBPOSIX_SPAWN_USEVFORK\fP; или
+.IP *
+\fIfile_actions\fP равно NULL и элемент \fIspawn\-flags\fP объекта атрибутов, на
+который указывает \fIattrp\fP, \fIне\fP содержит \fBPOSIX_SPAWN_SETSIGMASK\fP,
+\fBPOSIX_SPAWN_SETSIGDEF\fP, \fBPOSIX_SPAWN_SETSCHEDPARAM\fP,
+\fBPOSIX_SPAWN_SETSCHEDULER\fP, \fBPOSIX_SPAWN_SETPGROUP\fP или
+\fBPOSIX_SPAWN_RESETIDS\fP.
+.PP
+Иначе говоря, \fBvfork\fP(2) используется, если это запросил вызывающий или не
+нужна очистка в потомке перед выполнением \fBexec\fP(3) запрашиваемого файла.
+.PP
+.SS "Шаг перед exec(): служебные действия"
+Между \fBfork\fP(2) и \fBexec\fP(3) дочерний процесс может выполнить набор
+служебных действий. Функции \fBposix_spawn\fP() и \fBposix_spawnp\fP()
+поддерживают маленький, хорошо спроектированный набор системных задач,
+которые дочерний процесс может выполнить перед запуском исполняемого
+файла. Эти операции управляются объектом атрибутов, на который указывает
+\fIattrp\fP и объект файловых действий, на который указывает \fIfile_actions\fP. В
+потомке обработка выполняются в следующей последовательности:
+.IP 1. 3
+Действия с атрибутами процесса: маска сигналов, обработчики сигналов по
+умолчанию, алгоритм планирования и параметры, ID группы процесса,
+эффективного пользователя и группы изменяются согласно объекту атрибутов, на
+который указывает \fIattrp\fP.
+.IP 2.
+Файловые действия, указываемые в аргументе \fIfile_actions\fP, выполняются в
+порядке их определения вызовами функций \fBposix_spawn_file_actions_add*\fP().
+.IP 3.
+Закрываются файловые дескрипторы, имеющие флаг \fBFD_CLOEXEC\fP.
+.PP
+Все атрибуты процесса\-потомка, отличные от атрибутов в объекте, на который
+указывает \fIattrp\fP и файловые действия в объекте, на который указывает
+\fIfile_actions\fP, будут изменены как если бы потомок создавался с помощью
+\fBfork\fP(2) и выполнял программу с помощью \fBexecve\fP(2).
+.PP
+Действия атрибутов процесса определяются атрибутами объекта, на который
+указывает \fIattrp\fP. Атрибут \fIspawn\-flags\fP (устанавливается с помощью
+\fBposix_spawnattr_setflags\fP(3)) управляет общими действиями, а остальные
+атрибуты объекта хранят значения, которые будут использованы в этих
+действиях.
+.PP
+Влияние флагов, которые могут быть указаны в \fIspawn\-flags\fP:
+.TP  8
+\fBPOSIX_SPAWN_SETSIGMASK\fP
+.\" FIXME .
+.\" (see
+.\" .BR posix_spawnattr_setsigmask (3))
+Назначить маску сигналов равной набору сигналов, определённой в атрибуте
+\fIspawn\-sigmask\fP объекта, на который указывает \fIattrp\fP. Если не установлен
+флаг \fBPOSIX_SPAWN_SETSIGMASK\fP, то потомок наследует маску сигналов
+родителя.
+.TP 
+\fBPOSIX_SPAWN_SETSIGDEF\fP
+.\" FIXME .
+.\" (see
+.\" .BR posix_spawnattr_setsigdefault (3))
+Сбрасывает обработчики всех сигналов в наборе, заданном в атрибуте
+\fIspawn\-sigdefault\fP объекта, на который указывает \fIattrp\fP, в значения по
+умолчанию. О том, что происходит с обработчиками сигналов не указанных в
+атрибуте  \fIspawn\-sigdefault\fP или когда не указан \fBPOSIX_SPAWN_SETSIGDEF\fP,
+смотрите \fBexecve\fP(2).
+.TP 
+\fBPOSIX_SPAWN_SETSCHEDPARAM\fP
+.\" (POSIX_PRIORITY_SCHEDULING only)
+.\" FIXME .
+.\" (see
+.\" .BR posix_spawnattr_setschedparam (3))
+Если этот флаг установлен, а \fBPOSIX_SPAWN_SETSCHEDULER\fP нет, то изменяет
+параметры планирования на значения, указанные в атрибуте \fIspawn\-schedparam\fP
+объекта, на который указывает \fIattrp\fP.
+.TP 
+\fBPOSIX_SPAWN_SETSCHEDULER\fP
+Назначает алгоритм планирования и параметры потомка:
+.RS
+.IP * 3
+.\" FIXME .
+.\" (see
+.\" .BR posix_spawnattr_setpolicy (3))
+Алгоритму планирования присваивается значение, указанное в атрибуте
+\fIspawn\-schedpolicy\fP объекта, на который указывает \fIattrp\fP.
+.IP *
+.\" FIXME .
+.\" (see
+.\" .BR posix_spawnattr_setschedparam (3))
+Параметрам планирования присваивается значение, указанное в атрибуте
+\fIspawn\-schedparam\fP объекта, на который указывает \fIattrp\fP (но смотрите
+ДЕФЕКТЫ).
+.PP
+Если не указаны флаги \fBPOSIX_SPAWN_SETSCHEDPARAM\fP и
+\fBPOSIX_SPAWN_SETSCHEDPOLICY\fP, то потомок наследует соответствующие атрибуты
+планирования от родителя.
+.RE
+.TP 
+\fBPOSIX_SPAWN_RESETIDS\fP
+Если этот флаг установлен, то сбрасываются эффективный UID и GID в реальный
+UID и GID родительского процесса. Если флаг не установлен, то потомок
+сохраняет эффективный UID и GID родителя. В любом случае, если биты прав
+set\-user\-ID и set\-group\-ID включены на исполняемом файле, то это заменяет
+значения эффективного UID и GID (смотрите \fBexecve\fP(2)).
+.TP 
+\fBPOSIX_SPAWN_SETPGROUP\fP
+.\" FIXME .
+.\" (see
+.\" .BR posix_spawnattr_setpgroup (3))
+Назначает группе процесса значение, указанное в атрибуте \fIspawn\-pgroup\fP
+объекта, на который указывает \fIattrp\fP. Если атрибут \fIspawn\-pgroup\fP равен
+0, то ID группы потомка становится равным его ID процесса. Если флаг
+\fBPOSIX_SPAWN_SETPGROUP\fP не установлен, то потомок наследует ID группы
+процесса родителя.
+.PP
+.\" mtk: I think we probably don't want to say the following, since it
+.\"      could lead people to do the wrong thing
+.\" The POSIX standard tells you to call
+.\" this function to de-initialize the attributes object pointed to by
+.\" .I attrp
+.\" when you are done with it;
+.\" however, on Linux systems this operation is a no-op.
+Если \fIattrp\fP равно NULL, то выполняются действия по умолчанию, которые
+описаны выше по каждому флагу.
+.PP
+Аргумент \fIfile_actions\fP задаёт последовательность файловых операций,
+которые выполняются в дочернем процессе после общей обработки, описанной
+выше, и перед выполнением \fBexec\fP(3). Если \fIfile_actions\fP равно NULL, то
+никаких специальных действий не производится и выполняются стандартные
+действия \fBexec\fP(3) — файловые дескрипторы, открытые до выполнения exec,
+остаются открытыми и в новом процессе, за исключением тех, у которых
+установлен флаг \fBFD_CLOEXEC\fP. Файловые блокировки остаются как были.
+.PP
+.\" FIXME . I think the following is best placed in the
+.\" posix_spawn_file_actions_adddup2(3) page, and a similar statement is
+.\" also needed in posix_spawn_file_actions_addclose(3)
+.\" Note that you can specify file descriptors in
+.\" .I posix_spawn_file_actions_adddup2 (3)
+.\" which would not be usable if you called
+.\" .BR dup2 (2)
+.\" at that time--i.e., file descriptors that are opened or
+.\" closed by the earlier operations
+.\" added to
+.\" .I file_actions .
+Если \fIfile_actions\fP не равно NULL, то в нём содержится упорядоченный набор
+запросов \fBopen\fP(2), \fBclose\fP(2) и \fBdup2\fP(2) на файлы. Эти запросы
+добавляются в \fIfile_actions\fP с помощью
+\fBposix_spawn_file_actions_addopen\fP(3),
+\fBposix_spawn_file_actions_addclose\fP(3) и
+\fBposix_spawn_file_actions_adddup2\fP(3). Запрашиваемые операции выполняются в
+порядке их добавления в \fIfile_actions\fP.
+.PP
+Если какая\-либо обслуживающая операция завершается с ошибкой, (из\-за
+переданных некорректных значений или по другим причинам, из\-за которых
+обработка сигналов, планирование процесса, функции изменения ID группы
+процесса и операции с файловыми дескрипторами завершается с ошибкой),
+дочерний процесс завершается с кодом выхода 127.
+.SS "Шаг exec()"
+После того как потомок создан (fork) и выполнены все запрошенные шаги до
+exec, потомок выполняет запуск запрошенного исполняемого файла.
+.PP
+Дочерний процесс берёт своё окружение из аргумента \fIenvp\fP, которое
+рассматривается также как если бы оно передавалось в \fBexecve\fP(2). Аргументы
+созданного процесса выбираются из аргумента \fIargv\fP, который обрабатывается
+также как для \fBexecve\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном завершении \fBposix_spawn\fP() и \fBposix_spawnp\fP() помещают PID
+дочернего процесса в \fIpid\fP и возвращают 0. Если перед или во время
+\fBfork\fP(2) возникла ошибка, то потомок не создаётся, содержимое \fI*pid\fP
+неопределенно и функции возвращают номер ошибки (описано далее).
+.PP
+Даже когда эти функции выполняются без ошибок, дочерний процесс всё ещё
+может завершиться с ошибкой по многим причинам, касающимся инициализации до
+\fBexec\fP(). Также, может завершиться ошибкой и \fBexec\fP(3). Во всех этих
+случаях дочерний процесс завершается с кодом ошибки 127.
+.SH ОШИБКИ
+Функции \fBposix_spawn\fP() и \fBposix_spawnp\fP() завершаются с ошибкой, только
+из\-за ошибок в используемых вызовах \fBfork\fP(2) и \fBvfork\fP(2); в этих случаях
+эти функции возвращают номер ошибки, который может быть одним из описанных в
+\fBfork\fP(2) или \fBvfork\fP(2).
+.PP
+Также, эти функции завершаются с ошибкой если:
+.TP 
+\fBENOSYS\fP
+Функции не поддерживаются в этой системе.
+.SH ВЕРСИИ
+Функции \fBposix_spawn\fP() и \fBposix_spawnp\fP() доступны в glibc начиная с
+версии 2.2.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.PP
+.\" FIXME . This piece belongs in spawnattr_setflags(3)
+.\" The
+.\" .B POSIX_SPAWN_USEVFORK
+.\" flag is a GNU extension; the
+.\" .B _GNU_SOURCE
+.\" feature test macro must be defined (before including any header files)
+.\" to obtain the definition of this constant.
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Обслуживающие действия в потомке управляются объектами, на который указывает
+\fIattrp\fP (для не файловых действий) и \fIfile_actions\fP. В описании POSIX типы
+данных \fIposix_spawnattr_t\fP и \fIposix_spawn_file_actions_t\fP указываются как
+объекты, а их элементам не даны имена. Переносимые программы должны
+инициализировать эти объекты с только помощью функций, определённых в POSIX
+(другими словами, хотя эти объекты могут быть реализованы как структуры с
+полями, в переносимых программах нельзя привязываться к такой реализации).
+.PP
+.\" Tested on glibc 2.12
+В POSIX не определено вызывать ли обработчики fork, установленные с помощью
+\fBpthread_atfork\fP(3), при вызове \fBposix_spawn\fP(). В glibc обработчики fork
+вызываются только, если потомок создан с помощью \fBfork\fP(2).
+.PP
+Не существует функции «posix_fspawn» (т. е., функции типа \fBposix_spawn\fP(),
+которая вызывала бы \fBfexecve\fP(3) вместо \fBexecve\fP(2)). Однако, подобное
+поведение можно получить указав аргумент \fIpath\fP как один из файлов в
+каталоге \fI/proc/self/fd\fP вызывающего.
+.SH ДЕФЕКТЫ
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=12052
+В POSIX.1 указано, что когда в \fIspawn\-flags\fP определён
+\fBPOSIX_SPAWN_SETSCHEDULER\fP, флаг \fBPOSIX_SPAWN_SETSCHEDPARAM\fP (если есть)
+игнорируется. Однако до glibc 2.14 вызов \fBposix_spawn\fP() завершался с
+ошибкой, если \fBPOSIX_SPAWN_SETSCHEDULER\fP был указан, а
+\fBPOSIX_SPAWN_SETSCHEDPARAM\fP отсутствовал.
+.SH ПРИМЕР
+Представленная далее программа показывает использование различных функций
+программного интерфейса POSIX для создания процессов. Она принимает атрибуты
+из командной строки, которые позволяют задать файловые действия и атрибуты
+объектов при создании. В остальных аргументах командной строки задаются имя
+исполняемого файла и аргументы командной строки для программы, исполняемой в
+потомке.
+.PP
+Здесь для исполнения в потомке указана команда \fBdate\fP(1) и вызов
+\fBposix_spawn\fP() не использует каких\-либо файловых действий и атрибутов
+объекта.
+.PP
+.in +4
+.EX
+$ \fB./a.out date\fP
+PID потомка: 7634
+Tue Feb  1 19:47:50 CEST 2011
+Состояние потомка: завершился, состояние=0
+.EE
+.in
+.PP
+Здесь параметром командной строки \fI\-c\fP передаётся объект файловых действий,
+которые закрывают стандартный вывод в потомке. В результате этого \fBdate\fP(1)
+завершается с ошибкой, когда пытается выполнить вывод данных и завершается с
+кодом состояния 1.
+.PP
+.in +4
+.EX
+$ \fB./a.out \-c date\fP
+PID потомка: 7636
+date: write error: Bad file descriptor
+Состояние потомка: завершился, состояние=1
+.EE
+.in
+.PP
+Здесь используется параметр командной строки \fI\-s\fP для создания объекта
+атрибутов, который используется для блокировки всех сигналов (блокируемых) в
+потомке. В результате этого попытка убить потомка сигналом по умолчанию
+(т. е., \fBSIGTERM\fP) с помощью \fBkill\fP(1) завершается ошибкой, так как этот
+сигнал заблокирован. Теперь, чтобы убить потомка, требуется сигнал
+\fBSIGKILL\fP (\fBSIGKILL\fP невозможно заблокировать).
+.PP
+.in +4
+.EX
+$ \fB./a.out \-s sleep 60 &\fP
+[1] 7637
+$ PID потомка: 7638
+
+$ \fBkill 7638\fP
+$ \fBkill \-KILL 7638\fP
+$ Состояние потомка: убит по сигналу 9
+[1]+  Done                    ./a.out \-s sleep 60
+.EE
+.in
+.PP
+Когда мы пытаемся выполнить в потомке несуществующую команду, \fBexec\fP(3)
+завершается с ошибкой и потомок завершается с кодом 127.
+.PP
+.in +4
+.EX
+$ \fB./a.out xxxxx
+PID потомка: 10190
+Состояние потомка: завершился, состояние=127\fP
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <spawn.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <wait.h>
+#include <errno.h>
+
+#define errExit(msg)    do { perror(msg); \e
+                             exit(EXIT_FAILURE); } while (0)
+
+#define errExitEN(en, msg) \e
+                        do { errno = en; perror(msg); \e
+                             exit(EXIT_FAILURE); } while (0)
+
+char **environ;
+
+int
+main(int argc, char *argv[])
+{
+    pid_t child_pid;
+    int s, opt, status;
+    sigset_t mask;
+    posix_spawnattr_t attr;
+    posix_spawnattr_t *attrp;
+    posix_spawn_file_actions_t file_actions;
+    posix_spawn_file_actions_t *file_actionsp;
+
+    /* разбор параметров командной строки, которые можно использовать
+       в потомке в качестве объекта атрибутов и файловых действий */
+
+    attrp = NULL;
+    file_actionsp = NULL;
+
+    while ((opt = getopt(argc, argv, "sc")) != \-1) {
+        switch (opt) {
+        case \(aqc\(aq:       /* \-c: закрыть стандартный вывод в потомке */
+
+            /* создаём объект файловых действий и добавляем в него
+               действие «закрыть» */
+
+            s = posix_spawn_file_actions_init(&file_actions);
+            if (s != 0)
+                errExitEN(s, "posix_spawn_file_actions_init");
+
+            s = posix_spawn_file_actions_addclose(&file_actions,
+                                                  STDOUT_FILENO);
+            if (s != 0)
+                errExitEN(s, "posix_spawn_file_actions_addclose");
+
+            file_actionsp = &file_actions;
+            break;
+
+        case \(aqs\(aq:       /* \-s: блокировать все сигналы в потомке */
+
+            /* создаём объект атрибутов и добавляем в него действие
+               «назначения сигнальной маски» */
+
+            s = posix_spawnattr_init(&attr);
+            if (s != 0)
+                errExitEN(s, "posix_spawnattr_init");
+            s = posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSIGMASK);
+            if (s != 0)
+                errExitEN(s, "posix_spawnattr_setflags");
+
+            sigfillset(&mask);
+            s = posix_spawnattr_setsigmask(&attr, &mask);
+            if (s != 0)
+                errExitEN(s, "posix_spawnattr_setsigmask");
+
+            attrp = &attr;
+            break;
+        }
+    }
+
+    /* Порождение потомка. Имя исполняемой программы и аргументы
+       командной строки берутся из аргументов командной строки
+       этой программы. Окружение исполняемой программы в потомке
+       делается таким же как у родителя. */
+
+    s = posix_spawnp(&child_pid, argv[optind], file_actionsp, attrp,
+                     &argv[optind], environ);
+    if (s != 0)
+        errExitEN(s, "posix_spawn");
+
+    /* уничтожаем все объекты, которые мы создали ранее */
+
+    if (attrp != NULL) {
+        s = posix_spawnattr_destroy(attrp);
+        if (s != 0)
+            errExitEN(s, "posix_spawnattr_destroy");
+    }
+
+    if (file_actionsp != NULL) {
+        s = posix_spawn_file_actions_destroy(file_actionsp);
+        if (s != 0)
+            errExitEN(s, "posix_spawn_file_actions_destroy");
+    }
+
+    printf("PID потомка: %ld\en", (long) child_pid);
+
+    /* отслеживаем состояние потомка до его завершения */
+
+    do {
+        s = waitpid(child_pid, &status, WUNTRACED | WCONTINUED);
+        if (s == \-1)
+            errExit("waitpid");
+
+        printf("Состояние потомка: ");
+        if (WIFEXITED(status)) {
+            printf("завершился, состояние=%d\en", WEXITSTATUS(status));
+        } else if (WIFSIGNALED(status)) {
+            printf("убит по сигналу %d\en", WTERMSIG(status));
+        } else if (WIFSTOPPED(status)) {
+            printf("остановлен по сигналу %d\en", WSTOPSIG(status));
+        } else if (WIFCONTINUED(status)) {
+            printf("выполняется\en");
+        }
+    } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.\" Disable hyphenation
+.nh
+.ad l
+\fBclose\fP(2), \fBdup2\fP(2), \fBexecl\fP(2), \fBexeclp\fP(2), \fBfork\fP(2), \fBopen\fP(2),
+\fBsched_setparam\fP(2), \fBsched_setscheduler\fP(2), \fBsetpgid\fP(2), \fBsetuid\fP(2),
+\fBsigaction\fP(2), \fBsigprocmask\fP(2), \fBposix_spawn_file_actions_addclose\fP(3),
+\fBposix_spawn_file_actions_adddup2\fP(3),
+\fBposix_spawn_file_actions_addopen\fP(3),
+\fBposix_spawn_file_actions_destroy\fP(3), \fBposix_spawn_file_actions_init\fP(3),
+\fBposix_spawnattr_destroy\fP(3), \fBposix_spawnattr_getflags\fP(3),
+\fBposix_spawnattr_getpgroup\fP(3), \fBposix_spawnattr_getschedparam\fP(3),
+\fBposix_spawnattr_getschedpolicy\fP(3), \fBposix_spawnattr_getsigdefault\fP(3),
+\fBposix_spawnattr_getsigmask\fP(3), \fBposix_spawnattr_init\fP(3),
+\fBposix_spawnattr_setflags\fP(3), \fBposix_spawnattr_setpgroup\fP(3),
+\fBposix_spawnattr_setschedparam\fP(3), \fBposix_spawnattr_setschedpolicy\fP(3),
+\fBposix_spawnattr_setsigdefault\fP(3), \fBposix_spawnattr_setsigmask\fP(3),
+\fBpthread_atfork\fP(3), \fI<spawn.h>\fP, Base Definitions volume of
+POSIX.1\-2001, \fIhttp://www.opengroup.org/unix/online.html\fP

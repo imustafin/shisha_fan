@@ -1,0 +1,90 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1995, Thomas K. Dyas <tdyas@eden.rutgers.edu>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Created   Wed Aug  9 1995     Thomas K. Dyas <tdyas@eden.rutgers.edu>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSFS 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sysfs \- получает информацию о типах файловых систем
+.SH ОБЗОР
+\fBint sysfs(int \fP\fIoption\fP\fB, const char *\fP\fIfsname\fP\fB);\fP
+.PP
+\fBint sysfs(int \fP\fIoption\fP\fB, unsigned int \fP\fIfs_index\fP\fB, char
+*\fP\fIbuf\fP\fB);\fP
+.PP
+\fBint sysfs(int \fP\fIoption\fP\fB);\fP
+.SH ОПИСАНИЕ
+\fBЗамечание\fP: информация о файловой системе \fBsysfs\fP, обычно монтируемой в
+\fI/sys\fP, приведена в \fBsysfs\fP(5).
+.PP
+Системный вызов (устаревший) \fBsysfs\fP() возвращает информацию о типах
+файловой системы, которые имеются в ядре. Форма вызова \fBsysfs\fP() и
+возвращаемая информация зависят от параметра \fIoption\fP согласно следующей
+таблице:
+.TP  3
+\fB1\fP
+Преобразовать строку с идентификатором типа файловой системы \fIfsname\fP в
+индекс типа файловой системы.
+.TP 
+\fB2\fP
+Преобразовать индекс типа файловой системы \fIfs_index\fP в строку
+(оканчивающуюся null) с идентификатором типа файловой системы. Эта строка
+будет записана в буфер \fIbuf\fP. Убедитесь в том, что в \fIbuf\fP есть достаточно
+места для размещения этой строки.
+.TP 
+\fB3\fP
+Получить количество типов файловой системы, находящихся в настоящий момент в
+ядре.
+.PP
+Нумерация индексов типов файловой системы начинается с нуля.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsysfs\fP() возвращает индекс типа файловой системы
+при значении option равном \fB1\fP, ноль, если значение option равно \fB2\fP и
+количество существующих в данный момент типов файловых систем в ядре при
+option, равном \fB3\fP. При ошибке возвращается \-1, а переменная \fIerrno\fP
+устанавливается соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+\fIfsname\fP или \fIbuf\fP указывают на адрес за пределами адресного пространства
+процесса.
+.TP 
+\fBEINVAL\fP
+\fIfsname\fP не является правильным идентификатором типа файловой системы;
+превышены пределы \fIfs_index\fP; неправильный параметр \fIoption\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4.
+.SH ЗАМЕЧАНИЯ
+Данный вызов, унаследованный от System\-V, устарел; не используйте его. В
+системах с \fI/proc\fP такую же информацию можно получить из
+\fI/proc/filesystems\fP; используйте данную возможность вместо этого вызова.
+.SH ДЕФЕКТЫ
+Нет поддержки в libc и glibc. Нет способа определить необходимый размер
+буфера \fIbuf\fP.

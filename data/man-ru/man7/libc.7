@@ -1,0 +1,102 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2009 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LIBC 7 2016\-12\-12 Linux "Руководство программиста Linux"
+.SH ИМЯ
+libc \- обзор стандартных библиотек C в Linux
+.SH ОПИСАНИЕ
+Термин «libc» обычно используется как сокращение обозначения «стандартной
+библиотеки C» — библиотеки стандартных функций, которые могут использоваться
+всеми программами, написанными на C (и, иногда, программами, написанными на
+других языках). Из\-за некоторых исторических событий (см. ниже),
+использование термина «libc» как обозначение стандартной библиотеки С в
+Linux, несколько некорректно.
+.SS glibc
+Вне всяких сомнений, наиболее широко используемой в Linux библиотекой C
+является библиотека GNU C
+.UR http://www.gnu.org\:/software\:/libc/
+.UE ,
+(\fIhttp://wwwgnuorg/software/libc/\fP) часто упоминаемая как \fIglibc\fP. В
+настоящее время данная библиотека используется во всех основных
+дистрибутивах Linux. Также эта библиотека описана в соответствующих
+справочных страницах проекта \fIman\-pages\fP (в основном, в разделе
+3). Документация к glibc также доступна в руководстве glibc, доступном по
+команде \fIinfo libc\fP. Выпуск 1.0 glibc состоялся в сентябре 1992 года (до
+этого было несколько выпусков 0.x). Следующий большой выпуск glibc версии
+2.0 состоялся в начале 1997 года.
+.PP
+Путь \fI/lib/libc.so.6\fP (или подобный), обычно является символической ссылкой
+на расположение библиотеки glibc, а выполнение этого пути приводит к
+отображению различной информации о glibc, установленной в системе.
+.SS "Linux libc"
+В первой половине 1990х годов какое\-то время существовала \fILinux libc\fP,
+ответвление glibc 1.x, созданное разработчиками Linux, которые были не
+удовлетворены ходом разработки glibc для Linux. Часто, эту библиотеку
+называли (необоснованно) просто «libc». Было несколько основных версий Linux
+libc — 2, 3, 4 и 5, а также много промежуточных. Linux libc4 была последней
+версией, которая использовала формат двоичных файлов a.out и первой версий
+предоставившей (простейшую) поддержку общих библиотек. Linux libc 5 была
+первой версией с поддержкой формата двоичных файлов ELF; в этой версии
+использовалась общая библиотека с soname \fIlibc.so.5\fP. Некоторое время Linux
+libc была стандартной библиотекой Си во многих дистрибутивах Linux.
+.PP
+Однако, несмотря на всю первоначальную заинтересованность в разработке Linux
+libc, к этому времени была выпущена glibc 2.0 (в 1997 году), которая была
+однозначно лучше Linux libc, и все основные дистрибутивы Linux, которые
+использовали Linux libc, скоро переключились обратно на glibc. Чтобы
+избежать двусмысленности в версиях Linux libc, в glibc 2.0 и последующих
+версиях в качестве имени общей библиотеки используется soname \fIlibc.so.6\fP.
+.PP
+Так как переход с Linux libc на glibc 2.0 произошёл давно, в \fIman\-pages\fP
+Linux libc больше не описывается. Тем не менее частичные упоминания о Linux
+libc ещё встречаются в некоторых справочных страницах под именами \fIlibc4\fP и
+\fIlibc5\fP.
+.SS "Другие библиотеки C"
+Существует несколько других менее распространённых библиотек C для Linux Эти
+библиотеки, обычно, меньше glibc, как по возможностям так и по потреблению
+памяти, и часто предназначены для сборки исполняемых файлов малого размера,
+используемых, в основном, для разработки встраиваемых систем Linux. Такими
+библиотеками являются
+.UR http://www.uclibc.org/
+\fIuClibc\fP
+.UE ,
+.UR http://www.fefe.de/dietlibc/
+\fIdietlibc\fP
+.UE ,
+и
+.UR http://www.musl\-libc.org/
+\fImusl libc\fP
+.UE .
+Описание этих библиотек
+охватывается проектом \fIman\-pages\fP, если что\-то известно.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsyscalls\fP(2), \fBgetauxval\fP(3), \fBproc\fP(5), \fBfeature_test_macros\fP(7),
+\fBman\-pages\fP(7), \fBstandards\fP(7), \fBvdso\fP(7)

@@ -1,0 +1,113 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (c) Michael Haardt (michael@cantor.informatik.rwth-aachen.de),
+.\"     Sun Jan 15 19:16:33 1995
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified, Sun Feb 26 15:02:58 1995, faith@cs.unc.edu
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LP 4 1995\-01\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+lp \- устройства для работы с принтерами
+.SH ОБЗОР
+\fB#include <linux/lp.h>\fP
+.SH НАСТРОЙКА
+\fBlp\fP[0\(en2] \(em это символьные устройства для работы с принтерами,
+подключёнными к параллельному порту; они имеют старший номер 6 и младшие
+номера 0\(en2. Младший номер соответствует базовому адресу порта принтера
+0x03bc, 0x0378 и 0x0278, соответственно. Обычно режим доступа к ним
+устанавливается 220, и они принадлежат root и группе lp. Управлять
+принтерами можно при помощи опроса или при помощи прерываний. Прерывания
+рекомендуются при высоких скоростях печати, например, для лазерных
+принтеров. Для обычных матричных принтеров будет достаточно опроса. По
+умолчанию устанавливается режим опроса.
+.SH ОПИСАНИЕ
+Поддерживаются следующие вызовы \fBioctl\fP(2):
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPTIME, int \fP\fIarg\fP\fB)\fP"
+Устанавливает время между опросами принтера драйвером равным \fIarg\fP, если
+заполнен буфер принтера. Если принтер быстрый, то лучше уменьшить это число,
+а если медленный, то лучше увеличить. Значение выражается в сотых долях
+секунды; по умолчанию равно 2, что означает 0,02 секунды. Влияет только на
+драйвер опроса.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPCHAR, int \fP\fIarg\fP\fB)\fP"
+Устанавливает максимальное количество циклов равным \fIarg\fP, в течение
+которых драйвер опроса ожидает готовность принтера к приёму символа. Если
+печать медленная, то рекомендуется увеличить это число, а если система
+начинает медленно работать, то уменьшить. По умолчанию равно 1000. Влияет
+только на драйвер опроса.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPABORT, int \fP\fIarg\fP\fB)\fP"
+Если \fIarg\fP равно 0, то драйвер принтера будет повторять попытки при
+ошибках, в противном случае он прекратит работу. По умолчанию равно 0.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPABORTOPEN, int \fP\fIarg\fP\fB)\fP"
+Если \fIarg\fP равно 0, то \fBopen\fP(2) будет прерван при ошибке, иначе ошибка
+будет проигнорирована. По умолчанию равно 0.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPCAREFUL, int \fP\fIarg\fP\fB)\fP"
+Если \fIarg\fP равно 0, то для записи необходимо, чтобы сигналы нехватки
+бумаги, принтер выключен или ошибка, были не установлены. По умолчанию они
+игнорируются.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPWAIT, int \fP\fIarg\fP\fB)\fP"
+.\" FIXME . Actually, since Linux 2.2, the default is 1
+Устанавливает число циклов ожидания в значение \fIarg\fP, которые выполняются
+перед стробированием принтера для получения только что записанного символа,
+а также устанавливает число циклов ожидания до остановки стробирования. В
+спецификации сказано, что это время должно равняться 0,5 микросекунды, но
+опыт показал, что хватает и времени задержки при выполнении
+программы. Поэтому устанавливаемое значение по умолчанию равно
+0. Используется как в драйвере опроса, так и драйвере прерывания.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPSETIRQ, int \fP\fIarg\fP\fB)\fP"
+Этот \fBioctl\fP(2) требует прав суперпользователя. Он принимает \fIint\fP,
+содержащий новый номер IRQ. Побочный эффект \(em повторный запуск
+принтера. Если \fIarg\fP равно 0, то будет использован драйвер опроса (по
+умолчанию).
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPGETIRQ, int *\fP\fIarg\fP\fB)\fP"
+Сохраняет используемый в данный момент номер IRQ в \fIarg\fP.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPGETSTATUS, int *\fP\fIarg\fP\fB)\fP"
+Сохраняет значение состояния порта в \fIarg\fP. Биты имеют следующее значение:
+.TS
+l l.
+LP_PBUSY	инвертированный входной сигнал занятости, активен по высокому уровню
+LP_PACK	неизменённый входной сигнал подтверждения, активен по низкому уровню
+LP_POUTPA	неизменённый входной сигнал отсутствия бумаги, активен по высокому уровню
+LP_PSELECD	неизменённый входной сигнал выбора, активен по высокому уровню
+LP_PERRORP	неизменённый входной сигнал ошибки, активен по низкому уровню
+.TE
+.IP
+Обратитесь к руководству принтера для выяснения значения сигналов. Заметим,
+что в зависимости от принтера неописанные биты тоже могут иметь значение.
+.IP "\fBint ioctl(int \fP\fIfd\fP\fB, LPRESET)\fP"
+Перезапускает принтер. Аргументы не используются.
+.SH ФАЙЛЫ
+.\" .SH AUTHORS
+.\" The printer driver was originally written by Jim Weigand and Linus
+.\" Torvalds.
+.\" It was further improved by Michael K.\& Johnson.
+.\" The interrupt code was written by Nigel Gamble.
+.\" Alan Cox modularized it.
+.\" LPCAREFUL, LPABORT, LPGETSTATUS were added by Chris Metcalf.
+\fI/dev/lp*\fP
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchmod\fP(1), \fBchown\fP(1), \fBmknod\fP(1), \fBlpcntl\fP(8), \fBtunelp\fP(8)

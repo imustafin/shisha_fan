@@ -1,0 +1,193 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1995  James R. Van Zandt <jrv@vanzandt.mv.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Changed Tue Sep 19 01:49:29 1995, aeb: moved from man2 to man3
+.\"  added ref to /etc/utmp, added BUGS section, etc.
+.\" modified 2003 Walter Harms, aeb - added getlogin_r, note on stdin use
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETLOGIN 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getlogin, getlogin_r, cuserid \- возвращает имя пользователя
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBchar *getlogin(void);\fP
+.br
+\fBint getlogin_r(char *\fP\fIbuf\fP\fB, size_t \fP\fIbufsize\fP\fB);\fP
+.PP
+\fB#include <stdio.h>\fP
+.PP
+\fBchar *cuserid(char *\fP\fIstring\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.\" Deprecated: _REENTRANT ||
+\fBgetlogin_r\fP(): _POSIX_C_SOURCE\ >=\ 199506L
+.PP
+\fBcuserid\fP():
+.nf
+    Начиная с glibc 2.24:
+        (_XOPEN_SOURCE && ! (_POSIX_C_SOURCE >= 200112L)
+        || _GNU_SOURCE
+    До glibc 2.23 включительно:
+        _XOPEN_SOURCE
+.fi
+.SH ОПИСАНИЕ
+Функция \fBgetlogin\fP() возвращает указатель на строку, содержащую имя
+пользователя, вошедшего в систему c терминала, который является управляющим
+для процесса, или указатель null, если эта информация не может быть
+получена. Строка выделяется статически и может быть перезаписана при
+последующих вызовах этой функции или \fBcuserid\fP().
+.PP
+Функция \fBgetlogin_r\fP() возвращает то же имя пользователя, но в массиве
+\fIbuf\fP размером \fIbufsize\fP.
+.PP
+Функция \fBcuserid\fP() возвращает указатель на строку, содержащую имя
+пользователя, связанное с идентификатором эффективного пользователя
+процесса. Если \fIstring\fP не равно указателю null, то значение должно быть
+массивом, который способен вместить как минимум \fBL_cuserid\fP символов;
+строка возвращается в этом массиве. В противном случае возвращается
+указатель на строку в фиксированной области. Эта строка выделена статически
+и может быть перезаписана при последующих вызовах этой функции или функции
+\fBgetlogin\fP().
+.PP
+Макрос \fBL_cuserid\fP является целочисленной константой, показывающей длину
+массива, который может понадобиться для хранения имени
+пользователя. \fBL_cuserid\fP описан в \fI<stdio.h>\fP.
+.PP
+Эти функции позволяют программе точно определить работающего пользователя
+(\fBcuserid\fP()) или пользователя этого сеанса (\fBgetlogin\fP()) (значения могут
+различаться, если у программы установлен бит set\-user\-ID).
+.PP
+В большинстве случаев для определения пользователя полезнее использовать
+переменную окружения \fBLOGNAME\fP, потому что пользователь может установить
+\fBLOGNAME\fP каким угодно.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBgetlogin\fP() возвращает указатель на имя
+пользователя и NULL при ошибке, устанавливая в \fIerrno\fP значение ошибки. При
+успешном выполнении \fBgetlogin_r\fP() возвращается 0 и не ноль при ошибке.
+.SH ОШИБКИ
+В POSIX определены:
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENXIO\fP
+У вызывающего процесса нет управляющего терминала.
+.TP 
+\fBERANGE\fP
+(getlogin_r) Длина имени пользователя, включая завершающий байт null
+(\(aq\e0\(aq), больше чем \fIbufsize\fP.
+.PP
+В Linux/glibc также есть:
+.TP 
+\fBENOENT\fP
+Нет соответствующей записи в файле utmp.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для выделения под структуру passwd.
+.TP 
+\fBENOTTY\fP
+Стандартный ввод не ссылается на терминал (смотрите ДЕФЕКТЫ).
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/passwd\fP
+файл, содержащий базу паролей
+.TP 
+\fI/var/run/utmp\fP
+(обычно, \fI/etc/utmp\fP; в некоторых версиях libc используется
+\fI/var/adm/utmp\fP)
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetlogin\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:getlogin race:utent
+.br
+sig:ALRM timer locale
+T}
+T{
+\fBgetlogin_r\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:utent sig:ALRM timer
+.br
+locale
+T}
+T{
+\fBcuserid\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:cuserid/!string locale
+.TE
+.sp 1
+В приведённой выше таблице \fIutent\fP в \fIrace:utent\fP означает, что если любая
+из функций \fBsetutent\fP(3), \fBgetutent\fP(3) или \fBendutent\fP(3) используется
+одновременно в нескольких нитях программы, то может возникнуть
+состязательность по данным. Эти функции вызываются из \fBgetlogin\fP() и
+\fBgetlogin_r\fP() поэтому мы используем race:utent для напоминания.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBgetlogin\fP() и \fBgetlogin_r\fP(): POSIX.1\-2001, POSIX.1\-2008.
+.PP
+В System V имеется функция \fBcuserid\fP(), использующая идентификатор
+реального пользователя вместо идентификатора эффективного
+пользователя. Функция \fBcuserid\fP() была включена в версию POSIX 1988 года,
+но удалена из версии 1990 года. Она имеется в SUSv2, но удалена из
+POSIX.1\-2001.
+.PP
+В OpenBSD имеются \fBgetlogin\fP() и \fBsetlogin\fP(), а имя пользователя
+связывается с сеансом даже если не имеется управляющего терминала.
+.SH ДЕФЕКТЫ
+К сожалению, зачастую довольно просто «обмануть» \fBgetlogin\fP(). Иногда она
+вообще не работает из\-за того, что какая\-то программа испортила содержимое
+файла utmp. Часто функция возвращает только первые 8 символов
+имени. Пользователь, вошедший в систему с терминала, который является
+управляющим для нашей программы, необязательно будет пользователем,
+запустившим программу. Избегайте использования \fBgetlogin\fP() из соображений
+безопасности.
+.PP
+Заметим, что glibc не следует спецификации POSIX и использует \fIstdin\fP
+вместо \fI/dev/tty\fP. Дефект ( в других современных системах, например SunOS
+5.8, HP\-UX 11.11 и FreeBSD 4.8, также возвращают имя пользователя если было
+перенаправление \fIstdin\fP).
+.PP
+Никто точно не знает что делает \fBcuserid\fP(), поэтому не используйте её в
+переносимых программах. Вместо неё используйте \fIgetpwuid(geteuid())\fP, если
+это необходимо. \fBНе используйте\fP \fBcuserid\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlogname\fP(1), \fBgeteuid\fP(2), \fBgetuid\fP(2), \fButmp\fP(5)

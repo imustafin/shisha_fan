@@ -1,0 +1,94 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2005 Robert Love
+.\" and Copyright (C) 2008, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" 2005-07-19 Robert Love <rlove@rlove.org> - initial version
+.\" 2006-02-07 mtk, minor changes
+.\" 2008-10-10 mtk: add description of inotify_init1()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH INOTIFY_INIT 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+inotify_init, inotify_init1 \- инициализирует экземпляр inotify
+.SH ОБЗОР
+.nf
+\fB#include <sys/inotify.h>\fP
+.PP
+\fBint inotify_init(void);\fP
+\fBint inotify_init1(int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Обзор программного интерфейса inotify смотрите в \fBinotify\fP(7).
+.PP
+\fBinotify_init\fP() инициализирует новый экземпляр inotify и возвращает
+файловый дескриптор, связанный с очередью событий нового inotify.
+.PP
+Если \fIflags\fP равен 0, то \fBinotify_init1\fP() выполняет тоже, что и
+\fBinotify_init\fP(). Чтобы получить другое поведение, следующие значения могут
+быть сложены с помощью побитового ИЛИ в \fIflags\fP:
+.TP  12
+\fBIN_NONBLOCK\fP
+Устанавливает флаг состояния файла \fBO_NONBLOCK\fP для нового открытого
+файлового описания (смотрите \fBopen\fP(2)), на которое ссылается новый
+файловый дескриптор. Использование данного флага делает ненужными
+дополнительные вызовы \fBfcntl\fP(2) для достижения того же результата.
+.TP 
+\fBIN_CLOEXEC\fP
+Устанавливает флаг close\-on\-exec (\fBFD_CLOEXEC\fP) для нового открытого
+файлового дескриптора. Смотрите описание флага \fBO_CLOEXEC\fP в \fBopen\fP(2) для
+того, чтобы узнать как это может пригодиться.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные системные вызовы возвращают новый файловый
+дескриптор. При ошибке возвращается \-1 и \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+(\fBinotify_init1\fP()) Указано неверное значение в \fIflags\fP.
+.TP 
+\fBEMFILE\fP
+Достигнуто максимальное количество экземпляров inotify доступных
+пользователю.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти ядра.
+.SH ВЕРСИИ
+Системный вызов \fBinotify_init\fP() впервые появился в Linux 2.6.13; поддержка
+в glibc доступна с версии 2.4. Системный вызов \fBinotify_init1\fP() был
+добавлен в Linux 2.6.27; поддержка в glibc доступна с версии 2.9.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные системные вызовы есть только в Linux.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBinotify_add_watch\fP(2), \fBinotify_rm_watch\fP(2), \fBinotify\fP(7)

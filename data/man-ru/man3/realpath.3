@@ -1,0 +1,186 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1999 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Rewritten old page, 990824, aeb@cwi.nl
+.\" 2004-12-14, mtk, added discussion of resolved_path == NULL
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH REALPATH 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+realpath \- возвращает канонизированный абсолютный путь
+.SH ОБЗОР
+.nf
+\fB#include <limits.h>\fP
+\fB#include <stdlib.h>\fP
+.PP
+\fBchar *realpath(const char *\fP\fIpath\fP\fB, char *\fP\fIresolved_path\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBrealpath\fP():
+.ad l
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* в glibc начиная с 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBrealpath\fP() раскрывает все символьные ссылки, конструкции \fI/./\fP,
+\fI/../\fP и дополнительные символы «/» в строке \fIpath\fP (завершается null) для
+создания канонического абсолютного пути. Получившееся имя сохраняется в виде
+строки (с null на конце) не длиннее чем \fBPATH_MAX\fP байт в буфере, указанном
+в \fIresolved_path\fP. Конечный путь не содержит символьных ссылок и
+компонентов \fI/./\fP или \fI/../\fP.
+.PP
+.\" Even if we use resolved_path == NULL, then realpath() will still
+.\" return ENAMETOOLONG if the resolved pathname would exceed PATH_MAX
+.\" bytes -- MTK, Dec 04
+.\" .SH HISTORY
+.\" The
+.\" .BR realpath ()
+.\" function first appeared in 4.4BSD, contributed by Jan-Simon Pendry.
+Если значение \fIresolved_path\fP равно NULL, то \fBrealpath\fP() выделяет буфер
+размером \fBPATH_MAX\fP байт с помощью \fBmalloc\fP(3) для хранения полного пути и
+возвращает указатель на этот буфер. Вызывающий должен освободить буфер с
+помощью \fBfree\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBrealpath\fP() возвращает указатель на
+\fIresolved_path\fP.
+.PP
+При ошибках возвращается NULL, содержимое массива \fIresolved_path\fP не
+определено и в \fIerrno\fP указывается код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Запрещено чтение или поиск для компонента, содержащегося в пути.
+.TP 
+\fBEINVAL\fP
+.\" (In libc5 this would just cause a segfault.)
+Значение \fIpath\fP равно NULL (в glibc до версии 2.3 эта ошибка также
+возвращалась и при \fIresolved_path\fP равном NULL).
+.TP 
+\fBEIO\fP
+При чтении файловой системы произошла ошибка ввода\-вывода.
+.TP 
+\fBELOOP\fP
+Во время определения pathname встретилось слишком много символьных ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+Компонент имени пути более \fBNAME_MAX\fP символов, или весь путь более
+\fBPATH_MAX\fP символов.
+.TP 
+\fBENOENT\fP
+Указанный файл не существует.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти.
+.TP 
+\fBENOTDIR\fP
+Компонент в префиксе пути не является каталогом.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBrealpath\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.4BSD, POSIX.1\-2001.
+.PP
+В POSIX.1\-2001 сказано, что поведение при значении \fIresolved_path\fP равном
+NULL, зависит от реализации. В POSIX.1\-2008 определено поведение,
+аналогичное описанию на этой странице.
+.SH ЗАМЕЧАНИЯ
+В 4.4BSD и Solaris максимальная длина пути равна \fBMAXPATHLEN\fP (находится в
+\fI<sys/param.h>\fP). В SUSv2 величины \fBPATH_MAX\fP и \fBNAME_MAX\fP
+представлены в \fI<limits.h>\fP или предоставляются функцией
+\fBpathconf\fP(3). Вот типичный фрагмент кода:
+.PP
+.in +4n
+.EX
+#ifdef PATH_MAX
+  path_max = PATH_MAX;
+#else
+  path_max = pathconf(path, _PC_PATH_MAX);
+  if (path_max <= 0)
+    path_max = 4096;
+#endif
+.EE
+.in
+.PP
+(Но смотрите раздел ДЕФЕКТЫ)
+.PP
+.\"     2012-05-05, According to Casper Dik, the statement about
+.\"     Solaris was not true at least as far back as 1997, and
+.\"     may never have been true.
+.\"
+.\" The 4.4BSD, Linux and SUSv2 versions always return an absolute
+.\" pathname.
+.\" Solaris may return a relative pathname when the
+.\" .I path
+.\" argument is relative.
+.\" The prototype of
+.\" .BR realpath ()
+.\" is given in \fI<unistd.h>\fP in libc4 and libc5,
+.\" but in \fI<stdlib.h>\fP everywhere else.
+.SS "Расширения GNU"
+Если вызов завершается с ошибкой \fBEACCES\fP или \fBENOENT\fP и значение
+\fIresolved_path\fP не равно NULL, то в \fIresolved_path\fP возвращается начало не
+читаемой или не существующей части \fIpath\fP.
+.SH ДЕФЕКТЫ
+.\" .LP
+.\" The libc4 and libc5 implementation contained a buffer overflow
+.\" (fixed in libc-5.4.13).
+.\" Thus, set-user-ID programs like
+.\" .BR mount (8)
+.\" needed a private version.
+Стандартная версия этой функции POSIX.1\-2001 некорректна изначально, так как
+невозможно определить подходящий размер для буфера результата. В
+соответствии с POSIX.1\-2001 буфера размером \fBPATH_MAX\fP должно хватить, но
+\fBPATH_MAX\fP может не задаваться константой, а получаться через функцию
+\fBpathconf\fP(3). И запрос \fBpathconf\fP(3) особо не поможет, так как с одной
+стороны POSIX предупреждает, что результат \fBpathconf\fP(3) может быть слишком
+велик и не пригоден для выделения памяти. С другой стороны, \fBpathconf\fP(3)
+может возвратить \-1 для обозначения того, что \fBPATH_MAX\fP
+неограничен. Свойство \fIresolved_path\ ==\ NULL\fP, не стандартизованное в
+POSIX.1\-2001, но стандартизованное в POSIX.1\-2008, позволяет избежать этой
+проблемы проектирования.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBrealpath\fP(1), \fBreadlink\fP(2), \fBcanonicalize_file_name\fP(3), \fBgetcwd\fP(3),
+\fBpathconf\fP(3), \fBsysconf\fP(3)

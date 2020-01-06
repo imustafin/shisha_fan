@@ -1,0 +1,95 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 2006, Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FUTIMESAT 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+futimesat \- изменяет временные отметки файла, определяемого относительно
+файлового дескриптора каталога
+.SH ОБЗОР
+.nf
+\fB#include <fcntl.h> /* определения констант AT_* */\fP
+\fB#include <sys/time.h>\fP
+.PP
+\fBint futimesat(int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB,\fP
+\fB              const struct timeval \fP\fItimes\fP\fB[2]);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfutimesat\fP(): _GNU_SOURCE
+.SH ОПИСАНИЕ
+Данный системный вызов устарел. Используйте вместо него \fButimensat\fP(2).
+.PP
+Системный вызов \fBfutimesat\fP() работает также как системный вызов
+\fButimes\fP(2), за исключением случаев, описанных в данной справочной
+странице.
+.PP
+Если в \fIpathname\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fButimes\fP(2)).
+.PP
+Если в \fIpathname\fP задан относительный путь и \fIdirfd\fP равно специальному
+значению \fBAT_FDCWD\fP, то \fIpathname\fP рассматривается относительно текущего
+рабочего каталога вызывающего процесса (как \fButimes\fP(2)).
+.PP
+Если в \fIpathname\fP задан абсолютный путь, то \fIdirfd\fP игнорируется.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBfutimesat\fP() возвращает 0; при ошибке \(em \-1, а в
+\fIerrno\fP задаётся причина ошибки.
+.SH ОШИБКИ
+В \fBfutimesat\fP() могут возникнуть те же ошибки, что и в \fButimes\fP(2). Также,
+в \fBfutimesat\fP() могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+\fIdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBENOTDIR\fP
+Значение \fIpathname\fP содержит относительный путь и \fIdirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог.
+.SH ВЕРСИИ
+Вызов \fBfutimesat\fP() был добавлен в ядро Linux версии 2.6.16; поддержка в
+glibc доступна с версии 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный системный вызов не является стандартным. Он был реализован по
+спецификации POSIX.1, но она была заменена на \fButimensat\fP(2).
+.PP
+Подобный системный вызов есть в Solaris.
+.SH ЗАМЕЧАНИЯ
+.SS "Замечания по glibc"
+.\" The Solaris futimesat() also has this strangeness.
+Если \fIpathname\fP равно NULL, то обёрточная функция glibc \fBfutimesat\fP()
+обновляет временные метки файла, указанного в \fIdirfd\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBstat\fP(2), \fButimensat\fP(2), \fButimes\fP(2), \fBfutimes\fP(3),
+\fBpath_resolution\fP(7)

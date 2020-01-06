@@ -1,0 +1,123 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2008 Michael Kerrisk <tmk.manpages@gmail.com>
+.\" and Copyright 2003 Abhijit Menon-Sen <ams@wiw.org>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2004-05-31, added tgkill, ahu, aeb
+.\" 2008-01-15 mtk -- rewrote DESCRIPTION
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TKILL 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+tkill, tgkill \- посылает сигнал нити
+.SH ОБЗОР
+.nf
+\fBint tkill(int \fP\fItid\fP\fB, int \fP\fIsig\fP\fB);\fP
+.PP
+\fBint tgkill(int \fP\fItgid\fP\fB, int \fP\fItid\fP\fB, int \fP\fIsig\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для \fBtkill\fP(); смотрите
+ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+\fBtgkill\fP() отправляет сигнал \fIsig\fP нити с ID \fItid\fP в группе нитей
+\fItgid\fP. Для сравнения, \fBkill\fP(2) может быть использована только для
+отправки сигнала процессу (т.е., группе нитей) как единому целому и сигнал
+будет доставлен произвольной нити внутри этого процесса.
+.PP
+.\" FIXME Maybe say something about the following:
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=12889
+.\"
+.\" Quoting Rich Felker <bugdal@aerifal.cx>:
+.\"
+.\" There is a race condition in pthread_kill: it is possible that,
+.\" between the time pthread_kill reads the pid/tid from the target
+.\" thread descriptor and the time it makes the tgkill syscall,
+.\" the target thread terminates and the same tid gets assigned
+.\" to a new thread in the same process.
+.\"
+.\" (The tgkill syscall was designed to eliminate a similar race
+.\" condition in tkill, but it only succeeded in eliminating races
+.\" where the tid gets reused in a different process, and does not
+.\" help if the same tid gets assigned to a new thread in the
+.\" same process.)
+.\"
+.\" The only solution I can see is to introduce a mutex that ensures
+.\" that a thread cannot exit while pthread_kill is being called on it.
+.\"
+.\" Note that in most real-world situations, like almost all race
+.\" conditions, this one will be extremely rare. To make it
+.\" measurable, one could exhaust all but 1-2 available pid values,
+.\" possibly by lowering the max pid parameter in /proc, forcing
+.\" the same tid to be reused rapidly.
+Вызов \fBtkill\fP() \(em устаревший предшественник \fBtgkill\fP(). Он позволяет
+задавать только идентификатор нити\-получателя, что может привести к
+уведомлению не той нити, если нить завершила работу и её идентификатор
+используется повторно. Не используйте данный системный вызов.
+.PP
+Это вызовы интерфейса системного уровня, они предназначены для внутреннего
+использования в библиотеке нитей.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Достигнут ограничитель ресурса \fBRLIMIT_SIGPENDING\fP и \fIsig\fP содержит сигнал
+реального времени.
+.TP 
+\fBEAGAIN\fP
+Недостаточное количество памяти ядра и \fIsig\fP содержит сигнал реального
+времени.
+.TP 
+\fBEINVAL\fP
+Указан некорректный идентификатор нити, группы или сигнал.
+.TP 
+\fBEPERM\fP
+Отказано в доступе. См. \fBkill\fP(2) для получения подробностей о необходимом
+доступе.
+.TP 
+\fBESRCH\fP
+Не существует процесса с указанным идентификатором нити (и идентификатором
+группы).
+.SH ВЕРСИИ
+\fBtkill\fP() поддерживается начиная с Linux 2.4.19/2.5.4. \fBtgkill\fP() был
+добавлен в Linux 2.5.75.
+.PP
+Поддержка \fBtgkill\fP() добавлена в glibc версии 2.30.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызовы \fBtkill\fP() и \fBtgkill\fP() есть только в Linux, и они не должны
+использоваться в переносимых программах.
+.SH ЗАМЕЧАНИЯ
+См. описание \fBCLONE_THREAD\fP в \fBclone\fP(2) для пояснения по поводу групп
+нитей.
+.PP
+В glibc нет обёртки для \fBtkill\fP(); запускайте его с помощью
+\fBsyscall\fP(2). Также, до glibc 2.30 не было обёртки \fBtgkill\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclone\fP(2), \fBgettid\fP(2), \fBkill\fP(2), \fBrt_sigqueueinfo\fP(2)

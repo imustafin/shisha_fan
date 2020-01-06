@@ -1,0 +1,153 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 19:26:03 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETPROTOENT 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getprotoent, getprotobyname, getprotobynumber, setprotoent, endprotoent \-
+возвращают запись о протоколе
+.SH ОБЗОР
+.nf
+\fB#include <netdb.h>\fP
+.PP
+\fBstruct protoent *getprotoent(void);\fP
+.PP
+\fBstruct protoent *getprotobyname(const char *\fP\fIname\fP\fB);\fP
+.PP
+\fBstruct protoent *getprotobynumber(int \fP\fIproto\fP\fB);\fP
+.PP
+\fBvoid setprotoent(int \fP\fIstayopen\fP\fB);\fP
+.PP
+\fBvoid endprotoent(void);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBgetprotoent\fP() считывает следующую запись из файла, содержащего
+базу протоколов (смотрите \fBprotocols\fP(5)), и возвращает структуру
+\fIprotoent\fP, содержащую поля из этой записи. При необходимости будет открыто
+подключение к базе.
+.PP
+Функция \fBgetprotobyname\fP() возвращает структуру \fIprotoent\fP элемента из
+базы данных, который совпадает с именем протокола \fIname\fP. При необходимости
+будет открыто подключение к базе.
+.PP
+Функция \fBgetprotobynumber\fP() возвращает структуру \fIprotoent\fP элемента из
+базы данных, который совпадает с номером протокола \fInumber\fP. При
+необходимости будет открыто подключение к базе.
+.PP
+Функция \fBsetprotoent\fP() открывает соединение к базе и устанавливает
+следующую запись к первой записи. Если \fIstayopen\fP не равен нулю, то
+подключение к базе между вызовами нескольких функций \fBgetproto*\fP() не будет
+закрыто.
+.PP
+Функция \fBendprotoent\fP() закрывает подключение к базе.
+.PP
+Структура \fIprotoent\fP определена в \fI<netdb.h>\fP таким образом:
+.PP
+.in +4n
+.EX
+struct protoent {
+    char  *p_name;       /* официальное имя протокола */
+    char **p_aliases;    /* список псевдонимов */
+    int    p_proto;      /* номер протокола */
+}
+.EE
+.in
+.PP
+Члены структуры \fIprotoent\fP:
+.TP 
+\fIp_name\fP
+Официальное название протокола.
+.TP 
+\fIp_aliases\fP
+Список альтернативных имён протокола, завершающийся NULL.
+.TP 
+\fIp_proto\fP
+Номер протокола.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBgetprotoent\fP(), \fBgetprotobyname\fP() и \fBgetprotobynumber\fP()
+возвращают указатель на статически выделенную структуру \fIprotoent\fP или
+указатель null при ошибке или достижении конца файла.
+.SH ФАЙЛЫ
+.PD 0
+.TP 
+\fI/etc/protocols\fP
+файл, содержащий базу протоколов
+.PD
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw18 lb lbw28
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetprotoent\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:protoent
+.br
+race:protoentbuf locale
+T}
+T{
+\fBgetprotobyname\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:protobyname
+.br
+locale
+T}
+T{
+\fBgetprotobynumber\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:protobynumber
+.br
+locale
+T}
+T{
+\fBsetprotoent\fP(),
+.br
+\fBendprotoent\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:protoent
+.br
+locale
+T}
+.TE
+.sp 1
+В приведённой выше таблице \fIprotoent\fP в \fIrace:protoent\fP означает, что если
+в нескольких нитях программы одновременно используются функции
+\fBsetprotoent\fP(), \fBgetprotoent\fP() или \fBendprotoent\fP(), то может возникнуть
+состязательность по данным.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.3BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetnetent\fP(3), \fBgetprotoent_r\fP(3), \fBgetservent\fP(3), \fBprotocols\fP(5)

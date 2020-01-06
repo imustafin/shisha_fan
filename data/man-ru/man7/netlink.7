@@ -1,0 +1,450 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" This man page is Copyright (c) 1998 by Andi Kleen.
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Subject to the GPL.
+.\" %%%LICENSE_END
+.\"
+.\" Based on the original comments from Alexey Kuznetsov
+.\" Modified 2005-12-27 by Hasso Tepper <hasso@estpak.ee>
+.\" $Id: netlink.7,v 1.8 2000/06/22 13:23:00 ak Exp $
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NETLINK 7 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+netlink \- обмен информацией между ядром и пользовательским пространством
+(AF_NETLINK)
+.SH ОБЗОР
+.nf
+\fB#include <asm/types.h>\fP
+\fB#include <sys/socket.h>\fP
+\fB#include <linux/netlink.h>\fP
+.PP
+\fBnetlink_socket = socket(AF_NETLINK, \fP\fIsocket_type\fP\fB, \fP\fInetlink_family\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Протокол netlink используется для передачи информации между ядром и
+процессами в пользовательском пространстве. Он состоит из стандартного,
+основанного на сокетах, интерфейса для процессов пользователя и внутреннего
+API ядра, предназначенного для модулей ядра. Внутренний интерфейс ядра в
+этой странице не описан. Кроме того, существует устаревший интерфейс
+netlink, работающий через символьные устройства netlink. Этот интерфейс
+здесь также не описан; он предназначен только для обратной совместимости.
+.PP
+Netlink обеспечивает для приложений сервис передачи датаграмм. В качестве
+\fIsocket_type\fP могут использоваться типы сокетов как \fBSOCK_RAW\fP, так и
+\fBSOCK_DGRAM\fP. Несмотря на это, протокол netlink не различает датаграмные и
+неструктурированные (raw) сокеты.
+.PP
+По значению \fInetlink_family\fP выбирается модуль ядра или группа netlink для
+связи. В данный момент определены следующие семейства netlink:
+.TP 
+\fBNETLINK_ROUTE\fP
+Получает обновления маршрутов и состояние подключений (link); может
+использоваться для изменения таблицы маршрутизации (IPv4 и IPv6),
+IP\-адресов, параметров подключения, настроек взаимодействия с ответной
+стороной (neighbor), параметров работы очереди, классов трафика и
+классификаторов пакетов (см.\fB rtnetlink\fP(7)).
+.TP 
+\fBNETLINK_W1\fP (начиная с Linux 2.6.13 до 2.16.17)
+Сообщения из однопроводной подсистемы.
+.TP 
+\fBNETLINK_USERSOCK\fP
+Зарезервировано для будущих протоколов сокетов пространства пользователя.
+.TP 
+\fBNETLINK_FIREWALL\fP (существует до Linux 3.4 включительно)
+.\" removed by commit d16cf20e2f2f13411eece7f7fb72c17d141c4a84
+Переправляет пакеты IPv4 из netfilter в пространство
+пользователя. Используется модулем ядра \fIip_queue\fP. После долгого времени
+объявления устаревшим (предлагается использовать улучшенное свойство
+\fInfnetlink_queue\fP), \fBNETLINK_FIREWALL\fP был удалён к Linux 3.5.
+.TP 
+\fBNETLINK_INET_DIAG\fP (начиная с Linux 2.6.14)
+Запрашивает информации о сокетах различных семейств протоколов из ядра
+(смотрите \fBsock_diag\fP(7)).
+.TP 
+\fBNETLINK_SOCK_DIAG\fP (начиная с Linux 3.3)
+.\" commit 7f1fb60c4fc9fb29fbb406ac8c4cfb4e59e168d6
+Синоним для \fBNETLINK_INET_DIAG\fP.
+.TP 
+\fBNETLINK_NFLOG\fP (существует до Linux 3.16 включительно)
+Netfilter/iptables ULOG.
+.TP 
+\fBNETLINK_XFRM\fP
+.\" FIXME More details on NETLINK_XFRM needed.
+IPsec.
+.TP 
+\fBNETLINK_SELINUX\fP (начиная с Linux 2.6.4)
+Уведомляет о событиях SELinux.
+.TP 
+\fBNETLINK_ISCSI\fP (начиная с Linux 2.6.15)
+.\" FIXME More details on NETLINK_ISCSI needed.
+Open\-iSCSI.
+.TP 
+\fBNETLINK_AUDIT\fP (начиная с Linux 2.6.6)
+.\" FIXME More details on NETLINK_AUDIT needed.
+Ведёт контроль за системой.
+.TP 
+\fBNETLINK_FIB_LOOKUP\fP (начиная с Linux 2.6.13)
+.\" FIXME More details on NETLINK_FIB_LOOKUP needed.
+Доступ к таблице FIB из пользовательского пространства.
+.TP 
+\fBNETLINK_CONNECTOR\fP (начиная с Linux 2.6.14)
+Точка связи с ядром. Дополнительную информацию смотрите в файле
+\fIDocumentation/connector/*\fP дерева исходного кода ядра Linux.
+.TP 
+\fBNETLINK_NETFILTER\fP (начиная с Linux 2.6.14)
+.\" FIXME More details on NETLINK_NETFILTER needed.
+Подсистема netfilter.
+.TP 
+\fBNETLINK_SCSITRANSPORT\fP (начиная с Linux 2.6.19)
+.\" commit 84314fd4740ad73550c76dee4a9578979d84af48
+.\" FIXME More details on NETLINK_SCSITRANSPORT needed.
+Транспорты SCSI.
+.TP 
+\fBNETLINK_RDMA\fP (начиная с Linux 3.0)
+.\" commit b2cbae2c248776d81cc265ff7d48405b6a4cc463
+.\" FIXME More details on NETLINK_RDMA needed.
+Infiniband RDMA.
+.TP 
+\fBNETLINK_IP6_FW\fP (существует до Linux 3.4 включительно)
+Переправляет пакеты IPv6 из netfilter в пространство
+пользователя. Используется модулем ядра \fIip6_queue\fP.
+.TP 
+\fBNETLINK_DNRTMSG\fP
+Сообщения маршрутизации DECnet.
+.TP 
+\fBNETLINK_KOBJECT_UEVENT\fP (начиная с Linux 2.6.10)
+.\" FIXME More details on NETLINK_KOBJECT_UEVENT needed.
+Сообщения ядра в пользовательском пространстве.
+.TP 
+\fBNETLINK_GENERIC\fP (начиная с Linux 2.6.15)
+Обобщённое семейство netlink для использования netlink.
+.TP 
+\fBNETLINK_CRYPTO\fP (начиная с Linux 3.2)
+.\" commit a38f7907b926e4c6c7d389ad96cc38cec2e5a9e9
+.\" Author: Steffen Klassert <steffen.klassert@secunet.com>
+Интерфейс netlink для запроса информации о зарегистрированных алгоритмах
+шифрования с помощью программного интерфейса ядра шифрования, а также
+настройки программного интерфейса ядра шифрования.
+.PP
+Сообщения netlink состоят из потока байтов с одним или несколькими
+заголовками \fInlmsghdr\fP и присоединённой полезной нагрузкой. Доступ к потоку
+байтов нужно осуществлять только с помощью стандартных макросов
+\fBNLMSG_*\fP. Подробности смотрите в \fBnetlink\fP(3).
+.PP
+В первом и всех последующих заголовках сообщений, состоящих из нескольких
+частей (несколько заголовков \fInlmsghdr\fP с полезной нагрузкой в одном потоке
+байт), установлен флаг \fBNLM_F_MULTI\fP. Последний заголовок имеет тип
+\fBNLMSG_DONE\fP и этот флаг не устанавливается.
+.PP
+После каждого \fInlmsghdr\fP следует полезная нагрузка:
+.PP
+.in +4n
+.EX
+struct nlmsghdr {
+    __u32 nlmsg_len;    /* длина сообщения, включая заголовок */
+    __u16 nlmsg_type;   /* тип содержимого сообщения */
+    __u16 nlmsg_flags;  /* дополнительные флаги */
+    __u32 nlmsg_seq;    /* номер в последовательности */
+    __u32 nlmsg_pid;    /* ID порта отправителя */
+};
+.EE
+.in
+.PP
+Значение \fInlmsg_type\fP может быть одним из стандартных типов сообщения:
+сообщения \fBNLMSG_NOOP\fP должны игнорироваться, сообщение \fBNLMSG_ERROR\fP
+сообщает об ошибке и в нагрузке содержится структура \fInlmsgerr\fP, сообщение
+\fBNLMSG_DONE\fP заканчивает сообщение, состоящее из нескольких частей.
+.PP
+.in +4n
+.EX
+struct nlmsgerr {
+    int error;        /* отрицательный errno или
+                         0 для подтверждений */
+    struct nlmsghdr msg;  /* заголовок сообщения, вызвавшего
+                             ошибку */
+};
+.EE
+.in
+.PP
+Семейство netlink обычно определяет и другие типы сообщений
+(см. соответствующие справочные страницы, например, \fBrtnetlink\fP(7) о
+\fBNETLINK_ROUTE\fP).
+.TS
+tab(:);
+l s
+lB l.
+Стандартные биты флагов в \fInlmsg_flags\fP
+_
+NLM_F_REQUEST:Должен быть установлен у всех сообщений с запросами.
+NLM_F_MULTI:T{
+Сообщение является одной из частей длинного сообщения, которое заканчивается \fBNLMSG_DONE\fP.
+T}
+NLM_F_ACK:Запрашивать подтверждение при успешном выполнении.
+NLM_F_ECHO:Послать эхо этого запроса.
+.TE
+.\" No right adjustment for text blocks in tables
+.TS
+tab(:);
+l s
+lB l.
+Дополнительные биты флагов для запросов GET
+_
+NLM_F_ROOT:Вернуть полную таблицу вместо одной записи.
+NLM_F_MATCH:T{
+Вернуть все записи, подходящие под критерий, переданный в содержимом
+сообщения. Пока не реализовано.
+T}
+NLM_F_ATOMIC:Вернуть атомарный образ (snapshot) таблицы.
+NLM_F_DUMP:T{
+Макрос для удобства; эквивалентен
+.br
+(NLM_F_ROOT|NLM_F_MATCH).
+T}
+.TE
+.\" FIXME NLM_F_ATOMIC is not used anymore?
+.PP
+Заметим, что \fBNLM_F_ATOMIC\fP требует мандата \fBCAP_NET_ADMIN\fP или
+эффективного UID 0.
+.TS
+tab(:);
+l s
+lB l.
+Дополнительные биты флагов для запросов NEW
+_
+NLM_F_REPLACE:Переписать существующий подходящий объект.
+NLM_F_EXCL:Не перезаписывать, если объект уже существует.
+NLM_F_CREATE:Создать объект, если он ещё не существует.
+NLM_F_APPEND:Добавить в конец списка объектов.
+.TE
+.PP
+Поля \fInlmsg_seq\fP и \fInlmsg_pid\fP используются для отслеживания передачи
+сообщений. В \fInlmsg_pid\fP указывается источник сообщения. Заметим, что нет
+связи 1:1 между \fInlmsg_pid\fP и PID процесса, если сообщение возникло из
+сокета netlink. Дополнительную информацию ищите в разделе \fBФОРМАТЫ АДРЕСА\fP.
+.PP
+.\" FIXME Explain more about nlmsg_seq and nlmsg_pid.
+Тип поля \fInlmsg_seq\fP и \fInlmsg_pid\fP скрыт в ядре netlink.
+.PP
+Netlink не является надежным протоколом. Он делает всё возможное для
+доставки сообщения по адресу (адресам), но может отбрасывать пакеты при
+нехватке памяти или возникновении других ошибок в работе. Для повышения
+надёжности передачи отправитель может запросить подтверждение от получателя,
+установив флаг \fBNLM_F_ACK\fP. Подтверждающим является пакет \fBNLMSG_ERROR\fP с
+полем ошибки, равным нулю. Приложение должно само создавать подтверждения
+полученным сообщениям. Ядро пытается послать сообщение \fBNLMSG_ERROR\fP всем
+ошибочным пакетам. Процесс пользователя также должен следовать этому
+соглашению.
+.PP
+Однако, надёжная передача от ядра пользователю в любом случае
+невозможна. Ядро не может послать сообщение netlink, если заполнен буфер
+сокета: сообщение будет отброшено и ядро и пользовательский процесс будут
+иметь разное понятие о состоянии ядра. В обязанность приложения входит
+обнаружение такой ситуации (посредством ошибки \fBENOBUFS\fP, возвращаемой
+\fBrecvmsg\fP(2)) и выполнение восстановления синхронизации.
+.SS "Форматы адресов"
+Структура \fIsockaddr_nl\fP описывает клиент netlink в пространстве
+пользователя или в ядре. Она может быть как одноадресной (передача
+информации только на один адрес), так и посылаться многоадресной группе
+netlink (значение \fInl_groups\fP не равно нулю).
+.PP
+.in +4n
+.EX
+struct sockaddr_nl {
+    sa_family_t     nl_family;  /* AF_NETLINK */
+    unsigned short  nl_pad;     /* ноль */
+    pid_t           nl_pid;     /* ID порта */
+    __u32           nl_groups;  /* маска многоадресных групп */
+};
+.EE
+.in
+.PP
+\fInl_pid\fP — одиночный адрес сокета netlink. Он всегда равен 0, если местом
+назначения является ядро. Для процесса пользовательского пространства
+значение \fInl_pid\fP, обычно, равно PID процесса, которому принадлежит сокет
+назначения. Однако, значением \fInl_pid\fP определяется сокет netlink, а не
+процесс. Если процессу принадлежит несколько сокетов netlink, то значение
+\fInl_pid\fP может быть равно ID процесса только у одного сокета. Есть два
+способа назначить \fInl_pid\fP сокету netlink. Если приложение задаёт \fInl_pid\fP
+до вызова \fBbind\fP(2), то приложение само должно убедиться, что значение
+\fInl_pid\fP уникально. Если приложение устанавливает его равным 0, то
+присвоение уникального значения выполняется ядром. Первому сокету netlink
+ядро назначает ID процесса, который его открыл, а всем последующим
+создаваемым процессом сокетам netlink, будет назначено уникальное значение
+\fInl_pid\fP.
+.PP
+.\" commit d629b836d151d43332492651dd841d32e57ebe3b
+Значение \fInl_groups\fP — это битовая маска, где каждый бит представляет номер
+группы netlink. Каждое семейство netlink имеет набор из 32\-х многоадресных
+групп. Когда для сокета вызывается \fBbind\fP(2), то поле \fInl_groups\fP
+структуры \fIsockaddr_nl\fP должно содержать битовую маску групп, которые оно
+хочет прослушивать. По умолчанию значение этого поля равно нулю, что
+означает, что многоадресные передачи не будут приниматься. Сокет может
+передавать многоадресные сообщения любой из многоадресных групп, присвоив
+\fInl_groups\fP битовую маску групп, которым он желает передавать данные
+вызовом \fBsendmsg\fP(2) или при выполнении \fBconnect\fP(2). Принимать или
+посылать сообщения многоадресной группы netlink могут только процессы с
+эффективным UID, равным 0, или имеющие мандат \fBCAP_NET_ADMIN\fP. Начиная с
+Linux 2.6.13, сообщения не могут вещаться в многоадресные группы. Любые
+ответы на сообщение, полученное многоадресной группой, должны быть
+отправлены посылающему процессу с PID и многоадресной группе. Некоторые
+подсистемы ядра Linux могут разрешать отправку и/или приём сообщений другим
+пользователям. Начиная с Linux 3.0, в группах \fBNETLINK_KOBJECT_UEVENT\fP,
+\fBNETLINK_GENERIC\fP, \fBNETLINK_ROUTE\fP и \fBNETLINK_SELINUX\fP разрешено
+принимать сообщения от других пользователей. Отправлять сообщения другим
+пользователям запрещено.
+.PP
+.SS "Параметры сокета"
+Для получения и задания параметров сокета netlink используйте вызовы
+\fBgetsockopt\fP(2) и \fBsetsockopt\fP(2), соответственно. Значение аргумента
+уровня параметров должно быть равно \fBSOL_NETLINK\fP. Если не указано
+обратного, значение \fIoptval\fP является указателем на \fIint\fP.
+.TP 
+\fBNETLINK_PKTINFO\fP (начиная с Linux 2.6.14)
+.\"	commit 9a4595bc7e67962f13232ee55a64e063062c3a99
+.\"	Author: Patrick McHardy <kaber@trash.net>
+Включить управляющие сообщения \fBnl_pktinfo\fP для приёма пакетов, чтобы
+получать расширенный номер группы назначения.
+.TP 
+\fBNETLINK_ADD_MEMBERSHIP\fP,\ \fBNETLINK_DROP_MEMBERSHIP\fP (начиная с Linux 2.6.14)
+.\"	commit 9a4595bc7e67962f13232ee55a64e063062c3a99
+.\"	Author: Patrick McHardy <kaber@trash.net>
+Присоединиться/покинуть группу, заданную в \fIoptval\fP.
+.TP 
+\fBNETLINK_LIST_MEMBERSHIPS\fP (начиная с Linux 4.2)
+.\"	commit b42be38b2778eda2237fc759e55e3b698b05b315
+.\"	Author: David Herrmann <dh.herrmann@gmail.com>
+Получить все группы, в которых сокет является членом В аргументе \fIoptval\fP
+передаётся указатель на \fB__u32\fP, а в \fIoptlen\fP — размер массива. Массив
+заполняется полным набором членства сокета, а требуемый размер массива
+возвращается в \fIoptlen\fP.
+.TP 
+\fBNETLINK_BROADCAST_ERROR\fP (начиная с Linux 2.6.30)
+.\"	commit be0c22a46cfb79ab2342bb28fde99afa94ef868e
+.\"	Author: Pablo Neira Ayuso <pablo@netfilter.org>
+Если не установлен, то \fBnetlink_broadcast()\fP сообщает только об ошибках
+\fBESRCH\fP и игнорирует ошибки \fBNOBUFS\fP.
+.TP 
+\fBNETLINK_NO_ENOBUFS\fP (начиная с Linux 2.6.30)
+.\"	commit 38938bfe3489394e2eed5e40c9bb8f66a2ce1405
+.\"	Author: Pablo Neira Ayuso <pablo@netfilter.org>
+Данный флаг могут использовать слушающие одноадресные и широковещательные
+передачи, чтобы избежать ошибок \fBENOBUFS\fP.
+.TP 
+\fBNETLINK_LISTEN_ALL_NSID\fP (начиная с Linux 4.2)
+.\"	commit 59324cf35aba5336b611074028777838a963d03b
+.\"	Author: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Если установлен, то этот сокет будет принимать уведомления netlink из всех
+сетевых пространств имён, имеющих назначенный \fInsid\fP сетевого пространства
+имён, в котором был открыт сокет. Значение \fInsid\fP посылается в
+пользовательское пространство во вспомогательных данных.
+.TP 
+\fBNETLINK_CAP_ACK\fP (начиная с Linux 4.2)
+.\"	commit 0a6a3a23ea6efde079a5b77688541a98bf202721
+.\"	Author: Christophe Ricard <christophe.ricard@gmail.com>
+В ядре может возникнуть ошибка при выделении необходимого места в
+пользовательском пространстве для подтверждающего сообщения. При установке
+этого параметра обрезаются данные оригинального сообщения netlink. Заголовок
+сообщения netlink остаётся, поэтому пользователь может узнать номер
+последовательности сообщения, на которое пришло подтверждение.
+.SH ВЕРСИИ
+Сокетный интерфейс для netlink впервые появился в Linux 2.2.
+.PP
+Linux 2.0 поддерживал более примитивный интерфейс на основе устройств
+(который всё ещё доступен для совместимости). Этот устаревший интерфейс
+здесь не описывается.
+.SH ЗАМЕЧАНИЯ
+В большинстве случаев лучше использовать netlink с помощью функций библиотек
+\fIlibnetlink\fP или \fIlibnl\fP, а не через низкоуровневый интерфейс ядра.
+.SH ДЕФЕКТЫ
+Эта справочной странице не содержится всей необходимой информации.
+.SH ПРИМЕР
+В следующем примере создаётся сокет netlink семейства \fBNETLINK_ROUTE\fP,
+который будет прослушивать многоадресные группы \fBRTMGRP_LINK\fP (события о
+создании/удалении/включении/выключении сетевых интерфейсов) и
+\fBRTMGRP_IPV4_IFADDR\fP (события о добавлении/удалении адресов IPv4).
+.PP
+.in +4n
+.EX
+struct sockaddr_nl sa;
+
+memset(&sa, 0, sizeof(sa));
+sa.nl_family = AF_NETLINK;
+sa.nl_groups = RTMGRP_LINK | RTMGRP_IPV4_IFADDR;
+
+fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
+bind(fd, (struct sockaddr *) &sa, sizeof(sa));
+.EE
+.in
+.PP
+В следующем примере показано как отправить сообщение netlink ядру (pid
+0). Заметим, что приложение должно управлять нумерацией сообщений, чтобы
+отслеживать подтверждения о доставке.
+.PP
+.in +4n
+.EX
+struct nlmsghdr *nh; /* отправляется nlmsghdr с полезной нагрузкой */
+struct sockaddr_nl sa;
+struct iovec iov = { nh, nh\->nlmsg_len };
+struct msghdr msg;
+
+msg = { &sa, sizeof(sa), &iov, 1, NULL, 0, 0 };
+memset(&sa, 0, sizeof(sa));
+sanl_family = AF_NETLINK;
+nh\->nlmsg_pid = 0;
+nh\->nlmsg_seq = ++sequence_number;
+/* для запроса подтверждения от ядра, устанавливаем NLM_F_ACK */
+nh\->nlmsg_flags |= NLM_F_ACK;
+
+sendmsg(fd, &msg, 0);
+.EE
+.in
+.PP
+И последний пример о том, как выполнять чтение сообщения netlink.
+.PP
+.in +4n
+.EX
+int len;
+char buf[8192];     /* 8192 чтобы сообщение не обрезалось на
+                       платформах с размером страницы > 4096 */
+struct iovec iov = { buf, sizeof(buf) };
+struct sockaddr_nl sa;
+struct msghdr msg;
+struct nlmsghdr *nh;
+
+msg = { &sa, sizeof(sa), &iov, 1, NULL, 0, 0 };
+len = recvmsg(fd, &msg, 0);
+
+for (nh = (struct nlmsghdr *) buf; NLMSG_OK (nh, len);
+     nh = NLMSG_NEXT (nh, len)) {
+    /* конец сообщения из нескольких частей */
+    if (nh\->nlmsg_type == NLMSG_DONE)
+        return;
+
+    if (nh\->nlmsg_type == NLMSG_ERROR)
+        /* выполняем обработку ошибок */
+    …
+
+    /* разбираем полезную нагрузку */
+    …
+}
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcmsg\fP(3), \fBnetlink\fP(3), \fBcapabilities\fP(7), \fBrtnetlink\fP(7),
+\fBsock_diag\fP(7)
+.PP
+.UR ftp://ftp.inr.ac.ru\:/ip\-routing\:/iproute2*
+Информация о libnetlink
+.UE
+.PP
+.UR http://www.infradead.org\:/~tgr\:/libnl/
+Информация о libnl
+.UE
+.PP
+RFC 3549 «Linux Netlink as an IP Services Protocol»

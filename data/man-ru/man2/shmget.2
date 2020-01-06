@@ -1,0 +1,286 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Luigi P. Bai (lpb@softint.com) July 28, 1993
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Wed Jul 28 10:57:35 1993, Rik Faith <faith@cs.unc.edu>
+.\" Modified Sun Nov 28 16:43:30 1993, Rik Faith <faith@cs.unc.edu>
+.\"          with material from Giorgio Ciucci <giorgio@crcc.it>
+.\" Portions Copyright 1993 Giorgio Ciucci <giorgio@crcc.it>
+.\" Modified Tue Oct 22 22:03:17 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified, 8 Jan 2003, Michael Kerrisk, <mtk.manpages@gmail.com>
+.\"	Removed EIDRM from errors - that can't happen...
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\" Modified, 11 Nov 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Language and formatting clean-ups
+.\"	Added notes on /proc files
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SHMGET 2 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+shmget \- выделяет общий сегмент памяти System V
+.SH ОБЗОР
+.ad l
+\fB#include <sys/ipc.h>\fP
+.br
+\fB#include <sys/shm.h>\fP
+.PP
+\fBint shmget(key_t \fP\fIkey\fP\fB, size_t \fP\fIsize\fP\fB, int \fP\fIshmflg\fP\fB);\fP
+.ad b
+.SH ОПИСАНИЕ
+Вызов \fBshmget\fP() возвращает идентификатор общего сегмента памяти System\ V,
+соответствующего значению аргумента \fIkey\fP. Его можно использовать для
+получения идентификатора ранее созданного общего сегмента памяти (когда
+\fIshmflg\fP равно нулю и \fIkey\fP не содержит значения \fBIPC_PRIVATE\fP) или для
+создания нового.
+.PP
+Новый общий сегмент памяти размером \fIsize\fP, округлённым до значения,
+кратного \fBPAGE_SIZE\fP создаётся, если значение \fIkey\fP равно \fBIPC_PRIVATE\fP
+или, если \fIkey\fP не равно \fBIPC_PRIVATE\fP, но не существует общего сегмента
+памяти, который бы соответствовал значению \fIkey\fP и в \fIshmflg\fP есть флаг
+\fBIPC_CREAT\fP.
+.PP
+Если в \fIshmflg\fP одновременно указаны \fBIPC_CREAT\fP и \fBIPC_EXCL\fP и для
+значения \fIkey\fP уже существует общий сегмент памяти, то вызов \fBshmget\fP()
+завершается с ошибкой и \fIerrno\fP присваивается \fBEEXIST\fP (такой же результат
+как с \fBO_CREAT | O_EXCL\fP у \fBopen\fP(2)).
+.PP
+Значение \fIshmflg\fP составляется из следующих флагов:
+.TP  12
+\fBIPC_CREAT\fP
+Служит для создания нового сегмента. Если этого флага нет, то вызов
+\fBshmget\fP() будет искать сегмент, соответствующий \fIkey\fP, и затем проверит,
+имеет ли пользователь права на доступ к сегменту.
+.TP 
+\fBIPC_EXCL\fP
+Этот флаг используется совместно с \fBIPC_CREAT\fP для того, чтобы этот вызов
+создал сегмент. Если сегмент уже существует, то вызов завершается с ошибкой.
+.TP 
+\fBSHM_HUGETLB\fP (начиная с Linux 2.6)
+Выделять сегмент используя «огромные страницы». Дополнительную информацию
+смотрите в файле исходного кода ядра Linux
+\fIDocumentation/admin\-guide/mm/hugetlbpage.rst\fP.
+.TP 
+\fBSHM_HUGE_2MB\fP, \fBSHM_HUGE_1GB\fP (начиная с Linux 3.8)
+.\" See https://lwn.net/Articles/533499/
+Используется вместе с \fBSHM_HUGETLB\fP для выбора других размеров страниц
+hugetlb (2\ МБ и 1\ МБ, соответственно) в системах, которые поддерживают
+несколько размеров страниц hugetlb.
+.IP
+Вообще, желаемые размер огромной страницы можно настроить закодировав
+логарифмом по основанию 2 желаемый размер страницы в шести битах смещения
+\fBSHM_HUGE_SHIFT\fP. Таким образом, приведённые выше константы определяются
+так:
+.IP
+.in +4
+.EX
+#define SHM_HUGE_2MB    (21 << SHM_HUGE_SHIFT)
+#define SHM_HUGE_1GB    (30 << SHM_HUGE_SHIFT)
+.EE
+.in
+.IP
+Дополнительную информацию о схожих по имени константах смотрите в
+\fBmmap\fP(2).
+.TP 
+\fBSHM_NORESERVE\fP (начиная с Linux 2.6.15)
+.\" As at 2.6.17-rc2, this flag has no effect if SHM_HUGETLB was also
+.\" specified.
+Этот флаг нужен для того же, что и флаг \fBMAP_NORESERVE\fP у \fBmmap\fP(2). Он
+указывает не резервировать место в пространстве подкачки для этого
+сегмента. Операцией резервирования места в пространстве подкачки
+гарантируется, что сегмент можно изменить. Если место не резервировать, то
+при записи можно получить сигнал \fBSIGSEGV\fP, если кончится физическая
+память. Смотрите также обсуждение файла \fI/proc/sys/vm/overcommit_memory\fP в
+\fBproc\fP(5).
+.PP
+В дополнении к перечисленным выше флагам в младших 9 битах \fIshmflg\fP
+задаются права для владельца, группы и всех остальных. Формат значения битов
+совпадает с аргументом \fImode\fP вызова \fBopen\fP(2). В данный момент бит
+выполнения системой не используются.
+.PP
+Если создаётся новый общий сегмент памяти, то его содержимое
+инициализируется нулями, а соответствующая ему структура данных \fIshmid_ds\fP
+(см. \fBshmctl\fP(2)) следующим образом:
+.IP
+Полям \fIshm_perm.cuid\fP и \fIshm_perm.uid\fP присваиваются значения эффективного
+идентификатора пользователя вызывающего процесса.
+.IP
+Полям \fIshm_perm.cgid\fP и \fIshm_perm.gid\fP присваиваются значения эффективного
+идентификатора группы вызывающего процесса.
+.IP
+Младшим 9 битам \fIshm_perm.mode\fP присваивается значение младших 9 бит
+\fIshmflg\fP.
+.IP
+Полю \fIshm_segsz\fP присваивается значение \fIsize\fP.
+.IP
+Полям \fIshm_lpid\fP, \fIshm_nattch\fP, \fIshm_atime\fP и \fIshm_dtime\fP присваивается
+значение 0.
+.IP
+Полю \fIshm_ctime\fP присваивается значение текущего времени.
+.PP
+Если общий сегмент памяти уже существует, то проверяются права доступа к
+нему и не помечен ли он для удаления.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается корректный идентификатор общей
+памяти. При ошибке возвращается \-1, а в \fIerrno\fP записывается причина
+ошибки.
+.SH ОШИБКИ
+В случае возникновения ошибки \fIerrno\fP может принимать следующие значения:
+.TP 
+\fBEACCES\fP
+Пользователь не имеет прав доступа к общему сегменту памяти и не имеет
+мандата \fBCAP_IPC_OWNER\fP в пространстве имён пользователя, который управляет
+его пространством имён IPC.
+.TP 
+\fBEEXIST\fP
+В \fIshmflg\fP указаны \fBIPC_CREAT\fP и \fBIPC_EXCL\fP, но общий сегмент памяти уже
+существует для \fIkey\fP.
+.TP 
+\fBEINVAL\fP
+Был создан новый сегмент и \fIsize\fP меньше \fBSHMMIN\fP или больше \fBSHMMAX\fP.
+.TP 
+\fBEINVAL\fP
+Сегмент для заданного \fIkey\fP существует, но \fIsize\fP больше размера этого
+сегмента.
+.TP 
+\fBENFILE\fP
+.\" [2.6.7] shmem_zero_setup()-->shmem_file_setup()-->get_empty_filp()
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOENT\fP
+Не существует сегмента для ключа \fIkey\fP и флаг \fBIPC_CREAT\fP не указан.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти для выделения под перерасход сегмента.
+.TP 
+\fBENOSPC\fP
+Все возможные идентификаторы сегментов уже распределены (\fBSHMMNI\fP) или
+размер выделяемого сегмента превысит системные лимиты по общей памяти
+(\fBSHMALL\fP).
+.TP 
+\fBEPERM\fP
+Указан флаг \fBSHM_HUGETLB\fP, но у вызывающего нет прав (нет мандата
+\fBCAP_IPC_LOCK\fP).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents an additional error condition EEXIST.
+POSIX.1\-2001, POSIX.1\-2008, SVr4.
+.PP
+\fBSHM_HUGETLB\fP и \fBSHM_NORESERVE\fP являются расширениями Linux.
+.SH ЗАМЕЧАНИЯ
+.\" Like Linux, the FreeBSD man pages still document
+.\" the inclusion of these header files.
+Включение файлов \fI<sys/types.h>\fP и \fI<sys/ipc.h>\fP не
+требуется в Linux или любых версий POSIX. Однако, некоторые старые
+реализации требуют включения данных заголовочных файлов, и это также
+требуется по SVID. В приложениях, которые нужно перенести на такие старые
+системы, может потребоваться включить данных заголовочные файлы.
+.PP
+.\"
+\fBIPC_PRIVATE\fP — не поле флага, а тип \fIkey_t\fP. Если \fIkey\fP равно этому
+специальному значению, то системный вызов игнорирует всё кроме 9\-ти младших
+битов \fIshmflg\fP и создаёт новый общий сегмент памяти.
+.SS "Ограничения общей памяти"
+Ниже приведены ограничения ресурсов на общий сегмент памяти, влияющие на
+вызов \fBshmget\fP():
+.TP 
+\fBSHMALL\fP
+Системный лимит на полный объём общей памяти, измеряется в единицах, равных
+размеру системной страницы.
+.IP
+.\" commit 060028bac94bf60a65415d1d55a359c3a17d5c31
+В Linux это ограничение можно прочитать и изменить через
+\fI/proc/sys/kernel/shmmni\fP. Начиная с 3.16, значение по умолчанию равно:
+.IP
+    ULONG_MAX \- 2^24
+.IP
+Эффект этого значения (которое подходит и для 32\-разрядной, и для
+64\-разрядной системы) — не задать ограничение на выделения. Это значение, в
+отличии от  \fBULONG_MAX\fP, было выбрано в качестве значения по умолчанию,
+чтобы предотвратить некоторые случаи, когда старые приложения просто
+увеличивают существующий предел без начальной проверки его текущего
+значения. Такие приложения переполнили бы значение, если предел был равен
+\fBULONG_MAX\fP.
+.IP
+В Linux 2.4 по Linux 3.15 значение по умолчанию этого ограничения было:
+.IP
+    SHMMAX / PAGE_SIZE * (SHMMNI / 16)
+.IP
+Если \fBSHMMAX\fP и \fBSHMMNI\fP не изменены, то умножение результата этой формулы
+на размер страницы (для получения значения в байтах) даёт значение 8\ ГБ —
+ограничение на общее количество памяти, используемой во всех общих сегментах
+памяти.
+.TP 
+\fBSHMMAX\fP
+Максимальный размер общего сегмента памяти в байтах.
+.IP
+.\" commit 060028bac94bf60a65415d1d55a359c3a17d5c31
+В Linux это ограничение можно прочитать и изменить через
+\fI/proc/sys/kernel/shmmax\fP. Начиная с 3.16, значение по умолчанию равно:
+.IP
+    ULONG_MAX \- 2^24
+.IP
+Эффект этого значения (которое подходит и для 32\-разрядной, и для
+64\-разрядной системы) — не задать ограничение на выделения. Смотрите
+описание \fBSHMALL\fP о том, почему используется именно такое значение по
+умолчанию (а не \fBULONG_MAX\fP).
+.IP
+В Linux 2.2 по Linux 3.15 значение по умолчанию этого ограничения равно
+0x2000000 (32\ МБ).
+.IP
+Так как невозможно отобразить только часть общего сегмента памяти, размер
+виртуальной памяти отличается от ограничения на максимальный размер
+подходящего сегмента: например, на i386 самые большие сегменты, которые
+можно отображать, имеют размер около 2.8\ ГБ, а на x86\-64 — около 127\ ТБ.
+.TP 
+\fBSHMMIN\fP
+Минимальный размер общего сегмента памяти в байтах в системе: зависит от
+реализации (в настоящий момент равно 1 байту, хотя на самом деле минимальный
+выделяемый размер равен \fBPAGE_SIZE\fP).
+.TP 
+\fBSHMMNI\fP
+Системный лимит на общее количество общих сегментов памяти. Начиная с Linux
+2.2, значение по умолчанию равно 128; начиная с Linux 2.4, значение по
+умолчанию равно 4096.
+.IP
+.\" Kernels between 2.4.x and 2.6.8 had an off-by-one error that meant
+.\" that we could create one more segment than SHMMNI -- MTK
+.\" This /proc file is not available in Linux 2.2 and earlier -- MTK
+В Linux это ограничение можно прочитать и изменить через
+\fI/proc/sys/kernel/shmmni\fP.
+.PP
+Реализацией не ограничивается максимальное количество общих сегментов памяти
+на процесс (\fBSHMSEG\fP).
+.SS "Замечания, касающиеся Linux"
+В Linux до версии 2.3.30 вызов \fBshmget\fP() возвращал значение \fBEIDRM\fP, если
+общий сегмент памяти был запланирован к удалению.
+.SH ДЕФЕКТЫ
+Имя \fBIPC_PRIVATE\fP, возможно, было выбрано неудачно, \fBIPC_NEW\fP отражает
+смысл действия более ясно.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmemfd_create\fP(2), \fBshmat\fP(2), \fBshmctl\fP(2), \fBshmdt\fP(2), \fBftok\fP(3),
+\fBcapabilities\fP(7), \fBshm_overview\fP(7), \fBsysvipc\fP(7)

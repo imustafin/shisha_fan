@@ -1,0 +1,118 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 walter harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" based on the description in glibc source and infopages
+.\"
+.\" Corrections and additions, aeb
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ENVZ_ADD 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+envz_add, envz_entry, envz_get, envz_merge, envz_remove, envz_strip \-
+поддержка строк окружения
+.SH ОБЗОР
+.nf
+\fB#include <envz.h>\fP
+.PP
+\fBerror_t envz_add(char **\fP\fIenvz\fP\fB, size_t *\fP\fIenvz_len\fP\fB,\fP
+\fB                 const char *\fP\fIname\fP\fB, const char *\fP\fIvalue\fP\fB);\fP
+.PP
+\fBchar *envz_entry(const char *\fP\fIenvz\fP\fB, size_t \fP\fIenvz_len\fP\fB, const char *\fP\fIname\fP\fB);\fP
+.PP
+\fBchar *envz_get(const char *\fP\fIenvz\fP\fB, size_t \fP\fIenvz_len\fP\fB, const char *\fP\fIname\fP\fB);\fP
+.PP
+\fBerror_t envz_merge(char **\fP\fIenvz\fP\fB, size_t *\fP\fIenvz_len\fP\fB,\fP
+\fB                   const char *\fP\fIenvz2\fP\fB, size_t \fP\fIenvz2_len\fP\fB, int \fP\fIoverride\fP\fB);\fP
+.PP
+\fBvoid envz_remove(char **\fP\fIenvz\fP\fB, size_t *\fP\fIenvz_len\fP\fB, const char *\fP\fIname\fP\fB);\fP
+.PP
+\fBvoid envz_strip(char **\fP\fIenvz\fP\fB, size_t *\fP\fIenvz_len\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Эти функции есть только в glibc.
+.PP
+Вектор argz представляет собой указатель на символьный буфер и его длину
+(смотрите \fBargz_add\fP(3)). Вектор envz является особым вектором argz, в нём
+содержатся строки вида «имя=значение». Всё, что расположено за первым
+\(aq=\(aq, считается значением. Если \(aq=\(aq отсутствует, то значение
+считается равным NULL (если \(aq=\(aq указано в конце, то значение равно
+пустой строке "").
+.PP
+Эти функции предназначены для работы с векторами envz.
+.PP
+Функция \fBenvz_add\fP() добавляет строку "\fIname\fP=\fIvalue\fP" (если \fIname\fP не
+равно NULL) или "\fIname\fP" (если \fIvalue\fP равно NULL) в вектор envz
+(\fI*envz\fP,\ \fI*envz_len\fP) и обновляет \fI*envz\fP и \fI*envz_len\fP. Если запись с
+таким значением \fIname\fP уже существует, то она удаляется.
+.PP
+Функция \fBenvz_entry\fP() ищет значение \fIname\fP в векторе envz (\fIenvz\fP,\ \fIenvz_len\fP) и возвращает запись, если такое имя найдено, и NULL, если не
+найдено.
+.PP
+Функция \fBenvz_get\fP() ищет значение \fIname\fP в векторе envz (\fIenvz\fP,\ \fIenvz_len\fP) и возвращает значение, если такое имя найдено, и NULL, если не
+найдено (заметим, что значение само по себе может быть равно NULL, особенно,
+если есть запись для \fIname\fP без знака \(aq=\(aq).
+.PP
+Функция \fBenvz_merge\fP() добавляет все записи из \fIenvz2\fP в \fI*envz\fP, как
+если бы это делалось с помощью \fBenvz_add\fP(). Если значение \fIoverride\fP
+истинно, то значения в \fIenvz2\fP будут заменять значения с такими же именами
+в \fI*envz\fP, иначе — нет.
+.PP
+Функция \fBenvz_remove\fP() удаляет запись для \fIname\fP из (\fI*envz\fP,\ \fI*envz_len\fP), если она есть.
+.PP
+Функция \fBenvz_strip\fP() удаляет все записи со значением NULL.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Все функции envz, в которых происходит выделение памяти, возвращают
+результат, имеющий тип \fIerror_t\fP: 0 — при успешном выполнении и \fBENOMEM\fP —
+при ошибке выделения памяти.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw27 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBenvz_add\fP(),
+\fBenvz_entry\fP(),
+.br
+\fBenvz_get\fP(),
+\fBenvz_merge\fP(),
+.br
+\fBenvz_remove\fP(),
+\fBenvz_strip\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции являются расширениями GNU. Используйте с осторожностью.
+.SH ПРИМЕР
+.EX
+#include <stdio.h>
+#include <stdlib.h>
+#include <envz.h>
+
+int
+main(int argc, char *argv[], char *envp[])
+{
+    int i, e_len = 0;
+    char *str;
+
+    for (i = 0; envp[i] != NULL; i++)
+        e_len += strlen(envp[i]) + 1;
+
+    str = envz_entry(*envp, e_len, "HOME");
+    printf("%s\en", str);
+    str = envz_get(*envp, e_len, "HOME");
+    printf("%s\en", str);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBargz_add\fP(3)

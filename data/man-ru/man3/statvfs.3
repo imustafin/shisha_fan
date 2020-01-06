@@ -1,0 +1,202 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2003 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" The pathconf note is from Walter Harms
+.\" This is not a system call on Linux
+.\"
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STATVFS 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+statvfs, fstatvfs \- получение статистики по файловой системе
+.SH ОБЗОР
+\fB#include <sys/statvfs.h>\fP
+.PP
+\fBint statvfs(const char *\fP\fIpath\fP\fB, struct statvfs *\fP\fIbuf\fP\fB);\fP
+.br
+\fBint fstatvfs(int \fP\fIfd\fP\fB, struct statvfs *\fP\fIbuf\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функция \fBstatvfs\fP() возвращает информацию о смонтированной файловой
+системе. \fIpath\fP является путём любого файла, расположенного в
+смонтированной файловой системе. \fIbuf\fP является указателем на структуру
+\fIstatvfs\fP, определённую примерно следующим образом:
+.PP
+.in +4n
+.EX
+struct statvfs {
+    unsigned long  f_bsize;    /* размер блока файловой системы */
+    unsigned long  f_frsize;   /* размер фрагмента */
+    fsblkcnt_t     f_blocks;   /* размер ФС в единицах f_frsize */
+    fsblkcnt_t     f_bfree;    /* количество свободных блоков */
+    fsblkcnt_t     f_bavail;   /* количество свободных блоков
+                                  для непривилегированных пользователей */
+    fsfilcnt_t     f_files;    /* количество inodes */
+    fsfilcnt_t     f_ffree;    /* количество свободных inodes */
+    fsfilcnt_t     f_favail;   /* количество свободных inodes
+                                  для непривилегированных пользователей */
+    unsigned long  f_fsid;     /* идентификатор файловой системы */
+    unsigned long  f_flag;     /* параметры монтирования */
+    unsigned long  f_namemax;  /* максимальная длина имени файла */
+};
+.EE
+.in
+.PP
+Типы \fIfsblkcnt_t\fP и \fIfsfilcnt_t\fP определены в файле
+\fI<sys/types.h>\fP. Для их определения используется тип \fIunsigned
+long\fP.
+.PP
+.\" XXX Keep this list in sync with statfs(2)
+Значение поля \fIf_flag\fP — битовая маска различных параметров, которые были
+указаны при монтировании этой файловой системы. В нём содержится ноль или
+несколько следующих флагов:
+.TP 
+\fBST_MANDLOCK\fP
+Разрешена обязательная (mandatory) блокировка файловой системы (смотрите
+\fBfcntl\fP(2)).
+.TP 
+\fBST_NOATIME\fP
+Не обновлять времена доступа; смотрите \fBmount\fP(2).
+.TP 
+\fBST_NODEV\fP
+Запретить доступ к специальным файлам устройств в этой файловой системе.
+.TP 
+\fBST_NODIRATIME\fP
+Не обновлять времена доступа к каталогам; смотрите \fBmount\fP(2).
+.TP 
+\fBST_NOEXEC\fP
+Исполнение программ в этой файловой системе запрещено.
+.TP 
+\fBST_NOSUID\fP
+Биты set\-user\-ID и set\-group\-ID игнорируются в \fBexec\fP(3) для исполняемых
+файлов в этой файловой системе.
+.TP 
+\fBST_RDONLY\fP
+Файловая система смонтирована в режиме только для чтения.
+.TP 
+\fBST_RELATIME\fP
+Обновлять atime относительно mtime/ctime; смотрите \fBmount\fP(2).
+.TP 
+\fBST_SYNCHRONOUS\fP
+Выполнять синхронную запись в файловую систему немедленно (смотрите описание
+\fBO_SYNC\fP в \fBopen\fP(2)).
+.PP
+Не указывается, будут ли при любых файловых системах членам возвращаемой
+структуры присвоены осмысленные данные.
+.PP
+\fBfstatvfs\fP() возвращает такую же информацию об открытом файле через его
+ссылку на дескриптор \fIfd\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+(\fBstatvfs\fP()) Нет права на поиск одного из компонентов префикса пути
+\fIpath\fP (см. также \fBpath_resolution\fP(7)).
+.TP 
+\fBEBADF\fP
+(\fBfstatvfs\fP()) \fIfd\fP не является корректным открытым дескриптором файла.
+.TP 
+\fBEFAULT\fP
+\fIBuf\fP или \fIpath\fP указывает на неправильный адрес.
+.TP 
+\fBEINTR\fP
+Данный вызов был прерван сигналом; смотрите \fBsignal\fP(7).
+.TP 
+\fBEIO\fP
+При чтении файловой системы произошла ошибка ввода\-вывода.
+.TP 
+\fBELOOP\fP
+(\fBstatvfs\fP()) Было обнаружено слишком много символьных ссылок при
+трансляции \fIpath\fP.
+.TP 
+\fBENAMETOOLONG\fP
+(\fBstatvfs\fP()) Слишком длинное значение аргумента \fIpath\fP.
+.TP 
+\fBENOENT\fP
+(\fBstatvfs\fP()) Файл, указанный в \fIpath\fP, не существует.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOSYS\fP
+Файловая система не поддерживает данный вызов.
+.TP 
+\fBENOTDIR\fP
+(\fBstatvfs\fP()) Один из компонентов префикса пути \fIpath\fP не является
+каталогом.
+.TP 
+\fBEOVERFLOW\fP
+Некоторые значения слишком велики, чтобы быть представленными в возвращаемой
+структуре.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstatvfs\fP(),
+\fBfstatvfs\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.PP
+В POSIX.1 в поле \fIf_flag\fP определены только флаги \fBST_NOSUID\fP и
+\fBST_RDONLY\fP. Чтобы получить определения остальных флагов нужно определить
+\fB_GNU_SOURCE\fP.
+.SH ЗАМЕЧАНИЯ
+Для поддержки данной библиотечной функции в ядре Linux есть системные вызовы
+\fBstatfs\fP(2) и \fBfstatfs\fP(2).
+.PP
+.\" glibc commit 3cdaa6adb113a088fdfb87aa6d7747557eccc58d
+В версиях glibc до 2.13, \fBstatvfs\fP() заполняла биты поля \fIf_flag\fP сканируя
+параметры монтирования в \fI/proc/mounts\fP. Однако начиная с Linux 2.6.36,
+нижележащий системный вызов \fBstatfs\fP(2) предоставляет необходимую
+информацию через поле \fIf_flags\fP, и начиная с glibc версии 2.13, функция
+\fBstatvfs\fP() будет использовать информацию из этого поля, а не сканируя
+\fI/proc/mounts\fP.
+.PP
+Реализации функций в glibc
+.PP
+.in +4n
+.EX
+pathconf(path, _PC_REC_XFER_ALIGN);
+pathconf(path, _PC_ALLOC_SIZE_MIN);
+pathconf(path, _PC_REC_MIN_XFER_SIZE);
+.EE
+.in
+.PP
+используют, соответственно, поля \fIf_frsize\fP, \fIf_frsize\fP и \fIf_bsize\fP,
+возвращаемые вызовом \fBstatvfs\fP() с аргументом \fIpath\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBstatfs\fP(2)

@@ -1,0 +1,307 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
+.\" Written by Stephen M. Cameron <scameron@beardog.cce.hp.com>
+.\"
+.\" %%%LICENSE_START(GPLv2_ONELINE)
+.\" Licensed under GNU General Public License version 2 (GPLv2)
+.\" %%%LICENSE_END
+.\"
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CCISS 4 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+cciss \- блочный драйвер устройства HP Smart Array
+.SH ОБЗОР
+.nf
+modprobe cciss [ cciss_allow_hpsa=1 ]
+.fi
+.SH ОПИСАНИЕ
+.\" commit 253d2464df446456c0bba5ed4137a7be0b278aa8
+\fBЗамечание\fP: Данный устаревший драйвер был удалён из ядра версии 4.14; в
+новых ядрах его заменяет \fBhpsa\fP(4).
+.PP
+\fBcciss\fP — это блочный драйвер для старых контроллеров RAID HP Smart Array.
+.SS Параметры
+\fIcciss_allow_hpsa=1\fP: этот параметр запрещает драйверу \fBcciss\fP пробовать
+управлять контроллерами, которыми может управлять драйвер
+\fBhpsa\fP(4). Другими словами, этим параметром драйвер \fBcciss\fP будет
+ограничен следующими контроллерами:
+.PP
+.nf
+    Smart Array 5300
+    Smart Array 5i
+    Smart Array 532
+    Smart Array 5312
+    Smart Array 641
+    Smart Array 642
+    Smart Array 6400
+    Smart Array 6400 EM
+    Smart Array 6i
+    Smart Array P600
+    Smart Array P400i
+    Smart Array E200i
+    Smart Array E200
+    Smart Array E200i
+    Smart Array E200i
+    Smart Array E200i
+    Smart Array E500
+.fi
+.SS "Поддерживаемое оборудование"
+Драйвер \fBcciss\fP поддерживает следующие платы Smart Array:
+.PP
+.nf
+    Smart Array 5300
+    Smart Array 5i
+    Smart Array 532
+    Smart Array 5312
+    Smart Array 641
+    Smart Array 642
+    Smart Array 6400
+    Smart Array 6400 U320 Expansion Module
+    Smart Array 6i
+    Smart Array P600
+    Smart Array P800
+    Smart Array E400
+    Smart Array P400i
+    Smart Array E200
+    Smart Array E200i
+    Smart Array E500
+    Smart Array P700m
+    Smart Array P212
+    Smart Array P410
+    Smart Array P410i
+    Smart Array P411
+    Smart Array P812
+    Smart Array P712m
+    Smart Array P711m
+.fi
+.SS "Особенности настройки"
+Для настройки контроллеров HP Smart Array используйте HP Array Configuration
+Utility (\fBhpacuxe\fP(8) или \fBhpacucli\fP(8)) или Offline ROM\-based
+Configuration Utility (ORCA), которую можно запустить из ROM Smart Array при
+включении машины.
+.SH ФАЙЛЫ
+.SS "Узлы устройства"
+Ниже приведена схема именования устройств:
+.PP
+.nf
+Старшие номера:
+.PP
+    104     cciss0
+    105     cciss1
+    106     cciss2
+    105     cciss3
+    108     cciss4
+    109     cciss5
+    110     cciss6
+    111     cciss7
+.PP
+Младшие номера:
+.PP
+    b7 b6 b5 b4 b3 b2 b1 b0
+    |\-\-\-\-+\-\-\-\-| |\-\-\-\-+\-\-\-\-|
+         |           |
+         |           +\-\-\-\-\-\-\-\- Идентификатор раздела (0=всё устройство,
+                                                      1\-15 раздел)
+         |
+         +\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\- Номер логического тома
+.PP
+Порядок именования устройств:
+.PP
+    /dev/cciss/c0d0         Контроллер 0, диск 0, устройство целиком
+    /dev/cciss/c0d0p1       Контроллер 0, диск 0, раздел 1
+    /dev/cciss/c0d0p2       Контроллер 0, диск 0, раздел 2
+    /dev/cciss/c0d0p3       Контроллер 0, диск 0, раздел 3
+.PP
+    /dev/cciss/c1d1         Контроллер 1, диск 1, устройство целиком
+    /dev/cciss/c1d1p1       Контроллер 1, диск 1, раздел 1
+    /dev/cciss/c1d1p2       Контроллер 1, диск 1, раздел 2
+    /dev/cciss/c1d1p3       Контроллер 1, диск 1, раздел 3
+.fi
+.SS "Файлы в /proc"
+В файлах \fI/proc/driver/cciss/cciss[0\-9]+\fP содержится информация о настройке
+каждого контроллера. Пример:
+.PP
+.in +4n
+.EX
+$ \fBcd /proc/driver/cciss\fP
+$ \fBls \-l\fP
+total 0
+\-rw\-r\-\-r\-\- 1 root root 0 2010\-09\-10 10:38 cciss0
+\-rw\-r\-\-r\-\- 1 root root 0 2010\-09\-10 10:38 cciss1
+\-rw\-r\-\-r\-\- 1 root root 0 2010\-09\-10 10:38 cciss2
+$ \fBcat cciss2\fP
+cciss2: HP Smart Array P800 Controller
+Board ID: 0x3223103c
+Firmware Version: 7.14
+IRQ: 16
+Logical drives: 1
+Current Q depth: 0
+Current # commands on controller: 0
+Max Q depth since init: 1
+Max # commands on controller since init: 2
+Max SG entries since init: 32
+Sequential access devices: 0
+
+cciss/c2d0:   36.38GB       RAID 0
+.EE
+.in
+.\"
+.SS "Файлы в /sys"
+.TP 
+\fI/sys/bus/pci/devices/<dev>/ccissX/cXdY/model\fP
+Модель логического устройства \fIY\fP контроллера \fIX\fP со страницы 0 SCSI
+INQUIRY.
+.TP 
+\fI/sys/bus/pci/devices/<dev>/ccissX/cXdY/rev\fP
+Версия логического устройства \fIY\fP контроллера \fIX\fP со страницы 0 SCSI
+INQUIRY.
+.TP 
+\fI/sys/bus/pci/devices/<dev>/ccissX/cXdY/unique_id\fP
+Серийный номер логического устройства \fIY\fP контроллера \fIX\fP со страницы 83
+SCSI INQUIRY.
+.TP 
+\fI/sys/bus/pci/devices/<dev>/ccissX/cXdY/vendor\fP
+Производитель логического устройства \fIY\fP контроллера \fIX\fP со страницы 0
+SCSI INQUIRY.
+.TP 
+\fI/sys/bus/pci/devices/<dev>/ccissX/cXdY/block:cciss!cXdY\fP
+Символьная ссылка на \fI/sys/block/cciss!cXdY\fP.
+.TP 
+\fI/sys/bus/pci/devices/<dev>/ccissX/rescan\fP
+При записи в этот файл драйвер повторно сканирует контроллер для обнаружения
+новых, удалённых или изменённых логических дисков.
+.TP 
+\fI/sys/bus/pci/devices/<dev>/ccissX/resettable\fP
+Значение 1 в файле показывает, что параметр ядра «reset_devices=1»
+(используемый \fBkdump\fP) был принят данным контроллером. Значение 0
+показывает, что параметр ядра «reset_devices=1» принят не был. Некоторые
+модели Smart Array не способны принять этот параметр.
+.TP 
+\fI/sys/bus/pci/devices/<dev>/ccissX/cXdY/lunid\fP
+8\-байтовый LUN ID, используемый для адресации логического устройства \fIY\fP
+контроллера \fIX\fP.
+.TP 
+\fI/sys/bus/pci/devices/<dev>/ccissX/cXdY/raid_level\fP
+Уровень RAID логического устройства \fIY\fP контроллера \fIX\fP.
+.TP 
+\fI/sys/bus/pci/devices/<dev>/ccissX/cXdY/usage_count\fP
+Счётчик использования (число открытий) логического устройства \fIY\fP
+контроллера \fIX\fP.
+.SS "Поддержка ленточных устройств SCSI и устройств смены носителя"
+Драйвер поддерживает устройства SCSI с последовательным доступом и смены
+носителя, и автоматически создаёт соответствующие узлы устройств (например,
+\fI/dev/st0\fP, \fI/dev/st1\fP и т. д.; подробней смотрите в \fBst\fP(4)). Чтобы
+использовать ленточные устройства SCSI с контроллером Smart Array 5xxx в
+настройках ядра нужно включить «SCSI tape drive support for Smart Array
+5xxx» и «SCSI support».
+.PP
+Также заметим, что драйвер не привлекает ядро SCSI во время
+инициализации. Драйвер должен динамически задействовать ядро SCSI через
+запись в файловой системе \fI/proc\fP, которую (\fI/proc/driver/cciss/cciss*\fP)
+«блочная» часть драйвера создаёт во время работы. Так сделано потому, что на
+момент инициализации драйвера ядро SCSI ещё может быть не  инициализировано
+(так как драйвер — блочный) и попытка зарегистрировать его в ядре SCSI в
+этом случае вызывала бы зависание. Это лучше всего выполнять из сценария
+инициализации (обычно, в \fI/etc/init.d\fP, но в разных дистрибутивах
+по\-разному). Пример:
+.PP
+.in +4n
+.EX
+for x in /proc/driver/cciss/cciss[0\-9]*
+do
+    echo "engage scsi" > $x
+done
+.EE
+.in
+.PP
+После того, как драйвер подключил ядро SCSI, он не может быть выключен (за
+исключением выгрузки драйвера, если он собран в виде модуля).
+.PP
+Также заметим, что если устройства с последовательным доступом или смены
+носителя не обнаружены, то ядро SCSI не привлекается из показанного выше
+сценария.
+.SS "Ленточные устройства SCSI, подключаемые во время работы (hot plug)"
+Поддерживается подключение ленточных устройств SCSI без выключения
+машины. Драйвер \fBcciss\fP должен быть уведомлён об изменениях на шине
+SCSI. Это можно сделать через файловую систему \fI/proc\fP. Пример:
+.PP
+    echo "rescan" > /proc/scsi/cciss0/1
+.PP
+Это заставляет драйвер:
+.RS
+.IP 1. 3
+Опросить адаптер об изменениях на физических шинах SCSI и/или управляемой
+петли (arbitrated loop) fibre channel;
+.IP 2.
+Определить все новые или удалённые устройства с последовательным доступом
+или смены носителя;
+.RE
+.PP
+Драйвер выводит сообщения о добавленных или удалённых устройствах, а также
+контроллер, шину, назначение и lun каждого используемого устройства. Также,
+драйвер уведомляет промежуточный слой SCSI об этих изменениях.
+.PP
+Заметим, что по соглашению об именовании кроме имени драйвера, записи
+файловой системы \fI/proc\fP содержат номер (например, «cciss0» вместо «cciss»,
+как вы могли бы ожидать).
+.PP
+Замечание: драйвер \fBcciss\fP на промежуточном слое SCSI представляет в виде
+устройств SCSI \fIтолько\fP устройства с последовательным доступом и смены
+носителя. Устройства для физических дисков  SCSI \fIне\fP представляются на
+промежуточном слое SCSI. Дисковые устройства представляются ядром как
+логические устройства, который контроллер массива собрал из частей
+физических дисков. Логические устройства представляются на блочном уровне
+(не на промежуточном слое SCSI). Это важно для драйвера — не дать прямой
+доступ ядру к физическим дискам, так как устройства используются
+контроллером массива для сборки логических устройств.
+.SS "Обработка ошибок SCSI для ленточных устройств и устройств смены носителя"
+Промежуточный слой Linux SCSI предоставляет порядок (protocol) обработки
+ошибок, который запускается, если команда SCSI выполнилась с ошибкой
+определённое количество раз (которое может зависеть от команды). Драйвер
+\fBcciss\fP следует этому порядку с некоторыми изменениями. Обычный порядок
+состоит из четырёх шагов:
+.IP * 3
+Устройству указывается прервать работу команды.
+.IP *
+Если это не сработало, устройство сбрасывается (reset).
+.IP *
+Если это не сработало, сбрасывается шина SCSI.
+.IP *
+Если это не сработало, сбрасывается адаптер шины узла.
+.PP
+Как драйвер SCSI, \fBcciss\fP является блочным и только ленточные устройства и
+устройства смены носителя представлены на промежуточном уровне SCSI. Кроме
+этого, в отличие от более простых драйверов SCSI, дисковый ввод\-вывод
+продолжается через блочную часть во время процесса восстановления после
+ошибки SCSI. Поэтому драйвер \fBcciss\fP выполняет только первые два шага:
+прерывание команды и сброс устройства. Также заметим, что большинству
+ленточных устройств не поможет прерывание команды и, иногда, они даже не
+подчиняются этой команде, хотя очень редко. Если команда не может быть
+прервана и устройство не может быть сброшено, то устройство переводится в
+неактивный режим (offline).
+.PP
+Если событие обработки ошибок возникло и ленточное устройство успешно
+сброшено или последняя команда успешно прервана, то ленточное устройств
+может всё ещё продолжать не позволять выполнять ввод\-вывод, пока
+какая\-нибудь команда не поместит ленточное устройство в известное
+положение. Как правило, вы должны перемотать ленту (например, командной \fImt
+\-f /dev/st0 rewind\fP) перед тем как продолжить ввод\-вывод снова в ленточное
+устройство, которое было сброшено.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBhpsa\fP(4), \fBcciss_vol_status\fP(8), \fBhpacucli\fP(8), \fBhpacuxe\fP(8)
+.PP
+.UR http://cciss.sf.net
+.UE ,
+\fIDocumentation/blockdev/cciss.txt\fP и
+файл \fIDocumentation/ABI/testing/sysfs\-bus\-pci\-devices\-cciss\fP в дереве
+исходного кода ядра Linux
+.\" .SH AUTHORS
+.\" Don Brace, Steve Cameron, Chase Maupin, Mike Miller, Michael Ni,
+.\" Charles White, Francis Wiran
+.\" and probably some other people.

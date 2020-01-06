@@ -1,0 +1,95 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 21:27:01 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 14 Jun 2002, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" 	Added notes on differences from other UNIX systems with respect to
+.\"	waited-for children.
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CLOCK 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+clock \- вычисляет процессорное время
+.SH ОБЗОР
+.nf
+\fB#include <time.h>\fP
+.PP
+\fBclock_t clock(void);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBclock\fP() возвращает приблизительное процессорное время,
+использованное программой.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Возвращаемое значение — это время, затраченное процессором на выполнение
+программы, представленное типом \fIclock_t\fP. Чтобы узнать количество
+затраченных на выполнение секунд, разделите возвращенное значение на
+\fBCLOCKS_PER_SEC\fP. Если затраченное процессором время недоступно или если
+его значение не может быть определено, то функция возвращает значение
+\fI(clock_t)\ \-1\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBclock\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99. В XSI требуется, чтобы
+\fBCLOCKS_PER_SEC\fP было равно 1000000 вне зависимости от действительной
+точности.
+.SH ЗАМЕЧАНИЯ
+Стандарт Си разрешает выдавать произвольные значения времени при старте
+программы; поэтому вычтите из возвращенного функцией \fBclock\fP() значения её
+значение при старте и используйте разницу для обеспечения максимальной
+переносимости.
+.PP
+Заметим, что время может превысить свое максимальное значение. В 32\-битных
+системах, где \fBCLOCKS_PER_SEC\fP равно 1000000, функция \fBclock\fP() возвращает
+одно и то же значение примерно каждые 72 минуты.
+.PP
+.\" I have seen this behavior on Irix 6.3, and the OSF/1, HP/UX, and
+.\" Solaris manual pages say that clock() also does this on those systems.
+.\" POSIX.1-2001 doesn't explicitly allow this, nor is there an
+.\" explicit prohibition. -- MTK
+В некоторых других реализациях значение, возвращаемое \fBclock\fP(), также
+включает в себя время всех дочерних процессов, чьи состояния были собраны
+через \fBwait\fP(2) (или другие системные вызовы типа wait). Linux не включает
+время ожидающих потомков в значение, возвращаемое \fBclock\fP(). Возможно,
+предпочтительнее использовать функцию \fBtimes\fP(2), явно возвращающую
+(отдельно) информацию о вызвавшем функцию и его дочерних процессах.
+.PP
+В glibc 2.17 и старее, функция \fBclock\fP() работает на основе
+\fBtimes\fP(2). Для повышения точности, начиная с glibc 2.18, она реализуется
+через \fBclock_gettime\fP(2) (используются часы \fBCLOCK_PROCESS_CPUTIME_ID\fP).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclock_gettime\fP(2), \fBgetrusage\fP(2), \fBtimes\fP(2)

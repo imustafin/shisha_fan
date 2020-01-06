@@ -1,0 +1,115 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2009 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TIMER_GETOVERRUN 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+timer_getoverrun \- возвращает счётчик переполнения таймера POSIX (для
+каждого процесса отдельно)
+.SH ОБЗОР
+.nf
+\fB#include <time.h>\fP
+.PP
+\fBint timer_getoverrun(timer_t \fP\fItimerid\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBtimer_getoverrun\fP(): _POSIX_C_SOURCE\ >=\ 199309L
+.SH ОПИСАНИЕ
+Вызов \fBtimer_getoverrun\fP() возвращает «счётчик переполнения» (overrun
+count) таймера, заданного в \fItimerid\fP. Приложение может использовать
+счётчик переполнения для точного вычисления количества срабатываний
+(expirations) таймера, которые бы произошли за указанный временной
+интервал. Переполнения таймера могут происходить при получении уведомлений о
+срабатывании (expiration notifications) посредством сигналов
+(\fBSIGEV_SIGNAL\fP) и нитей (\fBSIGEV_THREAD\fP).
+.PP
+Если уведомление о срабатывании доставляется сигналом, то переполнение может
+происходить следующим образом. Независимо от того, используется ли для
+таймерных уведомлений сигнал реального времени или нет, система ставит в
+очередь не более одного сигнала на таймер (так определено в POSIX.1. В
+противном случае, если ставить в очередь один сигнал на каждое срабатывание
+таймера, то легко можно превысить разрешённый размер очереди сигналов в
+системы). Из\-за задержек системного планировщика или временной блокировки
+сигнала может возникать задержка между генерацией уведомляющего сигнала и
+его доставкой (delivered) (например, в обработчик сигнала) или приёмом
+(accepted) (например, с помощью \fBsigwaitinfo\fP(2)). В этом промежутке могут
+произойти дополнительные срабатывания таймера. Переполнение счётчика таймера
+— это количество дополнительных срабатываний таймера, которые произошли
+между генерацией и доставкой или принятием сигнала.
+.PP
+Переполнение таймера также может произойти когда уведомление о срабатывании
+доставляется через вызов нити, так как здесь может возникать произвольная
+задержка между срабатыванием таймера и вызовом уведомляемой нити, и в этом
+промежутке могут произойти дополнительные срабатывания таймера.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBtimer_getoverrun\fP() возвращается счётчик
+переполнений заданного таймера; он может быть равен 0, если если
+переполнений не было. При ошибке возвращается \-1, а \fIerrno\fP устанавливается
+в соответствующее значение кода ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Значение \fItimerid\fP не является допустимым идентификатором таймера.
+.SH ВЕРСИИ
+Данный системный вызов появился в Linux 2.6.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Когда уведомления таймера доставляются посредством сигналов
+(\fBSIGEV_SIGNAL\fP), в Linux также возможно узнать значение счётчика
+переполнения из поля \fIsi_overrun\fP структуры \fIsiginfo_t\fP (смотрите
+\fBsigaction\fP(2)). Это позволяет приложению не делать лишнего системного
+вызова для получения счётчика, но это непереносимое расширение POSIX.1.
+.PP
+.\" FIXME . Austin bug filed, 11 Feb 09
+В POSIX.1 переполнение таймера обсуждается только в контексте уведомлений
+таймера с помощью сигналов.
+.SH ДЕФЕКТЫ
+.\" Bug filed: http://bugzilla.kernel.org/show_bug.cgi?id=12665
+.\" http://thread.gmane.org/gmane.linux.kernel/113276/
+В POSIX.1 указано, что если счётчик переполнения таймера больше или равен
+максимальному значению (задаётся реализацией) \fBDELAYTIMER_MAX\fP, то
+\fBtimer_getoverrun\fP() должен возвращать \fBDELAYTIMER_MAX\fP. Однако в Linux
+это не реализовано: вместо этого, если значение переполнения таймера
+превышает максимальное значение целого, то счётчик начинает увеличиваться с
+начала.
+.SH ПРИМЕР
+Смотрите \fBtimer_create\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclock_gettime\fP(2), \fBsigaction\fP(2), \fBsignalfd\fP(2), \fBsigwaitinfo\fP(2),
+\fBtimer_create\fP(2), \fBtimer_delete\fP(2), \fBtimer_settime\fP(2), \fBsignal\fP(7),
+\fBtime\fP(7)

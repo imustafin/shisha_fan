@@ -1,0 +1,127 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1999 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2003-11-15, aeb, added tmpnam_r
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TMPNAM 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+tmpnam, tmpnam_r \- создаёт имя для временного файла
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+.PP
+\fBchar *tmpnam(char *\fP\fIs\fP\fB);\fP
+\fBchar *tmpnam_r(char *\fP\fIs\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBtmpnam_r\fP()
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.19:
+_DEFAULT_SOURCE
+.TP 
+Начиная с glibc 2.19:
+_BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+\fBЗамечание:\fP не используйте эти функции; вместо них используйте
+\fBmkstemp\fP(3) или \fBtmpfile\fP(3).
+.PP
+Функция \fBtmpnam\fP() возвращает указатель на строку, содержащую корректное
+имя файла, и гарантирует, что файла с таким именем не существует на момент
+вызова, и наивный программист может считать это имя самым подходящим для
+временного файла. Если аргумент \fIs\fP равен NULL, это имя генерируется во
+внутреннем статическом буфере и может быть изменено последующим вызовом
+\fBtmpnam\fP(). Если \fIs\fP не равно NULL, то имя копируется в массив символов
+(длиной не менее \fIL_tmpnam\fP), на который указывает \fIs\fP, и в случае
+успешного выполнения возвращается значение \fIs\fP.
+.PP
+Созданное имя файла содержит префикс каталога \fIP_tmpdir\fP (\fIL_tmpnam\fP и
+\fIP_tmpdir\fP определены в \fI<stdio.h>\fP также, как \fBTMP_MAX\fP,
+описанная ниже).
+.PP
+Функция \fBtmpnam_r\fP() выполняет ту же задачу, что и \fBtmpnam\fP(), но
+возвращает NULL (возникла ошибка), если \fIs\fP равно NULL.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Эти функции возвращают указатель на уникальное имя временного файла, либо
+NULL, если уникальное имя невозможно сгенерировать.
+.SH ОШИБКИ
+Ошибок не предполагается.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBtmpnam\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:tmpnam/!s
+T{
+\fBtmpnam_r\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBtmpnam\fP(): SVr4, 4.3BSD, C89, C99, POSIX.1\-2001. В POSIX.1\-2008 функция
+\fBtmpnam\fP() помечена как устаревшая.
+.PP
+.\" Appears to be on Solaris
+Функция \fBtmpnam_r\fP() является нестандартным расширением, но доступна и в
+некоторых других системах.
+.SH ЗАМЕЧАНИЯ
+Функция \fBtmpnam\fP() генерирует уникальное имя каждый раз, до \fBTMP_MAX\fP
+вызовов. Если она будет вызвана более чем \fBTMP_MAX\fP раз, то дальнейшее
+поведение определяется конкретной реализацией.
+.PP
+Хотя эти функции генерируют имена, которые трудно подобрать, тем не менее,
+есть вероятность, что за промежуток времени, когда вернётся имя файла и
+программа откроет его, другая программа успеет создать с помощью \fBopen\fP(2)
+файл с таким же именем или символическую ссылку, что может привести к
+проблемам с безопасностью. Чтобы исключить подобную вероятность, для
+открытия файла используйте \fBopen\fP(2) с флагом \fBO_EXCL\fP. А ещё лучше —
+воспользуйтесь \fBmkstemp\fP(3) или \fBtmpfile\fP(3).
+.PP
+Если определён \fB_POSIX_THREADS\fP или \fB_POSIX_THREAD_SAFE_FUNCTIONS\fP, то в
+переносимых приложениях с нитями нельзя вызывать \fBtmpnam\fP() с аргументом
+NULL.
+.SH ДЕФЕКТЫ
+Никогда не используйте эти функции. Вместо них используйте \fBmkstemp\fP(3) или
+\fBtmpfile\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmkstemp\fP(3), \fBmktemp\fP(3), \fBtempnam\fP(3), \fBtmpfile\fP(3)

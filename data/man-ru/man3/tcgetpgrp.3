@@ -1,0 +1,102 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2002 Andries Brouwer <aeb@cwi.nl>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TCGETPGRP 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+tcgetpgrp, tcsetpgrp \- возвращает и задаёт терминал активной группы
+процессов
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBpid_t tcgetpgrp(int \fP\fIfd\fP\fB);\fP
+.PP
+\fBint tcsetpgrp(int \fP\fIfd\fP\fB, pid_t \fP\fIpgrp\fP\fB);\fP
+.SH ОПИСАНИЕ
+.\" The process itself may be a background process.
+Функция \fBtcgetpgrp\fP() возвращает идентификатор активной (foreground) группы
+процессов, терминал которой связан с \fIfd\fP. Этот терминал должен быть
+управляющим терминалом вызывающего процесса.
+.PP
+Функция \fBtcsetpgrp\fP() делает группу процессов с идентификатором \fIpgrp\fP
+активной группой процессов на терминале, связанном с \fIfd\fP, который должен
+быть управляющим терминалом для вызывающего процесса, и все ещё быть
+связанным с его сеансом. Более того, \fIpgrp\fP должно быть (непустой) группой
+процессов, принадлежащей к тому же сеансу, что и вызывающий процесс.
+.PP
+Если \fBtcsetpgrp\fP() вызывается членом группы фоновых процессов в этом
+сеансе, и вызывающий процесс не блокирует или игнорирует \fBSIGTTOU\fP, то
+сигнал \fBSIGTTOU\fP отправляется всем членам этой группы фоновых процессов.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Когда \fIfd\fP ссылается на управляющий терминал вызывающего процесса, функция
+\fBtcgetpgrp\fP() возвращает идентификатор активной группы процессов этого
+терминала, если такой существует, или некоторое значение больше 1, не
+являющееся в данный момент идентификатором группы процессов, в другом
+случае. Когда \fIfd\fP не ссылается на управляющий терминал вызывающего
+процесса, возвращается \-1, а переменная \fIerrno\fP устанавливается
+соответственно ошибке.
+.PP
+При успешном выполнении \fBtcsetpgrp\fP() возвращает 0. Иначе возвращается \-1 и
+переменная \fIerrno\fP устанавливается соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+Неподдерживаемое значение \fIpgrp\fP.
+.TP 
+\fBENOTTY\fP
+Вызывающий процесс не имеет управляющего терминала, или он имеется, но не
+описан \fIfd\fP, или, для \fBtcsetpgrp\fP(), этот управляющий терминал больше не
+связан с сеансом вызывающего процесса.
+.TP 
+\fBEPERM\fP
+В \fIpgrp\fP содержится поддерживаемое значение, но это не идентификатор группы
+процессов для процесса в том же сеансе, что и вызывающий процесс.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw24 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBtcgetpgrp\fP(),
+\fBtcsetpgrp\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Эти функции реализованы через вызовы ioctl \fBTIOCGPGRP\fP и \fBTIOCSPGRP\fP.
+.SS История
+Эти вызовы ioctl появились в 4.2BSD. Функции являются изобретениями POSIX.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsetpgid\fP(2), \fBsetsid\fP(2), \fBcredentials\fP(7)

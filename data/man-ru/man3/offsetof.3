@@ -1,0 +1,97 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Justin Pryzby <pryzbyj@justinpryzby.com>
+.\"     and Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(PERMISSIVE_MISC)
+.\" Permission is hereby granted, free of charge, to any person obtaining
+.\" a copy of this software and associated documentation files (the
+.\" "Software"), to deal in the Software without restriction, including
+.\" without limitation the rights to use, copy, modify, merge, publish,
+.\" distribute, sublicense, and/or sell copies of the Software, and to
+.\" permit persons to whom the Software is furnished to do so, subject to
+.\" the following conditions:
+.\"
+.\" The above copyright notice and this permission notice shall be
+.\" included in all copies or substantial portions of the Software.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+.\" EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+.\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+.\" IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+.\" CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+.\" TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+.\" SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.\" %%%LICENSE_END
+.\"
+.\" References:
+.\"   /usr/lib/gcc/i486-linux-gnu/4.1.1/include/stddef.h
+.\"   glibc-doc
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH OFFSETOF 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+offsetof \- смещение элемента структуры
+.SH ОБЗОР
+.nf
+\fB#include <stddef.h>\fP
+.PP
+\fBsize_t offsetof(\fP\fItype\fP\fB, \fP\fImember\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Макрокоманда \fBoffsetof\fP() возвращает смещение поля \fImember\fP от начала
+структуры \fItype\fP.
+.PP
+Эта макрокоманда удобна, так как размеры полей, составляющих структуру,
+могут значительно изменяться в зависимости от реализаций, а компиляторы
+могут добавлять различное количество дополнительных байт между
+полями. Следовательно, смещение элемента не всегда является суммой размеров
+предыдущих элементов.
+.PP
+Если \fImember\fP не выровнен по границе байта (т.е., если это битовое поле),
+то компилятор вернёт ошибку.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBoffsetof\fP() возвращает смещение в байтах указанного поля \fImember\fP
+внутри указанного \fItype\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C89, C99.
+.SH ПРИМЕР
+В системах Linux/i386 при использовании компилятора \fBgcc\fP(1) с параметрами
+по умолчанию нижеследующая программа дает следующий результат:
+.PP
+.in +4n
+.EX
+$\fB ./a.out\fP
+offsets: i=0; c=4; d=8 a=16
+sizeof(struct s)=16
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int
+main(void)
+{
+    struct s {
+        int i;
+        char c;
+        double d;
+        char a[];
+    };
+
+    /* Вывод зависит от компилятора */
+
+    printf("offsets: i=%zd; c=%zd; d=%zd a=%zd\en",
+            offsetof(struct s, i), offsetof(struct s, c),
+            offsetof(struct s, d), offsetof(struct s, a));
+    printf("sizeof(struct s)=%zd\en", sizeof(struct s));
+
+    exit(EXIT_SUCCESS);
+}
+.EE

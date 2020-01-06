@@ -1,0 +1,367 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Michael Haardt;
+.\"             and Copyright (C) 1993,1995 Ian Jackson
+.\"		and Copyright (C) 2006, 2014 Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 00:35:52 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Thu Jun  4 12:21:13 1998 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified Thu Mar  3 09:49:35 2005 by Michael Haardt <michael@moria.de>
+.\" 2007-03-25, mtk, added various text to DESCRIPTION.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RENAME 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+rename, renameat, renameat2 \- изменяет имя или расположение файла
+.SH ОБЗОР
+.nf
+\fB#include <stdio.h>\fP
+.PP
+\fBint rename(const char *\fP\fIoldpath\fP\fB, const char *\fP\fInewpath\fP\fB);\fP
+
+\fB#include <fcntl.h>           \fP/* определения констант AT_* */
+\fB#include <stdio.h>\fP
+.PP
+\fBint renameat(int \fP\fIolddirfd\fP\fB, const char *\fP\fIoldpath\fP\fB,\fP
+\fB             int \fP\fInewdirfd\fP\fB, const char *\fP\fInewpath\fP\fB);\fP
+.PP
+\fBint renameat2(int \fP\fIolddirfd\fP\fB, const char *\fP\fIoldpath\fP\fB,\fP
+\fB              int \fP\fInewdirfd\fP\fB, const char *\fP\fInewpath\fP\fB, unsigned int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBrenameat\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_ATFILE_SOURCE
+.RE
+.PP
+\fBrenameat2\fP():
+.RS 4
+.TP 
+_GNU_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+Вызов \fBrename\fP() переименовывает файл и, если требуется, перемещает его из
+одного каталога в другой. Все прочие жёсткие ссылки на файл (созданные с
+помощью \fBlink\fP(2)), не изменяются. Открытые файловые дескрипторы на
+\fIoldpath\fP также не изменяются.
+.PP
+На успешность выполнения операции переименования влияют различные
+ограничения: смотрите ОШИБКИ далее.
+.PP
+Если \fInewpath\fP уже существует, то он будет атомарно перезаписан так, что
+другой процесс, пытающийся в этот момент обратиться к \fInewpath\fP, не сможет
+определить его временное отсутствие. Однако будет промежуток времени, когда
+\fIoldpath\fP и \fInewpath\fP указывают на один файл.
+.PP
+Если \fIoldpath\fP и \fInewpath\fP являются жёсткими ссылками на один и тот же
+файл, то \fBrename\fP() ничего не делает и возвращает код успешного выполнения.
+.PP
+Если \fInewpath\fP существует, но операция завершается ошибкой, то \fBrename\fP()
+гарантирует, что \fInewpath\fP останется нетронутым.
+.PP
+В \fIoldpath\fP может быть указан каталог. В этом случае каталог в \fInewpath\fP
+должен или не существовать, или должен быть пуст.
+.PP
+Если \fIoldpath\fP является символьной ссылкой, то она переименовывается; если
+\fInewpath\fP является символьной ссылкой, то будет вновь записан файл, на
+который она указывает.
+.SS renameat()
+Системный вызов \fBrenameat\fP() работает также как системный вызов
+\fBrename\fP(), за исключением случаев, описанных далее.
+.PP
+Если в \fIoldpath\fP указан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIolddirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBrename\fP()).
+.PP
+Если в \fIoldpath\fP указан относительный путь и \fIolddirfd\fP равно специальному
+значению \fBAT_FDCWD\fP, то \fIoldpath\fP рассматривается относительно текущего
+рабочего каталога вызывающего процесса (как \fBrename\fP()).
+.PP
+Если в \fIoldpath\fP указан абсолютный путь, то \fIolddirfd\fP игнорируется.
+.PP
+Значение \fInewpath\fP интерпретируется как \fIoldpath\fP, за исключением того,
+что относительный путь интерпретируется относительно каталога, на который
+ссылается файловый дескриптор \fInewdirfd\fP.
+.PP
+Смотрите в \fBopenat\fP(2) объяснение необходимости \fBrenameat\fP().
+.SS renameat2()
+Вызов \fBrenameat2\fP() имеет дополнительный аргумент \fIflags\fP. Если значение
+\fIflags\fP равно нулю, то \fBrenameat2\fP() эквивалентен \fBrenameat\fP().
+.PP
+Аргумент \fIflags\fP является битовой маской, состоящей из нуля или более
+следующих флагов:
+.TP 
+\fBRENAME_EXCHANGE\fP
+Атомарно обменять \fIoldpath\fP и \fInewpath\fP. Оба пути должны существовать, но
+могут быть различных типов (например, один может быть непустым каталогом, а
+другой символической ссылкой).
+.TP 
+\fBRENAME_NOREPLACE\fP
+Не перезаписывать \fInewpath\fP. Возвращать ошибку, если \fInewpath\fP уже
+существует.
+.IP
+\fBRENAME_NOREPLACE\fP не может быть применен вместе с \fBRENAME_EXCHANGE\fP.
+.IP
+Для \fBRENAME_NOREPLACE\fP требуется поддержка в файловой системе; она есть
+только у нескольких файловых систем:
+.RS
+.IP * 3
+.\" ext4: commit 0a7c3937a1f23f8cb5fc77ae01661e9968a51d0c
+ext4 (начиная с\ Linux 3.15);
+.IP *
+btrfs, shmem, и cifs (начиная с\ Linux 3.17);
+.IP *
+.\" btrfs: commit 80ace85c915d0f41016f82917218997b72431258
+.\" shmem: commit 3b69ff51d087d265aa4af3a532fc4f20bf33e718
+.\" cifs: commit 7c33d5972ce382bcc506d16235f1e9b7d22cbef8
+.\"
+.\" gfs2 in 4.2?
+xfs (начиная с\ Linux 4.0);
+.IP *
+.\" Also affs, bfs, exofs, hfs, hfsplus, jffs2, logfs, msdos,
+.\" nilfs2, omfs, sysvfs, ubifs, udf, ufs
+.\" hugetlbfs, ramfs
+.\" local filesystems: commit f03b8ad8d38634d13e802165cc15917481b47835
+.\" libfs: commit e0e0be8a835520e2f7c89f214dfda570922a1b90
+Поддержка для других файловых систем была добавлена в Linux 4.9: etx2,
+minix, reiserfs, jfs, vfat и bpf.
+.RE
+.TP 
+\fBRENAME_WHITEOUT\fP (начиная с Linux 3.18)
+.\" commit 0d7a855526dd672e114aff2ac22b60fc6f155b08
+.\" commit 787fb6bc9682ec7c05fb5d9561b57100fbc1cc41
+Эта операция применима только для реализаций оверлейных/объединённых
+файловых систем.
+.IP
+При указании \fBRENAME_WHITEOUT\fP для источника переименования одновременно с
+выполнением переименования создаётся «замазанный» объект (whiteout
+object). Вся операция атомарна, и при успешном выполнении переименования
+создаётся и замазка.
+.IP
+«Замазка» — это объект, имеющий специальное предназначение в
+оверлейных/объединённых файловых системах. В них существует несколько слоёв,
+и для изменения доступен только верхний. Замазка на верхнем слое эффективно
+скрывает файл из нижнего слоя, и кажется, что файл не существует.
+.IP
+Когда переименовывается файл, существующий в нижнем слое, то первым
+действием он переписывается (если его уже нет в верхнем слое) и
+переименовывается в верхнем, доступном на чтение\-запись слое. Одновременно с
+этим, исходный файл требуется «замазать» (что исходный файл в нижнем слое
+отражался невидимым). Вся операция должна выполняться атомарно.
+.IP
+.\" https://www.freebsd.org/cgi/man.cgi?query=mount_unionfs&manpath=FreeBSD+11.0-RELEASE
+При отсутствии объединения/оверлея замазка появляется в виде символьного
+устройства с номером устройства {0,0} (заметим, что в других реализациях
+объединения/оверлея могут использоваться другие методы хранения элементов
+замазки; в частности, в BSD для объединения монтирования используется
+специальный тип иноды, \fBDT_WHT\fP, который, хотя и поддерживается некоторыми
+файловыми системами, доступными в Linux, например CODA и XFS, но
+игнорируется кодом поддержки замазки в ядре, по крайней мере, в Linux 4.19).
+.IP
+Для \fBRENAME_WHITEOUT\fP требуются те же права, что и для создания узла
+устройства (т. е., мандата \fBCAP_MKNOD\fP).
+.IP
+\fBRENAME_WHITEOUT\fP не может быть применён вместе с \fBRENAME_EXCHANGE\fP.
+.IP
+.\" tmpfs: commit 46fdb794e3f52ef18b859ebc92f0a9d7db21c5df
+.\" ext4: commit cd808deced431b66b5fa4e5c193cb7ec0059eaff
+.\" XFS: commit 7dcf5c3e4527cfa2807567b00387cf2ed5e07f00
+.\" f2fs: commit 7e01e7ad746bc8198a8b46163ddc73a1c7d22339
+.\" btrfs: commit cdd1fedf8261cd7a73c0596298902ff4f0f04492
+.\" ubifs: commit 9e0a1fff8db56eaaebb74b4a3ef65f86811c4798
+Для \fBRENAME_WHITEOUT\fP требуется поддержка в файловой системе. Такая
+поддержка имеется в tmpfs (начиная с Linux 3.18), ext4 (начиная с Linux
+3.18), XFS (начиная с Linux 4.1), f2fs (начиная с Linux 4.2), btrfs (начиная
+с Linux 4.7) и ubifs (начиная с Linux 4.9).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Запись в каталог, содержащий \fIoldpath\fP или \fInewpath\fP, запрещена, или в
+одном из каталогов пути \fIoldpath\fP или \fInewpath\fP нельзя производить поиск,
+или \fIoldpath\fP является каталогом, в который запрещена запись (требует
+обновления элемента \fI..\fP); смотрите также \fBpath_resolution\fP(7)).
+.TP 
+\fBEBUSY\fP
+Переименование завершилось неудачно, так как \fIoldpath\fP или \fInewpath\fP
+является каталогом, который используется другим процессом (возможно в
+качестве текущего рабочего каталога или в качестве корневого каталога, или
+он открыт на чтение), или используется системой (например, в качестве точки
+монтирования), и система считает это ошибкой (заметим, что нет требования
+возвращать \fBEBUSY\fP в таких случаях — нет ничего неправильного в таком
+переименовании — но разрешается возвращать \fBEBUSY\fP, если система не может
+иначе обработать такие ситуации).
+.TP 
+\fBEDQUOT\fP
+Исчерпана пользовательская квота на дисковые блоки файловой системы.
+.TP 
+\fBEFAULT\fP
+Значения \fIoldpath\fP и \fInewpath\fP указывают за пределы доступного адресного
+пространства.
+.TP 
+\fBEINVAL\fP
+Новый путь содержит префикс старого пути или, в более общем смысле,
+выполняется попытка сделать каталог подкаталогом самого себя.
+.TP 
+\fBEISDIR\fP
+Каталог \fInewpath\fP уже существует, но \fIoldpath\fP не является каталогом.
+.TP 
+\fBELOOP\fP
+Во время определения \fIoldpath\fP или \fInewpath\fP встретилось слишком много
+символьных ссылок.
+.TP 
+\fBEMLINK\fP
+В \fIoldpath\fP уже имеется максимальное количество ссылок, или каталог,
+содержащий \fInewpath\fP, уже имеет максимальное количество ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fIoldpath\fP или \fInewpath\fP.
+.TP 
+\fBENOENT\fP
+Ссылка, на которую ссылается \fIoldpath\fP, не существует; компонент каталога в
+\fInewpath\fP не существует; в \fIoldpath\fP или \fInewpath\fP указана пустая строка.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOSPC\fP
+На устройстве, содержащем файл, нет места для создания нового элемента
+каталога.
+.TP 
+\fBENOTDIR\fP
+Компонент, используемый как каталог в \fIoldpath\fP или \fInewpath\fP, в
+действительности не является каталогом. Или \fIoldpath\fP является каталогом и
+существует \fInewpath\fP, который не является каталогом.
+.TP 
+\fBENOTEMPTY\fP или \fBEEXIST\fP
+Значение \fInewpath\fP является непустым каталогом, то есть содержит элементы,
+отличные от «.» и «..».
+.TP 
+\fBEPERM\fP или \fBEACCES\fP
+Каталог, содержащийся в \fIoldpath\fP, имеет закрепляющий бит (\fBS_ISVTX\fP) и
+эффективный идентификатор процесса не совпадает с идентификатором
+пользователя удаляемого файла или каталога, его содержащего, и процесс не
+имеет прав (Linux: нет мандата \fBCAP_FOWNER\fP); или \fInewpath\fP является
+существующим файлом и каталог, содержащий его, имеет закрепляющий бит и
+эффективный идентификатор процесса не совпадает с идентификатором
+пользователя замещаемого файла или каталога, его содержащего, и процесс не
+имеет прав (Linux: нет мандата \fBCAP_FOWNER\fP); или файловая система,
+содержащая \fIpathname\fP, не поддерживает переименования запрашиваемого типа.
+.TP 
+\fBEROFS\fP
+Файл расположен в файловой системе, доступной только для чтения.
+.TP 
+\fBEXDEV\fP
+Элементы \fIoldpath\fP и \fInewpath\fP находятся не в одной смонтированной
+файловой системе (Linux позволяет монтировать файловую систему в несколько
+точек, но \fBrename\fP() не работает с различающимися точками монтирования,
+даже если в них смонтирована идентичная файловая система).
+.PP
+В \fBrenameat\fP() и \fBrenameat2\fP() дополнительно могут возникнуть следующие
+ошибки:
+.TP 
+\fBEBADF\fP
+Значение \fIolddirfd\fP или \fInewdirfd\fP не является правильным файловым
+дескриптором.
+.TP 
+\fBENOTDIR\fP
+Значение \fIoldpath\fP содержит относительный путь и \fIolddirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог; или произошло
+тоже самое с \fInewpath\fP и \fInewdirfd\fP.
+.PP
+В \fBrenameat2\fP() дополнительно могут возникнуть следующие ошибки:
+.TP 
+\fBEEXIST\fP
+Значение \fIflags\fP содержит \fBRENAME_NOREPLACE\fP, а \fInewpath\fP уже существует.
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указан неверный флаг.
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указаны оба флага, \fBRENAME_NOREPLACE\fP и \fBRENAME_EXCHANGE\fP.
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указаны оба флага, \fBRENAME_WHITEOUT\fP и \fBRENAME_EXCHANGE\fP.
+.TP 
+\fBEINVAL\fP
+Файловая система не поддерживает один из флагов в \fIflags\fP.
+.TP 
+\fBENOENT\fP
+В \fIflags\fP содержится \fBRENAME_EXCHANGE\fP, но \fInewpath\fP не существует.
+.TP 
+\fBEPERM\fP
+В \fIflags\fP указан флаг \fBRENAME_WHITEOUT\fP , но вызывающий не имеет мандата
+\fBCAP_MKNOD\fP.
+.SH ВЕРСИИ
+Системный вызов \fBrenameat\fP() был добавлен в ядро Linux версии 2.6.16;
+поддержка в glibc доступна с версии 2.4.
+.PP
+Вызов \fBrenameat2\fP() был добавлен в Linux 3.15; поддержка в glibc доступна с
+версии 2.28.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBrename\fP(): 4.3BSD, C89, C99, POSIX.1\-2001, POSIX.1\-2008.
+.PP
+\fBrenameat\fP(): POSIX.1\-2008.
+.PP
+Вызов \fBrenameat2\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+.\"
+.SS "Замечания по glibc"
+В старых ядрах, где \fBrenameat\fP() отсутствует, обёрточная функция glibc
+использует \fBrename\fP(). Если \fIoldpath\fP и \fInewpath\fP являются относительными
+путями, то glibc собирает пути относительно символической ссылки в
+\fI/proc/self/fd\fP, которая соответствует аргументам \fIolddirfd\fP и
+\fInewdirfd\fP.
+.SH ДЕФЕКТЫ
+При работе с файловыми системами NFS нельзя считать, что если операция
+завершилась неудачно, то имя файла не изменилось. Если сервер производит
+операцию переименования, а затем аварийно останавливает свою работу, то
+перепосланный пакет RPC будет вновь обработан при восстановлении работы
+сервера, что вызовет сообщение об ошибке. Приложение в этой ситуации должно
+работать корректно. Смотрите \fBlink\fP(2), где описывается подобная проблема.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmv\fP(1), \fBchmod\fP(2), \fBlink\fP(2), \fBsymlink\fP(2), \fBunlink\fP(2),
+\fBpath_resolution\fP(7), \fBsymlink\fP(7)

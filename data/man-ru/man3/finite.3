@@ -1,0 +1,132 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2004 Andries Brouwer <aeb@cwi.nl>.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FINITE 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+finite, finitef, finitel, isinf, isinff, isinfl, isnan, isnanf, isnanl \-
+функции BSD для классификации чисел с плавающей запятой
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBint finite(double \fP\fIx\fP\fB);\fP
+\fBint finitef(float \fP\fIx\fP\fB);\fP
+\fBint finitel(long double \fP\fIx\fP\fB);\fP
+.PP
+\fBint isinf(double \fP\fIx\fP\fB);\fP
+\fBint isinff(float \fP\fIx\fP\fB);\fP
+\fBint isinfl(long double \fP\fIx\fP\fB);\fP
+.PP
+\fBint isnan(double \fP\fIx\fP\fB);\fP
+\fBint isnanf(float \fP\fIx\fP\fB);\fP
+\fBint isnanl(long double \fP\fIx\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBfinite\fP(), \fBfinitef\fP(), \fBfinitel\fP():
+.RS 4
+/* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+\fBisinf\fP():
+.RS 4
+_XOPEN_SOURCE\ >=\ 600 || _ISOC99_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.br
+\fBisinff\fP(), \fBisinfl\fP():
+.RS 4
+/* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+\fBisnan\fP():
+.RS 4
+_XOPEN_SOURCE || _ISOC99_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+\fBisnanf\fP(), \fBisnanl\fP():
+.RS 4
+_XOPEN_SOURCE\ >=\ 600
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии gibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Функции \fBfinite\fP(), \fBfinitef\fP() и \fBfinitel\fP() возвращают ненулевое
+значение, если \fIx\fP не равно бесконечности или «не числу» (NaN), в противном
+случае 0.
+.PP
+Функции \fBisnan\fP(), \fBisnanf\fP() и \fBisnanl\fP() возвращают ненулевое значение,
+если \fIx\fP равно NaN, в противном случае 0.
+.PP
+Функции \fBisinf\fP(), \fBisinff\fP() и \fBisinfl\fP() возвращают 1, если \fIx\fP равно
+плюс бесконечности, \-1, если \fIx\fP равно минус бесконечности, в остальных
+случаях 0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw31 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfinite\fP(),
+\fBfinitef\fP(),
+\fBfinitel\fP(),
+.br
+\fBisinf\fP(),
+\fBisinff\fP(),
+\fBisinfl\fP(),
+.br
+\fBisnan\fP(),
+\fBisnanf\fP(),
+\fBisnanl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH ЗАМЕЧАНИЯ
+.\"
+.\" finite* not on HP-UX; they exist on Tru64.
+.\" .SH HISTORY
+.\" The
+.\" .BR finite ()
+.\" function occurs in 4.3BSD.
+.\" see IEEE.3 in the 4.3BSD manual
+Заметим, что эти функции устарели. В C99 их заменили макросы \fBisfinite\fP(),
+\fBisinf\fP() и \fBisnan\fP() (для всех типов). Также заметим, что для \fBisinf\fP()
+C99 не гарантируется возвращаемого значения. Смотрите \fBfpclassify\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfpclassify\fP(3)

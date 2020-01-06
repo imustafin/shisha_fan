@@ -1,0 +1,104 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-10-22 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2005-01-09 by aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH USELIB 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+uselib \- загрузить динамическую библиотеку
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint uselib(const char *\fP\fIlibrary\fP\fB);\fP
+.PP
+\fIЗамечание\fP: В заголовочных файлах glibc этой системный вызов отсутствует;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Системный вызов \fBuselib\fP() выполняет загрузку динамической библиотеки для
+использования в вызывающем процессе. Она задаётся именем файла. Адрес
+загрузки находится в ней самой. Библиотека может быть в любом распознаваемом
+формате.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+В дополнении к тем кодам ошибок, которые возвращаются вызовами \fBopen\fP(2) и
+\fBmmap\fP(2), также могут быть следующие коды ошибок:
+.TP 
+\fBEACCES\fP
+На библиотеку, заданную \fIlibrary\fP, нет прав на чтение или исполнение, или
+вызывающий не имеет прав на поиск в одном из каталогов, указанных в
+пути. (Смотрите также \fBpath_resolution\fP(7).)
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOEXEC\fP
+Библиотека, заданная \fIlibrary\fP, имеет неизвестный исполняемый тип;
+например, в ней нет корректных идентификационных чисел (magic numbers).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBuselib\fP() применяется только в Linux и поэтому не должен
+использоваться в программах, предназначенных для переноса на другие
+платформы.
+.SH ЗАМЕЧАНИЯ
+Устаревший системный вызов, не поддерживается glibc. В заголовочных файлах
+glibc он не объявлен, но в недавнем прошлом версии glibc до 2.23
+экспортировали ABI для этого системного вызова. Поэтому, чтобы получить
+данный системный вызов достаточно вручную объявить интерфейс в своём коде;
+или же можно вызвать его через \fBsyscall\fP(2).
+.PP
+В очень старых версиях libc вызов \fBuselib\fP() использовался для загрузки
+динамических библиотек по именам из массива имён, находящегося в исполняемом
+файле.
+.PP
+.\" libc 4.3.1f - changelog 1993-03-02
+.\" libc 4.3.4 - changelog 1993-04-21
+Начиная с libc 4.3.2, код запуска дополняется эти имена "/usr/lib", "/lib" и
+"" перед тем как отказаться от загрузки. В libc 4.3.4 и более поздних эти
+имена ищутся в каталогах, содержащихся в переменной окружения
+\fBLD_LIBRARY_PATH\fP, и если они не находятся, то выполняется попытка поиска с
+добавлением "/usr/lib", "/lib" и "/".
+.PP
+Начиная libc 4.4.4 загружается только библиотека "/lib/ld.so" для того,
+чтобы она смогла загрузить оставшиеся необходимые библиотеки (используя этот
+системный вызов). То же происходит и в libc5.
+.PP
+В glibc2 не используется этот вызов.
+.PP
+.\" commit 69369a7003735d0d8ef22097e27a55a8bad9557a
+Начиная с Linux 3.15 данный системный вызов доступен только, если ядро
+собрано с параметром \fBCONFIG_USELIB\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBar\fP(1), \fBgcc\fP(1), \fBld\fP(1), \fBldd\fP(1), \fBmmap\fP(2), \fBopen\fP(2),
+\fBdlopen\fP(3), \fBcapabilities\fP(7), \fBld.so\fP(8)

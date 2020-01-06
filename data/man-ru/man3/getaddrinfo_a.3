@@ -1,0 +1,499 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2009 Petr Baudis <pasky@suse.cz>
+.\" and clean-ups and additions (C) Copyright 2010 Michael Kerrisk
+.\"                                 <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References: http://people.redhat.com/drepper/asynchnl.pdf,
+.\"     http://www.imperialviolet.org/2005/06/01/asynchronous-dns-lookups-with-glibc.html
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETADDRINFO_A 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getaddrinfo_a, gai_suspend, gai_error, gai_cancel \- асинхронная трансляция
+сетевого адреса и службы
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* См. feature_test_macros(7) */
+\fB#include <netdb.h>\fP
+.PP
+\fBint getaddrinfo_a(int \fP\fImode\fP\fB, struct gaicb *\fP\fIlist[]\fP\fB,\fP
+\fB                int \fP\fInitems\fP\fB, struct sigevent *\fP\fIsevp\fP\fB);\fP
+.PP
+\fBint gai_suspend(const struct gaicb * const \fP\fIlist[]\fP\fB, int \fP\fInitems\fP\fB,\fP
+\fB                const struct timespec *\fP\fItimeout\fP\fB);\fP
+.PP
+\fBint gai_error(struct gaicb *\fP\fIreq\fP\fB);\fP
+.PP
+\fBint gai_cancel(struct gaicb *\fP\fIreq\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lanl\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBgetaddrinfo_a\fP() выполняет ту же задачу что и \fBgetaddrinfo\fP(3),
+но позволяет выполнять поиск нескольких имён асинхронно, с дополнительным
+уведомлением о завершении операций поиска.
+.PP
+В аргументе \fImode\fP указывается одно из следующих значений:
+.TP 
+\fBGAI_WAIT\fP
+Выполнять поиск синхронно. Вызов блокирует выполнение пока поиск не
+завершится.
+.TP 
+\fBGAI_NOWAIT\fP
+Выполнять поиск асинхронно. Вызов сразу завершается и запросы обрабатываются
+в фоновом режиме. Смотрите далее описание параметра \fIsevp\fP.
+.PP
+В массиве \fIlist\fP задаются запросы на обработку. В аргументе \fInitems\fP
+задаётся количество элементов в \fIlist\fP. Запрашиваемые операции поиска
+начинаются параллельно. Элементы NULL в списке \fIlist\fP игнорируются. Каждый
+запрос описывается структурой \fIgaicb\fP, которая определена следующим
+образом:
+.PP
+.in +4n
+.EX
+struct gaicb {
+    const char            *ar_name;
+    const char            *ar_service;
+    const struct addrinfo *ar_request;
+    struct addrinfo       *ar_result;
+};
+.EE
+.in
+.PP
+Элементы данной структуры совпадают с аргументами \fBgetaddrinfo\fP(3). То есть
+\fIar_name\fP соответствует аргументу \fInode\fP, а \fIar_service\fP аргументу
+\fIservice\fP (определяют узел Интернета и службу). Элемент \fIar_request\fP
+соответствует аргументу \fIhints\fP; им задаётся критерий выбора структуры
+возвращаемого адреса сокета. И, наконец, \fIar_result\fP соответствует
+аргументу \fIres\fP; вам не нужно инициализировать этот элемент, он будет
+заполнен автоматически в результате запроса. Структура \fIaddrinfo\fP, на
+которую ссылаются последние два элемента, описана в \fBgetaddrinfo\fP(3).
+.PP
+Если значение \fImode\fP равно \fBGAI_NOWAIT\fP, то уведомления о обработанных
+запросах можно получить из структуры \fIsigevent\fP, на которую указывает
+аргумент \fIsevp\fP. Определение и описание данной структуры приведено в
+\fBsigevent\fP(7). Поле \fIsevp\->sigev_notify\fP может иметь следующие
+значения:
+.TP 
+\fBSIGEV_NONE\fP
+Отключить уведомление.
+.TP 
+\fBSIGEV_SIGNAL\fP
+.\" si_pid and si_uid are also set, to the values of the calling process,
+.\" which doesn't provide useful information, so we'll skip mentioning it.
+При завершении поиска послать процессу сигнал \fIsigev_signo\fP. Подробности
+смотрите в \fBsigevent\fP(7). Полю \fIsi_code\fP структуры \fIsiginfo_t\fP
+присваивается значение \fBSI_ASYNCNL\fP.
+.TP 
+\fBSIGEV_THREAD\fP
+При завершении поиска вызвать \fIsigev_notify_function\fP, как если бы с этой
+функции начиналась бы новая нить. Подробности смотрите в \fBsigevent\fP(7).
+.PP
+При \fBSIGEV_SIGNAL\fP и \fBSIGEV_THREAD\fP, может быть полезно, чтобы
+\fIsevp\->sigev_value.sival_ptr\fP указывала на \fIlist\fP.
+.PP
+Функция \fBgai_suspend\fP() приостанавливает выполнение вызывающей нити, ожидая
+завершения поиска одного или более запросов из массива \fIlist\fP. В аргументе
+\fInitems\fP задаётся размер массива \fIlist\fP. Вызов блокирует выполнение пока
+не произойдёт одно из следующего:
+.IP * 3
+Завершится операция для одного или более запросов из \fIlist\fP.
+.IP *
+Вызов прервётся пойманным сигналом.
+.IP *
+Временной интервал ожидания задаётся в \fItimeout\fP. В данном аргумента
+указывается промежуток в секундах плюс наносекундах (о структуре \fItimespec\fP
+смотрите \fBnanosleep\fP(2)). Если \fItimeout\fP равно NULL, то вызов блокирует
+выполнение навсегда (пока не произойдёт одно из событий выше).
+.PP
+При выполнении явно не указывается какие запросы завершены; для определения
+вам нужно обойти весь список запросов с помощью \fBgai_error\fP().
+.PP
+Функция \fBgai_error\fP() возвращает состояние запроса \fIreq\fP:
+\fBEAI_INPROGRESS\fP — запрос пока не выполнен, 0 — обработан успешно, код
+ошибки — запрос невозможно обработать.
+.PP
+Функция \fBgai_cancel\fP()  отменяет запрос \fIreq\fP. При успешной отмене
+состояние ошибки устанавливается в \fBEAI_CANCELED\fP и выполняется обычное
+асинхронное уведомление. Запрос не может быть отменён, если он начал
+обрабатываться; в этом случае действие будет доведено до конца, как если бы
+вызова \fBgai_cancel\fP() не происходило. Если \fIreq\fP равно NULL, то будет
+предпринята попытка отменить все имеющиеся запросы.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBgetaddrinfo_a\fP() возвращает 0, если все запросы были успешно
+обработаны или один из следующих ненулевых кодов ошибки:
+.TP 
+\fBEAI_AGAIN\fP
+Недоступны ресурсы, необходимые, чтобы постановки запросов поиска в
+очередь. Для нахождения проблемного приложение может проверить состояние
+ошибки каждого запроса.
+.TP 
+\fBEAI_MEMORY\fP
+Не хватает памяти.
+.TP 
+\fBEAI_SYSTEM\fP
+Неверное значение \fImode\fP.
+.PP
+Функция \fBgai_suspend\fP() возвращает 0, если завершён хотя бы один из
+запросов. В противном случае возвращается один из следующих ненулевых кодов
+ошибки:
+.TP 
+\fBEAI_AGAIN\fP
+Указанный интервал истёк до завершения хотят бы одного из запросов.
+.TP 
+\fBEAI_ALLDONE\fP
+В функцию не было передано никаких фактических запросов.
+.TP 
+\fBEAI_INTR\fP
+Функция прервана сигналом. Заметим, что такое прерывание может быть вызвано
+сигналом уведомления о каком\-то выполненном запросе.
+.PP
+Функция \fBgai_error\fP() может вернуть \fBEAI_INPROGRESS\fP для незаконченных
+запросов поиска, 0 при успешном поиске (как описано выше), один из кодов
+ошибок, которые может вернуть \fBgetaddrinfo\fP(3) или код ошибки
+\fBEAI_CANCELED\fP, если запрос был отменён явно до завершения.
+.PP
+Функция \fBgai_cancel\fP() может вернуть одно из следующих значений:
+.TP 
+\fBEAI_CANCELED\fP
+Запрос успешно отменён.
+.TP 
+\fBEAI_NOTCANCELED\fP
+Запрос не был отменён.
+.TP 
+\fBEAI_ALLDONE\fP
+Запрос уже выполнен.
+.PP
+Функция \fBgai_strerror\fP(3) транслирует эти коды ошибок в читаемый формат,
+подходящий для сообщений об ошибке.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw31 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetaddrinfo_a\fP(),
+\fBgai_suspend\fP(),
+\fBgai_error\fP(),
+\fBgai_cancel\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU, доступными в glibc начиная с версии
+2.2.3.
+.SH ЗАМЕЧАНИЯ
+Интерфейс \fBgetaddrinfo_a\fP() был создан после интерфейса \fBlio_listio\fP(3).
+.SH ПРИМЕР
+Вот два примера: простой пример выполнения нескольких запросов синхронно
+одновременно, и сложный пример, показывающий асинхронные возможности.
+.SS "Синхронный пример"
+Эта программа определяет несколько имён узлов параллельно, что быстрее по
+сравнению с определением имён последовательно с помощью
+\fBgetaddrinfo\fP(3). Результат работы программы:
+.PP
+.in +4n
+.EX
+$ \fB./a.out ftp.us.kernel.org enoent.linuxfoundation.org gnu.cz\fP
+ftp.us.kernel.org: 128.30.2.36
+enoent.linuxfoundation.org: Name or service not known
+gnu.cz: 87.236.197.13
+.EE
+.in
+.PP
+Исходный код программы
+.PP
+.EX
+#define _GNU_SOURCE
+#include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int
+main(int argc, char *argv[])
+{
+    int i, ret;
+    struct gaicb *reqs[argc \- 1];
+    char host[NI_MAXHOST];
+    struct addrinfo *res;
+
+    if (argc < 2) {
+        fprintf(stderr, "Использование: %s УЗЕЛ...\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    for (i = 0; i < argc \- 1; i++) {
+        reqs[i] = malloc(sizeof(*reqs[0]));
+        if (reqs[i] == NULL) {
+            perror("malloc");
+            exit(EXIT_FAILURE);
+        }
+        memset(reqs[i], 0, sizeof(*reqs[0]));
+        reqs[i]\->ar_name = argv[i + 1];
+    }
+
+    ret = getaddrinfo_a(GAI_WAIT, reqs, argc \- 1, NULL);
+    if (ret != 0) {
+        fprintf(stderr, "ошибка getaddrinfo_a(): %s\en",
+                gai_strerror(ret));
+        exit(EXIT_FAILURE);
+    }
+
+    for (i = 0; i < argc \- 1; i++) {
+        printf("%s: ", reqs[i]\->ar_name);
+        ret = gai_error(reqs[i]);
+        if (ret == 0) {
+            res = reqs[i]\->ar_result;
+
+            ret = getnameinfo(res\->ai_addr, res\->ai_addrlen,
+                    host, sizeof(host),
+                    NULL, 0, NI_NUMERICHOST);
+            if (ret != 0) {
+                fprintf(stderr, "ошибка getnameinfo(): %s\en",
+                        gai_strerror(ret));
+                exit(EXIT_FAILURE);
+            }
+            puts(host);
+
+        } else {
+            puts(gai_strerror(ret));
+        }
+    }
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SS "Асинхронный пример"
+Данный пример — простая интерактивная оболочка к
+\fBgetaddrinfo_a\fP(). Возможности уведомления не используются.
+.PP
+Результат работы программы:
+.PP
+.in +4n
+.EX
+$ \fB./a.out\fP
+> a ftp.us.kernel.org enoent.linuxfoundation.org gnu.cz
+> c 2
+[2] gnu.cz: Request not canceled
+> w 0 1
+[00] ftp.us.kernel.org: Выполнено
+> l
+[00] ftp.us.kernel.org: 216.165.129.139
+[01] enoent.linuxfoundation.org: Processing request in progress
+[02] gnu.cz: 87.236.197.13
+> l
+[00] ftp.us.kernel.org: 216.165.129.139
+[01] enoent.linuxfoundation.org: Name or service not known
+[02] gnu.cz: 87.236.197.13
+.EE
+.in
+.PP
+Исходный код программы:
+.PP
+.EX
+#define _GNU_SOURCE
+#include <netdb.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+static struct gaicb **reqs = NULL;
+static int nreqs = 0;
+
+static char *
+getcmd(void)
+{
+    static char buf[256];
+
+    fputs("> ", stdout); fflush(stdout);
+    if (fgets(buf, sizeof(buf), stdin) == NULL)
+        return NULL;
+
+    if (buf[strlen(buf) \- 1] == \(aq\en\(aq)
+        buf[strlen(buf) \- 1] = 0;
+
+    return buf;
+}
+
+/* добавление запросов задаваемых имён */
+static void
+add_requests(void)
+{
+    int nreqs_base = nreqs;
+    char *host;
+    int ret;
+
+    while ((host = strtok(NULL, " "))) {
+        nreqs++;
+        reqs = realloc(reqs, nreqs * sizeof(reqs[0]));
+
+        reqs[nreqs \- 1] = calloc(1, sizeof(*reqs[0]));
+        reqs[nreqs \- 1]\->ar_name = strdup(host);
+    }
+
+    /* очередь запросов nreqs_base..nreqs. */
+
+    ret = getaddrinfo_a(GAI_NOWAIT, &reqs[nreqs_base],
+                        nreqs \- nreqs_base, NULL);
+    if (ret) {
+        fprintf(stderr, "ошибка getaddrinfo_a(): %s\en",
+                gai_strerror(ret));
+        exit(EXIT_FAILURE);
+    }
+}
+
+/* ждём, пока один из запросов не выполнится */
+static void
+wait_requests(void)
+{
+    char *id;
+    int i, ret, n;
+    struct gaicb const **wait_reqs = calloc(nreqs, sizeof(*wait_reqs));
+                /* элементы NULL игнорируются gai_suspend(). */
+
+    while ((id = strtok(NULL, " ")) != NULL) {
+        n = atoi(id);
+
+        if (n >= nreqs) {
+            printf("Неправильный номер запроса: %s\en", id);
+            return;
+        }
+
+        wait_reqs[n] = reqs[n];
+    }
+
+    ret = gai_suspend(wait_reqs, nreqs, NULL);
+    if (ret) {
+        printf("gai_suspend(): %s\en", gai_strerror(ret));
+        return;
+    }
+
+    for (i = 0; i < nreqs; i++) {
+        if (wait_reqs[i] == NULL)
+            continue;
+
+        ret = gai_error(reqs[i]);
+        if (ret == EAI_INPROGRESS)
+            continue;
+
+        printf("[%02d] %s: %s\en", i, reqs[i]\->ar_name,
+               ret == 0 ? "Выполнено" : gai_strerror(ret));
+    }
+}
+
+/* отменяет заданные запросы */
+static void
+cancel_requests(void)
+{
+    char *id;
+    int ret, n;
+
+    while ((id = strtok(NULL, " ")) != NULL) {
+        n = atoi(id);
+
+        if (n >= nreqs) {
+            printf("Неправильный номер запроса: %s\en", id);
+            return;
+        }
+
+        ret = gai_cancel(reqs[n]);
+        printf("[%s] %s: %s\en", id, reqs[atoi(id)]\->ar_name,
+               gai_strerror(ret));
+    }
+}
+
+/* перечислим все запросы */
+static void
+list_requests(void)
+{
+    int i, ret;
+    char host[NI_MAXHOST];
+    struct addrinfo *res;
+
+    for (i = 0; i < nreqs; i++) {
+        printf("[%02d] %s: ", i, reqs[i]\->ar_name);
+        ret = gai_error(reqs[i]);
+
+        if (!ret) {
+            res = reqs[i]\->ar_result;
+
+            ret = getnameinfo(res\->ai_addr, res\->ai_addrlen,
+                              host, sizeof(host),
+                              NULL, 0, NI_NUMERICHOST);
+            if (ret) {
+                fprintf(stderr, "ошибка getnameinfo(): %s\en",
+                        gai_strerror(ret));
+                exit(EXIT_FAILURE);
+            }
+            puts(host);
+        } else {
+            puts(gai_strerror(ret));
+        }
+    }
+}
+
+int
+main(int argc, char *argv[])
+{
+    char *cmdline;
+    char *cmd;
+
+    while ((cmdline = getcmd()) != NULL) {
+        cmd = strtok(cmdline, " ");
+
+        if (cmd == NULL) {
+            list_requests();
+        } else {
+            switch (cmd[0]) {
+            case \(aqa\(aq:
+                add_requests();
+                break;
+            case \(aqw\(aq:
+                wait_requests();
+                break;
+            case \(aqc\(aq:
+                cancel_requests();
+                break;
+            case \(aql\(aq:
+                list_requests();
+                break;
+            default:
+                fprintf(stderr, "Неверная команда: %c\en", cmd[0]);
+                break;
+            }
+        }
+    }
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetaddrinfo\fP(3), \fBinet\fP(3), \fBlio_listio\fP(3), \fBhostname\fP(7), \fBip\fP(7),
+\fBsigevent\fP(7)

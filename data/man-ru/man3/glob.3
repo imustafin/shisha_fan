@@ -1,0 +1,251 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Wed Jul 28 11:12:17 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Mon May 13 23:08:50 1996 by Martin Schulze (joey@linux.de)
+.\" Modified 11 May 1998 by Joseph S. Myers (jsm28@cam.ac.uk)
+.\" Modified 990912 by aeb
+.\" 2007-10-10 mtk
+.\"     Added description of GLOB_TILDE_NOMATCH
+.\"     Expanded the description of various flags
+.\"     Various wording fixes.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GLOB 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+glob, globfree \- ищет имена путей по шаблону, освобождает память после
+glob()
+.SH ОБЗОР
+.nf
+\fB#include <glob.h>\fP
+.PP
+\fBint glob(const char *\fP\fIpattern\fP\fB, int \fP\fIflags\fP\fB,\fP
+\fB         int (*\fP\fIerrfunc\fP\fB) (const char *\fP\fIepath\fP\fB, int \fP\fIeerrno\fP\fB),\fP
+\fB         glob_t *\fP\fIpglob\fP\fB);\fP
+\fBvoid globfree(glob_t *\fP\fIpglob\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBglob\fP() ищет все совпадения имён путей с заданным шаблоном
+\fIpattern\fP, согласно правилам, используемым оболочкой (смотрите
+\fBglob\fP(7)). Расширения тильды или подстановка параметров не выполняется;
+если это нужно, то используйте \fBwordexp\fP(3).
+.PP
+Функция \fBglobfree\fP() освобождает динамически выделенное хранилище,
+полученное в последнем вызове \fBglob\fP().
+.PP
+Результаты вызова \fBglob\fP() сохраняются в структуре, на которую указывает
+\fIpglob\fP. Эта структура имеет тип \fIglob_t\fP (объявлен в \fI<glob.h>\fP)
+и содержит следующие элементы, определённые в POSIX.2 (их может быть и
+больше, в виде расширений):
+.PP
+.in +4n
+.EX
+typedef struct {
+    size_t   gl_pathc;    /* количество совпавших путей  */
+    char   **gl_pathv;    /* список совпавших имён путей.  */
+    size_t   gl_offs;     /* зарезервированные в \fIgl_pathv\fP слоты.  */
+} glob_t;
+.EE
+.in
+.PP
+Результаты размещаются в динамически выделяемом хранилище.
+.PP
+Значение параметра \fIflags\fP формируется побитовым сложением нуля или более
+следующих символических констант, которые меняют ход работы \fBglob\fP():
+.TP 
+\fBGLOB_ERR\fP
+Выполнять возврат при ошибке чтения (например, нет прав для чтения
+каталога). По умолчанию \fBglob\fP() пытается продолжить работу не смотря на
+ошибки, читая все каталоги, которые может.
+.TP 
+\fBGLOB_MARK\fP
+Добавлять косую черту к каждому пути, который соответствует каталогу.
+.TP 
+\fBGLOB_NOSORT\fP
+Не сортировать возвращаемые имена. Это экономит процессорное время. По
+умолчанию имена сортируются.
+.TP 
+\fBGLOB_DOOFFS\fP
+Резервировать слоты \fIpglob\->gl_offs\fP у начала списка строк в
+\fIpglob\->pathv\fP. Зарезервированные слоты содержат указатели null.
+.TP 
+\fBGLOB_NOCHECK\fP
+Если не найдено совпадений по шаблону, возвращать в качестве результата
+заданный шаблон. По умолчанию при отсутствии совпадений \fBglob\fP() возвращает
+\fBGLOB_NOMATCH\fP.
+.TP 
+\fBGLOB_APPEND\fP
+Добавлять результаты вызова к вектору результатов, полученному от
+предыдущего вызова \fBglob\fP(). Не следует включать этот флаг при первом
+вызове \fBglob\fP().
+.TP 
+\fBGLOB_NOESCAPE\fP
+Не использовать символы обратной косой черты (\(aq\e\(aq) в качестве
+экранирующего символа. Обычно, обратная косая черта может использоваться для
+экранирования следующего символа, таким образом предоставляя механизм для
+выключения специального значения метасимволов.
+.PP
+В \fIflags\fP также могу быть включены следующие флаги, которые являются
+расширениями GNU и отсутствуют в POSIX.2:
+.TP 
+\fBGLOB_PERIOD\fP
+Разрешить начальной точке соответствовать метасимволам. По умолчанию
+метасимволы не считаются совпадающими с начальной точкой.
+.TP 
+\fBGLOB_ALTDIRFUNC\fP
+Для доступа к файловой системе использовать функции
+\fIpglob\->gl_closedir\fP, \fIpglob\->gl_readdir\fP,
+\fIpglob\->gl_opendir\fP, \fIpglob\->gl_lstat\fP и \fIpglob\->gl_stat\fP
+вместо стандартных библиотечных функций.
+.TP 
+\fBGLOB_BRACE\fP
+Раскрывать выражения в фигурных скобках \fB{a,b}\fP аналогичны используемым в
+\fBcsh\fP(1). Выражения могут быть вложенными. То есть, например, по шаблону
+"{foo/{,cat,dog},bar}" возвращаются те же результаты что и при четырёх
+отдельных вызовах \fBglob\fP() со строками: "foo/", "foo/cat", "foo/dog" и
+"bar".
+.TP 
+\fBGLOB_NOMAGIC\fP
+Возвращать сам шаблон, если в нём не содержатся метасимволы, даже при
+отсутствии файла с таким именем.
+.TP 
+\fBGLOB_TILDE\fP
+Выполнять расширения тильды. Если тильда (\(aq~\(aq) — единственный символ в
+шаблоне или после начальной тильды сразу указана косая черта (\(aq/\(aq), то
+вместо тильды подставляется домашний каталог вызывающего Если после
+начальной тильды указано имя пользователя (например, "~andrea/bin"), то
+вместо тильды и имени пользователя подставляется домашний каталог этого
+пользователя. Если имя пользователя некорректно или домашний каталог
+невозможно определить, то подстановка не выполняется.
+.TP 
+\fBGLOB_TILDE_CHECK\fP
+Поведение подобно \fBGLOB_TILDE\fP. Отличие в том, что если имя пользователя
+некорректно или домашний каталог невозможно определить, то вместо
+использования самого шаблона как имени, \fBglob\fP() возвращает \fBGLOB_NOMATCH\fP
+для указания на ошибку.
+.TP 
+\fBGLOB_ONLYDIR\fP
+Это только \fIуказание\fP \fBglob\fP() на то, что вызывающего интересуют только
+каталоги, соответствующие шаблону. Если реализация может легко определить
+информацию о типе файла, то файлы не каталоги не возвращаются
+вызывающему. Однако, вызывающий всё равно должен проверять, что полученные
+файлы — каталоги (назначение этого флага — все лишь оптимизация
+производительности в случае, когда вызывающему нужны только каталоги).
+.PP
+Если \fIerrfunc\fP не равно NULL, то в случае ошибки она будет вызвана с
+параметрами \fIepath\fP (указатель на путь, в котором произошла ошибка) и
+\fIeerrno\fP (полученное значение \fIerrno\fP после вызова одной из функций
+\fBopendir\fP(3), \fBreaddir\fP(3) или \fBstat\fP(2)).Если \fIerrfunc\fP вернёт
+ненулевое значение или если флаг \fBGLOB_ERR\fP установлен, то \fBglob\fP()
+закончит работу после вызова \fIerrfunc\fP.
+.PP
+При успешном выполнении в \fIpglob\->gl_pathc\fP содержится количество
+совпадающих имён, а \fIpglob\->gl_pathv\fP содержит указатель на список
+указателей на найденные имена. Список указателей завершается указателем
+null.
+.PP
+Вызов \fBglob\fP() может выполняться несколько раз. В этом случае флаг
+\fBGLOB_APPEND\fP должен быть включён в \fIflags\fP при втором и последующих
+вызовах.
+.PP
+Как расширение GNU, при обнаружении метасимволов \fIpglob\->gl_flags\fP —
+набор задаваемых флагов, сложенный с \fBGLOB_MAGCHAR\fP (с помощью операции
+ИЛИ).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBglob\fP() возвращает ноль. Другие возможные
+возвращаемые значения:
+.TP 
+\fBGLOB_NOSPACE\fP
+занята вся свободная память
+.TP 
+\fBGLOB_ABORTED\fP
+ошибка чтения
+.TP 
+\fBGLOB_NOMATCH\fP
+не найдено совпадений с шаблоном
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw24
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBglob\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:utent env
+.br
+sig:ALRM timer locale
+T}
+T{
+\fBglobfree\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+В приведённой выше таблице \fIutent\fP в \fIrace:utent\fP означает, что если любая
+из функций \fBsetutent\fP(3), \fBgetutent\fP(3) или \fBendutent\fP(3) используется
+одновременно в нескольких нитях программы, то может возникнуть
+состязательность по данным. Эти функции вызываются из \fBglob\fP(), поэтому мы
+используем race:utent для напоминания.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, POSIX.2.
+.SH ЗАМЕЧАНИЯ
+Элементы структуры \fIgl_pathc\fP и \fIgl_offs\fP объявлены с типом \fIsize_t\fP в
+glibc 2.1 (как и должны указываться, согласно POSIX.2), но указаны как
+\fIint\fP в glibc 2.0.
+.SH ДЕФЕКТЫ
+Функция \fBglob\fP() может завершиться с ошибкой из\-за ошибок в используемых её
+функций: \fBmalloc\fP(3) или \fBopendir\fP(3). Эти функции записывают коды своих
+ошибок в переменную \fIerrno\fP.
+.SH ПРИМЕР
+Пример использования приводится ниже, в нём имитируется набор строки
+.PP
+.in +4n
+.EX
+ls \-l *.c ../*.c
+.EE
+.in
+.PP
+в оболочке:
+.PP
+.in +4n
+.EX
+glob_t globbuf;
+
+globbuf.gl_offs = 2;
+glob("*.c", GLOB_DOOFFS, NULL, &globbuf);
+glob("../*.c", GLOB_DOOFFS | GLOB_APPEND, NULL, &globbuf);
+globbuf.gl_pathv[0] = "ls";
+globbuf.gl_pathv[1] = "\-l";
+execvp("ls", &globbuf.gl_pathv[0]);
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBls\fP(1), \fBsh\fP(1), \fBstat\fP(2), \fBexec\fP(3), \fBfnmatch\fP(3), \fBmalloc\fP(3),
+\fBopendir\fP(3), \fBreaddir\fP(3), \fBwordexp\fP(3), \fBglob\fP(7)

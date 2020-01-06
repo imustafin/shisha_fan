@@ -1,0 +1,217 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1990, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" This code is derived from software contributed to Berkeley by
+.\" the American National Standards Committee X3, on Information
+.\" Processing Systems.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"	@(#)stdarg.3	6.8 (Berkeley) 6/29/91
+.\"
+.\" Converted for Linux, Mon Nov 29 15:11:11 1993, faith@cs.unc.edu
+.\" Additions, 2001-10-14, aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STDARG 3 2019\-05\-09 "" "Руководство программиста Linux"
+.SH ИМЯ
+stdarg, va_start, va_arg, va_end, va_copy \- работа со списком переменного
+количества аргументов
+.SH ОБЗОР
+\fB#include <stdarg.h>\fP
+.PP
+\fBvoid va_start(va_list \fP\fIap\fP\fB, \fP\fIlast\fP\fB);\fP
+.br
+\fItype\fP\fB va_arg(va_list \fP\fIap\fP\fB, \fP\fItype\fP\fB);\fP
+.br
+\fBvoid va_end(va_list \fP\fIap\fP\fB);\fP
+.br
+\fBvoid va_copy(va_list \fP\fIdest\fP\fB, va_list \fP\fIsrc\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функцию можно вызвать передав ей произвольное количество аргументов разных
+типов. Во включаемом файле \fI<stdarg.h>\fP объявляется тип \fIva_list\fP
+и определяется три макроса для пошагового обхода списка аргументов, чьё
+количество и типы неизвестны вызываемой функции.
+.PP
+В вызываемой функции требуется объявить объект с типом \fIva_list\fP, который
+используется макросами \fBva_start\fP(), \fBva_arg\fP() и \fBva_end\fP().
+.SS va_start()
+Макрос \fBva_start\fP() инициализирует \fIap\fP для последующего использования в
+\fBva_arg\fP()и \fBva_end\fP(), и должен вызываться первым.
+.PP
+Аргумент \fIlast\fP это имя последнего аргумента перед списком с переменным
+количеством аргументов, то есть это последний аргумент, тип которого
+известен вызывающей функции.
+.PP
+Так как адрес этого аргумента может быть использован в макросе
+\fBva_start\fP(), он не должен быть объявлен как регистровая переменная, иметь
+тип функции или массива.
+.SS va_arg()
+Макрос \fBva_arg\fP() раскрывается в выражение, которое имеет тип и значение
+следующего аргумента в вызове. Аргумент \fIap\fP — это \fIva_list\fP \fIap\fP,
+инициализированный \fBva_start\fP(). Каждый вызов \fBva_arg\fP() изменяет \fIap\fP
+так, что следующий вызов возвращает следующий аргумент. Аргумент \fItype\fP —
+это имя типа, указанное так, что тип указателя на объект, который имеет
+указанный тип, можно получить просто добавив * в \fItype\fP.
+.PP
+Первый вызов макроса \fBva_arg\fP() после \fBva_start\fP() вернёт аргумент после
+\fIlast\fP. Последующие вызовы вернут значения оставшихся аргументов.
+.PP
+Если аргументы закончились, или если \fItype\fP не совместим с типом настоящего
+следующего аргумента (преобразование происходит согласно преобразованию
+аргументов по умолчанию), может произойти любая ошибка.
+.PP
+Если \fIap\fP передан в функцию, которая использует
+\fBva_arg(\fP\fIap\fP\fB,\fP\fItype\fP\fB),\fP то значение \fIap\fP не определено после
+возврата из функции.
+.SS va_end()
+Каждый использование \fBva_start\fP() должно завершаться соответствующим
+вызовом \fBva_end\fP() в той же функции. После вызова \fBva_end(\fP\fIap\fP\fB)\fP
+значение переменной \fIap\fP не определено. Возможно несколько проходов по
+списку, если каждый из них начинать \fBva_start\fP() и заканчивать
+\fBva_end\fP(). Макрос \fBva_end\fP() может быть и функцией.
+.SS va_copy()
+Макрос \fBva_copy\fP() копирует (ранее инициализированный) список с переменным
+количеством аргументов \fIsrc\fP в \fIdest\fP. Его действие такое же, как если бы
+\fBva_start\fP() применили к \fIdest\fP с тем же аргументом \fIlast\fP, после чего
+было бы совершено такое же количество вызовов \fBva_arg\fP(), которое имеется в
+текущем состоянии \fIsrc\fP.
+.PP
+.\" Proposal from clive@demon.net, 1997-02-28
+Очевидной реализацией было бы создать переменную с типом \fIva_list\fP,
+указывающую на стековый фрейм функции с переменным количеством аргументов. В
+этом случае (безусловно, наиболее распространенном) кажется, что достаточно
+присвоения
+.PP
+.in +4n
+.EX
+va_list aq = ap;
+.EE
+.in
+.PP
+К сожалению, есть системы, в которых это массив указателей (длиной 1), и
+нужно делать
+.PP
+.in +4n
+.EX
+va_list aq;
+*aq = *ap;
+.EE
+.in
+.PP
+Наконец, в системах, где аргументы передаются через регистры, в
+\fBva_start\fP() может потребоваться выделить память, сохранить там аргументы,
+а также индекс следующего элемента для того, чтобы \fBva_arg\fP() мог обойти
+список. Также \fBva_end\fP() может освобождать выделенную память. Чтобы всё это
+учесть в C99 добавлен макрос \fBva_copy\fP(), который позволяет показанное выше
+назначение заменить на
+.PP
+.in +4n
+.EX
+va_list aq;
+va_copy(aq, ap);
+\&...
+va_end(aq);
+.EE
+.in
+.PP
+Для каждого вызова \fBva_copy\fP() должен быть соответствующий вызов
+\fBva_end\fP() в той же функции. В некоторых системах нет \fBva_copy\fP(), а есть
+\fB__va_copy\fP — имя, которое использовалось в черновике стандарта.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBva_start\fP(),
+\fBva_end\fP(),
+\fBva_copy\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBva_arg\fP()
+T}	Безвредность в нитях	MT\-Safe race:ap
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Макросы \fBva_start\fP(), \fBva_arg\fP() и \fBva_end\fP() соответствуют C89. В C99
+определён макрос \fBva_copy\fP().
+.SH ДЕФЕКТЫ
+В отличие от исторических макросов \fBvarargs\fP, макросы \fBstdarg\fP не
+позволяют программистам создать функцию без постоянных аргументов. Эта
+проблема создаёт работу, в основном, при преобразовании кода \fBvarargs\fP в
+код \fBstdarg\fP, а также есть сложности с функциями с переменным количеством
+аргументов, которым нужно передать все их аргументы в функцию в виде
+аргумента с типом \fIva_list\fP, например \fBvfprintf\fP(3).
+.SH ПРИМЕР
+Функция \fIfoo\fP берёт строку с символами формата и печатает аргумент,
+связанный с каждым таким символом, на основе его типа.
+.PP
+.EX
+#include <stdio.h>
+#include <stdarg.h>
+
+void
+foo(char *fmt, ...)   /* «...» это синтаксис C для функции с
+                         переменным количеством аргументов */
+
+{
+    va_list ap;
+    int d;
+    char c, *s;
+
+    va_start(ap, fmt);
+    while (*fmt)
+        switch (*fmt++) {
+        case \(aqs\(aq:              /* строка */
+            s = va_arg(ap, char *);
+            printf("строка %s\en", s);
+            break;
+        case \(aqd\(aq:              /* int */
+            d = va_arg(ap, int);
+            printf("int %d\en", d);
+            break;
+        case \(aqc\(aq:              /* символ */
+            /* здесь требуется преобразование, так как va_arg только
+               с полностью описанными (promoted) типами */
+            c = (char) va_arg(ap, int);
+            printf("символ %c\en", c);
+            break;
+        }
+    va_end(ap);
+}
+.EE

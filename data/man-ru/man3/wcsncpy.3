@@ -1,0 +1,62 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCSNCPY 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wcsncpy \- копирует широкосимвольную строку фиксированной длины
+.SH ОБЗОР
+.nf
+\fB#include <wchar.h>\fP
+.PP
+\fBwchar_t *wcsncpy(wchar_t *\fP\fIdest\fP\fB, const wchar_t *\fP\fIsrc\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBwcsncpy\fP() является эквивалентом \fBstrncpy\fP(3) для широких
+символов. Она копирует, как минимум, \fIn\fP широких символов из
+широкосимвольной строки, на которую указывает \fIsrc\fP (включая конечный
+символ (L\(aq\e\(aq)), в массив, на который указывает \fIdest\fP. В \fIdest\fP
+записывается ровно \fIn\fP широких символов. Если длина \fIwcslen(src)\fP меньше
+\fIn\fP, то оставшиеся широкие символы в массиве, на который указывает \fIdest\fP,
+заполняются широкими символами null. Если длина \fIwcslen(src)\fP больше или
+равна \fIn\fP, то строка, на которую указывает \fIdest\fP, не будет оканчиваться
+широким символом null.
+.PP
+Строки не должны пересекаться.
+.PP
+Программист должен проверить, что в \fIdest\fP есть место по крайней мере для
+\fIn\fP широких символов.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+\fBwcsncpy\fP() возвращает \fIdest\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwcsncpy\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBstrncpy\fP(3)

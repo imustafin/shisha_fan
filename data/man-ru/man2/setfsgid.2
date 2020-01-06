@@ -1,0 +1,103 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1995, Thomas K. Dyas <tdyas@eden.rutgers.edu>
+.\" and Copyright (C) 2019, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Created   1995-08-06 Thomas K. Dyas <tdyas@eden.rutgers.edu>
+.\" Modified  2000-07-01 aeb
+.\" Modified  2002-07-23 aeb
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETFSGID 2 2019\-05\-09 Linux "Руководство программиста Linux"
+.SH ИМЯ
+setfsgid \- устанавливает идентификатор группы для доступа к файловой системе
+.SH ОБЗОР
+\fB#include <sys/fsuid.h>\fP
+.PP
+\fBint setfsgid(uid_t \fP\fIfsgid\fP\fB);\fP
+.SH ОПИСАНИЕ
+В Linux у процесса есть идентификатор группы файловой системы и эффективный
+(effective) идентификатор группы. Идентификатор группы файловой системы
+(есть только в Linux) используется при проверки прав доступа к объектам
+файловой системы, а эффективный идентификатор группы используется для
+проверки прав доступа к другим различным объектам (смотрите
+\fBcredentials\fP(7)).
+.PP
+Обычно, значение идентификатора группы файловой системы процесса совпадает
+со значением эффективного идентификатора группы. Более того, при изменении
+идентификатора эффективного идентификатора группы ядро также изменяет и
+идентификатор группы файловой системы на новое значение идентификатора
+эффективного идентификатора группы.Процесс может изменить значение своего
+идентификатора группы файловой системы на отличное от эффективного
+идентификатора группы с помощью \fBsetfsgid\fP() указав его в параметре
+\fIfsgid\fP.
+.PP
+Вызов \fBsetfsgid\fP() выполняется корректно, только если он был вызван
+суперпользователем или, если \fIfsgid\fP совпадает с идентификатором
+действительной, эффективной и сохранённой группы или равен текущему значению
+идентификатора пользователя файловой системы вызывающего.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении или при ошибке данный вызов возвращает предыдущий
+идентификатор группы файловой системы вызвавшего.
+.SH ВЕРСИИ
+.\" This system call is present since Linux 1.1.44
+.\" and in libc since libc 4.7.6.
+Данный системный вызов доступен в Linux начиная с версии 1.2.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBsetfsgid\fP() есть только в Linux и не должен использоваться в
+переносимых программах.
+.SH ЗАМЕЧАНИЯ
+Понятие идентификатора группы файловой системы и системный вызов
+\fBsetfsgid\fP() были изобретены по историческим причинам, которые больше не
+применимы к современным ядрам Linux. Смотрите в описании \fBsetfsuid\fP(2)
+почему в использовании \fBsetfsuid\fP(2) и \fBsetfsgid\fP() теперь нет
+необходимости.
+.PP
+Первоначальная версия системного вызова Linux \fBsetfsgid\fP() поддерживала
+только 16\-битные идентификаторы групп. Позднее в Linux 2.4 был добавлен
+\fBsetfsgid32\fP(), поддерживающий 32\-битные идентификаторы. Обёрточная функция
+glibc \fBsetfsgid\fP() скрывает это различие в версиях ядер.
+.SS "Отличия между библиотекой C и ядром"
+В glibc 2.15 и старее, если обёрточная функция этого системного вызова
+определяет, что аргумент невозможно передать ядру без обрезания целого (так
+как ядро старое и не поддерживает 32\-битные ID группы), то она возвращает \-1
+и присваивает \fIerrno\fP значение \fBEINVAL\fP не пытаясь выполнить системный
+вызов.
+.SH ДЕФЕКТЫ
+Вызывающему не возвращается никаких ошибок, и факт того, что успешном или не
+успешном выполнении возвращается одинаковое значение, делает невозможным
+напрямую определить как завершился вызов. Вместо этого, вызывающий должен
+получить значение из ещё одного вызова — \fIsetfsgid(\-1)\fP (который всегда
+завершается с ошибкой), чтобы определить, изменил ли предыдущий вызов
+\fBsetfsgid\fP() идентификатор группы файловой системы. По крайней мере, должно
+быть получено значение \fBEPERM\fP, если вызов завершится с ошибкой (так как у
+вызывающего нет мандата \fBCAP_SETGID\fP).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBsetfsuid\fP(2), \fBcapabilities\fP(7), \fBcredentials\fP(7)

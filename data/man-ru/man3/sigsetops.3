@@ -1,0 +1,150 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1994 Mike Battersby
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by aeb, 960721
+.\" 2005-11-21, mtk, added descriptions of sigisemptyset(), sigandset(),
+.\"                  and sigorset()
+.\" 2007-10-26 mdw   added wording that a sigset_t must be initialized
+.\"                  prior to use
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGSETOPS 3 2016\-03\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sigemptyset, sigfillset, sigaddset, sigdelset, sigismember \- операции с
+набором сигналов POSIX
+.SH ОБЗОР
+\fB#include <signal.h>\fP
+.PP
+\fBint sigemptyset(sigset_t *\fP\fIset\fP\fB);\fP
+.PP
+\fBint sigfillset(sigset_t *\fP\fIset\fP\fB);\fP
+.PP
+\fBint sigaddset(sigset_t *\fP\fIset\fP\fB, int \fP\fIsignum\fP\fB);\fP
+.PP
+\fBint sigdelset(sigset_t *\fP\fIset\fP\fB, int \fP\fIsignum\fP\fB);\fP
+.PP
+\fBint sigismember(const sigset_t *\fP\fIset\fP\fB, int \fP\fIsignum\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBsigemptyset\fP(), \fBsigfillset\fP(), \fBsigaddset\fP(), \fBsigdelset\fP(),
+\fBsigismember\fP():
+.RS 4
+_POSIX_C_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Эти функции позволяют управлять наборами сигналов POSIX.
+.PP
+Функция \fBsigemptyset\fP() инициализирует набор сигналов, задаваемый \fIset\fP,
+пустым значением, то есть все сигналы исключены из набора.
+.PP
+Функция \fBsigfillset\fP() инициализирует \fIset\fP максимальным значением, то
+есть все сигналы входят в набор.
+.PP
+Функция \fBsigaddset\fP() и \fBsigdelset\fP(), соответственно, добавляет и удаляет
+сигнал \fIsignum\fP из \fIset\fP.
+.PP
+Функция \fBsigismember\fP() проверяет, является ли \fIsignum\fP членом набора
+\fIset\fP.
+.PP
+Объекты типа \fIsigset_t\fP должны быть инициированы вызовом \fBsigemptyset\fP()
+или \fBsigfillset\fP() до передачи в функции \fBsigaddset\fP(), \fBsigdelset\fP() и
+\fBsigismember\fP(), или другие дополнительные функции glibc, описанные ниже
+(\fBsigisemptyset\fP(), \fBsigandset\fP() и \fBsigorset\fP()). Если этого не делать,
+то результат не определён.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функции \fBsigemptyset\fP(), \fBsigfillset\fP(),
+\fBsigaddset\fP() и \fBsigdelset\fP() возвращают 0 и \-1 при ошибке.
+.PP
+Функция \fBsigismember\fP() возвращает 1, если \fIsignum\fP является членом набора
+\fIset\fP, 0, если \fIsignum\fP не является членом и \-1 при ошибке.
+.PP
+При ошибке эти функции изменяют значение \fIerrno\fP соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+В \fIsignum\fP задан неправильный сигнал.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw31 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsigemptyset\fP(),
+\fBsigfillset\fP(),
+.br
+\fBsigaddset\fP(),
+\fBsigdelset\fP(),
+.br
+\fBsigismember\fP(),
+\fBsigisemptyset\fP(),
+.br
+\fBsigorset\fP(),
+\fBsigandset\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.\"
+При создании заполненного набора сигналов функция glibc для \fBsigfillset\fP()
+не включает два сигнала реального времени, которые используются внутри
+реализации NPTL. Подробности смотрите в \fBnptl\fP(7).
+.SS "Расширения glibc"
+Если определён макрос тестирования свойств \fB_GNU_SOURCE\fP, то
+\fI<signal.h>\fP поставляет три другие функции для управления набором
+сигналов:
+.PP
+.nf
+\fBint sigisemptyset(const sigset_t *\fP\fIset\fP\fB);\fP
+\fBint sigorset(sigset_t *\fP\fIdest\fP\fB, const sigset_t *\fP\fIleft\fP\fB,\fP
+\fB              const sigset_t *\fP\fIright\fP\fB);\fP
+\fBint sigandset(sigset_t *\fP\fIdest\fP\fB, const sigset_t *\fP\fIleft\fP\fB,\fP
+\fB              const sigset_t *\fP\fIright\fP\fB);\fP
+.fi
+.PP
+Функция \fBsigisemptyset\fP() возвращает 1, если \fIset\fP не содержит сигналов и
+0 в противном случае.
+.PP
+Функция \fBsigorset\fP() помещает объединение наборов \fIleft\fP и \fIright\fP в
+\fIdest\fP. Функция \fBsigandset\fP() помещает пересечение наборов \fIleft\fP и
+\fIright\fP в \fIdest\fP. При успешном выполнении обе функции возвращают 0 и \-1
+при ошибке.
+.PP
+Эти функции являются нестандартными (но в некоторых других системах имеют
+подобные)и их лучше не использовать в переносимых приложениях.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsigaction\fP(2), \fBsigpending\fP(2), \fBsigprocmask\fP(2), \fBsigsuspend\fP(2)

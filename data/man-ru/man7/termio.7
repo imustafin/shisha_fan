@@ -1,0 +1,54 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2006 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 28 Dec 2006 - Initial Creation
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TERMIO 7 2017\-05\-03 Linux "Руководство программиста Linux"
+.SH ИМЯ
+termio \- интерфейс драйвера терминала System V
+.SH ОПИСАНИЕ
+\fBtermio\fP — название старого интерфейса драйвера терминала System V. В этом
+интерфейсе определена структура \fItermio\fP, которая используется для хранения
+настроек терминала, и набор операций \fBioctl\fP(2) для выборки и изменения
+атрибутов терминала.
+.PP
+В настоящее время интерфейс \fBtermio\fP устарел: в POSIX.1\-1990
+стандартизована изменённая версия данного интерфейса под именем
+\fBtermios\fP. В POSIX.1 структура данных немного отличается от версии System
+V, а также в POSIX.1 определён комплект функций, заменяющих различные
+операции \fBioctl\fP(2), которые существовали в System V (это сделано из\-за
+нестандаризованности \fBioctl\fP(2) и непостоянной длины (variadic) третьего
+аргумента, что не позволяет проверить тип аргумента).
+.PP
+Если вы ищете данные на странице с именем «termio», то большинство
+информации найдёте на странице \fBtermios\fP(3) или \fBioctl_tty\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBreset\fP(1), \fBsetterm\fP(1), \fBstty\fP(1), \fBioctl_tty\fP(2), \fBtermios\fP(3),
+\fBtty\fP(4)

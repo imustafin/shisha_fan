@@ -1,0 +1,147 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2002 Andries Brouwer <aeb@cwi.nl>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" This replaces an earlier man page written by Walter Harms
+.\" <walter.harms@informatik.uni-oldenburg.de>.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TTYSLOT 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+ttyslot \- поиск слота текущего терминала пользователя в определённом файле
+.SH ОБЗОР
+\fB#include <unistd.h>\fP /* смотрите ЗАМЕЧАНИЯ */
+.PP
+\fBint ttyslot(void);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBttyslot\fP():
+.RS 4
+Начиная с glibc 2.24:
+    _DEFAULT_SOURCE
+.br
+Начиная с glibc 2.20 по 2.23:
+    _DEFAULT_SOURCE ||
+    _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE\ <\ 500
+.br
+В Glibc 2.19 и старее:
+    _BSD_SOURCE ||
+    _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE\ <\ 500
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Исходная функция \fBttyslot\fP() возвращает индекс записи текущего пользователя
+в определённом файле.
+.PP
+«В каком файле?» \(em спросите вы. Что же, для начала обратимся к истории.
+.SS "Доисторические времена"
+В UNIX\ V6 использовался файл \fI/etc/ttys\fP, который читался программой
+\fBinit\fP(1) для определения того, что делать с каждым терминалом. Каждая
+строка содержала три символа. Первый символ мог быть \(aq0\(aq или \(aq1\(aq
+(где \(aq0\(aq означало «ignore»). Второй символ обозначал терминал:
+\(aq8\(aq означал «/dev/tty8». Третий символ был аргументом для \fBgetty\fP(8),
+обозначающим начальную скорость передачи символов (например, \(aq\-\(aq
+означал начинать с 110 бод). Обычная строка в файле, таким образом, имела
+вид «18\-». Зависание какого\-либо терминала обычно решалось изменением
+\(aq1\(aq на \(aq0\(aq, подачей сигнала в init, возвращением исходного
+значения и ещё одной подачей сигнала в init.
+.PP
+В UNIX\ V7 формат изменился. Второй символ стал аргументом \fBgetty\fP(8) для
+определения последовательного перебора скоростей (\(aq0\(aq означал цикл
+300\-1200\-150\-110 бод; \(aq4\(aq предназначался для онлайн\-консоли
+DECwriter), а оставшиеся символы содержали имя tty. Таким образом, обычная
+строка была «14console».
+.PP
+В последующих системах синтаксис был ещё разнообразней. В системах,
+основанных на System V, использовался \fI/etc/inittab\fP.
+.SS "Доисторические времена (2)"
+С другой стороны, существовал файл \fI/etc/utmp\fP, в котором перечислены люди,
+вошедшие в систему. Этот файл управлялся с помощью \fBlogin\fP(1). Он имел
+фиксированную длину, а соответствующий индекс в файле определялся
+\fBlogin\fP(1) с помощью вызова \fBttyslot\fP() и нахождения номера строки в
+\fI/etc/ttys\fP (начиная с 1).
+.SS "Семантика ttyslot"
+Таким образом, функция \fBttyslot\fP() возвращает из файла \fI/etc/ttys\fP индекс
+управляющего терминала вызывающего процесса, который является таким же
+(обычно), что и индекс записи текущего пользователя в файле \fI/etc/utmp\fP. В
+BSD файл \fI/etc/ttys\fP все ещё был, однако в System V его уже не было, и
+из\-за этого на него невозможно было ссылаться. Поэтому в подобных системах в
+документации указано, что \fBttyslot\fP() возвращает индекс текущего
+пользователя на основании базы данных пользователей.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данная функция возвращает номер слота. В случает
+ошибки (то есть, когда ни один из файловых дескрипторов 0, 1 и 2 не связан с
+терминалом из базы данных) возвращается 0 (для систем UNIX\ V6, V7 и BSD)
+или \-1 (для систем System\ V).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBttyslot\fP()
+T}	Безвредность в нитях	MT\-Unsafe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SUSv1; в SUSv2 отмечена как УСТАРЕВШАЯ; удалена в POSIX.1\-2001. SUSv2
+требует возврата \-1 в случае ошибки.
+.SH ЗАМЕЧАНИЯ
+Файл utmp в различных системах может находиться в различных местах:
+\fI/etc/utmp\fP, \fI/var/adm/utmp\fP, \fI/var/run/utmp\fP.
+.PP
+Реализация этой функции в glibc2 читает файл \fB_PATH_TTYS\fP, определённый в
+\fI<ttyent.h>\fP как «/etc/ttys». В случае ошибки она возвращает 0. Так
+как в системах Linux файла «/etc/ttys» обычно нет, то она всегда возвращает
+0.
+.PP
+В BSD\-подобных системах и Linux объявление \fBttyslot\fP() находится в файле
+\fI<unistd.h>\fP.  В System V\-подобных системах объявление находится в
+файле \fI<stdlib.h>\fP. Начиная с glibc 2.24 в \fI<stdlib.h>\fP
+также поместили это объявление под следующий макрос тестирования свойств:
+.PP
+.in +4n
+.EX
+(_XOPEN_SOURCE >= 500 ||
+        (_XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED))
+    && ! (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600)
+.EE
+.in
+.PP
+.\" .SH HISTORY
+.\" .BR ttyslot ()
+.\" appeared in UNIX V7.
+В Minix также есть \fIfttyslot\fP(\fIfd\fP).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetttyent\fP(3), \fBttyname\fP(3), \fButmp\fP(5)

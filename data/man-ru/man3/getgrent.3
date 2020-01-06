@@ -1,0 +1,182 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 19:29:54 1993 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETGRENT 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+getgrent, setgrent, endgrent \- возвращает запись из файла групп
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <grp.h>\fP
+.PP
+\fBstruct group *getgrent(void);\fP
+.PP
+\fBvoid setgrent(void);\fP
+.PP
+\fBvoid endgrent(void);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.PD 0
+.ad l
+\fBsetgrent\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии gibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.PP
+\fBgetgrent\fP(), \fBendgrent\fP():
+.RS 4
+.\"        || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+начиная с glibc 2.22:
+    _XOPEN_SOURCE\ >=\ 500 ||
+        _DEFAULT_SOURCE
+.br
+.\"        || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+в glibc 2.21 и старее
+    _XOPEN_SOURCE\ >=\ 500
+        || /* Since glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+        || /* Glibc versions <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.PD
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBgetgrent\fP() возвращает указатель на структуру, содержащую
+разделённую на поля запись базы данных групп (например, локального файла
+групп \fI/etc/group\fP, NIS и LDAP). При первом вызове \fBgetgrent\fP() возвращает
+первую запись; при следующих последовательно возвращаются остальные записи.
+.PP
+Функция \fBsetgrent\fP() возвращается к началу базы данных групп, позволяя
+выполнять повторное сканирование.
+.PP
+Функция \fBendgrent\fP() используется для закрытия базы данных групп при
+завершении процесса обработки.
+.PP
+Структура \fIgroup\fP определена в \fI<grp.h>\fP следующим образом:
+.PP
+.in +4n
+.EX
+struct group {
+    char   *gr_name;        /* имя группы */
+    char   *gr_passwd;      /* пароль группы */
+    gid_t   gr_gid;         /* ID группы */
+    char  **gr_mem;         /* массив, указателей
+                               имён членов группы, оканчивающийся NULL */
+};
+.EE
+.in
+.PP
+Подробней о полях этой структуры смотрите в \fBgroup\fP(5).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBgetgrent\fP() возвращает указатель на структуру \fIgroup\fP или NULL,
+если записи закончились или произошла ошибка.
+.PP
+При ошибке может измениться значение \fIerrno\fP. Если нужно проверять
+переменную \fIerrno\fP после вызова, то перед этим нужно присвоить ей нулевое
+значение.
+.PP
+Возвращаемое значение может указывать на статическую область и может быть
+перезаписано при последующих вызовах \fBgetgrent\fP(), \fBgetgrgid\fP(3) или
+\fBgetgrnam\fP(3) (не передавайте полученный указатель \fBfree\fP(3)).
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Служба временно недоступна; попробуйте позднее. Для NSS из glibc это
+указывает на временную ошибку обмена с сервером. Ошибка может исчезнуть
+самостоятельно, предлагается попробовать повторить вызов позднее.
+.TP 
+\fBEINTR\fP
+Поступил сигнал; смотрите \fBsignal\fP(7).
+.TP 
+\fBEIO\fP
+Ошибка ввода\-вывода.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+.\" not in POSIX
+\fBENOENT\fP
+Необходимый входной файл не найден. Для NSS в glibc это указывает на то, что
+служба некорректно настроена.
+.TP 
+\fBENOMEM\fP
+.\" not in POSIX
+Недостаточно памяти для структуры \fIgroup\fP.
+.TP 
+\fBERANGE\fP
+Недостаточно места в буфере.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/group\fP
+локальный файл базы данных групп
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw11 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetgrent\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:grent
+.br
+race:grentbuf locale
+T}
+T{
+\fBsetgrent\fP(),
+\fBendgrent\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:grent locale
+.TE
+.PP
+В приведённой выше таблице \fIgrent\fP в \fIrace:grent\fP означает, что если в
+нескольких нитях программы одновременно используются функции \fBsetgrent\fP(),
+\fBgetgrent\fP() или \fBendgrent\fP(), то может возникнуть состязательность по
+данным.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfgetgrent\fP(3), \fBgetgrent_r\fP(3), \fBgetgrgid\fP(3), \fBgetgrnam\fP(3),
+\fBgetgrouplist\fP(3), \fBputgrent\fP(3), \fBgroup\fP(5)

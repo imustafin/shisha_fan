@@ -1,0 +1,119 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2003 Walter Harms, 2004 Andries Brouwer <aeb@cwi.nl>.
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Created 2004-10-31. Text taken from a page by Walter Harms, 2003-09-08
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DRAND48_R 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+drand48_r, erand48_r, lrand48_r, nrand48_r, mrand48_r, jrand48_r, srand48_r,
+seed48_r, lcong48_r \- генерация равномерно распределённых псевдослучайных
+чисел реентерабельным способом
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint drand48_r(struct drand48_data *\fP\fIbuffer\fP\fB, double *\fP\fIresult\fP\fB);\fP
+.PP
+\fBint erand48_r(unsigned short \fP\fIxsubi\fP\fB[3]\fP\fI,\fP
+\fB              struct drand48_data *\fP\fIbuffer\fP\fB, double *\fP\fIresult\fP\fB);\fP
+.PP
+\fBint lrand48_r(struct drand48_data *\fP\fIbuffer\fP\fB, long int *\fP\fIresult\fP\fB);\fP
+.PP
+\fBint nrand48_r(unsigned short int \fP\fIxsubi[3]\fP\fB,\fP
+\fB              struct drand48_data *\fP\fIbuffer\fP\fB, long int *\fP\fIresult\fP\fB);\fP
+.PP
+\fBint mrand48_r(struct drand48_data *\fP\fIbuffer\fP\fB,long int *\fP\fIresult\fP\fB);\fP
+.PP
+\fBint jrand48_r(unsigned short int \fP\fIxsubi[3]\fP\fB,\fP
+\fB              struct drand48_data *\fP\fIbuffer\fP\fB, long int *\fP\fIresult\fP\fB);\fP
+.PP
+\fBint srand48_r(long int \fP\fIseedval\fP\fB, struct drand48_data *\fP\fIbuffer\fP\fB);\fP
+.PP
+\fBint seed48_r(unsigned short int \fP\fIseed16v[3]\fP\fB,\fP
+\fB             struct drand48_data *\fP\fIbuffer\fP\fB);\fP
+.PP
+\fBint lcong48_r(unsigned short int \fP\fIparam[7]\fP\fB,\fP
+\fB              struct drand48_data *\fP\fIbuffer\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+.\" .BR drand48_r (),
+.\" .BR erand48_r (),
+.\" .BR lrand48_r (),
+.\" .BR nrand48_r (),
+.\" .BR mrand48_r (),
+.\" .BR jrand48_r (),
+.\" .BR srand48_r (),
+.\" .BR seed48_r (),
+.\" .BR lcong48_r ():
+Для всех вышеуказанных функций:
+    /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+        || /* в версии glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.ad b
+.SH ОПИСАНИЕ
+Данные функции являются реентерабельными аналогами функций, описанных в
+\fBdrand48\fP(3). Вместо изменения состояния глобального генератора
+произвольных чисел, в них используется передаваемый буфер данных \fIbuffer\fP.
+.PP
+Перед первым использованием эта структура должна быть инициализирована,
+например, заполнена нулями или посредством вызова функции \fBsrand48_r\fP(),
+\fBseed48_r\fP() или \fBlcong48_r\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Возвращаемое значение равно 0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw25 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBdrand48_r\fP(),
+\fBerand48_r\fP(),
+\fBlrand48_r\fP(),
+\fBnrand48_r\fP(),
+\fBmrand48_r\fP(),
+\fBjrand48_r\fP(),
+\fBsrand48_r\fP(),
+\fBseed48_r\fP(),
+\fBlcong48_r\fP()
+T}	Безвредность в нитях	MT\-Safe race:buffer
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU и не переносимы.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBdrand48\fP(3), \fBrand\fP(3), \fBrandom\fP(3)

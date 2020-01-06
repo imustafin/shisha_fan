@@ -1,0 +1,219 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Wed Jul 21 22:35:42 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 18 Mar 1996 by Martin Schulze (joey@infodrom.north.de):
+.\"   Corrected description of getwd().
+.\" Modified Sat Aug 21 12:32:12 MET 1999 by aeb - applied fix by aj
+.\" Modified Mon Dec 11 13:32:51 MET 2000 by aeb
+.\" Modified Thu Apr 22 03:49:15 CEST 2002 by Roger Luethi <rl@hellgate.ch>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETCWD 3 2018\-04\-30 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getcwd, getwd, get_current_dir_name \- возвращают текущий рабочий каталог
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBchar *getcwd(char *\fP\fIbuf\fP\fB, size_t \fP\fIsize\fP\fB);\fP
+.PP
+\fBchar *getwd(char *\fP\fIbuf\fP\fB);\fP
+.PP
+\fBchar *get_current_dir_name(void);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBget_current_dir_name\fP():
+.RS
+_GNU_SOURCE
+.RE
+.PP
+\fBgetwd\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Начиная с glibc 2.12:
+.nf
+(_XOPEN_SOURCE\ >=\ 500) && ! (_POSIX_C_SOURCE\ >=\ 200809L)
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE
+.TP  4
+.fi
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+До glibc 2.12: _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.PD
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Данные функции возвращают строку (с null в конце), содержащую абсолютный
+путь текущего рабочего каталога вызывающего процесса. Путь возвращается как
+результат функции или в аргументе \fIbuf\fP, если он есть.
+.PP
+Функция \fBgetcwd\fP() копирует абсолютный путь текущего рабочего каталога в
+массив, на который указывает \fIbuf\fP, имеющий длину \fIsize\fP.
+.PP
+Если длина абсолютного пути, включая конечный байт null, превышает \fIsize\fP
+байт, то возвращается NULL, а \fIerrno\fP принимает значение \fBERANGE\fP;
+приложение должно проверить, возникла эта ошибка или нет и, если необходимо,
+выделить буфер большего размера.
+.PP
+Согласно расширению стандарта POSIX.1\-2001 в glibc предусмотрено следующее:
+если \fIbuf\fP равно NULL, то при вызове \fBgetcwd\fP() буфер выделяется
+динамически с помощью функции \fBmalloc\fP(3). В этом случае выделенный буфер
+имеет размер \fIsize\fP; если \fIsize\fP равно нулю, то выделяется \fIbuf\fP
+необходимого размера. Вызывающий после использования должен освободить
+выделенный буфер с помощью \fBfree\fP(3).
+.PP
+Функция \fBget_current_dir_name\fP() выделит с помощью \fBmalloc\fP(3) массив,
+достаточно большой для помещения в него абсолютного пути имени текущего
+каталога. Если существует и имеет правильное значение переменная окружения
+\fBPWD\fP, то будет возвращено её значение. Вызывающий после использования
+должен освободить выделенный буфер с помощью \fBfree\fP(3).
+.PP
+Функция \fBgetwd\fP() не выделяет память с помощью \fBmalloc\fP(3). Аргумент
+\fIbuf\fP должен быть указателем на массив длиной не менее \fBPATH_MAX\fP
+байтов. Если длина абсолютного пути текущего рабочего каталога, включая
+конечный байт null, превышает \fBPATH_MAX\fP байт, то возвращается NULL и
+\fIerrno\fP присваивается значение \fBENAMETOOLONG\fP (заметим, что в некоторых
+системах \fBPATH_MAX\fP может не являться константой времени компиляции; более
+того, её значение может зависеть от файловой системы, смотрите
+\fBpathconf\fP(3)). Для переносимости и безопасности использование \fBgetwd\fP()
+не рекомендуется.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают указатель на строку,
+содержащую пути текущего рабочего каталога. У \fBgetcwd\fP() и \fBgetwd\fP() это
+значение совпадает с \fIbuf\fP.
+.PP
+При ошибках эти функции возвращают NULL и в \fIerrno\fP помещают причину
+ошибки. Содержимое массива \fIbuf\fP в этом случае не определено.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Нет прав на чтение или поиск одного из компонентов пути файла.
+.TP 
+\fBEFAULT\fP
+Значение \fIbuf\fP указывает на неправильный адрес.
+.TP 
+\fBEINVAL\fP
+Аргумент \fIsize\fP равен нулю, а \fIbuf\fP не является указателем null.
+.TP 
+\fBEINVAL\fP
+\fBgetwd\fP(): \fIbuf\fP равно NULL.
+.TP 
+\fBENAMETOOLONG\fP
+\fBgetwd\fP(): Размер строки абсолютного пути, включая конечный null, превышает
+\fBPATH_MAX\fP байт.
+.TP 
+\fBENOENT\fP
+Текущий рабочий каталог был удалён.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти.
+.TP 
+\fBERANGE\fP
+Аргумент \fIsize\fP меньше длины абсолютного пути рабочего каталога, включая
+конечный байт null. Вам нужно выделить массив большего размера попробовать
+ещё раз.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw22 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetcwd\fP(),
+\fBgetwd\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBget_current_dir_name\fP()
+T}	Безвредность в нитях	MT\-Safe env
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функция \fBgetcwd\fP() соответствует POSIX.1\-2001. Однако заметим, что в
+POSIX.1\-2001 не описано поведение \fBgetcwd\fP(), если \fIbuf\fP равно NULL.
+.PP
+Функция \fBgetwd\fP() описана в POSIX.1\-2001, но помечена как УСТАРЕВШАЯ. В
+POSIX.1\-2008 \fBgetwd\fP() удалена. Вместо неё используйте \fBgetcwd\fP(). В
+POSIX.1\-2001 не определены ошибки, возвращаемые \fBgetwd\fP().
+.PP
+Функция \fBget_current_dir_name\fP() является расширением GNU.
+.SH ЗАМЕЧАНИЯ
+В Linux, эти функции используют системный вызов \fBgetcwd\fP() (доступен в
+Linux, начиная с версии 2.1.92). В старых системах они опрашивают
+\fI/proc/self/cwd\fP. Если в системе отсутствует системный вызов и файловая
+система proc, то задействуется обобщённая реализация. Только в этом случает
+данные вызовы в Linux могут завершиться с ошибкой \fBEACCES\fP.
+.PP
+.\"
+Данные функции часто используются для сохранения расположения текущего
+рабочего каталога с целью возврата в него позднее. Открытие текущего
+каталога («.») и вызов \fBfchdir\fP(2) для возврата, обычно, более быстрая и
+надёжная альтернатива при наличии достаточного количества файловых
+дескрипторов, особенно на платформах, отличных от Linux.
+.SS "Отличия между библиотекой C и ядром"
+.\" commit 3272c544da48f8915a0e34189182aed029bd0f2b
+Ядро Linux предоставляет системный вызов \fBgetcwd\fP(), который, если
+возможно, будут использовать описываемые на этой страницы функции. Системный
+вызов имеет такие же параметры как и библиотечная функция с тем же именем,
+но возвращает не более \fBPATH_MAX\fP байт (до Linux 3.12 размер возвращаемого
+пути ограничивался размером системной страницы. На многих архитектурах
+\fBPATH_MAX\fP и размер системной страницы равны 4096 байтам, но у некоторых
+архитектур размер страницы больше этого значения). Если длина пути текущего
+рабочего каталога превышает это ограничение, то системный вызов возвращает
+ошибку \fBENAMETOOLONG\fP. В этом случае библиотечные функции переходят к
+использованию альтернативной (медленной) реализации, которая возвращает
+полный путь.
+.PP
+.\" commit 8df9d1a4142311c084ffeeacb67cd34d190eff74
+После внесения изменения в Linux 2.6.36, путь, возвращаемый системным
+вызовом \fBgetcwd\fP(), будет начинаться со строки «(unreachable)», если
+текущий каталог не ниже корневого каталога текущего процесса (например,
+из\-за того, что процесс установил новую корневую файловую систему с помощью
+\fBchroot\fP(2) без изменения своего текущего каталога в новый корень). Такое
+поведение также проявляется у непривилегированного пользователя текущий
+каталог переводится в другое пространство имён монтирования. При работе с
+путём из недоверенных источников вызывающие описанные на этой странице
+функции должны учитывать, что возвращаемый путь может начинаться с «/» или
+«(», и не принимать недоступный путь за относительный.
+.SH ДЕФЕКТЫ
+Так как изменения в Linux 2.6.36 добавляет при описанных выше определённых
+обстоятельствах «(unreachable)», реализация \fBgetcwd\fP() в glibc нарушает
+POSIX и возвращает относительный путь, в то время как по соглашению API
+требуется абсолютный путь. В glibc 2.27 и новее это исправлено; вызов
+\fBgetcwd\fP() из такого пути приводит к ошибке \fBENOENT\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpwd\fP(1), \fBchdir\fP(2), \fBfchdir\fP(2), \fBopen\fP(2), \fBunlink\fP(2), \fBfree\fP(3),
+\fBmalloc\fP(3)

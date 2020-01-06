@@ -1,0 +1,277 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Written  Feb 1994 by Steve Greenland (stevegr@neosoft.com)
+.\" and Copyright 2001, 2017 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Updated 1999.12.19 by Karl M. Hegbloom <karlheg@debian.org>
+.\"
+.\" Updated 13 Oct 2001, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Added description of vsyslog
+.\"	Added descriptions of LOG_ODELAY and LOG_NOWAIT
+.\"	Added brief description of facility and option arguments
+.\"	Added CONFORMING TO section
+.\" 2001-10-13, aeb, minor changes
+.\" Modified 13 Dec 2001, Martin Schulze <joey@infodrom.org>
+.\" Modified 3 Jan 2002, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSLOG 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+closelog, openlog, syslog, vsyslog \- отправка сообщений в службу
+журналирования
+.SH ОБЗОР
+\fB#include <syslog.h>\fP
+.PP
+\fBvoid openlog(const char *\fP\fIident\fP\fB, int \fP\fIoption\fP\fB, int
+\fP\fIfacility\fP\fB);\fP
+.br
+\fBvoid syslog(int \fP\fIpriority\fP\fB, const char *\fP\fIformat\fP\fB, ...);\fP
+.br
+\fBvoid closelog(void);\fP
+.PP
+\fBvoid vsyslog(int \fP\fIpriority\fP\fB, const char *\fP\fIformat\fP\fB, va_list
+\fP\fIap\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBvsyslog\fP():
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    glibc 2.19 и старее:
+        _BSD_SOURCE
+.SH ОПИСАНИЕ
+.SS openlog()
+Функция \fBopenlog\fP() открывает для программы соединение со службой
+журналирования.
+.PP
+Строка, на которую указывает \fIident\fP, будет предварять каждое сообщение,
+обычно это имя программы. Если значение \fIident\fP равно NULL, то используется
+имя программы (в POSIX.1\-2008 не указано, что случается, если \fIident\fP равно
+NULL).
+.PP
+В аргументе \fIoption\fP указываются флаги, контролирующие действия
+\fBopenlog\fP() и последующих вызовов \fBsyslog\fP(). Аргумент \fIfacility\fP
+устанавливает значения по умолчанию, если не будет указано другое в
+последующих вызовах \fBsyslog\fP(). Значения для \fIoption\fP и \fIfacility\fP
+представлены ниже.
+.PP
+.\"
+Использование \fBopenlog\fP() не обязательно; она будет вызвана \fBsyslog\fP() в
+случае необходимости (в этом случае по умолчанию \fIident\fP будет установлено
+в NULL).
+.SS "syslog() и vsyslog()"
+Функция \fBsyslog\fP() генерирует сообщение журнала, которое будет передавать
+\fBsyslogd\fP(8).
+.PP
+Аргумент \fIpriority\fP составляется из объединения значений \fIfacility\fP и
+\fIlevel\fP (описано ниже). Если значения \fIfacility\fP нет в \fIpriority\fP, то по
+умолчанию используется значение, заданное \fBopenlog\fP(), или, если до этого
+\fBopenlog\fP() не вызывался, используется значение \fBLOG_USER\fP.
+.PP
+Оставшиеся аргументы — \fIformat\fP, задаются в формате как у \fBprintf\fP(3) (а
+также аргументы, необходимые для \fIformat\fP) за исключением
+последовательности двух символов \fB%m\fP, которые заменяются строкой ошибки
+\fIstrerror\fP(\fIerrno\fP). В строку формата не нужно включать конечный символ
+новой строки.
+.PP
+.\"
+Функция \fBvsyslog\fP() выполняет то же самое, что и \fBsyslog\fP() с той лишь
+разницей, что она принимает набор аргументов, получаемых с использованием
+списка макросов \fBstdarg\fP(3).
+.SS closelog()
+.\"
+Функция \fBcloselog\fP() закрывает файловый дескриптор, использованный для
+записи в службу журналирования. Использование \fBcloselog\fP() не обязательно.
+.SS "Значения \fIoption\fP"
+Аргумент \fIoption\fP у \fBopenlog\fP() представляет собой битовую маску
+объединённых следующих значений:
+.TP  15
+\fBLOG_CONS\fP
+Писать напрямую в системную консоль, если при отправке в систему
+журналирования возникла ошибка.
+.TP 
+\fBLOG_NDELAY\fP
+Немедленно открыть соединение (обычно соединение открывается при первом
+сообщении). Например, это может быть полезно, если последующий \fBchroot\fP(2)
+делает недоступным путь, используемый внутри свойства протоколирования.
+.TP 
+\fBLOG_NOWAIT\fP
+Не ждать дочерних процессов, которые могут быть созданы во время
+журналирования сообщения (библиотека GNU C не создаёт дочерних процессов,
+так что в Linux этот параметр не действует).
+.TP 
+\fBLOG_ODELAY\fP
+Противоположен \fBLOG_NDELAY\fP; открытие подключения откладывается, пока не
+будет вызван \fBsyslog\fP() (этот параметр используется по умолчанию, нет
+необходимости выставлять его вручную).
+.TP 
+\fBLOG_PERROR\fP
+(нет в POSIX.1\-2001 или POSIX.1\-2008) Также протоколировать сообщение в
+\fIstderr\fP.
+.TP 
+\fBLOG_PID\fP
+.\"
+Включать PID вызывающего в каждое сообщение.
+.SS "Значения \fIfacility\fP"
+Аргумент \fIfacility\fP используется для указания типа программы, записывающей
+сообщение. Благодаря этому с помощью файла настройки можно по\-разному
+обрабатывать сообщения от разных объектов.
+.TP  15
+\fBLOG_AUTH\fP
+сообщения безопасности/авторизации
+.TP 
+\fBLOG_AUTHPRIV\fP
+сообщения безопасности/авторизации (private)
+.TP 
+\fBLOG_CRON\fP
+планировщик заданий (\fBcron\fP и \fBat\fP)
+.TP 
+\fBLOG_DAEMON\fP
+системные службы без определенного значения объекта
+.TP 
+\fBLOG_FTP\fP
+служба FTP
+.TP 
+\fBLOG_KERN\fP
+.\" LOG_KERN has the value 0; if used as a facility, zero translates to:
+.\" "use the default facility".
+сообщения ядра (не могут быть созданы пользовательскими процессами)
+.TP 
+с \fBLOG_LOCAL0\fP по \fBLOG_LOCAL7\fP
+зарезервировано для локального использования
+.TP 
+\fBLOG_LPR\fP
+подсистема печати
+.TP 
+\fBLOG_MAIL\fP
+почтовая подсистема
+.TP 
+\fBLOG_NEWS\fP
+подсистема новостей USENET
+.TP 
+\fBLOG_SYSLOG\fP
+сообщения, сгенерированные самой службой \fBsyslogd\fP(8)
+.TP 
+\fBLOG_USER\fP (по умолчанию)
+обычные сообщения пользовательского уровня
+.TP 
+\fBLOG_UUCP\fP
+.\"
+подсистема UUCP
+.SS "Значения \fIlevel\fP"
+Определяет важность сообщения. Ниже указаны уровни по уменьшению важности:
+.TP  15
+\fBLOG_EMERG\fP
+система в нерабочем состоянии
+.TP 
+\fBLOG_ALERT\fP
+необходимо срочное вмешательство
+.TP 
+\fBLOG_CRIT\fP
+критические состояния
+.TP 
+\fBLOG_ERR\fP
+ошибки
+.TP 
+\fBLOG_WARNING\fP
+предупреждения
+.TP 
+\fBLOG_NOTICE\fP
+обычные, но важные сообщения
+.TP 
+\fBLOG_INFO\fP
+информационные сообщения
+.TP 
+\fBLOG_DEBUG\fP
+сообщения уровня отладки
+.PP
+Для ограничения журналирования только в определенные уровни можно
+использовать функцию \fBsetlogmask\fP(3).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBopenlog\fP(),
+\fBcloselog\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBsyslog\fP(),
+\fBvsyslog\fP()
+T}	Безвредность в нитях	MT\-Safe env locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функции \fBopenlog\fP(), \fBcloselog\fP() и \fBsyslog\fP() (но не \fBvsyslog\fP())
+определены в SUSv2, POSIX.1\-2001 и POSIX.1\-2008.
+.PP
+В POSIX.1\-2001 для \fIfacility\fP описаны только значения \fBLOG_USER\fP и
+\fBLOG_LOCAL*\fP. Однако, за исключением \fBLOG_AUTHPRIV\fP и \fBLOG_FTP\fP,
+остальные значения \fIfacility\fP присутствуют в большинстве систем UNIX.
+.PP
+.\" .SH HISTORY
+.\" A
+.\" .BR syslog ()
+.\" function call appeared in 4.2BSD.
+.\" 4.3BSD documents
+.\" .BR openlog (),
+.\" .BR syslog (),
+.\" .BR closelog (),
+.\" and
+.\" .BR setlogmask ().
+.\" 4.3BSD-Reno also documents
+.\" .BR vsyslog ().
+.\" Of course early v* functions used the
+.\" .I <varargs.h>
+.\" mechanism, which is not compatible with
+.\" .IR <stdarg.h> .
+Значение \fBLOG_PERROR\fP для \fIoption\fP не описано в POSIX.1\-2001 или
+POSIX.1\-2008, однако доступно в большинстве версий UNIX.
+.SH ЗАМЕЧАНИЯ
+Аргумент \fIident\fP при вызове \fBopenlog\fP() сохраняется как есть. Поэтому,
+если строка меняется, \fBsyslog\fP() может начать добавлять уже изменённую
+строку. Если строка перестаёт существовать, то это может привести к
+непредвиденным результатам. Наиболее переносимый способ в данном случае \(em
+использовать строковую константу.
+.PP
+Никогда не подставляйте пользовательские данные в качестве формата
+представления, используйте вместо этого:
+.PP
+.in +4n
+.EX
+syslog(priority, "%s", string);
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBjournalctl\fP(1), \fBlogger\fP(1), \fBsetlogmask\fP(3), \fBsyslog.conf\fP(5),
+\fBsyslogd\fP(8)

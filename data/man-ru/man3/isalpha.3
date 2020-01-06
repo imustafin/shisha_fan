@@ -1,0 +1,265 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 19:10:00 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Sun Aug 21 17:51:50 1994 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Sat Sep  2 21:52:01 1995 by Jim Van Zandt <jrv@vanzandt.mv.com>
+.\" Modified Mon May 27 22:55:26 1996 by Martin Schulze (joey@linux.de)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ISALPHA 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+isalnum, isalpha, isascii, isblank, iscntrl, isdigit, isgraph, islower,
+isprint, ispunct, isspace, isupper, isxdigit, isalnum_l, isalpha_l,
+isascii_l, isblank_l, iscntrl_l, isdigit_l, isgraph_l, islower_l, isprint_l,
+ispunct_l, isspace_l, isupper_l, isxdigit_l \- функции классификации символов
+.SH ОБЗОР
+.nf
+\fB#include <ctype.h>\fP
+.PP
+\fBint isalnum(int \fP\fIc\fP\fB);\fP
+\fBint isalpha(int \fP\fIc\fP\fB);\fP
+\fBint iscntrl(int \fP\fIc\fP\fB);\fP
+\fBint isdigit(int \fP\fIc\fP\fB);\fP
+\fBint isgraph(int \fP\fIc\fP\fB);\fP
+\fBint islower(int \fP\fIc\fP\fB);\fP
+\fBint isprint(int \fP\fIc\fP\fB);\fP
+\fBint ispunct(int \fP\fIc\fP\fB);\fP
+\fBint isspace(int \fP\fIc\fP\fB);\fP
+\fBint isupper(int \fP\fIc\fP\fB);\fP
+\fBint isxdigit(int \fP\fIc\fP\fB);\fP
+.PP
+\fBint isascii(int \fP\fIc\fP\fB);\fP
+\fBint isblank(int \fP\fIc\fP\fB);\fP
+.PP
+\fBint isalnum_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+\fBint isalpha_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+\fBint isblank_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+\fBint iscntrl_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+\fBint isdigit_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+\fBint isgraph_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+\fBint islower_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+\fBint isprint_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+\fBint ispunct_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+\fBint isspace_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+\fBint isupper_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+\fBint isxdigit_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+.PP
+\fBint isascii_l(int \fP\fIc\fP\fB, locale_t \fP\fIlocale\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBisascii\fP():
+.RS 4
+_XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _SVID_SOURCE
+.RE
+.PP
+\fBisblank\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+.PP
+\fBisalnum_l\fP(), \fBisalpha_l\fP(), \fBisblank_l\fP(), \fBiscntrl_l\fP(),
+\fBisdigit_l\fP(), \fBisgraph_l\fP(), \fBislower_l\fP(), \fBisprint_l\fP(),
+\fBispunct_l\fP(), \fBisspace_l\fP(), \fBisupper_l\fP(), \fBisxdigit_l\fP():
+.PD 0
+.RS 4
+.TP 
+Начиная с glibc 2.10:
+_XOPEN_SOURCE\ >=\ 700
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.PD
+.PP
+\fBisascii_l\fP():
+.PD 0
+.RS 4
+.TP 
+Начиная с glibc 2.10:
+_XOPEN_SOURCE\ >=\ 700 && (_SVID_SOURCE || _BSD_SOURCE)
+.TP 
+До glibc 2.10:
+_GNU_SOURCE
+.RE
+.PD
+.ad
+.SH ОПИСАНИЕ
+Данные функции проверяют, попадает ли символ \fIc\fP (который должен иметь
+значение \fIunsigned char\fP или \fBEOF\fP) в определённый класс символов согласно
+указанной локали. Функции без суффикса «_l» выполняют проверку на основе
+текущей локали.
+.PP
+Функции с суффиксом «_l» выполняют проверку на основе указанного объекта
+локали \fIlocale\fP. Поведение этих функций не определено, если значение
+\fIlocale\fP равно специальному объекту локали \fBLC_GLOBAL_LOCALE\fP (смотрите
+\fBduplocale\fP(3)) или является некорректным описателем объекта локали.
+.PP
+Далее в списке описаны действия функций без суффикса «_l»; функции с
+суффиксом  «_l» отличаются только использовании объекта локали \fIlocale\fP
+вместо текущей локали.
+.TP 
+\fBisalnum\fP()
+Проверяет символ на принадлежность к число\-буквенным символам; вызов
+эквивалентен \fB(isalpha(\fP\fIc\fP\fB) || isdigit(\fP\fIc\fP\fB))\fP.
+.TP 
+\fBisalpha\fP()
+Проверяет символ на принадлежность к алфавитным символам; в стандартной
+локали \fB«C»\fP это эквивалентно \fB(isupper(\fP\fIc\fP\fB) || islower(\fP\fIc\fP\fB))\fP. В
+некоторых локалях могут существовать дополнительные символы, для которых
+\fBisalpha\fP() верно — буквы могут не находиться ни в верхнем, ни в нижнем
+регистре.
+.TP 
+\fBisascii\fP()
+Проверяет, является ли \fIc\fP 7\-битным значением \fIunsigned char\fP, которое
+попадает в таблицу символов ASCII.
+.TP 
+\fBisblank\fP()
+Проверяет, является ли символ пробельным (blank); то есть пробелом или
+символом табуляции.
+.TP 
+\fBiscntrl\fP()
+Проверяет, является ли символ управляющим.
+.TP 
+\fBisdigit\fP()
+Проверяет, является ли символ цифрой (от 0 до 9).
+.TP 
+\fBisgraph\fP()
+Проверяет, является ли символ печатным (но не пробельным).
+.TP 
+\fBislower\fP()
+Проверяет, является ли символ символом нижнего регистра.
+.TP 
+\fBisprint\fP()
+Проверяет, является ли символ печатным (включая пробельный).
+.TP 
+\fBispunct\fP()
+Проверяет, является ли символ печатным; он не должен быть пробельным или
+цифро\-буквенным символом.
+.TP 
+\fBisspace\fP()
+Проверяет, являются ли символы не отображаемыми. В локалях \fB«C»\fP и
+\fB«POSIX»\fP таковыми являются: пробел, символ перевода страницы («\ef»),
+символ новой строки («\en»), символ перевода каретки («\er»), символ
+горизонтальной табуляции («\et») и символ вертикальной табуляции («\ev»).
+.TP 
+\fBisupper\fP()
+Проверяет, является ли символ символом верхнего регистра.
+.TP 
+\fBisxdigit\fP()
+Проверяет, является ли символ шестнадцатеричной цифрой, т.е. одной из
+.br
+\fB0 1 2 3 4 5 6 7 8 9 a b c d e f A B C D E F\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции возвращают ненулевые значения, если проверяемый символ \fIc\fP попадает
+в тестируемый класс символов, в противном случае возвращается 0.
+.SH ВЕРСИИ
+Функции \fBisalnum_l\fP(), \fBisalpha_l\fP(), \fBisblank_l\fP(), \fBiscntrl_l\fP(),
+\fBisdigit_l\fP(), \fBisgraph_l\fP(), \fBislower_l\fP(), \fBisprint_l\fP(),
+\fBispunct_l\fP(), \fBisspace_l\fP(), \fBisupper_l\fP(), \fBisxdigit_l\fP() и
+\fBisascii_l\fP() доступны в glibc с версии 2.3.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw32 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBisalnum\fP(),
+\fBisalpha\fP(),
+\fBisascii\fP(),
+\fBisblank\fP(),
+\fBiscntrl\fP(),
+\fBisdigit\fP(),
+\fBisgraph\fP(),
+\fBislower\fP(),
+\fBisprint\fP(),
+\fBispunct\fP(),
+\fBisspace\fP(),
+\fBisupper\fP(),
+\fBisxdigit\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.ad
+.\" FIXME: need a thread-safety statement about the *_l functions
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+В C89 определены \fBisalnum\fP(), \fBisalpha\fP(), \fBiscntrl\fP(), \fBisdigit\fP(),
+\fBisgraph\fP(), \fBislower\fP(), \fBisprint\fP(), \fBispunct\fP(), \fBisspace\fP(),
+\fBisupper\fP() и \fBisxdigit\fP(), но отсутствуют \fBisascii\fP() и \fBisblank\fP(). В
+POSIX.1\-2001 также определены эти функции, а также \fBisascii\fP() (как
+расширение XSI) и \fBisblank\fP(). В C99 определены все перечисленные ранее
+функции кроме \fBisascii\fP().
+.PP
+В POSIX.1\-2008 функция \fBtoascii\fP() помечена как устаревшая с примечанием,
+что её нельзя использовать в локализованных приложениях.
+.PP
+В POSIX.1\-2008 определены \fBisalnum_l\fP(), \fBisalpha_l\fP(), \fBisblank_l\fP(),
+\fBiscntrl_l\fP(), \fBisdigit_l\fP(), \fBisgraph_l\fP(), \fBislower_l\fP(),
+\fBisprint_l\fP(), \fBispunct_l\fP(), \fBisspace_l\fP(), \fBisupper_l\fP() и
+\fBisxdigit_l\fP().
+.PP
+Функция \fBisascii_l\fP() является расширением GNU.
+.SH ЗАМЕЧАНИЯ
+Стандартами требуется, что аргумент \fIc\fP этих функций равнялся \fBEOF\fP или
+значению, которое представимо типом \fIunsigned char\fP. Если аргумент \fIc\fP
+имеет тип \fIchar\fP, то он должен приводиться к \fIunsigned char\fP как в
+следующем примере:
+.PP
+.in +4n
+.EX
+char c;
+\&...
+res = toupper((unsigned char) c);
+.EE
+.in
+.PP
+Это необходимо, так как \fIchar\fP может быть эквивалентен \fIsigned char\fP, и
+если у байта установлен старший знаковый бит, то он учитывается при
+приведении к \fIint\fP и байт превращается в значение, выходящее за границу
+\fIunsigned char\fP.
+.PP
+Отношение символов к какому\-либо классу зависит от локали. Например,
+\fBisupper\fP() не распознает A\-umlaut (\(:A) как букву верхнего регистра в
+локали\ \fBC\fP по умолчанию.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBiswalnum\fP(3), \fBiswalpha\fP(3), \fBiswblank\fP(3), \fBiswcntrl\fP(3),
+\fBiswdigit\fP(3), \fBiswgraph\fP(3), \fBiswlower\fP(3), \fBiswprint\fP(3),
+\fBiswpunct\fP(3), \fBiswspace\fP(3), \fBiswupper\fP(3), \fBiswxdigit\fP(3),
+\fBnewlocale\fP(3), \fBsetlocale\fP(3), \fBtoascii\fP(3), \fBtolower\fP(3),
+\fBtoupper\fP(3), \fBuselocale\fP(3), \fBascii\fP(7), \fBlocale\fP(7)

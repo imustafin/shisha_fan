@@ -1,0 +1,153 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sun Mar 28 00:25:51 1993, David Metcalfe
+.\" Modified Sat Jul 24 18:13:39 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Sun Aug 20 21:47:07 2000, aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RANDOM 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+random, srandom, initstate, setstate \- генератор случайных чисел
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBlong int random(void);\fP
+.PP
+\fBvoid srandom(unsigned int \fP\fIseed\fP\fB);\fP
+.PP
+\fBchar *initstate(unsigned int \fP\fIseed\fP\fB, char *\fP\fIstate\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.PP
+\fBchar *setstate(char *\fP\fIstate\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBrandom\fP(), \fBsrandom\fP(), \fBinitstate\fP(), \fBsetstate\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* в версиях glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBrandom\fP() использует нелинейный возвратно\-аддитивный генератор
+случайных чисел, используя по умолчанию таблицу из 31\-ого длинного целого
+числа и возвращает очередное псевдослучайное число в промежутке от 0 до
+\fBRAND_MAX\fP. Период этого генератора очень велик, приблизительно \fI16\ *\ ((2^31)\ \-\ 1)\fP.
+.PP
+Функция \fBsrandom\fP() устанавливает свой аргумент в качестве семени для новой
+последовательности псевдослучайных чисел, которые будут возвращаться
+функцией \fBrandom\fP(). Эти последовательности повторяются, если вызывать
+\fBsrandom\fP() с тем же значением семени. Если значение семени не указано, то
+функция \fBrandom\fP() автоматически устанавливает его равным 1.
+.PP
+Функция \fBinitstate\fP() позволяет инициализировать массив состояния \fIstate\fP
+для использования в функции \fBrandom\fP(). Размер массива состояния \fIn\fP
+используется \fBinitstate\fP() для определения, какой сложности генератор
+случайных чисел необходимо использовать — чем больше массив, тем полученные
+числа будут более случайными. Текущие «оптимальные» значения размера массива
+состояния \fIn\fP: 8, 32, 64, 128 и 256 байт; другие значения будут округлены
+до ближайшей нижней границы. Если значения меньше 8 байт, то возвращается
+ошибка. Значение \fIseed\fP — это семя последовательности для инициализации,
+которое определяет стартовую точку последовательности псевдослучайных чисел
+и позволяет перезапустить последовательность с той же точки.
+.PP
+Функция \fBsetstate\fP() изменяет состояние массива состояния, используемого в
+\fBrandom\fP(). Массив состояния \fIstate\fP используется для генерации случайных
+чисел до следующего вызова \fBinitstate\fP() или \fBsetstate\fP(). Значение
+\fIstate\fP должно быть инициализировано с помощью функции \fBinitstate\fP() или
+результатом предыдущего вызова \fBsetstate\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBrandom\fP() возвращает значение в промежутке от 0 до
+\fBRAND_MAX\fP. Функция \fBsrandom\fP() не возвращает значение.
+.PP
+Функция \fBinitstate\fP() возвращает указатель на предыдущий массив
+состояния. При ошибке в \fIerrno\fP записывается соответствующий код.
+.PP
+При успешном выполнении функция \fBsetstate\fP() возвращает указатель на
+предыдущий массив состояния. При ошибке она возвращает NULL и в \fIerrno\fP
+записывает соответствующий код.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Аргумент \fIstate\fP, указанный \fBsetstate\fP(), равен NULL.
+.TP 
+\fBEINVAL\fP
+Функции \fBinitstate\fP() передан массив состояния меньше 8 байт.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw23 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBrandom\fP(),
+\fBsrandom\fP(),
+.br
+\fBinitstate\fP(),
+\fBsetstate\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Функция \fBrandom\fP() не должна использоваться в многонитевых программах, где
+требуется повторение поведения. Для этих целей используйте \fBrandom_r\fP(3).
+.PP
+Генерация случайных чисел является сложной проблемой. В главе 7 (Random
+Numbers) \fINumerical Recipes in C: The Art of Scientific Computing\fP (William
+H.\& Press, Brian P.\& Flannery, Saul A.\& Teukolsky, William T.\&
+Vetterling; New York: Cambridge University Press, 2007, 3rd ed.) приведено
+великолепное обсуждение проблем практического применения генерации случайных
+чисел.
+.PP
+Также вы можете обратиться к теоретическому обсуждению, которое также
+объясняет многие практические проблемы, приведенному в главе 3 (Random
+Numbers) второго тома \fIИскусства программирования\fP Дональда Кнута (The Art
+of Computer Programming, volume 2 (Seminumerical Algorithms), 2nd ed.;
+Reading, Massachusetts: Addison\-Wesley Publishing Company, 1981).
+.SH ДЕФЕКТЫ
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=15380
+Согласно POSIX, \fBinitstate\fP() должна возвращать NULL при ошибке. Реализация
+glibc в \fIerrno\fP записывает код ошибки (как по стандарту), но не возвращает
+NULL.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetrandom\fP(2), \fBdrand48\fP(3), \fBrand\fP(3), \fBrandom_r\fP(3), \fBsrand\fP(3)

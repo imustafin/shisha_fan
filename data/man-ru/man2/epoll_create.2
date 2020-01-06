@@ -1,0 +1,109 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"  Copyright (C) 2003  Davide Libenzi
+.\"  Davide Libenzi <davidel@xmailserver.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_SW_3_PARA)
+.\"  This program is free software; you can redistribute it and/or modify
+.\"  it under the terms of the GNU General Public License as published by
+.\"  the Free Software Foundation; either version 2 of the License, or
+.\"  (at your option) any later version.
+.\"
+.\"  This program is distributed in the hope that it will be useful,
+.\"  but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\"  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\"  GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2004-06-17 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2005-04-04 by Marko Kohtala <marko.kohtala@gmail.com>
+.\" 2008-10-10, mtk: add description of epoll_create1()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH EPOLL_CREATE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+epoll_create, epoll_create1 \- открывает файловый дескриптор epoll
+.SH ОБЗОР
+.nf
+\fB#include <sys/epoll.h>\fP
+.PP
+\fBint epoll_create(int \fP\fIsize\fP\fB);\fP
+\fBint epoll_create1(int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBepoll_create\fP() создаёт новый экземпляр \fBepoll\fP(7). Начиная с Linux
+2.6.8 аргумент \fIsize\fP игнорируется, но должен быть больше нуля; смотрите
+ЗАМЕЧАНИЯ далее.
+.PP
+\fBepoll_create\fP() возвращает дескриптор файла, указывающий на новый
+экземпляр epoll. Он используется для всех последующих вызовов к интерфейсу
+\fBepoll\fP. По окончанию использования дескриптор файла, возвращаемый
+\fBepoll_create\fP(), должен быть закрыт с помощью \fBclose\fP(2). Когда все
+файловые дескрипторы, указывающие на экземпляр epoll, будут закрыты, ядро
+уничтожит экземпляр и освободит связанные с ним ресурсы для повторного
+использования.
+.SS epoll_create1()
+Если \fIflags\fP равно 0, то, если не учитывать, что устаревший аргумент
+\fIsize\fP не используется, \fBepoll_create1\fP() выполняет тоже что и
+\fBepoll_create\fP(). Для различного поведения во \fIflags\fP могут включаться:
+.TP 
+\fBEPOLL_CLOEXEC\fP
+Устанавливает флаг close\-on\-exec (\fBFD_CLOEXEC\fP) для нового открытого
+файлового дескриптора. Смотрите описание флага \fBO_CLOEXEC\fP в \fBopen\fP(2) для
+того, чтобы узнать как это может пригодиться.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные системные вызовы возвращают неотрицательный
+файловый дескриптор. При ошибке возвращается \-1 и \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Аргумент \fIsize\fP содержит отрицательное значение.
+.TP 
+\fBEINVAL\fP
+(\fBepoll_create1\fP()) Указано неверное значение в \fIflags\fP.
+.TP 
+\fBEMFILE\fP
+Был достигнут пользовательский предел на количество экземпляров epoll,
+налагаемый \fI/proc/sys/fs/epoll/max_user_instances\fP. Подробней см. в
+\fBepoll\fP(7).
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для создания объекта ядра.
+.SH ВЕРСИИ
+Вызов \fBepoll_create\fP() был добавлен в ядро версии 2.6. В glibc
+соответствующая функция появилась в версии 2.3.2.
+.PP
+.\" To be precise: kernel 2.5.44.
+.\" The interface should be finalized by Linux kernel 2.5.66.
+Вызов \fBepoll_create1\fP() был добавлен в ядро версии 2.6.27. В glibc
+соответствующая функция появилась в версии 2.9.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBepoll_create\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+В первоначальной реализации \fBepoll_create\fP() аргумент \fIsize\fP уведомлял
+ядро о количестве файловых дескрипторов, которые вызывающий предполагал
+добавить в экземпляр \fBepoll\fP. Ядро использовало эту информацию для оценки
+требуемого количества памяти при начальном размещении внутренних структур
+данных, описывающих события (если требовалось, ядро выделяло больше места,
+если вызывающий превышал значение, указанное в \fIsize\fP). Сейчас, эта оценка
+больше не требуется (ядро динамически выделяет место под структуры данных),
+но значение \fIsize\fP всё равно должно быть больше нуля — для обеспечения
+обратной совместимости приложений с новым \fBepoll\fP для работы на старых
+ядрах.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclose\fP(2), \fBepoll_ctl\fP(2), \fBepoll_wait\fP(2), \fBepoll\fP(7)

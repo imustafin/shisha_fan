@@ -1,0 +1,85 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1996 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Moved to man3, aeb, 980612
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ULIMIT 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ulimit \- установка или получение пользовательских ограничений
+.SH ОБЗОР
+\fB#include <ulimit.h>\fP
+.PP
+\fBlong ulimit(int \fP\fIcmd\fP\fB, long \fP\fInewlimit\fP\fB);\fP
+.SH ОПИСАНИЕ
+Предупреждение: эта функция устарела. Вместо неё используйте
+\fBgetrlimit\fP(2), \fBsetrlimit\fP(2) и \fBsysconf\fP(3). Справку по вызову
+\fBulimit\fP из командной строки смотрите в \fBbash\fP(1).
+.PP
+Вызов \fBulimit\fP позволяет получить или установить ограничения вызывающего
+процесса. Аргумент \fIcmd\fP может принимать следующие значения:
+.TP 
+\fBUL_GETFSIZE\fP
+Возвращается ограничение на размер файла (в блоках по 512 байтов).
+.TP 
+\fBUL_SETFSIZE\fP
+Устанавливается ограничение размера файла.
+.TP 
+\fB3\fP
+Возвращается максимально возможный адрес сегмента данных (не реализовано в
+Linux).
+.TP 
+\fB4\fP
+Возвращается максимальное количество файлов, которое может открыть
+вызывающий процесс (реализовано, но нет символической константы).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBulimit\fP возвращает неотрицательное число. В случае
+ошибки возвращается \-1, а значение \fIerrno\fP устанавливается соответствующим
+образом.
+.SH ОШИБКИ
+.TP 
+\fBEPERM\fP
+Непривилегированный процесс пытается увеличить лимит.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBulimit\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4, POSIX.1\-2001. В POSIX.1\-2008 функция \fBulimit\fP() помечена как
+устаревшая.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbash\fP(1), \fBgetrlimit\fP(2), \fBsetrlimit\fP(2), \fBsysconf\fP(3)

@@ -1,0 +1,144 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Mitchum DSouza <m.dsouza@mrc-applied-psychology.cambridge.ac.uk>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Thu Dec 13 22:51:19 2001 by Martin Schulze <joey@infodrom.org>
+.\" Modified 2001-12-14 aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CATOPEN 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+catopen, catclose \- открывает/закрывает каталог сообщений
+.SH ОБЗОР
+\fB#include <nl_types.h>\fP
+.PP
+\fBnl_catd catopen(const char *\fP\fIname\fP\fB, int \fP\fIflag\fP\fB);\fP
+.PP
+\fBint catclose(nl_catd \fP\fIcatalog\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функция \fBcatopen\fP() открывает каталог сообщений и возвращает дескриптор
+каталога. Дескриптор остаётся действительным до вызова \fBcatclose\fP() или
+\fBexecve\fP(2). Если для реализации дескрипторов каталогов используется
+файловый дескриптор, то для него будет установлен флаг \fBFD_CLOEXEC\fP.
+.PP
+В аргументе \fIname\fP указывается имя каталога сообщений, который необходимо
+открыть. Если в \fIname\fP задаётся абсолютный путь (т.е., содержащий символ
+\(aq/\(aq), то \fIname\fP определяет путь к каталогу сообщений. Иначе
+используется переменная окружения \fBNLSPATH\fP, в которой символ \fB%N\fP
+заменяется значением \fIname\fP (смотрите \fBlocale\fP(7)). Не определено, будет
+ли использоваться \fBNLSPATH\fP, если процесс имеет права root. Если \fBNLSPATH\fP
+отсутствует в окружении или если каталог сообщений не может быть открыт ни
+по одному из путей, указанных в этой переменной, то используется путь,
+зависящий от реализации. Он может зависеть от настройки локали
+\fBLC_MESSAGES\fP в случае, когда аргумент \fIflag\fP имеет значение
+\fBNL_CAT_LOCALE\fP или от переменной окружения \fBLANG\fP в случае, когда
+аргумент \fIflag\fP равен 0. Изменение части локали в \fBLC_MESSAGES\fP может
+привести к признанию дескрипторов открытых каталогов недействительными.
+.PP
+В аргументе \fI flag\fP функции \fBcatopen\fP() задаётся источник используемого
+языка. Если его значение равно \fBNL_CAT_LOCALE\fP, то для \fBLC_MESSAGES\fP будет
+использована текущая локаль. В противном случае будет использована
+переменная окружения \fBLANG\fP.
+.PP
+Функция \fBcatclose\fP() закрывает каталог сообщений, указанный в
+\fIcatalog\fP. Все последующие обращения к каталогу сообщений, определяемому
+\fIcatalog\fP, считаются ошибкой.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBcatopen\fP() возвращает дескриптор каталога
+сообщений типа \fInl_catd\fP. В случае ошибки она возвращает \fI(nl_catd)\ \-1\fP и
+устанавливает в \fIerrno\fP значение ошибки. Возможными кодами ошибок могут
+быть все, что и у вызова \fBopen\fP(2).
+.PP
+При успешном выполнении функция \fBcatclose\fP() возвращает 0, а в случае
+ошибки значение \-1.
+.SH ОКРУЖЕНИЕ
+.TP 
+\fBLC_MESSAGES\fP
+Может быть источником \fBLC_MESSAGES\fP для локали и, таким образом, определять
+используемый язык в случае, когда \fIflag\fP установлен в \fBNL_CAT_LOCALE\fP.
+.TP 
+\fBLANG\fP
+Язык, используемый в случае, когда \fIflag\fP равен 0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBcatopen\fP()
+T}	Безвредность в нитях	MT\-Safe env
+T{
+\fBcatclose\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" In XPG 1987, Vol. 3 it says:
+.\" .I "The flag argument of catopen is reserved for future use"
+.\" .IR "and should be set to 0" .
+.\"
+.\" It is unclear what the source was for the constants
+.\" .B MCLoadBySet
+.\" and
+.\" .B MCLoadAll
+.\" (see below).
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.\" (Compare
+.\" .B MCLoadAll
+.\" below.)
+.\" .SS Linux notes
+.\" These functions are available for Linux since libc 4.4.4c.
+.\" In the case of linux libc4 and libc5, the catalog descriptor
+.\" .I nl_catd
+.\" is a
+.\" .BR mmap (2)'ed
+.\" area of memory and not a file descriptor.
+.\" The
+.\" .I flag
+.\" argument to
+.\" .BR catopen ()
+.\" should be either
+.\" .B MCLoadBySet
+.\" (=0) or
+.\" .B MCLoadAll
+.\" (=1).
+.\" The former value indicates that a set from the catalog is to be
+.\" loaded when needed, whereas the latter causes the initial call to
+.\" .BR catopen ()
+.\" to load the entire catalog into memory.
+.\" The default search path varies, but usually looks at a number of places below
+.\" .I /etc/locale
+.\" and
+.\" .IR /usr/lib/locale .
+Описание выше соответствует POSIX.1. В glibc значение \fBNL_CAT_LOCALE\fP
+равно. Путь, используемый по умолчанию, варьируется, но, обычно,
+представляет собой различные подкаталоги \fI/usr/share/locale\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcatgets\fP(3), \fBsetlocale\fP(3)

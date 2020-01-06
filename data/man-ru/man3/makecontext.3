@@ -1,0 +1,196 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+
+.\" Copyright (C) 2001 Andries Brouwer (aeb@cwi.nl)
+.\" and Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2006-08-02, mtk, Added example program
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MAKECONTEXT 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+makecontext, swapcontext \- управляет пользовательским контекстом
+.SH ОБЗОР
+\fB#include <ucontext.h>\fP
+.PP
+\fBvoid makecontext(ucontext_t *\fP\fIucp\fP\fB, void (*\fP\fIfunc\fP\fB)(),\fP \fBint
+\fP\fIargc\fP\fB, ...);\fP
+.PP
+\fBint swapcontext(ucontext_t *\fP\fIoucp\fP\fB, const ucontext_t *\fP\fIucp\fP\fB);\fP
+.SH ОПИСАНИЕ
+В окружении, подобном SysV, имеется тип данных \fImcontext_t\fP, определённый в
+файле \fI<ucontext.h>\fP, и четыре функции — \fBgetcontext\fP(3),
+\fBsetcontext\fP(3), \fBmakecontext\fP() и \fBswapcontext\fP(), которые позволяют
+контексту пользовательского уровня переключаться между несколькими нитями
+внутри одного процесса.
+.PP
+Описание типа и первых двух функций смотрите в \fBgetcontext\fP(3).
+.PP
+Функция \fBmakecontext\fP() изменяет контекст, на который указывает \fIucp\fP
+(полученный из вызова \fBgetcontext\fP(3)). Перед вызовом \fBmakecontext\fP(),
+вызывающий должен выделить новый стек для этого контекста и присвоить его
+адрес \fIucp\->uc_stack\fP, и определить последующий контекст и присвоить
+его адрес \fIucp\->uc_link\fP.
+.PP
+Позднее, когда этот контекст активируется (с помощью \fBsetcontext\fP(3) или
+\fBswapcontext\fP()), вызывается функция \fIfunc\fP и ей передаётся набор
+целочисленных аргументов (\fIint\fP), указанных после \fIargc\fP; вызывающий
+должен указать количество этих аргументов в \fIargc\fP. После возврата из
+функции активируется последующий контекст. Если указатель последующего
+контекста равен NULL, то нить завершается.
+.PP
+Функция \fBswapcontext\fP() сохраняет текущий контекст в структуру, на которую
+указывает \fIoucp\fP, и после этого активирует контекст, на который указывает
+\fIucp\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBswapcontext\fP() не возвращает выполнение (но мы
+можем вернуться позднее при активации \fIoucp\fP и это будет выглядеть как если
+бы \fBswapcontext\fP() вернула 0). При ошибке \fBswapcontext\fP() возвращает \-1 и
+изменяет \fIerrno\fP соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBENOMEM\fP
+Осталось недостаточно стекового пространства.
+.SH ВЕРСИИ
+Функции \fBmakecontext\fP() и \fBswapcontext\fP() появились в glibc начиная с
+версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmakecontext\fP()
+T}	Безвредность в нитях	MT\-Safe race:ucp
+T{
+\fBswapcontext\fP()
+T}	Безвредность в нитях	MT\-Safe race:oucp race:ucp
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SUSv2, POSIX.1\-2001. В POSIX.1\-2008 удалены определения \fBmakecontext\fP() и
+\fBswapcontext\fP() со ссылкой на проблемы с переносимостью и рекомендацией
+переписать приложение с использование нитей POSIX.
+.SH ЗАМЕЧАНИЯ
+Назначение \fIucp\->uc_stack\fP подобно описанному в \fBsigaltstack\fP(2), а
+именно: данная структура содержит начало и размер области памяти, которая
+будет использоваться как стек, независимо от направления роста стека. То
+есть, в пользовательской программе нет необходимости учитывать это
+направление.
+.PP
+В архитектурах, где тип \fIint\fP и указатель имеют одинаковый размер
+(например, x86\-32, оба типа имеют размер 32 бита), вы можете передавать
+указатели в аргументах \fBmakecontext\fP() после \fIargc\fP. Однако, это не
+гарантирует переносимость, не определено в стандарте и не работает на
+архитектурах, где указатели больше \fIint\fP. Тем не менее, начиная с версии
+2.8, в glibc внесены изменения в \fBmakecontext\fP(), которые позволяют это и
+на некоторых 64\-битных архитектурах (например, x86\-64).
+.SH ПРИМЕР
+.PP
+В программе, показанной далее, демонстрируется использование
+\fBgetcontext\fP(3), \fBmakecontext\fP() и \fBswapcontext\fP(). Вот результат запуска
+этой программы:
+.PP
+.in +4n
+.EX
+$\fB ./a.out\fP
+main: swapcontext(&uctx_main, &uctx_func2)
+func2: запущена
+func2: swapcontext(&uctx_func2, &uctx_func1)
+func1: запущена
+func1: swapcontext(&uctx_func1, &uctx_func2)
+func2: возврат
+func1: возврат
+main: выход
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <ucontext.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+static ucontext_t uctx_main, uctx_func1, uctx_func2;
+
+#define handle_error(msg) \e
+    do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+static void
+func1(void)
+{
+    printf("func1: запущена\en");
+    printf("func1: swapcontext(&uctx_func1, &uctx_func2)\en");
+    if (swapcontext(&uctx_func1, &uctx_func2) == \-1)
+        handle_error("swapcontext");
+    printf("func1: возврат\en");
+}
+
+static void
+func2(void)
+{
+    printf("func2: запущена\en");
+    printf("func2: swapcontext(&uctx_func2, &uctx_func1)\en");
+    if (swapcontext(&uctx_func2, &uctx_func1) == \-1)
+        handle_error("swapcontext");
+    printf("func2: возврат\en");
+}
+
+int
+main(int argc, char *argv[])
+{
+    char func1_stack[16384];
+    char func2_stack[16384];
+
+    if (getcontext(&uctx_func1) == \-1)
+        handle_error("getcontext");
+    uctx_func1.uc_stack.ss_sp = func1_stack;
+    uctx_func1.uc_stack.ss_size = sizeof(func1_stack);
+    uctx_func1.uc_link = &uctx_main;
+    makecontext(&uctx_func1, func1, 0);
+
+    if (getcontext(&uctx_func2) == \-1)
+        handle_error("getcontext");
+    uctx_func2.uc_stack.ss_sp = func2_stack;
+    uctx_func2.uc_stack.ss_size = sizeof(func2_stack);
+    /* последующий контекст — f1(), если argc > 1 */
+    uctx_func2.uc_link = (argc > 1) ? NULL : &uctx_func1;
+    makecontext(&uctx_func2, func2, 0);
+
+    printf("main: swapcontext(&uctx_main, &uctx_func2)\en");
+    if (swapcontext(&uctx_main, &uctx_func2) == \-1)
+        handle_error("swapcontext");
+
+    printf("main: выход\en");
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsigaction\fP(2), \fBsigaltstack\fP(2), \fBsigprocmask\fP(2), \fBgetcontext\fP(3),
+\fBsigsetjmp\fP(3)

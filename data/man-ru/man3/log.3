@@ -1,0 +1,122 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified 1993-07-24 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 1995-08-14 by Arnt Gulbrandsen <agulbra@troll.no>
+.\" Modified 2002-07-27 by Walter Harms
+.\" 	(walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LOG 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+log, logf, logl \- функция вычисления натурального логарифма
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble log(double \fP\fIx\fP\fB);\fP
+\fBfloat logf(float \fP\fIx\fP\fB);\fP
+\fBlong double logl(long double \fP\fIx\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBlogf\fP(), \fBlogl\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Данные функции возвращают натуральный логарифм от \fIx\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные функции возвращают натуральный логарифм от
+\fIx\fP.
+.PP
+Если \fIx\fP равно NaN, будет возвращено NaN.
+.PP
+Если \fIx\fP равно 1, результат будет +0.
+.PP
+Если \fIx\fP стремится к плюс бесконечности, то будет возвращена плюс
+бесконечность.
+.PP
+Если \fIx\fP равно нулю, возникнет ошибка особой точки, и функция вернет
+\-\fBHUGE_VAL\fP, \-\fBHUGE_VALF\fP или \-\fBHUGE_VALL\fP, соответственно.
+.PP
+Если \fIx\fP отрицательно (включая минус бесконечность), то будет сгенерирована
+ошибка области, и будет возвращено NaN (Not a Number, не число).
+.SH ОШИБКИ
+Смотрите \fBmath_error\fP(7), чтобы определить, какие ошибки могут возникать
+при вызове этих функций.
+.PP
+Могут возникать следующие ошибки:
+.TP 
+Ошибка области: \fIx\fP является отрицательным
+\fIerrno\fP устанавливается в \fBEDOM\fP. Вызывается исключение неправильной
+плавающей точки (\fBFE_INVALID\fP).
+.TP 
+Ошибка особой точки: \fIx\fP равен нулю
+\fIerrno\fP устанавливается в \fBERANGE\fP. Возникает исключение деления плавающей
+точки на ноль (\fBFE_DIVBYZERO\fP).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBlog\fP(),
+\fBlogf\fP(),
+\fBlogl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.PP
+Вариант, возвращающий значение типа \fIdouble\fP, также соответствует SVr4,
+4.3BSD, C89.
+.SH ДЕФЕКТЫ
+В версии glibc 2.5 и ниже значение \fBlog\fP() от NaN ошибочно производила
+исключение неправильной плавающей запятой (\fBFE_INVALID\fP).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcbrt\fP(3), \fBclog\fP(3), \fBlog10\fP(3), \fBlog1p\fP(3), \fBlog2\fP(3), \fBsqrt\fP(3)

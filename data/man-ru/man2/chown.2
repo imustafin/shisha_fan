@@ -1,0 +1,351 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\" and Copyright (c) 1998 Andries Brouwer (aeb@cwi.nl)
+.\" and Copyright (c) 2006, 2007, 2008, 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified 1993-07-21 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-07-09 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 1996-11-06 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1997-05-18 by Michael Haardt <michael@cantor.informatik.rwth-aachen.de>
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" 2007-07-08, mtk, added an example program; updated SYNOPSIS
+.\" 2008-05-08, mtk, Describe rules governing ownership of new files
+.\"     (bsdgroups versus sysvgroups, and the effect of the parent
+.\"     directory's set-group-ID mode bit).
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CHOWN 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+chown, fchown, lchown, fchownat \- изменяет владельца файла
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBint chown(const char *\fP\fIpathname\fP\fB, uid_t \fP\fIowner\fP\fB, gid_t \fP\fIgroup\fP\fB);\fP
+\fBint fchown(int \fP\fIfd\fP\fB, uid_t \fP\fIowner\fP\fB, gid_t \fP\fIgroup\fP\fB);\fP
+\fBint lchown(const char *\fP\fIpathname\fP\fB, uid_t \fP\fIowner\fP\fB, gid_t \fP\fIgroup\fP\fB);\fP
+
+\fB#include <fcntl.h>           \fP/* определения констант of AT_* */
+\fB#include <unistd.h>\fP
+.PP
+\fBint fchownat(int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB,\fP
+\fB             uid_t \fP\fIowner\fP\fB, gid_t \fP\fIgroup\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfchown\fP(), \fBlchown\fP():
+.PD 0
+.ad l
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+/* начиная с glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+    || _XOPEN_SOURCE\ >=\ 500
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE
+.RE
+.PP
+\fBfchownat\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_ATFILE_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+Данные системные вызовы изменяют владельца и группу для файла. Системные
+вызовы \fBchown\fP(), \fBfchown\fP() и \fBlchown\fP() отличаются только в том, каким
+образом задается файл:
+.IP * 2
+\fBchown\fP() изменяет владельца для файла, задаваемого параметром \fIpathname\fP,
+который разыменовывается, если является символьной ссылкой.
+.IP *
+\fBfchown\fP() изменяет владельца для файла, задаваемого открытым файловым
+дескриптором \fIfd\fP.
+.IP *
+\fBlchown\fP() похож на \fBchown\fP() за исключением того, что он не
+разыменовывает символьные ссылки.
+.PP
+Только привилегированный процесс (Linux: имеющий мандат \fBCAP_CHOWN\fP) может
+сменить владельца файла. Владелец файла может сменить группу файла на любую
+группу, в которой он числится. Привилегированный процесс (Linux: с
+\fBCAP_CHOWN\fP) может задавать произвольную группу.
+.PP
+Если параметр \fIowner\fP или \fIgroup\fP равен \-1, то соответствующий
+идентификатор не изменяется.
+.PP
+.\" In Linux 2.0 kernels, superuser was like everyone else
+.\" In 2.2, up to 2.2.12, these bits were not cleared for superuser.
+.\" Since 2.2.13, superuser is once more like everyone else.
+Когда владелец или группа исполняемого файла изменяется непривилегированным
+пользователем, то биты режима \fBS_ISUID\fP и \fBS_ISGID\fP сбрасываются В POSIX
+не указано, должно ли это происходить если \fBchown\fP() выполняется
+суперпользователем; поведение в Linux зависит от версии ядра и начиная с
+Linux 2.2.13, root рассматривается как обычный пользователь. В случае
+исполняемого файла вне группы (т. е., у которого не установлен бит
+\fBS_IXGRP\fP) бит \fBS_ISGID\fP указывает на обязательную блокировку, и не
+сбрасывается при выполнении \fBchown\fP().
+.PP
+.\"
+Когда владелец или группа исполняемого файла изменяется (любым
+пользователем), то все наборы мандатов файла очищаются.
+.SS fchownat()
+Системный вызов \fBfchownat\fP() работает также как системный вызов \fBchown\fP(),
+за исключением случаев, описанных здесь.
+.PP
+Если в \fIpathname\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBchown\fP()).
+.PP
+Если в \fIpathname\fP задан относительный путь и \fIdirfd\fP равно специальному
+значению \fBAT_FDCWD\fP, то \fIpathname\fP рассматривается относительно текущего
+рабочего каталога вызывающего процесса (как \fBchown\fP()).
+.PP
+Если в \fIpathname\fP задан абсолютный путь, то \fIdirfd\fP игнорируется.
+.PP
+Аргумент \fIflags\fP представляет собой битовую маску, создаваемую побитовым
+сложением (OR) следующих значений;
+.TP 
+\fBAT_EMPTY_PATH\fP (начиная с Linux 2.6.39)
+.\" commit 65cfc6722361570bfe255698d9cd4dccaf47570d
+.\" Before glibc 2.16, defining _ATFILE_SOURCE sufficed
+Если значение \fIpathname\fP равно пустой строке, то выполнять действие над
+файлом, на который указывает \fIdirfd\fP (который может быть получен с помощью
+\fBopen\fP(2) с флагом \fBO_PATH\fP). В этом случае, \fIdirfd\fP может указывать на
+файл любого типа, а не только на каталог. Если \fIdirfd\fP равно \fBAT_FDCWD\fP,
+то вызов выполняет действие над текущим рабочим каталогом. Этот флаг есть
+только в Linux; для получения его определения определите \fB_GNU_SOURCE\fP.
+.TP 
+\fBAT_SYMLINK_NOFOLLOW\fP
+Если значение \fIpathname\fP является символьной ссылкой, не разыменовывать её,
+а изменить владельца самой ссылки, как это делается в \fBlchown\fP() (по
+умолчанию, \fBfchownat\fP() разыменовывает символьные ссылки как и \fBchown\fP()).
+.PP
+Смотрите в \fBopenat\fP(2) объяснение необходимости \fBfchownat\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+В зависимости от файловой системы могут также возвращаться другие ошибки,
+перечисленные далее.
+.PP
+Наиболее распространённые ошибки \fBchown\fP() перечислены далее.
+.TP 
+\fBEACCES\fP
+Поиск запрещён из\-за одного из частей префикса пути (См. также
+\fBpath_resolution\fP(7).)
+.TP 
+\fBEFAULT\fP
+Аргумент \fIpathname\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBELOOP\fP
+Во время определения \fIpathname\fP встретилось слишком много символьных
+ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fIpathname\fP.
+.TP 
+\fBENOENT\fP
+Файл не существует.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOTDIR\fP
+Компонент в префиксе пути не является каталогом.
+.TP 
+\fBEPERM\fP
+Вызывающий процесс не имеет требуемых прав (см. выше), чтобы изменять
+владельца и/или группу.
+.TP 
+\fBEPERM\fP
+Файл помечен как неизменяемый (immutable) или только для добавления
+(смотрите \fBioctl_iflags\fP(2)).
+.TP 
+\fBEROFS\fP
+Указанный файл находится на файловой системе, смонтированной только для
+чтения.
+.PP
+Общие ошибки \fBfchown\fP() таковы:
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным открытым файловым дескриптором.
+.TP 
+\fBEIO\fP
+Во время изменения индексного дескриптора (inode) возникла низкоуровневая
+ошибка ввода/вывода.
+.TP 
+\fBENOENT\fP
+См. выше.
+.TP 
+\fBEPERM\fP
+См. выше.
+.TP 
+\fBEROFS\fP
+См. выше.
+.PP
+В \fBfchownat\fP() могут возникнуть те же ошибки, что и в \fBchown\fP(). Также, в
+\fBfchownat\fP() могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+Значение \fIdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+Указано неверное значение в \fIflags\fP.
+.TP 
+\fBENOTDIR\fP
+Значение \fIpathname\fP содержит относительный путь и \fIdirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог.
+.SH ВЕРСИИ
+Вызов \fBfchownat\fP() был добавлен в ядро Linux версии 2.6.16; поддержка в
+glibc доступна с версии 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBchown\fP(), \fBfchown\fP(), \fBlchown\fP(): 4.4BSD, SVr4, POSIX.1\-2001,
+POSIX.1\-2008.
+.PP
+.\" chown():
+.\" SVr4 documents EINVAL, EINTR, ENOLINK and EMULTIHOP returns, but no
+.\" ENOMEM.  POSIX.1 does not document ENOMEM or ELOOP error conditions.
+.\" fchown():
+.\" SVr4 documents additional EINVAL, EIO, EINTR, and ENOLINK
+.\" error conditions.
+Версия из 4.4BSD может использоваться только суперпользователем (то есть,
+обычные пользователи не могут менять владельцев).
+.PP
+\fBfchownat\fP(): POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.SS "Назначение владельца новых файлов"
+При создании нового файла (например, с помощью \fBopen\fP(2) или \fBmkdir\fP(2)),
+его владельцем будет установлен ID пользователя из файловой системы
+создающего процесса. Группа файла зависит от нескольких факторов, включая
+тип файловой системы, параметры монтирования и установлен ли бит режима
+set\-group\-ID на родительском каталоге. Если файловая система поддерживает
+параметры \fBmount\fP(8) \fB\-o\ grpid\fP (тоже что и \fB\-o\ bsdgroups\fP) и \fB\-o\ nogrpid\fP (тоже что и \fB\-o\ sysvgroups\fP), то правила следующие:
+.IP * 2
+Если файловая система смонтирована с параметром \fB\-o\ grpid\fP, то группой
+нового файла будет группа родительского каталога.
+.IP *
+Если файловая система смонтирована с параметром \fB\-o\ nogrpid\fP и у
+родительского каталога нет бита set\-group\-ID, то группой нового файла будет
+GID файловой системы того же процесса.
+.IP *
+Если файловая система смонтирована с параметром \fB\-o\ nogrpid\fP и на
+родительском каталоге установлен бит set\-group\-ID, то группой нового файла
+будет группа родительского каталога.
+.PP
+Начиная с Linux 4.12, параметры монтирования \fB\-o\ grpid\fP и \fB\-o\ nogrpid\fP
+поддерживаются для ext2, ext3, ext4 и XFS. Для файловых систем, не
+поддерживающих эти параметры монтирования, используются правила как для
+\fB\-o\ nogrpid\fP.
+.SS "Замечания по glibc"
+В старых ядрах, где \fBfchownat\fP() отсутствует, обёрточная функция glibc
+использует \fBchown\fP() или \fBlchown\fP(). Если \fIpathname\fP является
+относительным путём, то glibc собирает путь относительно символической
+ссылки в \fI/proc/self/fd\fP, которая соответствует аргументу \fIdirfd\fP.
+.SS NFS
+Семантика \fBchown\fP() сознательно нарушается в файловых системах NFS, в
+которых включено отображение UID. Также, нарушается семантика всех системных
+вызовов, которые обеспечивают доступ к содержимому файлов, так как
+\fBchown\fP() может привести к немедленному отзыву доступа к уже открытым
+файлам. Кэширование на клиентской стороне может привести к задержке между
+сменой доступа пользователю и временем, когда файл действительно станет
+доступным.
+.SS "Историческая справка"
+Первоначальные версии системных вызовов \fBchown\fP(), \fBfchown\fP() и
+\fBlchown\fP() в Linux поддерживали только 16\-битные идентификаторы
+пользователей и групп. Позднее в Linux 2.4 были добавлены вызовы
+\fBchown32\fP(), \fBfchown32\fP() и \fBlchown32\fP(), поддерживающие 32\-битные
+идентификаторы. В glibc обёрточные функции \fBchown\fP(), \fBfchown\fP() и
+\fBlchown\fP() работают одинаково вне зависимости от версий ядра.
+.PP
+В версиях Linux до 2.1.81 (кроме 2.1.46) \fBchown\fP() не следовал по
+символьным ссылкам. Начиная с версии Linux 2.1.81 \fBchown\fP() следует по
+символьным ссылкам, и существует новый системный вызов \fBlchown\fP(), который
+не следует по символьным ссылкам. Начиная с Linux 2.1.86 этот новый вызов
+(имеющий тот же смысл, что и старый \fBchown\fP()) имеет тот же самый номер
+системного вызова, а \fBchown\fP() получил новый номер.
+.SH ПРИМЕР
+.PP
+Следующая программа изменять владельца файла, указанного вторым в командной
+строке, на значение, указанное в первом аргументе командной строки. Новый
+владелец может задаваться в виде числового пользовательского ID, или в виде
+имени пользователя (которое преобразуется в пользовательский ID с помощью
+\fBgetpwnam\fP(3), выполняющего поиск в системном файле паролей).
+.SS "Исходный код программы"
+.EX
+#include <pwd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int
+main(int argc, char *argv[])
+{
+    uid_t uid;
+    struct passwd *pwd;
+    char *endptr;
+
+    if (argc != 3 || argv[1][0] == \(aq\e0\(aq) {
+        fprintf(stderr, "%s <owner> <file>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    uid = strtol(argv[1], &endptr, 10);  /* Allow a numeric string */
+
+    if (*endptr != \(aq\e0\(aq) {         /* Was not pure numeric string */
+        pwd = getpwnam(argv[1]);   /* Try getting UID for username */
+        if (pwd == NULL) {
+            perror("getpwnam");
+            exit(EXIT_FAILURE);
+        }
+
+        uid = pwd\->pw_uid;
+    }
+
+    if (chown(argv[2], uid, \-1) == \-1) {
+        perror("chown");
+        exit(EXIT_FAILURE);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchgrp\fP(1), \fBchown\fP(1), \fBchmod\fP(2), \fBflock\fP(2), \fBpath_resolution\fP(7),
+\fBsymlink\fP(7)

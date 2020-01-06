@@ -1,0 +1,50 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2000 Christoph J. Thompson <obituary@linuxbe.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_MISC)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FTPUSERS 5 2000\-08\-27 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ftpusers \- список пользователей, не имеющих доступа к службе FTP
+.SH ОПИСАНИЕ
+Текстовый файл \fBftpusers\fP содержит список пользователей, которые не могут
+войти на сервер по протоколу передачи файлов (FTP). Этот файл используется
+не только в целях администрирования системы, но и для улучшения безопасности
+в сетевой среде TCP/IP.
+.PP
+Обычно, файл \fBftpusers\fP содержит список пользователей, которые не
+пользуются ftp или имеют слишком много прав, позволяющих получить доступ
+через службу сервера FTP. Такими пользователями, обычно, являются root,
+daemon, bin, uucp и news.
+.PP
+Если сервер FTP не использует \fBftpusers\fP, то рекомендуется прочитать его
+документацию, чтобы найти способ блокирования определённых
+пользователей. Сервер Washington University FTP Daemon (wuftpd) и
+Professional FTP Daemon (proftpd) умеют обращаться с \fBftpusers\fP.
+.SS Формат
+Формат \fBftpusers\fP очень прост. Он содержит по одному имени учётной записи
+(или имени пользователя) в каждой строке. Строки, начинающиеся с #
+игнорируются.
+.SH ФАЙЛЫ
+\fI/etc/ftpusers\fP
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpasswd\fP(5), \fBproftpd\fP(8), \fBwuftpd\fP(8)

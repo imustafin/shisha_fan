@@ -1,0 +1,66 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" %%%LICENSE_START(PUBLIC_DOMAIN)
+.\" This text is in the public domain.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NFSSERVCTL 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+nfsservctl \- интерфейс syscall к ядерной службе nfs
+.SH ОБЗОР
+.nf
+\fB#include <linux/nfsd/syscall.h>\fP
+.PP
+\fBlong nfsservctl(int \fP\fIcmd\fP\fB, struct nfsctl_arg *\fP\fIargp\fP\fB,\fP
+\fB                union nfsctl_res *\fP\fIresp\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fIЗамечание\fP: Начиная с Linux 3.1, данный системный вызов больше не
+существует. Он был заменён набором файлов в файловой системе \fInfsd\fP;
+смотрите \fBnfsd\fP(7).
+.PP
+.in +4n
+.EX
+/*
+ * Эти команды понимает nfsctl()
+ */
+#define NFSCTL_SVC        0  /* это серверный процесс */
+#define NFSCTL_ADDCLIENT  1  /* добавить клиента NFS */
+#define NFSCTL_DELCLIENT  2  /* удалить клиента NFS */
+#define NFSCTL_EXPORT     3  /* экспортировать файловую систему */
+#define NFSCTL_UNEXPORT   4  /* снять экспорт файловой системы */
+#define NFSCTL_UGIDUPDATE 5  /* обновить карту клиентов UID/GID
+                                (только в Linux 2.4.x и старее) */
+#define NFSCTL_GETFH      6  /* получить описатель файла (используется mountd)
+                                (только в Linux 2.4.x и старее). */
+
+struct nfsctl_arg {
+    int                       ca_version;     /* защитная мера */
+    union {
+        struct nfsctl_svc     u_svc;
+        struct nfsctl_client  u_client;
+        struct nfsctl_export  u_export;
+        struct nfsctl_uidmap  u_umap;
+        struct nfsctl_fhparm  u_getfh;
+        unsigned int          u_debug;
+    } u;
+}
+
+union nfsctl_res {
+        struct knfs_fh          cr_getfh;
+        unsigned int            cr_debug;
+};
+.EE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ВЕРСИИ
+Данный системный вызов был удалён из ядра Linux в версии 3.1. Поддержка в
+библиотеке glibc была удалена в версии 2.28.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов существует только в Linux.

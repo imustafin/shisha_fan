@@ -1,0 +1,195 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2016 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_GETATTR_DEFAULT_NP 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_getattr_default_np, pthread_setattr_default_np \- возврат или
+изменение атрибутов создания нити по умолчанию
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_getattr_default_np(pthread_attr_t *\fP\fIattr\fP\fB);\fP
+\fBint pthread_setattr_default_np(pthread_attr_t *\fP\fIattr\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_setattr_default_np\fP() изменяет атрибуты по умолчанию,
+используемые при создании новой нити — то есть атрибуты, которые
+используются при вызове \fBpthread_create\fP(3) со вторым аргументом, равным
+NULL. Атрибуты по умолчанию изменяются в соответствии с атрибутами,
+переданными в \fI*attr\fP — объекте атрибутов нити, инициализированном
+ранее. Вот, что нужно знать об объекте атрибутов:
+.IP * 3
+Значения атрибутов в объекте должны быть корректными.
+.IP *
+Атрибут \fIstack address\fP не должен быть указан в объекте.
+.IP *
+Значение нуля в \fIstack size\fP означает, что размер стека по умолчанию
+остаётся без изменения.
+.PP
+Функция \fBpthread_getattr_default_np\fP() инициализирует объект атрибутов
+нити, на который указывает \fIattr\fP, так, что он содержит значения атрибутов
+по умолчанию, использованные при создании нити.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+(\fBpthread_setattr_default_np\fP()) Одно из значений атрибутов в \fIattr\fP
+неверно или в \fIattr\fP изменён атрибут адреса стека.
+.TP 
+\fBENOMEM\fP
+.\" Can happen (but unlikely) while trying to allocate memory for cpuset
+(\fBpthread_setattr_default_np\fP())  Недостаточно памяти.
+.SH ВЕРСИИ
+Эти функции доступны в glibc начиная с версии 2.18.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw30 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_getattr_default_np\fP(),
+\fBpthread_setattr_default_np\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции являются не стандартизированными расширениями GNU, о чём
+свидетельствует наличие суффикса «_np» (nonportable).
+.SH ПРИМЕР
+В программе, показанной далее, используется \fBpthread_getattr_default_np()\fP
+для получения атрибутов создания нити по умолчанию, а затем выводятся
+различные параметры полученного объекта. Вывод работы программы:
+.PP
+.in +4n
+.EX
+$ \fB./a.out\fP
+Размер стека:          8388608
+Размер защиты:          4096
+Алгоритм планирования:   SCHED_OTHER
+Приоритет планирования: 0
+Состояние отсоединения:        JOINABLE
+Наследование планировщика:   INHERIT
+.EE
+.in
+.PP
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+
+#define errExitEN(en, msg) \e
+                        do { errno = en; perror(msg); \e
+                             exit(EXIT_FAILURE); } while (0)
+
+static void
+display_pthread_attr(pthread_attr_t *attr)
+{
+    int s;
+    size_t stacksize;
+    size_t guardsize;
+    int policy;
+    struct sched_param schedparam;
+    int detachstate;
+    int inheritsched;
+
+    s = pthread_attr_getstacksize(attr, &stacksize);
+    if (s != 0)
+        errExitEN(s, "pthread_attr_getstacksize");
+    printf("Размер стека:          %zd\en", stacksize);
+
+    s = pthread_attr_getguardsize(attr, &guardsize);
+    if (s != 0)
+        errExitEN(s, "pthread_attr_getguardsize");
+    printf("Размер защиты:          %zd\en", guardsize);
+
+    s = pthread_attr_getschedpolicy(attr, &policy);
+    if (s != 0)
+        errExitEN(s, "pthread_attr_getschedpolicy");
+    printf("Алгоритм планирования:   %s\en",
+            (policy == SCHED_FIFO) ? "SCHED_FIFO" :
+            (policy == SCHED_RR) ? "SCHED_RR" :
+            (policy == SCHED_OTHER) ? "SCHED_OTHER" : "[неизвестно]");
+
+    s = pthread_attr_getschedparam(attr, &schedparam);
+    if (s != 0)
+        errExitEN(s, "pthread_attr_getschedparam");
+    printf("Приоритет планирования: %d\en", schedparam.sched_priority);
+
+    s = pthread_attr_getdetachstate(attr, &detachstate);
+    if (s != 0)
+        errExitEN(s, "pthread_attr_getdetachstate");
+    printf("Состояние отсоединения:        %s\en",
+            (detachstate == PTHREAD_CREATE_DETACHED) ? "DETACHED" :
+            (detachstate == PTHREAD_CREATE_JOINABLE) ? "JOINABLE" :
+            "???");
+
+    s = pthread_attr_getinheritsched(attr, &inheritsched);
+    if (s != 0)
+        errExitEN(s, "pthread_attr_getinheritsched");
+    printf("Наследование планировщика:   %s\en",
+            (inheritsched == PTHREAD_INHERIT_SCHED) ? "INHERIT" :
+            (inheritsched == PTHREAD_EXPLICIT_SCHED) ? "EXPLICIT" :
+            "???");
+}
+
+int
+main(int argc, char *argv[])
+{
+    int s;
+    pthread_attr_t attr;
+
+    s = pthread_getattr_default_np(&attr);
+    if (s != 0)
+        errExitEN(s, "pthread_getattr_default_np");
+
+    display_pthread_attr(&attr);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBpthread_attr_getaffinity_np\fP(3), \fBpthread_attr_getdetachstate\fP(3),
+\fBpthread_attr_getguardsize\fP(3), \fBpthread_attr_getinheritsched\fP(3),
+\fBpthread_attr_getschedparam\fP(3), \fBpthread_attr_getschedpolicy\fP(3),
+\fBpthread_attr_getscope\fP(3), \fBpthread_attr_getstack\fP(3),
+\fBpthread_attr_getstackaddr\fP(3), \fBpthread_attr_getstacksize\fP(3),
+\fBpthread_attr_init\fP(3), \fBpthread_create\fP(3), \fBpthreads\fP(7)

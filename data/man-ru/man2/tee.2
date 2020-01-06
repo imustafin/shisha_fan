@@ -1,0 +1,177 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 2006 Jens Axboe
+.\" and Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TEE 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+tee \- повторяет содержимое канала
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+\fB#include <fcntl.h>\fP
+.PP
+\fBssize_t tee(int \fP\fIfd_in\fP\fB, int \fP\fIfd_out\fP\fB, size_t \fP\fIlen\fP\fB, unsigned int \fP\fIflags\fP\fB);\fP
+.fi
+.\" Return type was long before glibc 2.7
+.SH ОПИСАНИЕ
+.\" Example programs http://brick.kernel.dk/snaps
+.\"
+.\"
+.\" add a "tee(in, out1, out2)" system call that duplicates the pages
+.\" (again, incrementing their reference count, not copying the data) from
+.\" one pipe to two other pipes.
+Вызов \fBtee\fP() повторяет до \fIlen\fP байт данных из канала, на который
+указывает файловый дескриптор \fIfd_in\fP в канал, на который указывает
+файловый дескриптор \fIfd_out\fP. Он не потребляет данные, копируемые из
+\fIfd_in\fP, поэтому эти данные можно копировать последующим вызовом
+\fBsplice\fP(2).
+.PP
+Аргумент \fIflags\fP представляет собой битовую маску, которая составляется
+логическим сложением (OR) следующих значений:
+.TP  1.9i
+\fBSPLICE_F_MOVE\fP
+В данный момент никак не влияет при указании в \fBtee\fP(); см. \fBsplice\fP(2).
+.TP 
+\fBSPLICE_F_NONBLOCK\fP
+Не блокировать ввод\-вывод; подробности в \fBsplice\fP(2).
+.TP 
+\fBSPLICE_F_MORE\fP
+В данный момент никак не влияет при указании в \fBtee\fP(), но это может
+измениться; см. \fBsplice\fP(2).
+.TP 
+\fBSPLICE_F_GIFT\fP
+Не используется для \fBtee\fP(); см. \fBvmsplice\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении, \fBtee\fP() возвращает количество байт, которые были
+повторены из ввода в выводе. Возвращаемое значение 0 означает, что нет
+данных для передачи, и блокировка не имеет смысла, так как нет
+процессов\-писателей, подключённых к каналу для записи, на который указывает
+\fIfd_in\fP.
+.PP
+В случае ошибки \fBtee\fP() возвращает \-1, а \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+В \fIflags\fP указан \fBSPLICE_F_NONBLOCK\fP или один из файловых дескрипторов был
+помечен как неблокирующий (\fBO_NONBLOCK\fP)\fB,\fP и операция вызвала бы
+блокировку.
+.TP 
+\fBEINVAL\fP
+Значение \fIfd_in\fP или \fIfd_out\fP не указывает на канал; \fIfd_in\fP и \fIfd_out\fP
+указывают на один и тот же канал.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти.
+.SH ВЕРСИИ
+Системный вызов \fBtee\fP() впервые появился в Linux 2.6.17; поддержка в glibc
+добавлена в версии 2.5.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Концептуально, \fBtee\fP() копирует данные между двумя каналами. В реальности,
+данные не копируются на самом деле: внутри, \fBtee\fP() назначает данные на
+вывод просто схватывая ссылку из ввода.
+.SH ПРИМЕР
+В примере далее показана простая реализация программы \fBtee\fP(1) с помощью
+системного вызова \fBtee\fP(). Пример использования:
+.PP
+.in +4n
+.EX
+$ \fBdate |./a.out out.log | cat\fP
+Tue Oct 28 10:06:00 CET 2014
+$ \fBcat out.log\fP
+Tue Oct 28 10:06:00 CET 2014
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <limits.h>
+
+int
+main(int argc, char *argv[])
+{
+    int fd;
+    int len, slen;
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s <файл>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    fd = open(argv[1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd == \-1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    do {
+        /*
+         * перекладывать из stdin в stdout.
+         */
+        len = tee(STDIN_FILENO, STDOUT_FILENO,
+                  INT_MAX, SPLICE_F_NONBLOCK);
+
+        if (len < 0) {
+            if (errno == EAGAIN)
+                continue;
+            perror("tee");
+            exit(EXIT_FAILURE);
+        } else
+            if (len == 0)
+                break;
+
+        /*
+         * Поглотить stdin, объединяя данные в файле.
+         */
+        while (len > 0) {
+            slen = splice(STDIN_FILENO, NULL, fd, NULL,
+                          len, SPLICE_F_MOVE);
+            if (slen < 0) {
+                perror("splice");
+                break;
+            }
+            len \-= slen;
+        }
+    } while (1);
+
+    close(fd);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsplice\fP(2), \fBvmsplice\fP(2), \fBpipe\fP(7)

@@ -1,0 +1,129 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" This was done with the help of the glibc manual.
+.\"
+.\" 2004-10-31, aeb, corrected
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FPCLASSIFY 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+fpclassify, isfinite, isnormal, isnan, isinf \- макросы классификации чисел с
+плавающей запятой
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBint fpclassify(\fP\fIx\fP\fB);\fP
+.PP
+\fBint isfinite(\fP\fIx\fP\fB);\fP
+.PP
+\fBint isnormal(\fP\fIx\fP\fB);\fP
+.PP
+\fBint isnan(\fP\fIx\fP\fB);\fP
+.PP
+\fBint isinf(\fP\fIx\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.\" I haven't fully grokked the source to determine the FTM requirements;
+.\" in part, the following has been tested by experiment.
+.ad l
+\fBfpclassify\fP(), \fBisfinite\fP(), \fBisnormal\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+.RE
+\fBisnan\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || _XOPEN_SOURCE
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+\fBisinf\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+У чисел с плавающей запятой есть специальные значения, например для
+бесконечности или NaN. С помощью макроса \fBfpclassify(\fP\fIx\fP\fB)\fP вы можете
+выяснить тип \fIx\fP. В качестве аргумента макрос принимает любое выражение с
+плавающей запятой. Результатом будет одно из следующих значений:
+.TP  14
+\fBFP_NAN\fP
+Значение \fIx\fP не является числом («Not a Number»).
+.TP 
+\fBFP_INFINITE\fP
+Значение \fIx\fP стремится к плюс или минус бесконечности.
+.TP 
+\fBFP_ZERO\fP
+Значение \fIx\fP равно нулю.
+.TP 
+\fBFP_SUBNORMAL\fP
+Значение \fIx\fP слишком мало для представления в нормализованном формате.
+.TP 
+\fBFP_NORMAL\fP
+Если значение не равно ни одному из вышеперечисленных, то это обычное число
+с плавающей запятой.
+.PP
+Остальные макросы предоставляют короткие ответы на некоторые стандартные
+вопросы.
+.TP  14
+\fBisfinite(\fP\fIx\fP\fB)\fP
+возвращает ненулевое значение, если
+.br
+(fpclassify(x) != FP_NAN && fpclassify(x) != FP_INFINITE)
+.TP 
+\fBisnormal(\fP\fIx\fP\fB)\fP
+возвращает ненулевое значение, если (fpclassify(x) == FP_NORMAL)
+.TP 
+\fBisnan(\fP\fIx\fP\fB)\fP
+возвращает ненулевое значение, если (fpclassify(x) == FP_NAN)
+.TP 
+\fBisinf(\fP\fIx\fP\fB)\fP
+возвращает 1, если \fIx\fP равно положительной бесконечности и \-1, если \fIx\fP
+равно отрицательной бесконечности.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw28 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBfpclassify\fP(),
+\fBisfinite\fP(),
+\fBisnormal\fP(),
+\fBisnan\fP(),
+\fBisinf\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.PP
+Про \fBisinf\fP() в стандартах лишь сказано, что этот макрос возвращает
+ненулевое значение, если только аргумент равен бесконечности.
+.SH ЗАМЕЧАНИЯ
+В glibc 2.01 и более ранних \fBisinf\fP() возвращает ненулевое значение (а
+именно 1), если \fIx\fP равно положительной или отрицательной бесконечности
+(это всё, что требует C99).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfinite\fP(3), \fBINFINITY\fP(3), \fBisgreater\fP(3), \fBsignbit\fP(3)

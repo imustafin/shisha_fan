@@ -1,0 +1,59 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt (michael@moria.de),
+.\"     Thu May 20 20:45:48 MET DST 1993
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 17:11:07 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Sun Nov 21 10:49:38 1993 by Michael Haardt
+.\" Modified Sun Feb 26 15:09:15 1995 by Rik Faith (faith@cs.unc.edu)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SHELLS 5 2017\-11\-26 "" "Руководство программиста Linux"
+.SH ИМЯ
+shells \- полные имена файлов разрешённых входных оболочек
+.SH ОПИСАНИЕ
+\fI/etc/shells\fP \- это текстовый файл, содержащий полные имена файлов
+разрешённых входных оболочек. Этот файл учитывается \fBchsh\fP(1)  и может быть
+затребован другими программами.
+.PP
+Удостоверьтесь, что те программы, которые учитывают этот файл, если
+пользователь является обычным пользователем; например, службы FTP, обычно,
+отключают доступ для тех пользователей, входные оболочки которых не указаны
+в этом файле.
+.SH ФАЙЛЫ
+\fI/etc/shells\fP
+.SH ПРИМЕР
+\fI/etc/shells\fP может содержать следующие пути:
+.PP
+.in +4n
+.EX
+\fI/bin/sh\fP
+\fI/bin/bash\fP
+\fI/bin/csh\fP
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchsh\fP(1), \fBgetusershell\fP(3), \fBpam_shells\fP(8)

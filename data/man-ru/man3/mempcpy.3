@@ -1,0 +1,71 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\" Heavily based on glibc infopages, copyright Free Software Foundation
+.\"
+.\" aeb, 2003, polished a little
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MEMPCPY 3 2015\-03\-02 GNU "Руководство программиста Linux"
+.SH ИМЯ
+mempcpy, wmempcpy — копирует участок памяти
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* смотрите feature_test_macros(7) */
+\fB#include <string.h>\fP
+.PP
+\fBvoid *mempcpy(void *\fP\fIdest\fP\fB, const void *\fP\fIsrc\fP\fB, size_t \fP\fIn\fP\fB);\fP
+
+\fB#define _GNU_SOURCE\fP         /* смотрите feature_test_macros(7) */
+\fB#include <wchar.h>\fP
+.PP
+\fBwchar_t *wmempcpy(wchar_t *\fP\fIdest\fP\fB, const wchar_t *\fP\fIsrc\fP\fB, size_t \fP\fIn\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBmempcpy\fP() почти идентична \fBmemcpy\fP(3). Она копирует \fIn\fP байт из
+\fIsrc\fP в \fIdest\fP, но вместо возвращения значения \fIdest\fP, она возвращает
+указатель на байт, следующий за последним записанным байтом.
+.PP
+Она удобна если требуется скопировать несколько участков памяти в другой
+участок последовательно, чтобы они располагались в нем друг за другом.
+.PP
+\fBwmempcpy\fP() делает тоже самое, но принимает \fIwchar_t\fP тип аргументов и
+копирует \fIn\fP широких символов.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+\fIdest\fP + \fIn\fP.
+.SH ВЕРСИИ
+Впервые \fBmempcpy\fP() появилась в glibc версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmempcpy\fP(),
+\fBwmempcpy\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция является расширением GNU.
+.SH ПРИМЕР
+.EX
+void *
+combine(void *o1, size_t s1, void *o2, size_t s2)
+{
+    void *result = malloc(s1 + s2);
+    if (result != NULL)
+        mempcpy(mempcpy(result, o1, s1), o2, s2);
+    return result;
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmemccpy\fP(3), \fBmemcpy\fP(3), \fBmemmove\fP(3), \fBwmemcpy\fP(3)

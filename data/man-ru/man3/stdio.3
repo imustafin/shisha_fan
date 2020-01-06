@@ -1,0 +1,191 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1990, 1991 Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)stdio.3	6.5 (Berkeley) 5/6/91
+.\"
+.\" Converted for Linux, Mon Nov 29 16:07:22 1993, faith@cs.unc.edu
+.\" Modified, 2001-12-26, aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STDIO 3 2017\-11\-26 "" "Руководство программиста Linux"
+.SH ИМЯ
+stdio \- библиотека функций стандартного ввода\-вывода
+.SH ОБЗОР
+\fB#include <stdio.h>\fP
+.PP
+\fBFILE *\fP\fIstdin\fP\fB;\fP
+.br
+\fBFILE *\fP\fIstdout\fP\fB;\fP
+.br
+\fBFILE *\fP\fIstderr\fP\fB;\fP
+.SH ОПИСАНИЕ
+Библиотеки стандартного ввода\-вывода предоставляют простой и эффективный
+интерфейс буферизируемого потока ввода\-вывода. Ввод и вывод представляется
+логическим потоком данных, а физические характеристики ввода\-вывода
+скрываются. Далее приводится список функций и макросов; более подробная
+информация находится в соответствующих страницах.
+.PP
+Поток соотносится с внешним файлом (который также может быть физическим
+устройством) при \fIоткрытии\fP файла. Такое открытие может вызвать создание
+нового файла. Создание существующего файла вызовет потерю его
+содержимого. Если для файла поддерживаются запросы позиционирования
+(например для файла на диске, а не терминал), то \fIиндикатор позиции в
+файле\fP, соответствующий потоку, устанавливается в начало файла (нулевой
+байт), если только файл не открыт в режиме добавления. Если используется
+режим добавления, то не определено, будет ли индикатор позиции в файле будет
+указывать на конец файла. Индикатор позиции изменяется при последующих
+запросах чтения, записи и изменения индикатора. Все операции ввода
+осуществляются так, как если бы все символы последовательно считывались
+вызовом функции \fBfgetc\fP(3); а вывод осуществляется, как если бы все символы
+последовательно записывались вызовом функции \fBfputc\fP(3).
+.PP
+Соотношение потока с файлом прекращается при \fIзакрытии\fP файла. Перед
+прекращением потоки вывода очищаются (flushed) (содержимое незаписанного
+буфера передаётся в системное окружение). Значение указателя на объект
+\fIFILE\fP после закрытия файла становится неопределённым (мусорным).
+.PP
+Впоследствии файл может быть открыт ещё раз той же самой или другой
+программой, а его содержание может быть восстановлено или изменено (если
+можно перейти в его начало). Если основная функция завершает работу и
+возвращает значения своему родителю или если вызывается функция \fBexit\fP(3),
+то перед закрытием программы закрываются все открытые файлы (и,
+следовательно, очищаются все потоки вывода). Другие методы закрытия
+программ, например, \fBabort\fP(3), не всегда приводят к корректному закрытию
+файлов.
+.PP
+При запуске программы предопределяются три текстовых потока, которые не
+следует открывать явно: \fIстандартный ввод\fP (standard input) (для чтения
+условного ввода), \fIстандартный вывод\fP (standard output) (для записи
+условного вывода) и \fIстандартный поток ошибок\fP (standard error) (для вывода
+диагностики). Сокращённые названия потоков: \fIstdin\fP, \fIstdout\fP и
+\fIstderr\fP. При открытии, стандартный поток ошибок буферизируется не
+полностью; стандартные потоки ввода и вывода полностью буферизируются только
+при условии, что они не ссылаются на какое\-либо интерактивное устройство.
+.PP
+Потоки вывода, ссылающиеся на устройства терминала, по умолчанию
+буферизируются построчно; ожидающие в таких потоках данные записываются
+автоматически всякий раз при чтении из потока ввода, ссылающегося на
+терминал. В случаях, когда после вывода на терминал части строки объём
+производимых вычислений велик, необходимо выполнять \fBfflush\fP(3), чтобы
+появилась часть строки до вычислений.
+.PP
+Библиотека \fIstdio\fP является частью библиотеки \fBlibc\fP, а функции
+автоматически загружаются \fBcc\fP(1) по мере надобности. В разделе СИНТАКСИС
+справочных страниц указано какие файлы заголовков необходимо использовать,
+как выглядят объявления функций и какие внешние переменные представляют
+интерес для работы.
+.PP
+.\" Not on Linux: .BR fropen ,
+.\" Not on Linux: .BR fwopen ,
+В списке далее перечислены макросы; эти имена не могут быть использованы
+повторно без предварительного удаления их определений с помощью \fB#undef\fP:
+\fBBUFSIZ\fP, \fBEOF\fP, \fBFILENAME_MAX\fP, \fBFOPEN_MAX\fP, \fBL_cuserid\fP,
+\fBL_ctermid\fP, \fBL_tmpnam\fP, \fBNULL\fP, \fBSEEK_END\fP, \fBSEEK_SET\fP, \fBSEEK_CUR\fP,
+\fBTMP_MAX\fP, \fBclearerr\fP, \fBfeof\fP, \fBferror\fP, \fBfileno\fP, \fBgetc\fP, \fBgetchar\fP,
+\fBputc\fP, \fBputchar\fP, \fBstderr\fP, \fBstdin\fP, \fBstdout\fP. Для \fBfeof\fP, \fBferror\fP,
+\fBclearerr\fP, \fBfileno\fP, \fBgetc\fP, \fBgetchar\fP, \fBputc\fP, и \fBputchar\fP
+существуют версии в виде функций, которые используются если определения
+макросов были удалены явно.
+.SS "Список функций"
+.TS
+;
+lb lb
+l l.
+функция	описание
+_
+\fBclearerr\fP(3)	проверяет и сбрасывает состояние потока
+\fBfclose\fP(3)	закрывает поток
+\fBfdopen\fP(3)	функции для открытия потоков
+\fBfeof\fP(3)	проверяет и сбрасывает состояние потока
+\fBferror\fP(3)	проверяет и сбрасывает состояние потока
+\fBfflush\fP(3)	сбрасывает поток
+\fBfgetc\fP(3)	считывает следующий символ или слово из входного потока
+\fBfgetpos\fP(3)	смена указания в потоке
+\fBfgets\fP(3)	считывает строку из потока
+\fBfileno\fP(3)	возвращает целочисленный дескриптор аргумента потока
+\fBfopen\fP(3)	функции для открытия потоков
+\fBfprintf\fP(3)	вывод по формату
+\fBfpurge\fP(3)	сбрасывает поток
+\fBfputc\fP(3)	выводит символ или слово в поток
+\fBfputs\fP(3)	выводит строку в поток
+\fBfread\fP(3)	считывает двоичные данные потока ввода\-вывода
+\fBfreopen\fP(3)	функции для открытия потоков
+\fBfscanf\fP(3)	форматирует входные данные
+\fBfseek\fP(3)	смена указания в потоке
+\fBfsetpos\fP(3)	смена указания в потоке
+\fBftell\fP(3)	смена указания в потоке
+\fBfwrite\fP(3)	считывает двоичные данные потока ввода\-вывода
+\fBgetc\fP(3)	считывает следующий символ или слово из входного потока
+\fBgetchar\fP(3)	считывает следующий символ или слово из входного потока
+\fBgets\fP(3)	считывает строку из потока
+\fBgetw\fP(3)	считывает следующий символ или слово из входного потока
+\fBmktemp\fP(3)	создаёт имя временного файла (уникальное)
+\fBperror\fP(3)	сообщения о системных ошибках
+\fBprintf\fP(3)	вывод по формату
+\fBputc\fP(3)	выводит символ или слово в поток
+\fBputchar\fP(3)	выводит символ или слово в поток
+\fBputs\fP(3)	выводит строку в поток
+\fBputw\fP(3)	выводит символ или слово в поток
+\fBremove\fP(3)	удаляет запись из каталога
+\fBrewind\fP(3)	смена указания в потоке
+\fBscanf\fP(3)	форматирует входные данные
+\fBsetbuf\fP(3)	операции буферизации потока
+\fBsetbuffer\fP(3)	операции буферизации потока
+\fBsetlinebuf\fP(3)	операции буферизации потока
+\fBsetvbuf\fP(3)	операции буферизации потока
+\fBsprintf\fP(3)	вывод по формату
+\fBsscanf\fP(3)	форматирует входные данные
+\fBstrerror\fP(3)	сообщения о системных ошибках
+\fBsys_errlist\fP(3)	сообщения о системных ошибках
+\fBsys_nerr\fP(3)	сообщения о системных ошибках
+\fBtempnam\fP(3)	функции для работы с временным файлом
+\fBtmpfile\fP(3)	функции для работы с временным файлом
+\fBtmpnam\fP(3)	функции для работы с временным файлом
+\fBungetc\fP(3)	возвращает символ во входной поток
+\fBvfprintf\fP(3)	вывод по формату
+\fBvfscanf\fP(3)	форматирует входные данные
+\fBvprintf\fP(3)	вывод по формату
+\fBvscanf\fP(3)	форматирует входные данные
+\fBvsprintf\fP(3)	вывод по формату
+\fBvsscanf\fP(3)	форматирует входные данные
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Библиотека \fIstdio\fP соответствует C89.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclose\fP(2), \fBopen\fP(2), \fBread\fP(2), \fBwrite\fP(2), \fBstdout\fP(3),
+\fBunlocked_stdio\fP(3)

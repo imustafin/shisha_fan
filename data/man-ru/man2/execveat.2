@@ -1,0 +1,142 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2014 Google, Inc., written by David Drysdale
+.\" and Copyright (c) 2015, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH EXECVEAT 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+execveat \- выполняет программу, определяемую относительно файлового
+дескриптора каталога
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint execveat(int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB,\fP
+.br
+\fB char *const \fP\fIargv\fP\fB[], char *const \fP\fIenvp\fP\fB[],\fP
+.br
+\fB int \fP\fIflags\fP\fB);\fP
+.SH ОПИСАНИЕ
+.\" commit 51f39a1f0cea1cacf8c787f652f26dfee9611874
+Системный вызов \fBexecveat\fP() выполняет программу, на которую ссылается
+комбинация \fIdirfd\fP и \fIpathname\fP. Он работает также как системный вызов
+\fBexecve\fP(2), за исключением случаев, описанных в данной справочной
+странице.
+.PP
+Если в \fIpathname\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBexecve\fP(2)).
+.PP
+Если в \fIpathname\fP задан относительный путь и \fIdirfd\fP равно специальному
+значению \fBAT_FDCWD\fP, то \fIpathname\fP рассматривается относительно текущего
+рабочего каталога вызывающего процесса (как \fBexecve\fP(2)).
+.PP
+Если в \fIpathname\fP задан абсолютный путь, то \fIdirfd\fP игнорируется.
+.PP
+Если \fIpathname\fP — пустая строка и указан флаг \fBAT_EMPTY_PATH\fP, то файловым
+дескриптором \fIdirfd\fP задаётся выполняемый файл (т. е., \fIdirfd\fP ссылается
+на исполняемый файл, а не на каталог).
+.PP
+Аргумент \fIflags\fP является битовой маской, которая может включать ноль или
+более следующих флагов:
+.TP 
+\fBAT_EMPTY_PATH\fP
+Если значение \fIpathname\fP равно пустой строке, то вызов выполняет действие с
+файлом, на который ссылается \fIdirfd\fP (может быть получен с помощью
+\fBopen\fP(2) с флагом \fBO_PATH\fP).
+.TP 
+\fBAT_SYMLINK_NOFOLLOW\fP
+Если файл задаётся \fIdirfd\fP и \fIpathname\fP — символическая ссылка (не NULL),
+то вызов завершается с ошибкой \fBELOOP\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBexecveat\fP() не возвращает управление. В случае
+ошибки возвращается \-1, а \fIerrno\fP устанавливается в соответствующее
+значение.
+.SH ОШИБКИ
+В \fBexecveat\fP() могут возникнуть те же ошибки, что и в \fBexecve\fP(). Также, в
+\fBexecveat\fP() могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+\fIdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+Указано неверное значение в \fIflags\fP.
+.TP 
+\fBELOOP\fP
+Значение \fIflags\fP содержит \fBAT_SYMLINK_NOFOLLOW\fP и файл задаётся \fIdirfd\fP,
+а \fIpathname\fP — символическая ссылка (не NULL).
+.TP 
+\fBENOENT\fP
+Программа задаётся \fIdirfd\fP и по \fIpathname\fP требуется использовать
+интерпретирующую программу (то есть сценарий, начинающийся с «#!»), но
+файловый дескриптор \fIdirfd\fP открыт с флагом \fBO_CLOEXEC\fP, что приводит к
+недоступности файла программы запускаемому интерпретатору. Смотрите ДЕФЕКТЫ.
+.TP 
+\fBENOTDIR\fP
+Значение \fIpathname\fP содержит относительный путь и \fIdirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог.
+.SH ВЕРСИИ
+.\" FIXME . check for glibc support in a future release
+Вызов \fBexecveat\fP() был добавлен в ядро Linux версии 3.19; поддержки в
+библиотеке GNU C пока нет.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Системный вызов \fBexecveat\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+В дополнении к причинам, описанным в \fBopenat\fP(2), системному вызову
+\fBexecveat\fP() также требуется разрешить \fBfexecve\fP(3) для реализации в
+системах, у которых не смонтированной файловой системы \fI/proc\fP.
+.PP
+При запросе запуска файла сценария, значение \fIargv[0]\fP, передаваемое в
+интерпретатор сценарий, является строкой в виде \fI/dev/fd/N\fP или
+\fI/dev/fd/N/P\fP, где \fIN\fP — номер файлового дескриптора, передаваемого через
+аргумент \fIdirfd\fP. Строка в первом формате встречается, когда указан
+\fBAT_EMPTY_PATH\fP. Строка во втором формате встречается, когда сценарий
+задаётся сразу через \fIdirfd\fP и \fIpathname\fP; в этом случае \fIP\fP — это
+значение, указанное в \fIpathname\fP.
+.PP
+По причинам, описанным в \fBfexecve\fP(3), естественным подходом является
+использование \fBexecveat\fP() с установленным флагом close\-on\-exec у \fIdirfd\fP
+(но смотрите ДЕФЕКТЫ).
+.SH ДЕФЕКТЫ
+Ошибка \fBENOENT\fP, описанная выше, означает, что невозможно установить флаг
+close\-on\-exec у файлового дескриптора, переданного вызову в виде:
+.PP
+    execveat(fd, "", argv, envp, AT_EMPTY_PATH);
+.PP
+.\" For an example, see Michael Kerrisk's 2015-01-10 reply in this LKML
+.\" thread (http://thread.gmane.org/gmane.linux.kernel/1836105/focus=20229):
+.\"
+.\"     Subject: [PATCHv10 man-pages 5/5] execveat.2: initial man page.\"                        for execveat(2
+.\"     Date: Mon, 24 Nov 2014 11:53:59 +0000
+Однако неспособность установить флаг close\-on\-exec означает утечку файловых
+дескрипторов, через ссылку сценария на самого себя. Помимо траты файлового
+дескриптора, это может привести к исчерпанию файловых дескрипторов, если
+сценарии рекурсивно вызывают \fBexecveat\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBexecve\fP(2), \fBopenat\fP(2), \fBfexecve\fP(3)

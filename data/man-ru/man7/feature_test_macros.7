@@ -1,0 +1,666 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 2006, Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FEATURE_TEST_MACROS 7 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+feature_test_macros \- макросы тестирования свойств
+.SH ОПИСАНИЕ
+Макросы тестирования свойств позволяют программисту контролировать какие
+определения будут доступны из системных заголовочных файлов при компиляции
+программы.
+.PP
+\fBЗАМЕЧАНИЕ:\fP В целях эффективности, макрос тестирования свойств \fIдолжен
+быть определён до включения всех заголовочных файлов\fP. Это можно сделать или
+в команде компиляции (\fIcc \-DМАКРОС=значение\fP) или определив макрос в
+исходном коде до включения заголовочных файлов. Требование включения макроса
+раньше остальных заголовочных файлов возникло из\-за того, что заголовочные
+файлы могут включаться друг в друга в любой последовательности. Например, в
+следующих строках определение макроса \fB_GNU_SOURCE\fP может не сработать, так
+как заголовок \fI<abc.h>\fP сам включает \fI<xyz.h>\fP (в POSIX
+это разрешается явным образом):
+.PP
+.in +4n
+.EX
+#include <abc.h>
+#define _GNU_SOURCE
+#include <xys.h>
+.EE
+.in
+.PP
+Некоторые макросы тестирования свойств полезны для создания переносимых
+приложений; они позволяют блокировать нестандартные определения. Другие
+макросы можно использовать для разблокировки нестандартных определений,
+которые по умолчанию недоступны.
+.PP
+Действие каждого макроса тестирования свойств, описанного далее, можно
+узнать из содержимого заголовочного файла
+\fI<features.h>\fP. \fBЗамечание\fP: в приложениях \fIне\fP нужно явно
+включать \fI<features.h>\fP — это не приветствуется. Смотрите
+ЗАМЕЧАНИЯ.
+.SS "Обозначение макросов тестирования свойств в справочных страницах"
+Когда функции требуется определение макроса тестирования свойств в ОБЗОРЕ
+справочной страницы, обычно, содержится упоминание в следующем виде (этот
+пример взят из справочной страницы \fBacct\fP(2)):
+.PP
+.RS 8
+\fB#include <unistd.h>\fP
+.PP
+\fBint acct(const char *\fP\fIfilename\fP\fB);\fP
+.PP
+.EX
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.EE
+.in
+.PP
+\fBacct\fP(): _BSD_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+.RE
+.PP
+Символ \fB||\fP означает, что для получения объявления \fBacct\fP(2) из
+\fI<unistd.h>\fP нужно определить \fIлюбой\fP из следующих макросов до
+включения любых заголовочных файлов:
+.PP
+.in +4n
+.EX
+#define _BSD_SOURCE
+#define _XOPEN_SOURCE        /* или любое значение < 500 */
+.EE
+.in
+.PP
+Или же эквивалентные определения могут быть включены следующей командой
+компиляции:
+.PP
+.in +4n
+.EX
+cc \-D_BSD_SOURCE
+cc \-D_XOPEN_SOURCE           # или любое значение < 500
+.EE
+.in
+.PP
+Как описывается далее, \fBнекоторые макросы тестирования свойств определяются
+по умолчанию\fP, поэтому макрос не всегда нужно указывать явно даже, если он
+приведён в ОБЗОРЕ.
+.PP
+В некоторых случаях в справочных страницах используется сокращённая запись
+требований макросов тестирования свойств (пример из \fBreadahead\fP(2)):
+.PP
+.in +4n
+.EX
+\fB#define _GNU_SOURCE\fP
+\fB#include <fcntl.h>\fP
+.PP
+\fBssize_t readahead(int \fP\fIfd\fP\fB, off64_t *\fP\fIoffset\fP\fB, size_t \fP\fIcount\fP\fB);\fP
+.EE
+.in
+.PP
+Такой формат употребляется в случаях, когда достаточно одного макроса для
+получения объявления функции, и этот макрос не определён по умолчанию.
+.SS "Макросы тестирования свойств, распознаваемые glibc"
+В следующих параграфах описаны макросы тестирования свойств, управляющие
+Linux glibc 2.\fIx\fP, где \fIx\fP > 0.
+.PP
+Если кратко:
+.IP * 3
+Макросы, которые вам, вероятно, понадобится использовать в современном коде:
+\fB_POSIX_C_SOURCE\fP (определения из различных версий POSIX.1),
+\fB_XOPEN_SOURCE\fP (определения из различных версий SUS), \fB_GNU_SOURCE\fP
+(специальные возможности GNU и/или Linux) и \fB_DEFAULT_SOURCE\fP (определения,
+которые, обычно, включены по умолчанию).
+.IP *
+Некоторые макросы определяют значения по умолчанию. То есть, хотя один или
+более макросов могут быть указаны как необходимые в ОБЗОР справочной
+страницы, возможно необязательно определять их явно. Полное описание
+значений по умолчанию приведены далее в этой справочной странице.
+.IP *
+Определение \fB_XOPEN_SOURCE\fP со значением 600 и более даёт тот же эффект что
+и определение \fB_POSIX_C_SOURCE\fP со значением 200112L и больше. Если
+требуется
+.IP
+.in +4n
+.EX
+_POSIX_C_SOURCE >= 200112L
+.EE
+.in
+.IP
+в макросах тестирования свойств ОБЗОРА справочной страницы, то это неявным
+образом тоже что и:
+.IP
+.in +4n
+.EX
+_XOPEN_SOURCE >= 600
+.EE
+.in
+.IP *
+Определение \fB_XOPEN_SOURCE\fP со значением 700 и более даёт тот же эффект что
+и определение \fB_POSIX_C_SOURCE\fP со значением 200809L и больше. Если
+требуется
+.IP
+.in +4n
+.EX
+_POSIX_C_SOURCE >= 200809L
+.EE
+.in
+.IP
+в макросах тестирования свойств ОБЗОРА справочной страницы, то это неявным
+образом тоже что и:
+.IP
+.in +4n
+.EX
+_XOPEN_SOURCE >= 700
+.EE
+.in
+.\" The details in glibc 2.0 are simpler, but combining a
+.\" a description of them with the details in later glibc versions
+.\" would make for a complicated description.
+.PP
+В Linux glibc распознаются следующие макросы тестирования свойств:
+.TP  8
+\fB__STRICT_ANSI__\fP
+Стандарт ISO C. Этот макрос неявно определяется компилятором \fBgcc\fP(1), если
+он вызывается с флагом \fI\-std=c99\fP или \fI\-ansi\fP.
+.TP 
+\fB_POSIX_C_SOURCE\fP
+При определении этого макроса из заголовочных файлов становится доступно
+следующее:
+.RS
+.IP \(bu 3
+При значении 1 доступны определения, удовлетворяющие POSIX.1\-1990 и ISO C
+(1990).
+.IP \(bu
+При значении 2 и более дополнительно доступны определения, удовлетворяющие
+POSIX.2\-1992.
+.IP \(bu
+.\" 199506L functionality is available only since glibc 2.1
+При значении 199309L и более дополнительно доступны определения,
+удовлетворяющие POSIX.1b (расширения для реального времени).
+.IP \(bu
+При значении 199506L и более дополнительно доступны определения,
+удовлетворяющие POSIX.1c (нити).
+.IP \(bu
+(начиная с glibc 2.3.3) При значении 200112L и более доступны определения,
+удовлетворяющие базовой спецификации POSIX.1\-2001 (за исключением расширения
+XSI) а также свойства C95 (начиная с glibc 2.12) и C99 (начиная с glibc
+2.10). Другими словами это эквивалент определения \fB_ISOC99_SOURCE\fP.
+.IP \(bu
+(начиная с glibc 2.10) При значении 200809L и более доступны определения,
+удовлетворяющие базовой спецификации POSIX.1\-2008 (за исключением расширения
+XSI).
+.RE
+.TP 
+\fB_POSIX_SOURCE\fP
+Определение этого устаревшего макроса с любым значением эквивалентно
+определению \fB_POSIX_C_SOURCE\fP со значением 1.
+.IP
+Так как этот макрос устарел, его использование, обычно, не описывается при
+обсуждении требований макросов тестирования свойств в справочной странице.
+.TP 
+\fB_XOPEN_SOURCE\fP
+При определении этого макроса из заголовочных файлов становится доступно
+следующее:
+.RS
+.IP \(bu 3
+Определение с любым значением делает доступным определения, удовлетворяющие
+POSIX.1, POSIX.2 и XPG4.
+.IP \(bu
+При значении 500 и более дополнительно доступны определения, удовлетворяющие
+SUSv2 (UNIX 98).
+.IP \(bu
+(начиная с glibc 2.2) При значении 600L и более дополнительно доступны
+определения, удовлетворяющие SUSv3 (UNIX 03; т. е., базовой спецификации
+POSIX.1\-2001 плюс расширение XSI), и определения C99.
+.IP \(bu
+(начиная с glibc 2.10) При значении 700 и более дополнительно доступны
+определения, удовлетворяющие SUSv4 (т. е., базовой спецификации POSIX.1\-2008
+плюс расширение XSI).
+.RE
+.IP
+If \fB__STRICT_ANSI__\fP не определено или определено \fB_XOPEN_SOURCE\fP со
+значением больше или равно 500 \fIи\fP явно не определено \fB_POSIX_SOURCE\fP или
+\fB_POSIX_C_SOURCE\fP, то неявно определяются следующие макросы:
+.RS
+.IP \(bu 3
+\fB_POSIX_SOURCE\fP определяется со значением 1.
+.IP \(bu
+\fB_POSIX_C_SOURCE\fP определяется согласно значению \fB_XOPEN_SOURCE\fP:
+.RS
+.TP 
+\fB_XOPEN_SOURCE\fP < 500
+\fB_POSIX_C_SOURCE\fP определяется со значением 2.
+.TP 
+500 <= \fB_XOPEN_SOURCE\fP < 600
+\fB_POSIX_C_SOURCE\fP определяется со значением 199506L.
+.TP 
+600 <= \fB_XOPEN_SOURCE\fP < 700
+\fB_POSIX_C_SOURCE\fP определяется со значением 200112L.
+.TP 
+700 <= \fB_XOPEN_SOURCE\fP (начиная с glibc 2.10)
+\fB_POSIX_C_SOURCE\fP определяется со значением 200809L.
+.RE
+.RE
+.IP
+Также, определение \fB_XOPEN_SOURCE\fP со значением 500 и более даёт тот же
+эффект что и определение \fB_XOPEN_SOURCE_EXTENDED\fP.
+.TP 
+\fB_XOPEN_SOURCE_EXTENDED\fP
+Если этот макрос определён \fIвместе\fP с \fB_XOPEN_SOURCE\fP, то доступны
+определения, соответствующие расширениям UNIX (UNIX 95) XPG4v2
+(SUSv1). Определение \fB_XOPEN_SOURCE\fP со значением 500 и более также
+вызывает эффект, подобный \fB_XOPEN_SOURCE_EXTENDED\fP. Использование
+\fB_XOPEN_SOURCE_EXTENDED\fP в новом коде следует избегать.
+.IP
+Так как определение \fB_XOPEN_SOURCE\fP со значением 500 и более даёт тот же
+эффект, что и \fB_XOPEN_SOURCE_EXTENDED\fP, последний (устаревший) макрос
+тестирования свойств, обычно, не описывается в ОБЗОРЕ справочной страницы.
+.TP 
+\fB_ISOC99_SOURCE\fP (начиная с glibc 2.1.3)
+Делает доступными объявления, удовлетворяющие требованиям стандарта ISO C99.
+.IP
+Ранние версии glibc 2.1.x распознавали макрос\-эквивалент \fB_ISOC9X_SOURCE\fP
+(так как стандарт C99 ещё не был утверждён). Хотя использование последнего
+макроса не рекомендуется, glibc пока поддерживает его для обратной
+совместимости.
+.IP
+Делает доступными определения стандарта ISO C (1990) Amendment 1
+(«C95»). Основным изменением в C95 была поддержка международных наборов
+символов.
+.IP
+Вызов компилятора C с параметром \fI\-std=c99\fP работает также как если был бы
+указан этот макрос.
+.TP 
+\fB_ISOC11_SOURCE\fP (начиная с glibc 2.16)
+Делает доступными объявления, удовлетворяющие требованиям стандарта ISO
+C11. Определение этого макроса также включает свойства C99 и C95 (подобно
+\fB_ISOC99_SOURCE\fP).
+.IP
+Вызов компилятора C с параметром \fI\-std=c11\fP работает также как если был бы
+указан этот макрос.
+.TP 
+\fB_LARGEFILE64_SOURCE\fP
+Делает доступными объявления альтернативного программного интерфейса,
+определяемого в LFS (Large File Summit) как «переходного расширение» на
+Single UNIX Specification (смотрите
+.UR http:\:/\:/opengroup.org\:/platform\:/lfs.html
+.UE)
+. Альтернативный
+программный интерфейс состоит из набора новых объектов (т. е., функций и
+типов), чьи имена оканчиваются на «»64 (например, \fIoff64_t\fP и \fIoff_t\fP,
+\fBlseek64\fP() и \fBlseek\fP(), и т. д.). В новых программах не нужно указывать
+этот макрос; вместо него указывайте \fI_FILE_OFFSET_BITS=64\fP.
+.TP 
+\fB_LARGEFILE_SOURCE\fP
+Данный макрос исторически используется для предоставления определённых
+функций (в частности, \fBfseeko\fP(3) и \fBftello\fP(3)), которые обходят адресные
+ограничения раннего программного интерфейса (\fBfseek\fP(3) и \fBftell\fP(3)), в
+котором для файловых смещений использовался \fIlong int\fP. Данный макрос
+неявно определяется, если определён \fB_XOPEN_SOURCE\fP со значением больше или
+равным 500. В новых программах не нужно определять данный макрос;
+определение \fB_XOPEN_SOURCE\fP или \fB_FILE_OFFSET_BITS\fP со значением 64
+является более предпочтительным механизмом для достижения того же
+результата.
+.TP 
+\fB_FILE_OFFSET_BITS\fP
+При определении данного макроса со значением 64 ссылки на 32\-битные функции
+и типы данных, относящиеся к файловому вводу\-выводу и операциям с файловой
+системой, автоматически преобразуются в их 64\-битные прототипы. Это полезно
+для выполнения ввода\-вывода в огромные файлы (> 2 гигабайт) на 32\-битных
+системах (определение данного макроса позволяет корректно написанным
+программам использовать огромные файлы, для чего требуется только
+перекомпиляция).
+.IP
+64\-битные системы сразу позволяют работать с файлами размером больше 2
+гигабайт, и на этих системах данный макрос ничего не делает.
+.TP 
+\fB_BSD_SOURCE\fP (устарел начиная с glibc 2.20)
+Определение данного макроса с любым значением приводит к доступности из
+заголовочных файлов определений BSD.
+.IP
+В glibc до версии 2.18 включительно при определении данного макроса также
+отдаётся приоритет определениям BSD в ситуациях, когда имеется конфликт со
+стандартами. Если определён один из макросов \fB_SVID_SOURCE\fP,
+\fB_POSIX_SOURCE\fP, \fB_POSIX_C_SOURCE\fP, \fB_XOPEN_SOURCE\fP,
+\fB_XOPEN_SOURCE_EXTENDED\fP или \fB_GNU_SOURCE\fP, то определения BSD не
+используются. Начиная с glibc 2.19 при наличии макроса \fB_BSD_SOURCE\fP
+определения BSD в случае конфликта приоритета не имеют.
+.IP
+.\" commit c941736c92fa3a319221f65f6755659b2a5e0a20
+.\" commit 498afc54dfee41d33ba519f496e96480badace8e
+.\" commit acd7f096d79c181866d56d4aaf3b043e741f1e2c
+.\" commit ade40b10ff5fa59a318cf55b9d8414b758e8df78
+Начиная с glibc 2.20 этот макрос считается устаревшим. Теперь он действует
+также как определение \fB_DEFAULT_SOURCE\fP, но при компиляции генерируется
+предупреждение (если также не определён \fB_DEFAULT_SOURCE\fP). Используйте
+\fB_DEFAULT_SOURCE\fP вместо него. Чтобы для кода, которому требуется
+\fB_BSD_SOURCE\fP в glibc 2.19 и старее и \fB_DEFAULT_SOURCE\fP в glibc 2.20 и
+новее, не выдавалось предупреждение при компиляции определите \fB_BSD_SOURCE\fP
+и \fB_DEFAULT_SOURCE\fP \fIодновременно\fP.
+.TP 
+\fB_SVID_SOURCE\fP (устарел начиная с glibc 2.20)
+При определении этого макроса с любым значением из заголовочных файлов
+становятся доступны определения System V (SVID == System V Interface
+Definition; смотрите \fBstandards\fP(7)).
+.IP
+Начиная с glibc 2.20 этот макрос устарел также как \fB_BSD_SOURCE\fP.
+.TP 
+\fB_DEFAULT_SOURCE\fP (начиная с glibc 2.19)
+Данный макрос можно определить, чтобы точно знать, что будут доступны
+определения «по умолчанию» даже, если умолчательные макросы отключены, что
+случается, когда отдельные макросы определяются явно, или компилятор
+вызывается в одном из своих «стандартных» режимов (например, \fIcc\ \-std=c99\fP). Определение \fB_DEFAULT_SOURCE\fP без определения отдельных
+макросов или вызов компилятора в одном из его «стандартных» режимов не
+работают.
+.IP
+Определения «по умолчанию» охватывают все, которые требуются POSIX.1\-2008 и
+ISO C99, а также различные определения появившиеся из BSD и System V. В
+glibc 2.19 и старее эти значения по умолчанию приблизительно эквивалентны
+явному определению следующего:
+.IP
+    cc \-D_BSD_SOURCE \-D_SVID_SOURCE \-D_POSIX_C_SOURCE=200809
+.TP 
+\fB_ATFILE_SOURCE\fP (начиная с glibc 2.4)
+При определении этого макроса с любым значением из заголовочных файлов
+становятся доступны объявления набора функций с суффиксом «at»; смотрите
+\fBopenat\fP(2). Начиная с glibc 2.10 данный макрос также неявно определяется,
+если определён \fB_POSIX_C_SOURCE\fP со значением 200809L или больше.
+.TP 
+\fB_GNU_SOURCE\fP
+При определении этого макроса (с любым значением) неявно определяются
+\fB_ATFILE_SOURCE\fP, \fB_LARGEFILE64_SOURCE\fP, \fB_ISOC99_SOURCE\fP,
+\fB_XOPEN_SOURCE_EXTENDED\fP, \fB_POSIX_SOURCE\fP, \fB_POSIX_C_SOURCE\fP со значением
+200809L (200112L в версиях glibc до 2.10; 199506L в версиях glibc до 2.5;
+199309L в версиях glibc до 2.1) и \fB_XOPEN_SOURCE\fP со значением 700 (600 в
+версиях glibc до 2.10; 500 в версиях glibc до 2.2). Также становятся
+доступны различные расширения GNU.
+.IP
+Начиная с glibc 2.19 определение \fB_GNU_SOURCE\fP также неявно определяет
+\fB_DEFAULT_SOURCE\fP. В glibc до 2.20 версии определение \fB_GNU_SOURCE\fP также
+неявно определяет \fB_BSD_SOURCE\fP и \fB_SVID_SOURCE\fP.
+.TP 
+\fB_REENTRANT\fP
+.\" Zack Weinberg
+.\"     There did once exist C libraries where it was necessary. The ones
+.\"     I remember were proprietary Unix vendor libcs from the mid-1990s
+.\"     You would get completely unlocked stdio without _REENTRANT.
+В прошлом, этот макрос требовалось определять для различных библиотек C,
+чтобы работал многонитевой код (некоторым библиотекам C это всё ещё
+требуется). В glibc этот макрос также включает определения определённых
+реентерабельных функций.
+.IP
+Однако glibc уже давно по умолчанию безопасна для нитей; начиная glibc 2.3
+единственным эффектом определения \fB_REENTRANT\fP является включение одного
+или двух определений, которые также включаются определением
+\fB_POSIX_C_SOURCE\fP со значением 199606L или больше.
+.IP
+В настоящий момент \fB_REENTRANT\fP устарел. В glibc 2.25 и новее определение
+\fB_REENTRANT\fP эквивалентно определению \fB_POSIX_C_SOURCE\fP со значением
+199606L. Если выбирается более высокий уровень соответствия POSIX (например,
+самим \fB_POSIX_C_SOURCE\fP, \fB_XOPEN_SOURCE\fP, \fB_DEFAULT_SOURCE\fP или
+\fB_GNU_SOURCE\fP), то определение не действует \fB_REENTRANT\fP.
+.IP
+Данный макрос автоматически определяется, если выполняется компиляция \fIcc\ \-pthread\fP.
+.TP 
+\fB_THREAD_SAFE\fP
+Синоним (устарел) \fB_REENTRANT\fP, предоставляется для совместимости с
+некоторыми другими реализациями.
+.TP 
+\fB_FORTIFY_SOURCE\fP (начиная с glibc 2.3.4)
+.\" For more detail, see:
+.\" http://gcc.gnu.org/ml/gcc-patches/2004-09/msg02055.html
+.\" [PATCH] Object size checking to prevent (some) buffer overflows
+.\" * From: Jakub Jelinek <jakub at redhat dot com>
+.\" * To: gcc-patches at gcc dot gnu dot org
+.\" * Date: Tue, 21 Sep 2004 04:16:40 -0400
+.\" Look for __USE_FORTIFY_LEVEL in the header files
+Определение этого макроса вызывает выполнение нескольких простых проверок
+для обнаружения ошибок переполнения буфера, которые возникают в различных
+функциях работы со строками и памятью (например, \fBmemcpy\fP(3), \fBmemset\fP(3),
+\fBstpcpy\fP(3), \fBstrcpy\fP(3), \fBstrncpy\fP(3), \fBstrcat\fP(3), \fBstrncat\fP(3),
+\fBsprintf\fP(3), \fBsnprintf\fP(3), \fBvsprintf\fP(3), \fBvsnprintf\fP(3), \fBgets\fP(3) и
+их варианты для работы с широкими символами). Для некоторых функций
+проверяется целостность аргумента; например, проверяется, что \fBopen\fP(2)
+передали в аргументе \fImode\fP, если указан флаг \fBO_CREAT\fP. Обнаруживаются не
+все проблемы, только самые распространённые.
+.IP
+.\" For example, given the following code
+.\"        int d;
+.\"        char buf[1000], buf[1000];
+.\"        strcpy(fmt, "Hello world\n%n");
+.\"        snprintf(buf, sizeof(buf), fmt, &d);
+.\"
+.\" Compiling with "gcc -D_FORTIFY_SOURCE=2 -O1" and then running will
+.\" cause the following diagnostic at run time at the snprintf() call
+.\"
+.\"        *** %n in writable segment detected ***
+.\"        Aborted (core dumped)
+.\"
+Если значение \fB_FORTIFY_SOURCE\fP равно 1 и уровень оптимизации компиляции
+равен 1 (\fIgcc\ \-O1\fP) и больше, то выполняются проверки,  которые не
+изменяют поведение выверяемых программ. Если значение \fB_FORTIFY_SOURCE\fP
+равно 2, то добавляются дополнительные проверки, но некоторые выверяемые
+программы могут завершаться с ошибкой.
+.IP
+Некоторые проверки выполняются во время компиляции (через макросы,
+реализованных в заголовочных файлах) и вызывают предупреждение компилятора;
+другие проверки выполняются во время выполнения и приводят к ошибкам времени
+выполнения.
+.IP
+Для работы этого макроса требуется поддержка в компиляторе, доступная в
+\fBgcc\fP(1) начиная с версии 4.0.
+.SS "Определения по умолчанию, неявные определения и объединяющие определения"
+.PP
+Если макросы тестирования свойств не указаны явно, то по умолчанию действуют
+следующие макросы тестирования свойств: \fB_BSD_SOURCE\fP (в glibc 2.19 и
+старее), \fB_SVID_SOURCE\fP (в glibc 2.19 и старее), \fB_DEFAULT_SOURCE\fP
+(начиная с glibc 2.19), \fB_POSIX_SOURCE\fP и \fB_POSIX_C_SOURCE\fP=200809L
+(200112L в версиях glibc до 2.10; 199506L в версиях glibc до 2.4; 199309L в
+версиях glibc до 2.1).
+.PP
+Если любой из макросов \fB__STRICT_ANSI__\fP, \fB_ISOC99_SOURCE\fP,
+\fB_POSIX_SOURCE\fP, \fB_POSIX_C_SOURCE\fP, \fB_XOPEN_SOURCE\fP,
+\fB_XOPEN_SOURCE_EXTENDED\fP, \fB_BSD_SOURCE\fP (в glibc 2.19 и старее) или
+\fB_SVID_SOURCE\fP (в glibc 2.19 и старее) указан явно, то по умолчанию не
+определяются макросы \fB_BSD_SOURCE\fP, \fB_SVID_SOURCE\fP и \fB_DEFAULT_SOURCE\fP.
+.PP
+Если макросы \fB_POSIX_SOURCE\fP и \fB_POSIX_C_SOURCE\fP не указаны явно и не
+определён \fB__STRICT_ANSI__\fP или \fB_XOPEN_SOURCE\fP определён со значением 500
+или более, то
+.IP * 3
+\fB_POSIX_SOURCE\fP определяется со значением 1; и
+.IP *
+\fB_POSIX_C_SOURCE\fP определяется с одним из следующих значений:
+.RS 3
+.IP \(bu 3
+2, если \fB_XOPEN_SOURCE\fP определён со значением меньше 500;
+.IP \(bu
+199506L, если \fB_XOPEN_SOURCE\fP определён со значением 500 или более, но
+меньше 600; или
+.IP \(bu
+(начиная с glibc 2.4) 200112L, если \fB_XOPEN_SOURCE\fP определён со значением
+600 или более, но меньше 700.
+.IP \(bu
+(начиная с glibc 2.10) 200809L, если \fB_XOPEN_SOURCE\fP определён со значением
+700 или более.
+.IP \(bu
+Старые версии glibc не знают о значениях 200112L и 200809L у
+\fB_POSIX_C_SOURCE\fP, и значение этого макроса зависит от версии glibc.
+.IP \(bu
+Если макрос \fB_XOPEN_SOURCE\fP не определён, то значение \fB_POSIX_C_SOURCE\fP
+зависит от версии glibc: 199506L в версиях glibc до 2.4; 200112L в glibc от
+2.4 до 2.9 и 200809L в glibc 2.10 и новее.
+.RE
+.PP
+Можно определять несколько макросов; результат складывается.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+В POSIX.1 определены \fB_POSIX_C_SOURCE\fP, \fB_POSIX_SOURCE\fP и
+\fB_XOPEN_SOURCE\fP.
+.PP
+Макрос \fB_XOPEN_SOURCE_EXTENDED\fP был определён в XPG4v2 (также называемом
+SUSv1), но отсутствует в SUSv2 и более новых версиях. Макрос
+\fB_FILE_OFFSET_BITS\fP отсутствует в стандартах, но используется в некоторых
+других реализациях.
+.PP
+Макросы \fB_BSD_SOURCE\fP, \fB_SVID_SOURCE\fP, \fB_DEFAULT_SOURCE\fP,
+\fB_ATFILE_SOURCE\fP, \fB_GNU_SOURCE\fP, \fB_FORTIFY_SOURCE\fP, \fB_REENTRANT\fP и
+\fB_THREAD_SAFE\fP есть только в Linux (glibc).
+.SH ЗАМЕЧАНИЯ
+Файл \fI<features.h>\fP есть только в Linux/glibc. В других системах
+есть аналогичный файл, но, обычно, с другим именем. Данный заголовочный
+файл, если нужен, автоматически включается из других заголовочных файлов:
+его необязательно явно указывать для использования макросов тестирования
+свойств.
+.PP
+Согласно указанным макросам тестирования свойств раньше файла
+\fI<features.h>\fP, внутри него определяются другие различные макросы,
+которые проверяются в других заголовочных файлах glibc. Эти макросы имеют
+имена, начинающиеся с двух подчёркиваний (например,
+\fB__USE_MISC\fP). Программы \fIникогда\fP не должны определять эти макросы
+самостоятельно: вместо этого нужно задействовать соответствующий макрос
+тестирования свойств из перечисленных ранее.
+.SH ПРИМЕР
+Представленную далее программу можно использовать для изучения какие
+значения присваиваются макросам тестирования свойств в зависимости от версии
+glibc и какие макросы тестирования свойств устанавливаются явно. В следующем
+сеансе оболочки на системе с glibc 2.10 показаны несколько примеров того,
+что мы увидели:
+.PP
+.in +4n
+.EX
+$ \fBcc ftm.c\fP
+$ \fB./a.out\fP
+_POSIX_SOURCE defined
+_POSIX_C_SOURCE defined: 200809L
+_BSD_SOURCE defined
+_SVID_SOURCE defined
+_ATFILE_SOURCE defined
+$ \fBcc \-D_XOPEN_SOURCE=500 ftm.c\fP
+$ \fB./a.out\fP
+_POSIX_SOURCE defined
+_POSIX_C_SOURCE defined: 199506L
+_XOPEN_SOURCE defined: 500
+$ \fBcc \-D_GNU_SOURCE ftm.c\fP
+$ \fB./a.out\fP
+_POSIX_SOURCE defined
+_POSIX_C_SOURCE defined: 200809L
+_ISOC99_SOURCE defined
+_XOPEN_SOURCE defined: 700
+_XOPEN_SOURCE_EXTENDED defined
+_LARGEFILE64_SOURCE defined
+_BSD_SOURCE defined
+_SVID_SOURCE defined
+_ATFILE_SOURCE defined
+_GNU_SOURCE defined
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+/* ftm.c */
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+int
+main(int argc, char *argv[])
+{
+#ifdef _POSIX_SOURCE
+    printf("_POSIX_SOURCE defined\en");
+#endif
+
+#ifdef _POSIX_C_SOURCE
+    printf("_POSIX_C_SOURCE defined: %ldL\en", (long) _POSIX_C_SOURCE);
+#endif
+
+#ifdef _ISOC99_SOURCE
+    printf("_ISOC99_SOURCE defined\en");
+#endif
+
+#ifdef _ISOC11_SOURCE
+    printf("_ISOC11_SOURCE defined\en");
+#endif
+
+#ifdef _XOPEN_SOURCE
+    printf("_XOPEN_SOURCE defined: %d\en", _XOPEN_SOURCE);
+#endif
+
+#ifdef _XOPEN_SOURCE_EXTENDED
+    printf("_XOPEN_SOURCE_EXTENDED defined\en");
+#endif
+
+#ifdef _LARGEFILE64_SOURCE
+    printf("_LARGEFILE64_SOURCE defined\en");
+#endif
+
+#ifdef _FILE_OFFSET_BITS
+    printf("_FILE_OFFSET_BITS defined: %d\en", _FILE_OFFSET_BITS);
+#endif
+
+#ifdef _BSD_SOURCE
+    printf("_BSD_SOURCE defined\en");
+#endif
+
+#ifdef _SVID_SOURCE
+    printf("_SVID_SOURCE defined\en");
+#endif
+
+#ifdef _DEFAULT_SOURCE
+    printf("_DEFAULT_SOURCE defined\en");
+#endif
+
+#ifdef _ATFILE_SOURCE
+    printf("_ATFILE_SOURCE defined\en");
+#endif
+
+#ifdef _GNU_SOURCE
+    printf("_GNU_SOURCE defined\en");
+#endif
+
+#ifdef _REENTRANT
+    printf("_REENTRANT defined\en");
+#endif
+
+#ifdef _THREAD_SAFE
+    printf("_THREAD_SAFE defined\en");
+#endif
+
+#ifdef _FORTIFY_SOURCE
+    printf("_FORTIFY_SOURCE defined\en");
+#endif
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlibc\fP(7), \fBstandards\fP(7)
+.PP
+.\" But beware: the info libc document is out of date (Jul 07, mtk)
+Раздел «Макросы тестирования свойств» в \fIinfo libc\fP.
+.PP
+\fI/usr/include/features.h\fP

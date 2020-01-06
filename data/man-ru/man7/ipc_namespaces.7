@@ -1,0 +1,68 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2019 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IPC_NAMESPACES 7 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+namespaces \- обзор пространств имён IPC в Linux
+.SH ОПИСАНИЕ
+.\" commit 7eafd7c74c3f2e67c27621b987b28397110d643f
+.\" https://lwn.net/Articles/312232/
+Пространства имён IPC изолируют определённые ресурсы IPC, а именно
+IPC\-объекты System V (смотрите \fBsysvipc\fP(7)) и (начиная с Linux 2.6.30)
+очереди сообщений POSIX (смотрите \fBmq_overview\fP(7)). Общая характеристика
+этих механизмов IPC в том, что объекты IPC распознаются механизмами не как
+пути файловой системы.
+.PP
+Каждое пространство имён IPC имеет свой набор идентификаторов System V IPC и
+свою файловую систему для очереди сообщений POSIX. Объекты, созданные в
+пространстве имён IPC, видимы всем другим процессам, которые являются
+членами этого пространства имён, и невидимы процессам из других пространств
+имён IPC.
+.PP
+Следующие интерфейсы \fI/proc\fP отличаются в каждом пространстве имён IPC:
+.IP * 3
+Интерфейсы очереди сообщений POSIX в \fI/proc/sys/fs/mqueue\fP.
+.IP *
+IPC\-интерфейсы System V в \fI/proc/sys/kernel\fP, а именно: \fImsgmax\fP,
+\fImsgmnb\fP, \fImsgmni\fP, \fIsem\fP, \fIshmall\fP, \fIshmmax\fP, \fIshmmni\fP и
+\fIshm_rmid_forced\fP.
+.IP *
+IPC\-интерфейсы System V в \fI/proc/sysvipc\fP.
+.PP
+При уничтожении пространства имён IPC (т. е., когда завершается последний
+процесс из этого пространства имён), все объекты IPC из пространства имён
+автоматически уничтожаются.
+.PP
+Для использования пространств имён IPC требуется, чтобы ядро было собрано с
+параметром \fBCONFIG_IPC_NS\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBnsenter\fP(1), \fBunshare\fP(1), \fBclone\fP(2), \fBsetns\fP(2), \fBunshare\fP(2),
+\fBmq_overview\fP(7), \fBnamespaces\fP(7), \fBsysvipc\fP(7)

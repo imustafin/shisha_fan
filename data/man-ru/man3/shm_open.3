@@ -1,0 +1,195 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2002 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" FIXME . Add an example to this page
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SHM_OPEN 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+shm_open, shm_unlink \- создаёт/открывает или удаляет объекты общей памяти
+POSIX
+.SH ОБЗОР
+\fB#include <sys/mman.h>\fP
+.br
+\fB#include <sys/stat.h>\fP /* константы для mode */
+.br
+\fB#include <fcntl.h>\fP    /* константы O_* */
+.PP
+\fBint shm_open(const char *\fP\fIname\fP\fB, int \fP\fIoflag\fP\fB, mode_t \fP\fImode\fP\fB);\fP
+.PP
+\fBint shm_unlink(const char *\fP\fIname\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.SH ОПИСАНИЕ
+Функция \fBshm_open\fP() создаёт и открывает новый (или открывает уже
+существующий) объект общей памяти POSIX. Объект общей памяти POSIX — это
+описатель, используемый несвязанными процессами для выполнения \fBmmap\fP(2)
+для одной области общей памяти. Функция \fBshm_unlink\fP() выполняет обратную
+операцию, удаляя объект, созданный ранее с помощью \fBshm_open\fP().
+.PP
+.\" glibc allows the initial slash to be omitted, and makes
+.\" multiple initial slashes equivalent to a single slash.
+.\" This differs from the implementation of POSIX message queues.
+.\" glibc allows subdirectory components in the name, in which
+.\" case the subdirectory must exist under /dev/shm, and allow the
+.\" required permissions if a user wants to create a shared memory
+.\" object in that subdirectory.
+Действие \fBshm_open\fP() аналогично \fBopen\fP(2). Значением \fIname\fP определяется
+создаваемый или открываемый объект общей памяти. Для использования в
+переносимых программах объект общей памяти должен опознаваться по имени в
+виде \fI/какое_то_имя\fP, то есть строкой, оканчивающейся null и длиной до
+\fINAME_MAX\fP (т.е., 255) символов, состоящей из начальной косой черты и
+одного или более символов (любых, кроме косой черты).
+.PP
+Аргумент \fIoflag\fP содержит маску битов, созданную логическим сложением OR
+одного из флагов \fBO_RDONLY\fP или \fBO_RWDR\fP и любых других флагов,
+перечисленных далее:
+.TP  1.1i
+\fBO_RDONLY\fP
+Открыть объект для чтения. Открытый таким образом объект общей памяти можно
+указывать в \fBmmap\fP(2) только для чтения (\fBPROT_READ\fP).
+.TP 
+\fBO_RDWR\fP
+Открыть объект для чтения и записи.
+.TP 
+\fBO_CREAT\fP
+.\" In truth it is actually the filesystem IDs on Linux, but these
+.\" are nearly always the same as the effective IDs.  (MTK, Jul 05)
+Создать объект общей памяти, если он не существует. Владелец и группа
+объекта устанавливаются из соответствующих эффективных ID вызвавшего
+процесса, а биты прав на объект устанавливаются в соответствии с младшими 9
+битами \fImode\fP, за исключением того, что биты, установленные маске режима
+создания файла (см. \fBumask\fP(2)), очищаются у новых объектов. Набор
+макросов\-констант, используемых для определения \fImode\fP, описан в
+\fBopen\fP(2). Символические определения этих констант можно получить
+включением \fI<sys/stat.h>\fP.
+.IP
+Новый объект общей памяти изначально имеет нулевую длину; размер объекта
+можно установить, используя \fBftruncate\fP(2). Новые выделенные байты объекта
+общей памяти автоматически заполняются 0.
+.TP 
+\fBO_EXCL\fP
+Если также был указан \fBO_CREAT\fP и объект общей памяти с заданным \fIname\fP
+уже существует, то возвращается ошибка. Проверка существования объекта и его
+создание, если он не существует, выполняется атомарно.
+.TP 
+\fBO_TRUNC\fP
+Если объект общей памяти уже существует, то обрезать его до 0 байтов.
+.PP
+Определения значений этих флагов можно получить включением
+\fI<fcntl.h>\fP.
+.PP
+При успешном выполнении \fBshm_open\fP() возвращает новый файловый дескриптор,
+ссылающийся на объект общей памяти. Этот файловый дескриптор гарантированно
+будет дескриптором файла с самым маленьким номером среди ещё не открытых
+процессом. У дескриптора файла устанавливается флаг \fBFD_CLOEXEC\fP
+(см. \fBfcntl\fP(2)).
+.PP
+Дескриптор файла обычно используется в последующих вызовах \fBftruncate\fP(2)
+(для новых объектов) и \fBmmap\fP(2). После вызова \fBmmap\fP(2) дескриптор файла
+может быть закрыт без влияния на отображение памяти.
+.PP
+Действие \fBshm_unlink\fP() аналогично \fBunlink\fP(2): оно удаляет имя объекта
+общей памяти и, как только все процессы завершили работу с объектом и
+отменили его отображение, очищает пространство и уничтожает связанную с ним
+область памяти. После успешного выполнения \fBshm_unlink\fP() попытка выполнить
+\fBshm_open\fP() для объекта с тем же именем \fIname\fP завершается ошибкой (если
+не был указан \fBO_CREAT\fP, в этом случае создаётся новый, уже другой объект).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBshm_open\fP() возвращает неотрицательный дескриптор
+файла. При ошибках \fBshm_open\fP() возвращает \-1. При успешном выполнении
+\fBshm_unlink\fP() возвращает 0 и \-1 при ошибке.
+.SH ОШИБКИ
+При ошибках в \fIerrno\fP записываются причины ошибки. Значения \fIerrno\fP могут
+быть такими:
+.TP 
+\fBEACCES\fP
+Отказ в доступе для \fBshm_unlink\fP() для объекта общей памяти.
+.TP 
+\fBEACCES\fP
+Отказ в доступе для \fBshm_open\fP() с заданным \fIname\fP и режимом \fImode\fP, или
+был указан \fBO_TRUNC\fP, а вызывающий не имеет прав на запись для объекта.
+.TP 
+\fBEEXIST\fP
+В \fBshm_open\fP() указаны \fBO_CREAT\fP и \fBO_EXCL\fP, но объект общей памяти
+\fIname\fP уже существует.
+.TP 
+\fBEINVAL\fP
+Аргумент \fIname\fP для \fBshm_open\fP() некорректен.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENAMETOOLONG\fP
+Длина \fIname\fP превышает \fBPATH_MAX\fP.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOENT\fP
+Была сделана попытка выполнить \fBshm_open\fP() для несуществующего \fIname\fP и
+при этом не был указан \fBO_CREAT\fP.
+.TP 
+\fBENOENT\fP
+Была сделана попытка выполнить \fBshm_unlink\fP() для несуществующего \fIname\fP.
+.SH ВЕРСИИ
+Эти функции присутствуют в glibc 2.2 и более новых.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw24 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBshm_open\fP(),
+\fBshm_unlink\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.PP
+В POSIX.1\-2001 сказано, что группа\-владелец нового объекта общей памяти
+устанавливается или в эффективный ID группы вызвавшего процесса, или «ID
+системной группы по умолчанию». В POSIX.1\-2008 сказано, что группа\-владелец
+может быть установлена или в эффективный ID группы вызвавшего процесса или,
+если объект видим в файловой системе, ID группы родительского каталога.
+.SH ЗАМЕЧАНИЯ
+.PP
+POSIX оставляет неопределённым поведение при комбинации \fBO_RDONLY\fP и
+\fBO_TRUNC\fP. В Linux это приводит к успешному обрезанию существующего объекта
+общей памяти, но в других системах UNIX может быть по\-другому.
+.PP
+Реализация объектов общей памяти POSIX в Linux использует выделенную
+файловую систему \fBtmpfs\fP(5), которая обычно монтируется в \fI/dev/shm\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclose\fP(2), \fBfchmod\fP(2), \fBfchown\fP(2), \fBfcntl\fP(2), \fBfstat\fP(2),
+\fBftruncate\fP(2), \fBmemfd_create\fP(2), \fBmmap\fP(2), \fBopen\fP(2), \fBumask\fP(2),
+\fBshm_overview\fP(7)

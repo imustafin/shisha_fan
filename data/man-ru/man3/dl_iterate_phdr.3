@@ -1,0 +1,294 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2003, 2017 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH DL_ITERATE_PHDR 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+dl_iterate_phdr \- обход списка общих объектов
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+\fB#include <link.h>\fP
+.PP
+\fBint dl_iterate_phdr(\fP
+\fB          int (*\fP\fIcallback\fP\fB) (struct dl_phdr_info *\fP\fIinfo\fP\fB,\fP
+\fB                           size_t \fP\fIsize\fP\fB, void *\fP\fIdata\fP\fB),\fP
+\fB          void *\fP\fIdata\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBdl_iterate_phdr\fP() позволяет приложению во время выполнения
+узнать, какие общие объекты были загружены и их порядок загрузки.
+.PP
+Функция \fBdl_iterate_phdr\fP() обходит список общих объектов приложения и
+однократно вызывает функцию \fIcallback\fP для каждого объекта до тех пор, пока
+или все общие объекты не будут просмотрены, или функция \fIcallback\fP не
+вернёт ненулевое значение.
+.PP
+При каждом вызове в \fIcallback\fP передаётся три параметра: \fIinfo\fP (указатель
+на структуру с информацией об общем объекте), \fIsize\fP (размер структуры, на
+которую указывает \fIinfo\fP) и \fIdata\fP (копия любого значения, переданного
+вызывающей программой во втором параметре (также называемом \fIdata\fP) в вызов
+\fBdl_iterate_phdr\fP().
+.PP
+Параметр \fIinfo\fP представляет собой структуру следующего вида:
+.PP
+.in +4n
+.EX
+struct dl_phdr_info {
+    ElfW(Addr)        dlpi_addr;  /* базовый адрес объекта */
+    const char       *dlpi_name;  /* имя объекта
+                                     (оканчивается Null) */
+    const ElfW(Phdr) *dlpi_phdr;  /* указатель на массив
+                                     программных заголовков ELF
+                                     этого объекта */
+    ElfW(Half)        dlpi_phnum; /* кол\-во элементов в \fIdlpi_phdr\fP */
+
+    /* Следующие поля были добавлены в glibc 2.4, после опубликования
+       первой версии этой структуры. Из аргумента \fIsize\fP,
+       передаваемом в dl_iterate_phdr, можно определить
+       были ли добавлены новые члены. */
+
+    unsigned long long int dlpi_adds;
+                    /* увеличивается, когда мог быть
+                       добавлен новый объект */
+    unsigned long long int dlpi_subs;
+                    /* увеличивается, когда мог быть
+                       удалён новый объект */
+    size_t dlpi_tls_modid;
+                    /* если существует сегмент PT_TLS, это его
+                       ID модуля, используемый в
+                       перестановках TLS, иначе 0 */
+    void  *dlpi_tls_data;
+                    /* адрес экземпляра вызывающей нити
+                       сегмента PT_TLS этого модуля, если он есть
+                       и был выделен в вызывающей нити,
+                       иначе указатель null */
+};
+.EE
+.in
+.PP
+(Макрос \fIElfW\fP() преобразует свой аргумент в имя  типа данных ELF,
+подходящее для аппаратной архитектуры. Например, на 32\-битной платформе
+\fIElfW(Addr)\fP вернёт имя типа данных \fIElf32_Addr\fP. Дополнительную
+информацию можно найти в заголовочных файлах \fI<elf.h>\fP и
+\fI<link.h>\fP.)
+.PP
+В поле \fIdlpi_addr\fP указывается базовый адрес общего объекта (т. е., разница
+между виртуальным адресом памяти общего объекта и смещением до этого объекта
+в файле, из которого он был загружен). Поле \fIdlpi_name\fP представляет собой
+строку с null на конце, определяющую путь, из которого был загружен общий
+объект.
+.PP
+Чтобы понять назначение полей \fIdlpi_phdr\fP и \fIdlpi_phnum\fP, нам необходимо
+представлять, что общий объект ELF состоит из набора сегментов, каждый из
+которых имеет соответствующий программный заголовок, описывающий
+сегмент. Поле \fIdlpi_phdr\fP представляет собой указатель на массив
+программных заголовков этого общего объекта. В поле \fIdlpi_phnum\fP задаётся
+размер этого массива.
+.PP
+Программные заголовки представляют собой структуры следующего вида:
+.PP
+.in +4n
+.EX
+typedef struct {
+    Elf32_Word  p_type;    /* тип сегмента */
+    Elf32_Off   p_offset;  /* смещение сегмента в файле */
+    Elf32_Addr  p_vaddr;   /* виртуальный адрес сегмента */
+    Elf32_Addr  p_paddr;   /* физический адрес сегмента */
+    Elf32_Word  p_filesz;  /* размер сегмента в файле */
+    Elf32_Word  p_memsz;   /* размер сегмента в памяти */
+    Elf32_Word  p_flags;   /* флаги сегмента */
+    Elf32_Word  p_align;   /* выравнивание сегмента */
+} Elf32_Phdr;
+.EE
+.in
+.PP
+Заметим, что мы можем вычислить расположение определённого программного
+заголовка \fIx\fP в виртуальной памяти по следующей формуле:
+.PP
+.in +4n
+.EX
+addr == info\->dlpi_addr + info\->dlpi_phdr[x].p_vaddr;
+.EE
+.in
+.PP
+Возможными значениями \fIp_type\fP поля могут быть (подробности смотрите в
+\fI<elf.h>\fP):
+.PP
+.in +4n
+.EX
+.\" For PT_GNU_STACK, see http://www.airs.com/blog/archives/518
+#define PT_LOAD         1    /* загружаемый сегмент программы */
+#define PT_DYNAMIC      2    /* информация о динамической компоновке */
+#define PT_INTERP       3    /* интерпретатор программы */
+#define PT_NOTE         4    /* вспомогательная информация */
+#define PT_SHLIB        5    /* зарезервировано */
+#define PT_PHDR         6    /* сам элемент таблицы заголовков */
+#define PT_TLS          7    /* сегмент локального хранилища нити */
+#define PT_GNU_EH_FRAME 0x6474e550 /* сегмент GCC .eh_frame_hdr */
+#define PT_GNU_STACK  0x6474e551 /* показывает, что стек — исполняемый */
+#define PT_GNU_RELRO  0x6474e552 /* только чтения после перемещения */
+.EE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBdl_iterate_phdr\fP() возвращает значение, которое было получено в
+результате последнего вызова \fIcallback\fP.
+.SH ВЕРСИИ
+Функция \fBdl_iterate_phdr\fP() доступна в glibc начиная с версии 2.2.4.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBdl_iterate_phdr\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Функция \fBdl_iterate_phdr\fP() не описана в каком\-либо стандарте. Эта функция
+есть в некоторых других системах, при чём возвращаемая структура
+\fIdl_phdr_info\fP имеет другой формат. В BSD и Solaris, в структуре есть поля
+\fIdlpi_addr\fP, \fIdlpi_name\fP, \fIdlpi_phdr\fP и \fIdlpi_phnum\fP (помимо других
+внесённых реализацией полей).
+.SH ЗАМЕЧАНИЯ
+В будущих версиях библиотеки C в структуре \fIdl_phdr_info\fP могут появиться
+дополнительные поля; для этого случая предусмотрен аргумент \fIsize\fP, который
+предоставляет вызываемой функции механизм обнаружения того, что она работает
+в системе с добавленными полями.
+.PP
+Первый объект, просматриваемый \fIcallback\fP, это главная программа. У главной
+программы поле \fIdlpi_name\fP будет содержать пустую строку.
+.SH ПРИМЕР
+Следующая программа выводит список путей общих объектов, из которых они были
+загружены. Для каждого общего объекта программа выводит информацию из
+каждого сегмента объектов ELF (виртуальный адрес, размер, флаги и тип).
+.PP
+В следующем сеансе оболочки показан вывод программы, запущенной в системе с
+архитектурой x86\-64. Первый показанный общий объект это основная программа
+(вместо имени пустая строка).
+.PP
+.in +4n
+.EX
+$ \fB./a.out\fP
+Имя: "" (9 сегментов)
+     0: [      0x400040; memsz:    1f8] flags: 0x5; PT_PHDR
+     1: [      0x400238; memsz:     1c] flags: 0x4; PT_INTERP
+     2: [      0x400000; memsz:    ac4] flags: 0x5; PT_LOAD
+     3: [      0x600e10; memsz:    240] flags: 0x6; PT_LOAD
+     4: [      0x600e28; memsz:    1d0] flags: 0x6; PT_DYNAMIC
+     5: [      0x400254; memsz:     44] flags: 0x4; PT_NOTE
+     6: [      0x400970; memsz:     3c] flags: 0x4; PT_GNU_EH_FRAME
+     7: [         (nil); memsz:      0] flags: 0x6; PT_GNU_STACK
+     8: [      0x600e10; memsz:    1f0] flags: 0x4; PT_GNU_RELRO
+Имя: "linux\-vdso.so.1" (4 сегментов)
+     0: [0x7ffc6edd1000; memsz:    e89] flags: 0x5; PT_LOAD
+     1: [0x7ffc6edd1360; memsz:    110] flags: 0x4; PT_DYNAMIC
+     2: [0x7ffc6edd17b0; memsz:     3c] flags: 0x4; PT_NOTE
+     3: [0x7ffc6edd17ec; memsz:     3c] flags: 0x4; PT_GNU_EH_FRAME
+Имя: "/lib64/libc.so.6" (10 сегментов)
+     0: [0x7f55712ce040; memsz:    230] flags: 0x5; PT_PHDR
+     1: [0x7f557145b980; memsz:     1c] flags: 0x4; PT_INTERP
+     2: [0x7f55712ce000; memsz: 1b6a5c] flags: 0x5; PT_LOAD
+     3: [0x7f55716857a0; memsz:   9240] flags: 0x6; PT_LOAD
+     4: [0x7f5571688b80; memsz:    1f0] flags: 0x6; PT_DYNAMIC
+     5: [0x7f55712ce270; memsz:     44] flags: 0x4; PT_NOTE
+     6: [0x7f55716857a0; memsz:     78] flags: 0x4; PT_TLS
+     7: [0x7f557145b99c; memsz:   544c] flags: 0x4; PT_GNU_EH_FRAME
+     8: [0x7f55712ce000; memsz:      0] flags: 0x6; PT_GNU_STACK
+     9: [0x7f55716857a0; memsz:   3860] flags: 0x4; PT_GNU_RELRO
+Имя: "/lib64/ld\-linux\-x86\-64.so.2" (7 сегментов)
+     0: [0x7f557168f000; memsz:  20828] flags: 0x5; PT_LOAD
+     1: [0x7f55718afba0; memsz:   15a8] flags: 0x6; PT_LOAD
+     2: [0x7f55718afe10; memsz:    190] flags: 0x6; PT_DYNAMIC
+     3: [0x7f557168f1c8; memsz:     24] flags: 0x4; PT_NOTE
+     4: [0x7f55716acec4; memsz:    604] flags: 0x4; PT_GNU_EH_FRAME
+     5: [0x7f557168f000; memsz:      0] flags: 0x6; PT_GNU_STACK
+     6: [0x7f55718afba0; memsz:    460] flags: 0x4; PT_GNU_RELRO
+.EE
+.in
+.PP
+.SS "Исходный код программы"
+\&
+.EX
+#define _GNU_SOURCE
+#include <link.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+static int
+callback(struct dl_phdr_info *info, size_t size, void *data)
+{
+    char *type;
+    int p_type, j;
+
+    printf("Имя: \e"%s\e" (%d сегментов)\en", info\->dlpi_name,
+               info\->dlpi_phnum);
+
+    for (j = 0; j < info\->dlpi_phnum; j++) {
+        p_type = info\->dlpi_phdr[j].p_type;
+        type =  (p_type == PT_LOAD) ? "PT_LOAD" :
+                (p_type == PT_DYNAMIC) ? "PT_DYNAMIC" :
+                (p_type == PT_INTERP) ? "PT_INTERP" :
+                (p_type == PT_NOTE) ? "PT_NOTE" :
+                (p_type == PT_INTERP) ? "PT_INTERP" :
+                (p_type == PT_PHDR) ? "PT_PHDR" :
+                (p_type == PT_TLS) ? "PT_TLS" :
+                (p_type == PT_GNU_EH_FRAME) ? "PT_GNU_EH_FRAME" :
+                (p_type == PT_GNU_STACK) ? "PT_GNU_STACK" :
+                (p_type == PT_GNU_RELRO) ? "PT_GNU_RELRO" : NULL;
+
+        printf("    %2d: [%14p; memsz:%7lx] flags: 0x%x; ", j,
+                (void *) (info\->dlpi_addr + info\->dlpi_phdr[j].p_vaddr),
+                info\->dlpi_phdr[j].p_memsz,
+                info\->dlpi_phdr[j].p_flags);
+        if (type != NULL)
+            printf("%s\en", type);
+        else
+            printf("[другой (0x%x)]\en", p_type);
+    }
+
+    return 0;
+}
+
+int
+main(int argc, char *argv[])
+{
+    dl_iterate_phdr(callback, NULL);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBldd\fP(1), \fBobjdump\fP(1), \fBreadelf\fP(1), \fBdladdr\fP(3), \fBdlopen\fP(3),
+\fBelf\fP(5), \fBld.so\fP(8)
+.PP
+\fIExecutable and Linking Format Specification\fP в веб.

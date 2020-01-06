@@ -1,0 +1,395 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" and Copyright (C) 2014 David Herrmann <dh.herrmann@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+)
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MEMFD_CREATE 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+memfd_create \- создаёт анонимный файл
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* смотрите feature_test_macros(7) */
+\fB#include <sys/mman.h>\fP
+.PP
+\fBint memfd_create(const char *\fP\fIname\fP\fB, unsigned int \fP\fIflags\fP\fB);\fP
+.SH ОПИСАНИЕ
+.\" David Herrmann:
+.\"     memfd uses VM_NORESERVE so each page is accounted on first access.
+.\"     This means, the overcommit-limits (see __vm_enough_memory()) and the
+.\"     memory-cgroup limits (mem_cgroup_try_charge()) are applied. Note that
+.\"     those are accounted on "current" and "current->mm", that is, the
+.\"     process doing the first page access.
+Вызов \fBmemfd_create\fP() создаёт анонимный файл и возвращает ссылающийся на
+него файловый дескриптор. Анонимный файл ведёт себя как обычный файл и может
+быть изменён, обрезан, отображён в память и т.д. Однако в отличие от
+обычного файла он располагается в ОЗУ и не имеет энергонезависимого
+хранилища. Как только все ссылки на файл удаляются, он автоматически
+исчезает. Анонимные файлы располагаются в анонимной памяти. Поэтому у
+файлов, создаваемых \fBmemfd_create\fP(), такая же семантика как и областей
+анонимной памяти, выделяемой с помощью \fBmmap\fP(2) с флагом \fBMAP_ANONYMOUS\fP.
+.PP
+Первоначально, размер файла равен 0. После этого вызова нужно задать размер
+файла с помощью \fBftruncate\fP(2) (или заполнить файл с помощью \fBwrite\fP(2)
+или подобными).
+.PP
+Имя, указанное в \fIname\fP, используется в качестве имени файла и будет
+показываться как цель соответствующей символьной ссылки в
+каталоге. \fI/proc/self/fd/\fP. Отображаемое имя всегда начинается с \fImemfd:\fP
+и служит только для отладки. Имена не влияют на поведение файлового
+дескриптора и поэтому несколько файлов могут иметь одно имя без каких\-либо
+последствий.
+.PP
+Для изменения поведения \fBmemfd_create\fP() можно использовать следующие
+значения \fIflags\fP (через OR):
+.TP 
+\fBMFD_CLOEXEC\fP
+Устанавливает флаг close\-on\-exec (\fBFD_CLOEXEC\fP) для нового открытого
+файлового дескриптора. Смотрите описание флага \fBO_CLOEXEC\fP в \fBopen\fP(2) для
+того, чтобы узнать как это может пригодиться.
+.TP 
+\fBMFD_ALLOW_SEALING\fP
+.\" FIXME Why is the MFD_ALLOW_SEALING behavior not simply the default?
+.\" Is it worth adding some text explaining this?
+Разрешает операции опечатывания (sealing) файла. Описание операций
+\fBF_ADD_SEALS\fP и \fBF_GET_SEALS\fP смотрите в \fBfcntl\fP(2), а также в ЗАМЕЧАНИЯ
+ниже. Первоначально набор печатей пуст. Если этот флаг не установлен, то
+начальным набором печатей будет \fBF_SEAL_SEAL\fP, означающий запрещение
+установки печатей на файл.
+.TP 
+\fBMFD_HUGETLB\fP (начиная с Linux 4.14)
+.\" commit 749df87bd7bee5a79cef073f5d032ddb2b211de8
+.\" commit 47b9012ecdc747f6936395265e677d41e11a31ff
+В файловой системе hugetlbfs, использующей огромные страницы, будет создан
+анонимный файл. В файле исходного кода Linux
+\fIDocumentation/admin\-guide/mm/hugetlbpage.rst\fP дана подробная информация о
+hugetlbfs. Одновременное указание \fBMFD_HUGETLB\fP и \fBMFD_ALLOW_SEALING\fP в
+\fIflags\fP поддерживается начиная с Linux 4.16.
+.TP 
+\fBMFD_HUGE_2MB\fP, \fBMFD_HUGE_1GB\fP, \fB...\fP
+Используется как дополнение к \fBMFD_HUGETLB\fP для выбора размера страницы
+hugetlb (соответственно, 2\ МБ, 1\ ГБ, …) в системах, которые поддерживают
+различные размеры страниц hugetlb. Определения размеров огромных страниц
+включены в заголовочный файл \fI<linux/memfd.h>.\fP
+.IP
+Дополнительную информацию о кодировании размеров огромных страниц,
+отсутствующих в заголовочном файле, смотрите в описании сходных по имени
+констант в \fBmmap\fP(2).
+.PP
+Неиспользуемые биты в \fIflags\fP должны быть равны 0.
+.PP
+В качестве возвращаемого значения \fBmemfd_create\fP() возвращает новый
+файловый дескриптор, который можно использовать для обращения к
+файлу. Данный файловый дескриптор открыт на чтение и запись (\fBO_RDWR\fP) и в
+файловом дескрипторе установлен флаг \fBO_LARGEFILE\fP.
+.PP
+При вызове \fBfork\fP(2) и \fBexecve\fP(2) с файловым дескриптором, созданным
+\fBmemfd_create\fP(), применяется обычная семантика. Копия файлового
+дескриптора наследуется потомком, созданным \fBfork\fP(2), указывает на тот же
+файл. Файловый дескриптор сохраняется при после \fBexecve\fP(2), если не
+установлен флаг close\-on\-exec.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBmemfd_create\fP() возвращает новый файловый
+дескриптор. При ошибке возвращается \-1, и \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Некорректный адрес в \fIname\fP.
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указаны неизвестные биты.
+.TP 
+\fBEINVAL\fP
+.\" NAME_MAX - strlen("memfd:")
+Значение \fIname\fP было слишком длинным (ограничено 249 байтами, не считая
+конечный байт null).
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указаны \fBMFD_HUGETLB\fP и \fBMFD_ALLOW_SEALING\fP одновременно.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для создания нового анонимного файла.
+.SH ВЕРСИИ
+Системный вызов \fBmemfd_create\fP() появился в Linux 3.17; поддержка в glibc
+началась с версии 2.27.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Системный вызов \fBmemfd_create\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+.PP
+.\" See also http://lwn.net/Articles/593918/
+.\" and http://lwn.net/Articles/594919/ and http://lwn.net/Articles/591108/
+Системный вызов \fBmemfd_create\fP() предоставляет простую альтернативу ручному
+монтированию файловой системы \fBtmpfs\fP(5), созданию и открытию файла в этой
+файловой системе. Основным предназначением \fBmemfd_create\fP() является
+создание файлов и соответствующих файловых дескрипторов, которые
+используются с программным интерфейсом опечатывания файлов, предоставляемым
+\fBfcntl\fP(2).
+.PP
+Системный вызов \fBmemfd_create\fP() также используется и без опечатывания
+файла (вот почему опечатывание файлов отключено, если этого не запросить
+явно с помощью флага \fBMFD_ALLOW_SEALING\fP). В частности, он может
+использоваться как альтернатива созданию файлов в \fItmp\fP или использованию
+\fBopen\fP(2) с \fBO_TMPFILE\fP в случаях, когда не требуется реальная ссылка на
+конечный файл в файловой системе.
+.SS "Опечатывание файла (file sealing)"
+Ели файл не опечатан, то процессы, которые связываются через общую память,
+должны или доверять друг другу, или учитывать возможность того, что
+недоверенная сторона может работать с общей памятью проблемным
+способом. Например, недоверенная сторона может изменить содержимое общей
+памяти в любое время или уменьшить область общей памяти. Первая возможность
+делает локальный процесс уязвимым к состязательности условий «момент
+проверки — момент использования» (обычно решается копированием данных из
+области общей памяти перед проверкой и использованием). Последняя
+возможность делает локальный процесс уязвимым к сигналам \fBSIGBUS\fP, которые
+возникают при попытке получить доступ к теперь несуществующему расположению
+в области общей памяти (решается использованием обработчика сигнала
+\fBSIGBUS\fP).
+.PP
+Взаимодействие с недоверенными сторонами приводит к усложнению кода для
+работы с общей памятью. Опечатывание памяти позволяет устранить эту
+сложность, позволяя процессу безопасно работать, зная что его партнёр не
+может изменить общую память нежелательным способом.
+.PP
+В примере использования механизма опечатывания происходит следующее:
+.IP 1. 3
+Первый процесс создаёт файл \fBtmpfs\fP(5) с помощью \fBmemfd_create\fP(). Вызов
+возвращает файловый дескриптор, используемый далее.
+.IP 2.
+Первый процесс задаёт размер файла, созданного ранее, с помощью
+\fBftruncate\fP(2), отображает его с помощью \fBmmap\fP(2) и заполняется общую
+память нужными данными.
+.IP 3.
+Первый процесс использует \fBfcntl\fP(2) с операцией \fBF_ADD_SEALS\fP для
+установки одной или более печатей на файл, чтобы в дальнейшем ограничить
+изменение файла (если устанавливается печать \fBF_SEAL_WRITE\fP, то сначала
+нужно удалить общее доступное на запись отображение, созданное ранее).
+.IP 4.
+Второй процесс получает файловый дескриптор файла \fBtmpfs\fP(5) и отображает
+его. Варианты того, как это можно сделать:
+.RS
+.IP * 3
+Процесс, вызвавший \fBmemfd_create\fP(), может переслать полученный файловый
+дескриптор второму процессу через доменный сокет UNIX (смотрите \fBunix\fP(7) и
+\fBcmsg\fP(3)). Второй процесс затем отображает файл с помощью \fBmmap\fP(2).
+.IP *
+Второй процесс создаётся с помощью \fBfork\fP(2) и, таким образом, наследует
+файловый дескриптор и отображение (заметим, что в этом случае и следующем
+образуется природное доверие между двумя процессами, так как они работают с
+правами одного пользовательского идентификатора. Поэтому опечатывание файла
+здесь не нужно).
+.IP *
+Второй процесс открывает файл \fI/proc/<pid>/fd/<fd>\fP, где
+\fI<pid>\fP — PID первого процесса (вызвавшего \fBmemfd_create\fP()), а
+\fI<fd>\fP — номер файлового дескриптора, возвращённого вызовом
+\fBmemfd_create\fP() в этом процессе. Затем второй процесс отображает файл с
+помощью \fBmmap\fP(2).
+.RE
+.IP 5.
+Второй процесс использует \fBfcntl\fP(2) с операцией \fBF_GET_SEALS\fP для
+получения битовой маски печатей, которые были применены к файлу. Данная
+маска проверяется, чтобы определить какие ограничения наложены на изменения
+файла. Если требуется, то второй процесс может наложить дополнительные
+печати, что ещё ограничить действия (возможно до тех пор, пока не будет
+наложена печать \fBF_SEAL_SEAL\fP).
+.SH ПРИМЕР
+Далее показано два примера программы, в которых продемонстрировано
+использование \fBmemfd_create\fP() и программный интерфейс опечатывания файла.
+.PP
+Первая программа, \fIt_memfd_create.c\fP, создаёт файл \fBtmpfs\fP(5) с помощью
+\fBmemfd_create\fP(), изменяет его размер, отображает в память и, возможно,
+накладывает несколько печатей на файл. Программа принимает не более трёх
+аргументов командной строки, два первых обязательные. Первым аргументом
+задаётся имя файла, во втором — размер файла, а в необязательном третьем —
+строка символов, задающих устанавливаемые печати на файл.
+.PP
+Вторая программа, \fIt_get_seals.c\fP, может использоваться для открытия
+существующего файла, созданного \fBmemfd_create\fP(), и проверки набора
+печатей, применённых к файлу.
+.PP
+Следующий пример сеанса показывает как использовать программу. Сначала
+создаётся файл \fBtmpfs\fP(5) и накладываются печати:
+.PP
+.in +4n
+.EX
+$ \fB./t_memfd_create my_memfd_file 4096 sw &\fP
+[1] 11775
+PID: 11775; fd: 3; /proc/11775/fd/3
+.EE
+.in
+.PP
+После этого программа \fIt_memfd_create\fP продолжает выполняться в фоновом
+режиме. Из другой программы можно получить дескриптор файла, созданный
+\fBmemfd_create\fP(), открыв файл \fI/proc/[pid]/fd\fP, который соответствует
+файловому дескриптору, открытому \fBmemfd_create\fP(). Используя это имя, можно
+просмотреть содержимое символьной ссылки \fI/proc/[pid]/fd\fP и использовать
+программу \fIt_get_seals\fP для просмотра печатей, которые установлены на файл:
+.PP
+.in +4n
+.EX
+$ \fBreadlink /proc/11775/fd/3\fP
+/memfd:my_memfd_file (удалён)
+$ \fB./t_get_seals /proc/11775/fd/3\fP
+Наложенные печати: WRITE SHRINK
+.EE
+.in
+.SS "Исходный код программы: t_memfd_create.c"
+\&
+.EX
+#define _GNU_SOURCE
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    int fd;
+    unsigned int seals;
+    char *addr;
+    char *name, *seals_arg;
+    ssize_t len;
+
+    if (argc < 3) {
+        fprintf(stderr, "%s имя размер [печати]\en", argv[0]);
+        fprintf(stderr, "\et в \(aqпечати\(aq могут быть "
+                "следующие символы:\en");
+        fprintf(stderr, "\et\etg \- F_SEAL_GROW\en");
+        fprintf(stderr, "\et\ets \- F_SEAL_SHRINK\en");
+        fprintf(stderr, "\et\etw \- F_SEAL_WRITE\en");
+        fprintf(stderr, "\et\etS \- F_SEAL_SEAL\en");
+        exit(EXIT_FAILURE);
+    }
+
+    name = argv[1];
+    len = atoi(argv[2]);
+    seals_arg = argv[3];
+
+    /* Создаётся анонимный файл в tmpfs; на файл
+       накладываются указанные печати */
+
+    fd = memfd_create(name, MFD_ALLOW_SEALING);
+    if (fd == \-1)
+        errExit("memfd_create");
+
+    /* Размер файл как указано в командной строке */
+
+    if (ftruncate(fd, len) == \-1)
+        errExit("truncate");
+
+    printf("PID: %ld; fd: %d; /proc/%ld/fd/%d\en",
+            (long) getpid(), fd, (long) getpid(), fd);
+
+    /* Здесь может быть код для отображения файла и заполнения данными */
+
+    /* Если в командной строке задан параметр \(aqпечати\(aq, то
+       накладываем их на файл */
+
+    if (seals_arg != NULL) {
+        seals = 0;
+
+        if (strchr(seals_arg, \(aqg\(aq) != NULL)
+            seals |= F_SEAL_GROW;
+        if (strchr(seals_arg, \(aqs\(aq) != NULL)
+            seals |= F_SEAL_SHRINK;
+        if (strchr(seals_arg, \(aqw\(aq) != NULL)
+            seals |= F_SEAL_WRITE;
+        if (strchr(seals_arg, \(aqS\(aq) != NULL)
+            seals |= F_SEAL_SEAL;
+
+        if (fcntl(fd, F_ADD_SEALS, seals) == \-1)
+            errExit("fcntl");
+    }
+
+    /* Продолжаем выполнение для того, чтобы файл, созданный memfd_create(),
+       продолжал существовать */
+
+    pause();
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SS "Исходный код программы: t_get_seals.c"
+\&
+.EX
+#define _GNU_SOURCE
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    int fd;
+    unsigned int seals;
+
+    if (argc != 2) {
+        fprintf(stderr, "%s /proc/PID/fd/FD\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    fd = open(argv[1], O_RDWR);
+    if (fd == \-1)
+        errExit("open");
+
+    seals = fcntl(fd, F_GET_SEALS);
+    if (seals == \-1)
+        errExit("fcntl");
+
+    printf("Наложенные печати:");
+    if (seals & F_SEAL_SEAL)
+        printf(" SEAL");
+    if (seals & F_SEAL_GROW)
+        printf(" GROW");
+    if (seals & F_SEAL_WRITE)
+        printf(" WRITE");
+    if (seals & F_SEAL_SHRINK)
+        printf(" SHRINK");
+    printf("\en");
+
+    /* Здесь может быть код для отображения и доступа к содержимому файла */
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfcntl\fP(2), \fBftruncate\fP(2), \fBmmap\fP(2), \fBshmget\fP(2), \fBshm_open\fP(3)

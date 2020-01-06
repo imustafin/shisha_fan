@@ -1,0 +1,34 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CEXP2 3 2014\-08\-19 "" "Руководство программиста Linux"
+.SH ИМЯ
+cexp2, cexp2f, cexp2l \- экспонента по основанию 2 для комплексного числа
+.SH ОБЗОР
+\fB#include <complex.h>\fP
+.PP
+\fBdouble complex cexp2(double complex \fP\fIz\fP\fB);\fP
+.br
+\fBfloat complex cexp2f(float complex \fP\fIz\fP\fB);\fP
+.br
+\fBlong double complex cexp2l(long double complex \fP\fIz\fP\fB);\fP
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.SH ОПИСАНИЕ
+Функция возвращает значение числа 2 в степени \fIz\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Имена функций зарезервированы для будущего использования в C99.
+.SH ДОСТУПНОСТЬ
+.\" But reserved in NAMESPACE.
+Пока не в glibc (версия 2.19).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcabs\fP(3), \fBcexp\fP(3), \fBclog10\fP(3), \fBcomplex\fP(7)

@@ -1,0 +1,70 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified Sun Jul 25 10:14:13 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 15 April 1995 by Michael Chastain <mec@shell.portal.com>
+.\"   Update calling parameters to Linux 1.2.4 values.
+.\" Modified 10 June 1995 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 3 May 1996 by Martin Schulze <joey@infodrom.north.de>
+.\" Modified Wed Nov  6 04:05:28 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Sat Jan 29 01:08:23 2000 by aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETUP 2 2008\-12\-03 Linux "Руководство программиста Linux"
+.SH ИМЯ
+setup \- настраивает устройства и файловые системы, монтирует корневую
+файловую систему
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint setup(void);\fP
+.SH ОПИСАНИЕ
+\fBsetup\fP() вызывается один раз из \fIlinux/init/main.c\fP. Она вызывает функции
+инициализации устройств и файловых систем, встроенных в ядро, и затем
+монтирует корневую файловую систему.
+.PP
+Ни один из пользовательских процессов не может вызвать \fBsetup\fP(). Любой
+пользовательский процесс даже с правами суперпользователя будет получать
+сообщение об ошибке с кодом \fBEPERM\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Вызов \fBsetup\fP() всегда возвращает пользовательскому процессу значение \-1.
+.SH ОШИБКИ
+.TP 
+\fBEPERM\fP
+Всегда для пользовательского процесса.
+.SH ВЕРСИИ
+Начиная с Linux 2.1.121, эта функция не существует.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция применяется только в Linux и поэтому не должна использоваться в
+программах, предназначенных для переноса на другую платформу, и вообще не
+должна вызываться из пользовательских программ.
+.SH ЗАМЕЧАНИЯ
+Вызывающая последовательность менялась: в некоторых версиях у \fBsetup\fP() был
+один аргумент \fIvoid\ *BIOS\fP, а в некоторых — \fIint magic\fP.

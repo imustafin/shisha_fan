@@ -1,0 +1,111 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1980, 1991 Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)killpg.2	6.5 (Berkeley) 3/10/91
+.\"
+.\" Modified Fri Jul 23 21:55:01 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Oct 22 08:11:14 EDT 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 2004-06-16 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on CAP_KILL
+.\" Modified 2004-06-21 by aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH KILLPG 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+killpg \- послать сигнал группе процессов
+.SH ОБЗОР
+\fB#include <signal.h>\fP
+.PP
+\fBint killpg(int \fP\fIpgrp\fP\fB, int \fP\fIsig\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.ad l
+.TP  4
+\fBkillpg\fP():
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE
+.ad
+.SH ОПИСАНИЕ
+\fBkillpg\fP() отправляет сигнал \fIsig\fP группе процессов \fIpgrp\fP. Список
+сигналов можно найти в \fBsignal\fP(7).
+.PP
+Если значение \fIpgrp\fP равно 0, то \fBkillpg\fP() отправляет сигнал вызывающей
+группе процессов (в POSIX: если значение \fIpgrp\fP меньше или равно 1, то
+поведение не определено).
+.PP
+Права, требуемые для отправки сигнала другому процессу, смотрите в
+\fBkill\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+В \fIsig\fP задан неправильный номер сигнала.
+.TP 
+\fBEPERM\fP
+Процесс не имеет достаточно прав для отправки сигнала ни одному из группы
+процессов\-получателей. Требуемые права смотрите в \fBkill\fP(2).
+.TP 
+\fBESRCH\fP
+В группе процессов \fIpgrp\fP нет ни одного процесса.
+.TP 
+\fBESRCH\fP
+Номер группы процессов равен 0, но процесс\-отправитель не входит ни в какую
+группу процессов.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.4BSD, (\fBkillpg\fP() впервые появился в
+4BSD).
+.SH ЗАМЕЧАНИЯ
+Есть некоторые различия между проверкой прав в системах BSD и System\ V. Смотрите в POSIX объяснение \fBkill\fP(). Различие не упомянуто в POSIX по
+отношению к возвращаемому значению \fBEPERM\fP: в BSD описано, что сигнал не
+послан и возвращается \fBEPERM\fP когда проверка прав не пройдена по крайней
+мере для одного процесса\-получателя, в то время как в POSIX описано, что
+\fBEPERM\fP возвращается только когда проверка прав не пройдена для всех
+процессов\-получателей.
+.SS "Отличия между библиотекой C и ядром"
+В Linux \fBkillpg\fP() реализован в виде библиотечной функции, которая вызывает
+\fIkill(\-pgrp,\ sig)\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetpgrp\fP(2), \fBkill\fP(2), \fBsignal\fP(2), \fBcapabilities\fP(7),
+\fBcredentials\fP(7)

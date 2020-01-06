@@ -1,0 +1,202 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
+.\" Written by Stephen M. Cameron <scameron@beardog.cce.hp.com>
+.\"
+.\" %%%LICENSE_START(GPLv2_ONELINE)
+.\" Licensed under GNU General Public License version 2 (GPLv2)
+.\" %%%LICENSE_END
+.\"
+.\" shorthand for double quote that works everywhere.
+.ds q \N'34'
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH HPSA 4 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+hpsa \- драйвер SCSI для HP Smart Array
+.SH ОБЗОР
+.nf
+modprobe hpsa [ hpsa_allow_any=1 ]
+.fi
+.SH ОПИСАНИЕ
+\fBhpsa\fP — это драйвер SCSI для контроллеров RAID HP Smart Array.
+.SS Параметры
+\fIhpsa_allow_any=1\fP: Этот параметр разрешает драйверу попытаться управлять
+аппаратурой любого контроллера RAID HP Smart Array, даже если его модель
+неизвестна драйверу. Это позволяет новому оборудованию работать через старые
+драйверы. Обычно, данный параметр используется для того, чтобы позволить
+установить операционную систему с носителя, который был создан раньше
+контроллера RAID, а также он может использоваться для обслуживания драйвером
+\fBhpsa\fP старых контроллеров, которые, обычно, работают через драйвер
+\fBcciss\fP(4). Такие старые карты не тестировались и не поддерживаются
+\fBhpsa\fP; для них пока всё же лучше использовать \fBcciss\fP(4).
+.SS "Поддерживаемое оборудование"
+Драйвер \fBhpsa\fP поддерживает следующие карты Smart Array:
+.PP
+.nf
+    Smart Array P700M
+    Smart Array P212
+    Smart Array P410
+    Smart Array P410i
+    Smart Array P411
+    Smart Array P812
+    Smart Array P712m
+    Smart Array P711m
+    StorageWorks P1210m
+.fi
+.PP
+.\" commit 135ae6edeb51979d0998daf1357f149a7d6ebb08
+Начиная с Linux 4.14 также поддерживаются следующие платы Smart Array:
+.PP
+.nf
+    Smart Array 5300
+    Smart Array 5312
+    Smart Array 532
+    Smart Array 5i
+    Smart Array 6400
+    Smart Array 6400 EM
+    Smart Array 641
+    Smart Array 642
+    Smart Array 6i
+    Smart Array E200
+    Smart Array E200i
+    Smart Array E200i
+    Smart Array E200i
+    Smart Array E200i
+    Smart Array E500
+    Smart Array P400
+    Smart Array P400i
+    Smart Array P600
+    Smart Array P700m
+    Smart Array P800
+.fi
+.SS "Особенности настройки"
+Для настройки контроллеров HP Smart Array используйте HP Array Configuration
+Utility (\fBhpacuxe\fP(8) или \fBhpacucli\fP(8)) или Offline ROM\-based
+Configuration Utility (ORCA), которую можно запустить из ROM Smart Array при
+старте машины.
+.SH ФАЙЛЫ
+.SS "Узлы устройства"
+Логические диски доступны через драйвер дисков SCSI (\fBsd\fP(4)), ленточные
+устройства — через драйвер лент SCSI (\fBst\fP(4)), а контроллеры RAID — через
+общий драйвер SCSI (\fBsg\fP(4)); имена узлов устройств называются \fI/dev/sd*,\fP
+\fI/dev/st*\fP и \fI/dev/sg*\fP, соответственно.
+.SS "Файлы в /sys, относящиеся к атрибутам узла HPSA"
+.TP 
+\fI/sys/class/scsi_host/host*/rescan\fP
+Атрибут только для записи. Факт записи заставляет драйвер выполнить
+сканирование на предмет появления новых, изменившихся или удалённых
+устройств (например, подключаемых на ходу ленточных накопителей или только
+что настроенных или удалённых логических дисков и т. д.) и уведомить
+прослойку (midlayer)  SCSI об обнаруженных изменениях. Обычно,
+пересканирование выполняется автоматически утилитой настройки HP Array (из
+графического интерфейса или командной строки); поэтому при изменении
+логических дисков, обычно, пользователь не должен использовать этот
+атрибут. Данный атрибут полезен при подключении на ходу устройств, таких как
+ленточные накопители или хранилищ с уже настроенными логическими дисками.
+.TP 
+\fI/sys/class/scsi_host/host*/firmware_revision\fP
+В данном атрибуте хранится версия микропрограммы Smart Array.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+# \fBcd /sys/class/scsi_host/host4\fP
+# \fBcat firmware_revision\fP
+7.14
+.EE
+.in
+.\"
+.SS "Файлы в /sys, относящиеся к атрибутам диска HPSA"
+.TP 
+\fI/sys/class/scsi_disk/c:b:t:l/device/unique_id\fP
+В данном атрибуте хранится 32 шестнадцатеричных цифры уникального
+идентификатора для каждого логического диска.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+# \fBcd /sys/class/scsi_disk/4:0:0:0/device\fP
+# \fBcat unique_id\fP
+600508B1001044395355323037570F77
+.EE
+.in
+.TP 
+\fI/sys/class/scsi_disk/c:b:t:l/device/raid_level\fP
+В данном атрибуте хранится уровень RAID каждого логического диска.
+.IP
+Пример:
+.IP
+.in +4n
+.EX
+# \fBcd /sys/class/scsi_disk/4:0:0:0/device\fP
+# \fBcat raid_level\fP
+RAID 0
+.EE
+.in
+.TP 
+\fI/sys/class/scsi_disk/c:b:t:l/device/lunid\fP
+В данном атрибуте хранится 16 шестнадцатеричных цифры (8 байт)
+идентификатора LUN, который может адресовать логический или физический
+диск. Форматом \fIc\fP:\fIb\fP:\fIt\fP:\fIl\fP описывается контроллер, шина, целевое
+устройство (target) и lun устройства.
+.PP
+Пример:
+.IP
+.in +4n
+.EX
+# \fBcd /sys/class/scsi_disk/4:0:0:0/device\fP
+# \fBcat lunid\fP
+0x0000004000000000
+.EE
+.in
+.\"
+.SS "Поддерживаемые операции ioctl()"
+Для совместимости с приложениями, написанными для драйвера \fBcciss\fP(4), в
+драйвере \fBhpsa\fP поддерживаются многие ioctl из драйвера \fBcciss\fP(4) (но не
+все). Структуры данных, используемые в ioctl, описаны в файле исходного кода
+ядра Linux \fIinclude/linux/cciss_ioctl.h\fP.
+.TP 
+\fBCCISS_DEREGDISK\fP, \fBCCISS_REGNEWDISK\fP, \fBCCISS_REGNEWD\fP
+Это три ioctl выполняют одинаковую работу — заставляют драйвер искать новые
+устройства. Это тоже самое, как если выполнить запись в hpsa\-атрибут узла
+«rescan».
+.TP 
+\fBCCISS_GETPCIINFO\fP
+Возвращает домен PCI, шину, устройство, функцию и «board ID» (ID подсистемы
+PCI).
+.TP 
+\fBCCISS_GETDRIVVER\fP
+Возвращает версию драйвера в виде трёх байт в формате:
+.IP
+.in +4n
+.EX
+(major_version << 16) | (minor_version << 8) |
+    (subminor_version)
+.EE
+.in
+.TP 
+\fBCCISS_PASSTHRU\fP, \fBCCISS_BIG_PASSTHRU\fP
+Разрешает передавать команды «BMIC» и «CISS» в Smart Array. Они часто
+используются в HP Array Configuration Utility, SNMP\-агентах хранилищ и
+т. д. Примеры смотрите в
+.UR http://cciss.sf.net
+.UE
+в разделе о
+\fIcciss_vol_status\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcciss\fP(4), \fBsd\fP(4), \fBst\fP(4), \fBcciss_vol_status\fP(8), \fBhpacucli\fP(8),
+\fBhpacuxe\fP(8),
+.PP
+.UR http://cciss.sf.net
+.UE ,
+and \fIDocumentation/scsi/hpsa.txt\fP и
+\fIDocumentation/ABI/testing/sysfs\-bus\-pci\-devices\-cciss\fP в дереве исходного
+кода ядра Linux
+.\" .SH AUTHORS
+.\" Don Brace, Steve Cameron, Tom Lawler, Mike Miller, Scott Teel
+.\" and probably some other people.

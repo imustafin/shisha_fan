@@ -1,0 +1,102 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2012 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MALLOC_GET_STATE 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+malloc_get_state, malloc_set_state \- сохраняют и восстанавливают состояние в
+реализации malloc
+.SH ОБЗОР
+.nf
+\fB#include <malloc.h>\fP
+.PP
+\fBvoid* malloc_get_state(void);\fP
+.PP
+\fBint malloc_set_state(void *\fP\fIstate\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fIПримечание\fP: эта функция была удалена в glibc версии 2.25.
+.PP
+Функция \fBmalloc_get_state\fP() записывает текущее состояние всех внутренних
+служебных переменных \fBmalloc\fP(3) (но не фактическое содержимое кучи или
+состояние указателей функций \fBmalloc_hook\fP(3)). Состояние сохраняется в
+системно\-зависимой структуре данных с закрытым форматом, динамически
+выделенной через \fBmalloc\fP(3), и указатель на эту структуру данных
+возвращается как результат функции (вызывающий является ответственным за
+вызов \fBfree\fP(3) для этой памяти).
+.PP
+Функция \fBmalloc_set_state\fP()  восстанавливает значения состояния внутренних
+служебных переменных \fBmalloc\fP(3) из сохранённой структуры закрытого
+формата, на которую указывает \fIstate\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBmalloc_get_state\fP() возвращает указатель на только
+что выделенную структуру с закрытым форматом. При ошибке (например, если не
+получилось выделить память под структуру) \fBmalloc_get_state\fP() возвращает
+NULL.
+.PP
+.\" if(ms->magic != MALLOC_STATE_MAGIC) return -1;
+.\" /* Must fail if the major version is too high. */
+.\" if((ms->version & ~0xffl) > (MALLOC_STATE_VERSION & ~0xffl)) return -2;
+При успешном выполнении \fBmalloc_set_state\fP() возвращается 0. Если
+реализация обнаруживает, что \fIstate\fP не указывает на корректную структуру с
+данными, то \fBmalloc_set_state\fP() возвращает \-1. Если реализация
+обнаруживает, что версия структуры данных, на которую ссылается \fIstate\fP,
+новее чем известно реализации, то \fBmalloc_set_state\fP() возвращает \-2.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw19 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmalloc_get_state\fP(),
+\fBmalloc_set_state\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+Эти функции полезны при использовании реализации \fBmalloc\fP(3) в виде общей
+библиотеки, а содержимое кучи сохраняется/восстанавливается каким\-то другим
+способом. Это используется в GNU Emacs для реализации своей функции
+«выгрузки».
+.PP
+.\" i.e., calls __malloc_check_init()
+.\" i.e., malloc checking is not already in use
+.\" and the caller requested malloc checking
+Эти функции никогда не сохраняют и не восстанавливают указатели на
+перехватывающие функции, но есть два исключения: если вызваны проверки
+malloc (смотрите \fBmallopt\fP(3)), то, если возможно, \fBmalloc_get_state\fP()
+сбрасывает проверки malloc перехватывающих функций; если проверки malloc не
+используются в сохранённом состоянии, но вызывающий их запросил, то
+перехватывающие функции сбрасываются в 0.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmalloc\fP(3), \fBmallopt\fP(3)

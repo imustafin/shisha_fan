@@ -1,0 +1,268 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_CLEANUP_PUSH 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_cleanup_push, pthread_cleanup_pop \- помещает и выталкивает очищающие
+обработчики при отмене нити
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBvoid pthread_cleanup_push(void (*\fP\fIroutine\fP\fB)(void *),\fP
+\fB                          void *\fP\fIarg\fP\fB);\fP
+\fBvoid pthread_cleanup_pop(int \fP\fIexecute\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Данные функции управляют стеком нити, вызывающим очищающие обработчики при
+отмене нити. Очищающий обработчик — это функция, которая автоматически
+вызывается при отмене нити (или в при других обстоятельствах, описанных
+ниже); это может быть, например, отмена блокировки мьютекса, при которой он
+становится доступным другим нитям процесса.
+.PP
+Функция \fBpthread_cleanup_push\fP() помещает обработчик \fIroutine\fP наверх
+стека очищающих обработчиков. Позднее, при вызове \fIroutine\fP, ему будет
+передан \fIarg\fP в качестве аргумента.
+.PP
+Функция \fBpthread_cleanup_pop\fP() удаляет обработчик с вершины стека
+очищающих обработчиков, и, возможно, выполняет его, если \fIexecute\fP не равно
+нулю.
+.PP
+Очищающий обработчик при отмене выталкивается из стека и выполняется при
+следующих условиях:
+.IP 1. 3
+Когда нить отменяется, все очищающие обработчики из стека выталкиваются и
+вызываются в обратном порядке их помещения в стек.
+.IP 2.
+Когда нить завершается вызовом \fBpthread_exit\fP(3), все очищающие обработчики
+выполняются как описано в предыдущем пункте (очищающие обработчики \fIне\fP
+вызываются, если нить завершается \fIвозвратом\fP из начальной функции нити).
+.IP 3.
+Когда нить вызывает \fBpthread_cleanup_pop\fP() с ненулевым значением аргумента
+\fIexecute\fP, самый верхний очищающий обработчик выталкивается и выполняется.
+.PP
+В POSIX.1 допускается реализация \fBpthread_cleanup_push\fP() и
+\fBpthread_cleanup_pop\fP() в виде макросов, которые раскрывают текст,
+содержащий \(aq\fB{\fP\(aq и \(aq\fB}\fP\(aq, соответственно. По этой причине,
+вызывающий должен убедиться, что вызовы этих функций используются парно в
+одной функции и на одном лексическом уровне вложенности (другими словами,
+очищающий обработчик устанавливается только во время выполнения определённой
+секции кода).
+.PP
+Вызов \fBlongjmp\fP(3)  (\fBsiglongjmp\fP(3)) приводит к непредсказуемым
+результатам, если был сделан любой вызов в \fBpthread_cleanup_push\fP() или
+\fBpthread_cleanup_pop\fP() без соответствующего вызову пары, так как буфер
+перехода (jump buffer) был заполнен \fBsetjmp\fP(3)
+(\fBsigsetjmp\fP(3)). Подобным образом, вызов \fBlongjmp\fP(3)  (\fBsiglongjmp\fP(3))
+изнутри очищающего обработчика приводит к непредсказуемым результатам, если
+буфер перехода также не был заполнен \fBsetjmp\fP(3) (\fBsigsetjmp\fP(3)) внутри
+обработчика.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Данные функции не возвращают никаких значений.
+.SH ОШИБКИ
+.\" SH VERSIONS
+.\" Available since glibc 2.0
+Эти функции не вызывают ошибок.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw23 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_cleanup_push\fP(),
+\fBpthread_cleanup_pop\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В Linux, функции \fBpthread_cleanup_push\fP() и \fBpthread_cleanup_pop\fP()
+реализованы в виде макросов, которые расширяются до текста, содержащего
+\(aq\fB{\fP\(aq и \(aq\fB}\fP\(aq, соответственно. Это означает, что переменные,
+объявленные внутри области парных вызовов этих функций, будут видимы внутри
+только этой области.
+.PP
+.\" The text was actually added in the 2004 TC2
+В POSIX.1 сказано, что результат использования \fIreturn\fP, \fIbreak\fP,
+\fIcontinue\fP или \fIgoto\fP для преждевременного оставления блока, окружающего
+\fBpthread_cleanup_push\fP()  и \fBpthread_cleanup_pop\fP(), не определён. В
+переносимых приложениях не нужно так делать.
+.SH ПРИМЕР
+Далее показан простой пример использования функций, описанных на этой
+странице. Программа создаёт нить, которая выполняет цикл обрамлённый
+\fBpthread_cleanup_push\fP() и \fBpthread_cleanup_pop\fP(). В этом цикле каждую
+секунду увеличивается глобальная переменная \fIcnt\fP. В зависимости от
+аргументов командной строки главная нить посылает другой нити запрос на
+отмену или изменяет глобальную переменную, что заставляет другую нить выйти
+из цикла и завершить работу (с помощью \fIreturn\fP).
+.PP
+В этом сеансе главная нить посылает запрос отмены другой нити:
+.PP
+.in +4n
+.EX
+$ \fB./a.out\fP
+Запущена новая нить
+cnt = 0
+cnt = 1
+Отменяем нить
+Вызван очищающий обработчик
+Нить отменена; cnt = 0
+.EE
+.in
+.PP
+Здесь мы видим, что нить была отменена и что был вызван очищающий обработчик
+и он сбросил значение глобальной переменной \fIcnt\fP в 0.
+.PP
+В следующем сеансе главная программа изменяет глобальную переменную, что
+вызывает штатное завершение другой нити:
+.PP
+.in +4n
+.EX
+$ \fB./a.out x\fP
+Запущена новая нить
+cnt = 0
+cnt = 1
+Нить завершилась штатным образом; cnt = 2
+.EE
+.in
+.PP
+Здесь мы видим, что очищающий обработчик не вызывался (так как
+\fIcleanup_pop_arg\fP равно 0), и поэтому значение \fIcnt\fP не сброшено.
+.PP
+В следующем сеансе главная программа изменяет глобальную переменную, что
+вызывает штатное завершение другой нити, передаёт ненулевое значение в
+\fIcleanup_pop_arg\fP:
+.PP
+.in +4n
+.EX
+$ \fB./a.out x 1\fP
+Запущена новая нить
+cnt = 0
+cnt = 1
+Вызван очищающий обработчик
+Нить завершилась штатным образом; cnt = 0
+.EE
+.in
+.PP
+Здесь мы видим, что хотя нить не отменена, всё же вызван очищающий
+обработчик, так как в \fBpthread_cleanup_pop\fP() передан ненулевой аргумент.
+.SS "Исходный код программы"
+\&
+.EX
+#include <pthread.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+
+#define handle_error_en(en, msg) \e
+        do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
+
+static int done = 0;
+static int cleanup_pop_arg = 0;
+static int cnt = 0;
+
+static void
+cleanup_handler(void *arg)
+{
+    printf("Вызван очищающий обработчик\en");
+    cnt = 0;
+}
+
+static void *
+thread_start(void *arg)
+{
+    time_t start, curr;
+
+    printf("Запущена новая нить\en");
+
+    pthread_cleanup_push(cleanup_handler, NULL);
+
+    curr = start = time(NULL);
+
+    while (!done) {
+        pthread_testcancel();           /* точка отмены */
+        if (curr < time(NULL)) {
+            curr = time(NULL);
+            printf("cnt = %d\en", cnt);  /* точка отмены */
+            cnt++;
+        }
+    }
+
+    pthread_cleanup_pop(cleanup_pop_arg);
+    return NULL;
+}
+
+int
+main(int argc, char *argv[])
+{
+    pthread_t thr;
+    int s;
+    void *res;
+
+    s = pthread_create(&thr, NULL, thread_start, NULL);
+    if (s != 0)
+        handle_error_en(s, "pthread_create");
+
+    sleep(2);           /* даём время нити запуститься */
+
+    if (argc > 1) {
+        if (argc > 2)
+            cleanup_pop_arg = atoi(argv[2]);
+        done = 1;
+
+    } else {
+        printf("Отменяем нить\en");
+        s = pthread_cancel(thr);
+        if (s != 0)
+            handle_error_en(s, "pthread_cancel");
+    }
+
+    s = pthread_join(thr, &res);
+    if (s != 0)
+        handle_error_en(s, "pthread_join");
+
+    if (res == PTHREAD_CANCELED)
+        printf("Нить была отменена; cnt = %d\en", cnt);
+    else
+        printf("Нить завершилась штатным образом; cnt = %d\en", cnt);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthread_cancel\fP(3), \fBpthread_cleanup_push_defer_np\fP(3),
+\fBpthread_setcancelstate\fP(3), \fBpthread_testcancel\fP(3), \fBpthreads\fP(7)

@@ -1,0 +1,151 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2008, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ACCT 5 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+acct \- файл учёта процессов
+.SH ОБЗОР
+\fB#include <sys/acct.h>\fP
+.SH ОПИСАНИЕ
+Если ядро собрано с включённым параметром учёта процессов
+(\fBCONFIG_BSD_PROCESS_ACCT\fP), то системный вызов \fBacct\fP(2) запустит учёт
+процесса:
+.PP
+.in +4n
+acct("/var/log/pacct");
+.in
+.PP
+При включённом учёте процессов, ядро делает запись в файл учёта по каждому
+процессу системы по его завершении. Эта запись содержит информацию о
+завершённом процессе и определена в \fI<sys/acct.h>\fP следующим
+образом:
+.PP
+.in +4n
+.EX
+#define ACCT_COMM 16
+
+typedef u_int16_t comp_t;
+
+struct acct {
+    char ac_flag;           /* флаги учёта */
+    u_int16_t ac_uid;       /* ID пользователя */
+    u_int16_t ac_gid;       /* ID группы */
+    u_int16_t ac_tty;       /* управляющий терминал */
+    u_int32_t ac_btime;     /* время создания процесса
+                               (в секундах с начала эпохи) */
+    comp_t    ac_utime;     /* время работы ЦП в пользовательском режиме */
+    comp_t    ac_stime;     /* время работы ЦП в системном режиме */
+    comp_t    ac_etime;     /* прошедшее время */
+    comp_t    ac_mem;       /* среднее количество использованной памяти (КБ) */
+    comp_t    ac_io;        /* передано символов (не используется) */
+    comp_t    ac_rw;        /* прочитано или записано блоков (не используется) */
+    comp_t    ac_minflt;    /* промахи для вспомогательных страниц */
+    comp_t    ac_majflt;    /* промахи для главных страниц */
+    comp_t    ac_swaps;     /* количество подкачек (не используется) */
+    u_int32_t ac_exitcode;  /* код завершения процесса
+                               (см. wait(2)) */
+    char      ac_comm[ACCT_COMM+1];
+                            /* имя команды (basename от последней
+                               исполнявшейся команды; завершается null) */
+    char      ac_pad[\fIX\fP];    /* байты заполнения */
+};
+
+enum {                      /* биты для поля ac_flag */
+    AFORK = 0x01,           /* был выполнен fork, но не exec */
+    ASU   = 0x02,           /* использовались права суперпользователя */
+    ACORE = 0x08,           /* создан файл core */
+    AXSIG = 0x10            /* завершён по сигналу */
+};
+.EE
+.in
+.PP
+Тип данных \fIcomp_t\fP \(em это число с плавающей точкой, состоящее из
+3\-битной экспоненты по основанию 8 и 13\-битной мантиссы. Переменная \fIc\fP
+этого типа может быть преобразована к целому (long) так:
+.PP
+.nf
+    v = (c & 0x1fff) << (((c >> 13) & 0x7) * 3);
+.fi
+.PP
+Поля \fIac_utime\fP, \fIac_stime\fP и \fIac_etime\fP хранят время в "тактах часов";
+для преобразования в секунды нужно поделить значение на
+\fIsysconf(_SC_CLK_TCK)\fP.
+.SS "Формат файла учёта версии 3"
+Начиная с ядра версии 2.6.8, можно создавать файл учёта альтернативной
+версии, если задать параметр \fBCONFIG_BSD_PROCESS_ACCT_V3\fP при сборке
+ядра. Если этот параметр установлен, то записи, сохранённые в файле учёта,
+будут содержать дополнительные поля, а ширина полей \fIc_uid\fP и \fIac_gid\fP
+будет расширена с 16 до 32 бит (для соответствия с увеличенным размером UID
+и GID в Linux 2.4 и новее). Записи определены следующим образом:
+.PP
+.in +4n
+.EX
+struct acct_v3 {
+    char      ac_flag;      /* флаги */
+    char      ac_version;   /* всегда равно ACCT_VERSION (3) */
+    u_int16_t ac_tty;       /* управляющий терминал */
+    u_int32_t ac_exitcode;  /* код завершения процесса
+    u_int32_t ac_uid;       /* реальный ID пользователя */
+    u_int32_t ac_gid;       /* реальный ID группы */
+    u_int32_t ac_pid;       /* ID процесса */
+    u_int32_t ac_ppid;      /* ID родительского процесса */
+    u_int32_t ac_btime;     /* время создания процесса
+    float     ac_etime;     /* прошедшее время */
+    comp_t    ac_utime;     /* время работы ЦП в пользовательском режиме */
+    comp_t    ac_stime;     /* время работы ЦП в системном режиме */
+    comp_t    ac_mem;       /* среднее количество использованной памяти (КБ) */
+    comp_t    ac_io;        /* передано символов (не используется) */
+    comp_t    ac_rw;        /* прочитано или записано блоков
+                            (не используется) */
+    comp_t    ac_minflt;    /* промахи для вспомогательных страниц */
+    comp_t    ac_majflt;    /* промахи для главных страниц */
+    comp_t    ac_swaps;     /* количество подкачек (не используется) */
+    char      ac_comm[ACCT_COMM]; /* имя команды */
+};
+.EE
+.in
+.SH ВЕРСИИ
+Структура \fIacct_v3\fP определена в glibc начиная с версии 2.6.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Учёт процессов возник в BSD. Хотя он есть в большинстве систем, он не
+стандартизован, и параметры разнятся между системами.
+.SH ЗАМЕЧАНИЯ
+Записи в файле учёта упорядочены по времени завершения процессов.
+.PP
+В ядрах до версии 2.6.9 включительно, с помощью библиотеки нитей NPTL для
+каждой нити сохранялась своя запись учёта; начиная с Linux 2.6.10 отдельная
+запись сохраняется для всего процесса при завершении работы его последней
+нити.
+.PP
+В файле \fI/proc/sys/kernel/acct\fP, описанном в \fBproc\fP(5), определены
+настройки, которые управляют поведением учёта процессов при нехватке места
+на диске.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlastcomm\fP(1), \fBacct\fP(2), \fBaccton\fP(8), \fBsa\fP(8)

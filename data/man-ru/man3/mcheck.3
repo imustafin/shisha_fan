@@ -1,0 +1,176 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2012 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MCHECK 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+mcheck, mcheck_check_all, mcheck_pedantic, mprobe \- проверяет целостность
+кучи
+.SH ОБЗОР
+.nf
+\fB#include <mcheck.h>\fP
+.PP
+\fBint mcheck(void (*\fP\fIabortfunc\fP\fB)(enum mcheck_status \fP\fImstatus\fP\fB));\fP
+.PP
+\fBint mcheck_pedantic(void (*\fP\fIabortfunc\fP\fB)(enum mcheck_status \fP\fImstatus\fP\fB));\fP
+.PP
+\fBvoid mcheck_check_all(void);\fP
+.PP
+\fBenum mcheck_status mprobe(void *\fP\fIptr\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBmcheck\fP() устанавливает набор отладочных ловушек (hooks) на
+семейство функций выделения памяти \fBmalloc\fP(3). Эти ловушки выполняют
+определённые проверки целостности состояния кучи. Проверками обнаруживаются
+следующие ошибки приложения: многократное освобождение одного блока памяти,
+повреждение структур данных служебной информации, расположенных
+непосредственно перед блоком выделенной памяти.
+.PP
+Для эффективной работы функция \fBmcheck\fP() должна вызываться перед первым
+вызовом \fBmalloc\fP(3) или подобной функции. В случаях, когда это трудно
+проверить, компоновка программы с параметром \fI\-lmcheck\fP вставляет неявный
+вызов \fBmcheck\fP() (с аргументом NULL) перед первым вызовом функции выделения
+памяти.
+.PP
+Функция \fBmcheck_pedantic\fP() похожа на \fBmcheck\fP(), но выполняет проверку
+всех выделенных блоков каждый раз, когда вызывается функция выделения
+памяти. Она может работать очень медленно!
+.PP
+Функция \fBmcheck_check_all\fP() выполняет немедленную проверку всех выделенных
+блоков. Этот вызов эффективно работает только, если перед этим была вызвана
+\fBmcheck\fP().
+.PP
+Если система обнаруживает целостность кучи, то вызывается функция, которую
+указал вызывающий в \fIabortfunc\fP с единственным аргументом \fImstatus\fP,
+который показывает, какой тип рассогласованности обнаружен. Если
+\fIabortfunc\fP равно NULL, то функция по умолчанию печатает сообщение об
+ошибке в \fIstderr\fP и вызывает \fBabort\fP(3).
+.PP
+Функция \fBmprobe\fP() выполняет проверку целостности блока выделенной памяти,
+на который указывает \fIptr\fP. Перед этим должна вызываться функция
+\fBmcheck\fP() (в противном случае \fBmprobe\fP() возвращает \fBMCHECK_DISABLED\fP).
+.PP
+Далее перечислены значения, возвращаемые \fBmprobe\fP() или передаваемые в
+аргументе \fImstatus\fP при вызове \fIabortfunc\fP:
+.TP 
+\fBMCHECK_DISABLED\fP (только \fBmprobe\fP())
+Не вызвана функция \fBmcheck\fP() до первого вызова функции выделения
+памяти. Проверка несоответствий невозможна.
+.TP 
+\fBMCHECK_OK\fP (только \fBmprobe\fP())
+Никаких несоответствий не обнаружено.
+.TP 
+\fBMCHECK_HEAD\fP
+Память, предшествующая выделенному блоку, была затёрта.
+.TP 
+\fBMCHECK_TAIL\fP
+Память после выделенного блока была затёрта.
+.TP 
+\fBMCHECK_FREE\fP
+Блок памяти был освобожден дважды.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBmcheck\fP()  и \fBmcheck_pedantic\fP() возвращают 0, а
+в случае ошибки возвращают \-1.
+.SH ВЕРСИИ
+Функции \fBmcheck_pedantic\fP() и \fBmcheck_check_all\fP() доступны начиная с
+glibc 2.2. Функции \fBmcheck\fP() и \fBmprobe\fP() появились, как минимум, начиная
+с glibc 2.0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw28 lb lbw21
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmcheck\fP(),
+\fBmcheck_pedantic\fP(),
+.br
+\fBmcheck_check_all\fP(),
+\fBmprobe\fP()
+T}	Безвредность в нитях	T{
+MT\-Unsafe race:mcheck
+.br
+const:malloc_hooks
+T}
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+.\" But is MALLOC_CHECK_ slower?
+Компоновка программы с \fI\-lmcheck\fP и использование переменной окружения
+\fBMALLOC_CHECK_\fP (описана в \fBmallopt\fP(3)) обнаруживают ошибки схожим
+образом. Но при использовании \fBMALLOC_CHECK_\fP не требуется
+перекомпоновывать приложение.
+.SH ПРИМЕР
+Программа, представленная ниже, вызывает \fBmcheck\fP() с аргументом NULL и
+затем освобождает один и тот же блок дважды. В следующем сеансе оболочки
+показано что случается при запуске программы:
+.PP
+.in +4n
+.EX
+$\fB ./a.out\fP
+Освобождаем
+
+Освобождаем второй раз
+блок освобождён дважды
+Aborted (core dumped)
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <stdlib.h>
+#include <stdio.h>
+#include <mcheck.h>
+
+int
+main(int argc, char *argv[])
+{
+    char *p;
+
+    if (mcheck(NULL) != 0) {
+        fprintf(stderr, "ошибка mcheck()\en");
+
+        exit(EXIT_FAILURE);
+    }
+
+    p = malloc(1000);
+
+    fprintf(stderr, "Освобождаем\en");
+    free(p);
+    fprintf(stderr, "\enОсвобождаем второй раз\en");
+    free(p);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmalloc\fP(3), \fBmallopt\fP(3), \fBmtrace\fP(3)

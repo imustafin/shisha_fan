@@ -1,0 +1,178 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This man page is Copyright (C) 1999 Andi Kleen <ak@muc.de>.
+.\"
+.\" %%%LICENSE_START(VERBATIM_ONE_PARA)
+.\" Permission is granted to distribute possibly modified copies
+.\" of this page provided the header is included verbatim,
+.\" and in case of nontrivial modification author and date
+.\" of the modification is added to the header.
+.\" %%%LICENSE_END
+.\"
+.\" $Id: cmsg.3,v 1.8 2000/12/20 18:10:31 ak Exp $
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CMSG 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+CMSG_ALIGN, CMSG_SPACE, CMSG_NXTHDR, CMSG_FIRSTHDR \- доступ к
+вспомогательным данным
+.SH ОБЗОР
+.nf
+\fB#include <sys/socket.h>\fP
+\fBstruct cmsghdr *CMSG_FIRSTHDR(struct msghdr *\fP\fImsgh\fP\fB);\fP
+\fBstruct cmsghdr *CMSG_NXTHDR(struct msghdr *\fP\fImsgh\fP\fB ,\fP
+\fB                            struct cmsghdr *\fPcmsg\fB);\fP
+\fBsize_t CMSG_ALIGN(size_t \fP\fIlength\fP\fB);\fP
+\fBsize_t CMSG_SPACE(size_t \fP\fIlength\fP\fB);\fP
+\fBsize_t CMSG_LEN(size_t \fP\fIlength\fP\fB);\fP
+\fBunsigned char *CMSG_DATA(struct cmsghdr *\fP\fIcmsg\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Эти макросы используются для создания сообщений контроля доступа (также
+называемых вспомогательными данными), которые не являются частью полезной
+нагрузки сокета. Эта управляющая информация может содержать интерфейс, с
+которого получен пакет, различные редко используемые поля заголовков и
+расширенное описание ошибок, наборы файловых дескрипторов или параметров
+доступа (credentials) UNIX. Например, управляющие сообщения могут быть
+использованы для отправки дополнительных полей заголовков, таких, как
+параметры IP. Вспомогательные данные посылаются с помощью вызова
+\fBsendmsg\fP(2) и принимаются посредством вызова \fBrecvmsg\fP(2). Более полная
+информация приведена в их справочных страницах.
+.PP
+Вспомогательные данные представляют собой последовательность структур
+\fIcmsghdr\fP с присоединёнными к ней данными. Возможные типы управляющих
+сообщений смотрите в соответствующих страницах протоколов. Максимально
+возможный размер буфера вспомогательных данных одного сокета можно
+установить через \fI/proc/sys/net/core/optmem_max\fP; смотрите \fBsocket\fP(7).
+.PP
+Структура \fIcmsghdr\fP определена следующим образом:
+.PP
+.in +4n
+.EX
+struct cmsghdr {
+    size_t cmsg_len;    /* счетчик байтов данных с заголовком
+                           (тип — socklen_t в POSIX) */
+    int    cmsg_level;  /* начальный протокол */
+    int    cmsg_type;   /* тип, зависящий от протокола */
+/* после
+   unsigned char cmsg_data[]; */
+};
+.EE
+.in
+.PP
+К последовательности структур \fIcmsghdr\fP нельзя обращаться напрямую. Для
+этого используйте следующие макросы:
+.IP * 3
+Макрос \fBCMSG_FIRSTHDR\fP() возвращает указатель на первый \fIcmsghdr\fP в буфере
+вспомогательных данных, связанных с переданным \fIcmsghdr\fP. Он возвращает
+NULL, если в буфере недостаточно места для \fIcmsghdr\fP.
+.IP *
+Макрос \fBCMSG_NXTHDR\fP() возвращает следующее значение \fIcmsghdr\fP после
+переданного \fIcmsghdr\fP. Он возвращает NULL, если в буфере недостаточно
+места.
+.IP
+Для правильной работы \fBCMSG_NXTHDR\fP() при инициализации буфера, который
+будет содержать набор структур \fIcmsghdr\fP (например, для отправки с помощью
+\fBsendmsg\fP(2)), его необходимо заполнять нулями.
+.IP *
+Макрос \fBCMSG_ALIGN\fP() возвращает длину, учитывая необходимое
+выравнивание. Это постоянное выражение.
+.IP *
+Макрос \fBCMSG_SPACE\fP() возвращает количество байт, которое занимает
+вспомогательный элемент с полезной нагрузкой переданных данных. Это
+постоянное выражение.
+.IP *
+Макрос \fBCMSG_DATA\fP() возвращает указатель на часть с данными в \fIcmsghdr\fP.
+.IP *
+Макрос \fBCMSG_LEN\fP возвращает значение, хранящееся в поле \fIcmsg_len\fP
+структуры \fIcmsghdr\fP с учётом необходимого выравнивания. Он принимает
+значение объёма данных в качестве аргумента. Это постоянное выражение.
+.PP
+Чтобы создать вспомогательные данные, сначала инициализируйте элемент
+\fImsg_controllen\fP структуры \fImsghdr\fP, указав длину буфера управляющего
+сообщения. Запустите \fBCMSG_FIRSTHDR\fP() со структурой \fImsghdr\fP для
+получения первого управляющего сообщения и \fBCMSG_NEXTHDR\fP() для получения
+последующих. Для каждого управляющего сообщения инициализируйте \fIcmsg_len\fP
+(с помощью \fBCMSG_LEN\fP()) и другие поля заголовка \fIcmsghdr\fP, а также часть
+для данных (с помощью \fBCMSG_DATA\fP()). В результате значение поля
+\fImsg_controllen\fP структуры \fImsghdr\fP будет равно сумме \fBCMSG_SPACE\fP() для
+длин всех управляющих сообщений в буфере. Дополнительная информация о
+\fImsghdr\fP находится в \fBrecvmsg\fP(2).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта модель вспомогательных данных соответствует черновому варианту POSIX.1g,
+4.4BSD\-Lite, расширению IPv6 API, описанному в RFC\ 2292, и
+SUSv2. \fBCMSG_ALIGN\fP() — это расширение Linux.
+.SH ЗАМЕЧАНИЯ
+В целях переносимости вспомогательные данные могут быть доступны только с
+помощью макросов, описанных здесь. \fBCMSG_ALIGN\fP() — это расширение Linux,
+поэтому оно не должно быть использовано в переносимых программах.
+.PP
+В Linux \fBCMSG_LEN\fP(), \fBCMSG_DATA\fP() и \fBCMSG_ALIGN\fP() — это постоянные
+выражения (вне зависимости от переданных аргументов), то есть эти значения
+можно использовать для объявления размера глобальных переменных. Но это
+также сделает программу непереносимой на другие платформы.
+.SH ПРИМЕР
+Данный код ищет параметр \fBIP_TTL\fP в буфере с полученными вспомогательными
+данными:
+.PP
+.in +4n
+.EX
+struct msghdr msgh;
+struct cmsghdr *cmsg;
+int *ttlptr;
+int received_ttl;
+
+/* приём вспомогательных данных в msgh */
+
+for (cmsg = CMSG_FIRSTHDR(&msgh); cmsg != NULL;
+        cmsg = CMSG_NXTHDR(&msgh, cmsg)) {
+    if (cmsg\->cmsg_level == IPPROTO_IP
+            && cmsg\->cmsg_type == IP_TTL) {
+        ttlptr = (int *) CMSG_DATA(cmsg);
+        received_ttl = *ttlptr;
+        break;
+    }
+}
+
+if (cmsg == NULL) {
+    /* Ошибка: не включён IP_TTL, мал буфер или ошибка ввода\-вывода */
+}
+.EE
+.in
+.PP
+Данный код передаёт массив файловых дескрипторов через доменный сокет UNIX,
+используя \fBSCM_RIGHTS\fP:
+.PP
+.in +4n
+.EX
+struct msghdr msg = { 0 };
+struct cmsghdr *cmsg;
+int myfds[NUM_FD];  /* содержит дескрипторы файлов для передачи */
+char iobuf[1];
+struct iovec io = {
+    .iov_base = iobuf,
+    .iov_len = sizeof(iobuf)
+};
+union {         /* буфер вспомогательных данных, обёрнутый в union,
+                   чтобы точно получить нужное выравнивание */
+    char buf[CMSG_SPACE(sizeof(myfds))];
+    struct cmsghdr align;
+} u;
+
+msg.msg_iov = &io;
+msg.msg_iovlen = 1;
+msg.msg_control = u.buf;
+msg.msg_controllen = sizeof(u.buf);
+cmsg = CMSG_FIRSTHDR(&msg);
+cmsg\->cmsg_level = SOL_SOCKET;
+cmsg\->cmsg_type = SCM_RIGHTS;
+cmsg\->cmsg_len = CMSG_LEN(sizeof(int) * NUM_FD);
+memcpy(CMSG_DATA(cmsg), myfds, NUM_FD * sizeof(int));
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBrecvmsg\fP(2), \fBsendmsg\fP(2)
+.PP
+RFC\ 2292

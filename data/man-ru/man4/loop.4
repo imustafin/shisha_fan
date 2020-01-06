@@ -1,0 +1,257 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Urs Thuermann (urs@isnogud.escape.de)
+.\" and Copyright 2015 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, write to the Free
+.\" Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111,
+.\" USA.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LOOP 4 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+loop, loop\-control \- закольцованные устройства
+.SH ОБЗОР
+#include <linux/loop.h>
+.SH ОПИСАНИЕ
+Закольцованное устройство — это блочное устройство, которое отображает блоки
+данных обычного файла в файловой системе или другое блочное устройство. Это
+может быть полезно, например, для получения образа файловой системы,
+хранящегося в файле, в виде блочного устройства, которое может быть
+смонтировано с помощью команды \fBmount\fP(8). Это можно сделать так:
+.PP
+.in +4n
+.EX
+$ \fBdd if=/dev/zero of=file.img bs=1MiB count=10\fP
+$ \fBsudo losetup /dev/loop4 file.img \fP
+$ \fBsudo mkfs \-t ext4 /dev/loop4\fP
+$ \fBsudo mkdir /myloopdev\fP
+$ \fBsudo mount /dev/loop4 /myloopdev\fP
+.EE
+.in
+.PP
+Другой пример смотрите в \fBlosetup\fP(8).
+.PP
+Для шифрования и расшифровки каждому закольцованному устройству может быть
+назначена функция обмена.
+.PP
+Для закольцованного блочного устройства доступны следующие операции
+\fBioctl\fP(2):
+.TP 
+\fBLOOP_SET_FD\fP
+Связывает закольцованное устройство с открытым файлом, чей файловый
+дескриптор передаётся в третьем аргументе \fBioctl\fP(2).
+.TP 
+\fBLOOP_CLR_FD\fP
+Отвязывает закольцованное устройство от файлового дескриптора.
+.TP 
+\fBLOOP_SET_STATUS\fP
+Назначает состояние (передаваемое в третьем аргументе \fBioctl\fP(2))
+закольцованному устройству. Данный аргумент представляет собой указатель на
+структуру \fIloop_info\fP, определённую в \fI<linux/loop.h>\fP следующим
+образом:
+.IP
+.in +4n
+.EX
+struct loop_info {
+    int           lo_number;            /* только чтение из ioctl */
+    dev_t         lo_device;            /* только чтение из ioctl */
+    unsigned long lo_inode;             /* только чтение из ioctl */
+    dev_t         lo_rdevice;           /* только чтение из ioctl */
+    int           lo_offset;
+    int           lo_encrypt_type;
+    int           lo_encrypt_key_size;  /* только запись ioctl */
+    int           lo_flags;             /* только чтение из ioctl */
+    char          lo_name[LO_NAME_SIZE];
+    unsigned char lo_encrypt_key[LO_KEY_SIZE];
+                                        /* только запись ioctl */
+    unsigned long lo_init[2];
+    char          reserved[4];
+};
+.EE
+.in
+.IP
+Типом шифрования (\fIlo_encrypt_type\fP) должно быть одно из значений:
+\fBLO_CRYPT_NONE\fP, \fBLO_CRYPT_XOR\fP, \fBLO_CRYPT_DES\fP, \fBLO_CRYPT_FISH2\fP,
+\fBLO_CRYPT_BLOW\fP, \fBLO_CRYPT_CAST128\fP, \fBLO_CRYPT_IDEA\fP, \fBLO_CRYPT_DUMMY\fP,
+\fBLO_CRYPT_SKIPJACK\fP или \fBLO_CRYPT_CRYPTOAPI\fP (начиная с Linux 2.6.0).
+.IP
+Поле \fIlo_flags\fP представляет собой битовую маску, в которой может быть ноль
+или несколько следующих значений:
+.RS
+.TP 
+\fBLO_FLAGS_READ_ONLY\fP
+Закольцованное устройство доступно только для чтения.
+.TP 
+\fBLO_FLAGS_AUTOCLEAR\fP (начиная с Linux 2.6.25)
+.\" commit 96c5865559cee0f9cbc5173f3c949f6ce3525581
+Закольцованное устройство автоматически уничтожится после закрытия.
+.TP 
+\fBLO_FLAGS_PARTSCAN\fP (начиная с Linux 3.2)
+.\" commit e03c8dd14915fabc101aa495828d58598dc5af98
+Разрешено автоматическое сканирования разделов.
+.RE
+.TP 
+\fBLOOP_GET_STATUS\fP
+Получить состояние закольцованного устройства. В третьем аргументе
+\fBioctl\fP(2) должен быть задан указатель на структуру \fIstruct loop_info\fP.
+.TP 
+\fBLOOP_CHANGE_FD\fP (начиная с Linux 2.6.5)
+Поменять источник данных (backing store) закольцованного устройства на новый
+файл, определяемый файловым дескриптором, указанным в третьем аргументе
+\fBioctl\fP(2), представленный целым числом. Данная операция допустима только,
+если закольцованное устройство доступно только на чтение и новый источник
+данных имеет тот же размер и тип, использованный ранее.
+.TP 
+\fBLOOP_SET_CAPACITY\fP (начиная с Linux 2.6.30)
+.\" commit 53d6660836f233df66490707365ab177e5fb2bb4
+Изменить размер используемого (live) закольцованного устройства. Можно
+изменить размер используемого источника данных, а затем применить эту
+операцию для того, чтобы драйвер закольцованных устройств учёл новый
+размер. У этой операции нет аргументов.
+.PP
+Начиная с Linux 2.6, появилось две новые операции \fBioctl\fP(2):
+.TP 
+\fBLOOP_SET_STATUS64\fP, \fBLOOP_GET_STATUS64\fP
+Они подобны описанным выше \fBLOOP_SET_STATUS\fP и \fBLOOP_GET_STATUS\fP, но
+используют структуру \fIloop_info64\fP, в которой есть несколько дополнительных
+полей, а некоторым другим полям назначены типы с большим диапазоном
+значений:
+.IP
+.in +4n
+.EX
+struct loop_info64 {
+    uint64_t lo_device;                   /* только чтение из ioctl */
+    uint64_t lo_inode;                    /* только чтение из ioctl */
+    uint64_t lo_rdevice;                  /* только чтение из ioctl */
+    uint64_t lo_offset;
+    uint64_t lo_sizelimit;/* в байтах, 0 == макс. доступный */
+    uint32_t lo_number;                   /* только чтение из ioctl */
+    uint32_t lo_encrypt_type;
+    uint32_t lo_encrypt_key_size;         /* только запись из ioctl */
+    uint32_t lo_flags;                    /* только чтение из ioctl */
+    uint8_t  lo_file_name[LO_NAME_SIZE];
+    uint8_t  lo_crypt_name[LO_NAME_SIZE];
+    uint8_t  lo_encrypt_key[LO_KEY_SIZE]; /* только запись из ioctl */
+    uint64_t lo_init[2];
+};
+.EE
+.in
+.SS /dev/loop\-control
+.\" commit 770fe30a46a12b6fb6b63fbe1737654d28e84844
+Начиная с Linux 3.1, ядро предоставляет устройство \fI/dev/loop\-control\fP,
+которое позволяет приложению динамически находить свободное устройство,
+добавлять и удалять закольцованные устройства из системы. Для выполнения
+этих операций сначала открывается \fI/dev/loop\-control\fP, а затем выполняется
+одна из следующих операций \fBioctl\fP(2):
+.TP 
+\fBLOOP_CTL_GET_FREE\fP
+Выделяет или ищет свободное закольцованное устройства для работы. При
+успешном выполнении возвращается номер устройства. У операции нет
+аргументов.
+.TP 
+\fBLOOP_CTL_ADD\fP
+Добавляет новое закольцованное устройство; номер устройства передаётся в
+виде длинного целого в третьем аргументе \fBioctl\fP(2). При успешном
+выполнении возвращается индекс устройства. Если устройство уже выделено, то
+вызов завершается с ошибкой \fBEEXIST\fP.
+.TP 
+\fBLOOP_CTL_REMOVE\fP
+Удаляет закольцованное устройство; номер устройства передаётся в виде
+длинного целого в третьем аргументе \fBioctl\fP(2). При успешном выполнении
+возвращается номер устройства. Если устройство используется, то вызов
+завершается с ошибкой \fBEBUSY\fP.
+.SH ФАЙЛЫ
+.TP 
+\fI/dev/loop*\fP
+Специальные закольцованные файлы устройств.
+.SH ПРИМЕР
+Программа, представленная ниже, используется устройство \fI/dev/loop\-control\fP
+для поиска свободного закольцованного устройства, открывает закольцованное
+устройство, открывает файл, который нужно использовать в качестве источника
+данных, и связывает закольцованное устройство с источником. Демонстрация
+работы программы:
+.PP
+.in +4n
+.EX
+$ \fBdd if=/dev/zero of=file.img bs=1MiB count=10\fP
+10+0 records in
+10+0 records out
+10485760 bytes (10 MB) copied, 0.00609385 s, 1.7 GB/s
+$ \fBsudo ./mnt_loop file.img\fP
+loopname = /dev/loop5
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <fcntl.h>
+#include <linux/loop.h>
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    int loopctlfd, loopfd, backingfile;
+    long devnr;
+    char loopname[4096];
+
+    if (argc != 2) {
+        fprintf(stderr, "Использование: %s файл\-источник\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    loopctlfd = open("/dev/loop\-control", O_RDWR);
+    if (loopctlfd == \-1)
+        errExit("open: /dev/loop\-control");
+
+    devnr = ioctl(loopctlfd, LOOP_CTL_GET_FREE);
+    if (devnr == \-1)
+        errExit("ioctl\-LOOP_CTL_GET_FREE");
+
+    sprintf(loopname, "/dev/loop%ld", devnr);
+    printf("loopname = %s\en", loopname);
+
+    loopfd = open(loopname, O_RDWR);
+    if (loopfd == \-1)
+        errExit("open: loopname");
+
+    backingfile = open(argv[1], O_RDWR);
+    if (backingfile == \-1)
+        errExit("open: backing\-file");
+
+    if (ioctl(loopfd, LOOP_SET_FD, backingfile) == \-1)
+        errExit("ioctl\-LOOP_SET_FD");
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlosetup\fP(8), \fBmount\fP(8)

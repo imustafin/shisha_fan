@@ -1,0 +1,98 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1995 Jim Van Zandt <jrv@vanzandt.mv.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2001-12-13, Martin Schulze <joey@infodrom.org>
+.\" Added ttyname_r, aeb, 2002-07-20
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH TTYNAME 3 2017\-05\-03 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ttyname, ttyname_r \- возвращает имя терминала
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBchar *ttyname(int \fP\fIfd\fP\fB);\fP
+.PP
+\fBint ttyname_r(int \fP\fIfd\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fIbuflen\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBttyname\fP() возвращает указатель на завершаемый нулевым символом
+путь устройства терминала, на котором был открыт файловый дескриптор \fIfd\fP,
+или NULL в случае ошибки (например, если \fIfd\fP не подключен к
+терминалу). Возвращаемое значение может указывать на статические данные,
+которые могут быть перезаписаны при следующем вызове. Функция \fBttyname_r\fP()
+сохраняет имя пути в буфере \fIbuf\fP длиной \fIbuflen\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция \fBttyname\fP() возвращает указатель на имя
+пути. В случае ошибки возвращается NULL, в \fIerrno\fP устанавливается код
+ошибки. При успешном выполнении функция \fBttyname_r\fP() возвращает 0, а в
+случае ошибки — номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Неправильный дескриптор файла.
+.TP 
+.\" glibc commit 15e9a4f378c8607c2ae1aa465436af4321db0e23
+\fBENODEV\fP
+Файловые дескрипторы ссылаются на устройство подчинённого псевдотерминала,
+но соответствующий путь невозможно найти (смотрите ЗАМЕЧАНИЯ).
+.TP 
+\fBENOTTY\fP
+Файловый дескриптор указывает не на устройство терминала.
+.TP 
+\fBERANGE\fP
+(\fBttyname_r\fP()) Значение \fIbuflen\fP мало для хранения имени пути.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBttyname\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:ttyname
+T{
+\fBttyname_r\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, 4.2BSD.
+.SH ЗАМЕЧАНИЯ
+Процесс, сохранивший файловый дескриптор, указывающий на устройство
+\fBpts\fP(4), открытым при переключении в другое пространство имён
+монтирования, в котором используется другой экземпляр \fI/dev/ptmx\fP, может
+неожиданно обнаружить, что существует путь устройства с тем же именем как у
+этого файлового дескриптора. Однако данный путь указывает на другое
+устройство и поэтому не может использоваться для доступа к устройству, на
+который указывает файловый дескриптор. Вызов \fBttyname\fP() или \fBttyname_r\fP()
+с файловым дескриптором в новом пространстве имён монтирования приведёт к
+тому, что эти функции вернут NULL и присвоят \fIerrno\fP значение \fBENODEV\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBtty\fP(1), \fBfstat\fP(2), \fBctermid\fP(3), \fBisatty\fP(3), \fBpts\fP(4)

@@ -1,0 +1,230 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1991 Regents of the University of California.
+.\" and Copyright (C) 2007, Michael Kerrisk <mtk.manpages@gmail.com>
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)getpgrp.2	6.4 (Berkeley) 3/10/91
+.\"
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1995-04-15 by Michael Chastain <mec@shell.portal.com>:
+.\"   Added 'getpgid'.
+.\" Modified 1996-07-21 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 1996-11-06 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1999-09-02 by Michael Haardt <michael@moria.de>
+.\" Modified 2002-01-18 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2003-01-20 by Andries Brouwer <aeb@cwi.nl>
+.\" 2007-07-25, mtk, fairly substantial rewrites and rearrangements
+.\" of text.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETPGID 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+setpgid, getpgid, setpgrp, getpgrp \- устанавливает/получает группу процессов
+.SH ОБЗОР
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <unistd.h>\fP
+.PP
+\fBint setpgid(pid_t \fP\fIpid\fP\fB, pid_t \fP\fIpgid\fP\fB);\fP
+.br
+\fBpid_t getpgid(pid_t \fP\fIpid\fP\fB);\fP
+.PP
+\fBpid_t getpgrp(void);\fP /* по версии POSIX.1 */
+.br
+\fBpid_t getpgrp(pid_t \fP\fIpid\fP\fB);\fP /* по версии BSD */
+.PP
+\fBint setpgrp(void);\fP /* по версии System V */
+.br
+\fBint setpgrp(pid_t \fP\fIpid\fP\fB, pid_t \fP\fIpgid\fP\fB);\fP /* по версии BSD */
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBgetpgid\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+.br
+    || /* начиная с glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+.RE
+.PP
+\fBsetpgrp\fP() (POSIX.1):
+.nf
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+    _XOPEN_SOURCE\ >=\ 500
+        || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+        || /* в версии glibc <= 2.19: */ _SVID_SOURCE
+.fi
+.PP
+\fBsetpgrp\fP()\ (BSD), \fBgetpgrp\fP()\ (BSD):
+.nf
+    [Доступно только в версиях glibc до 2.19]
+    _BSD_SOURCE &&
+        !\ (_POSIX_SOURCE || _POSIX_C_SOURCE || _XOPEN_SOURCE ||
+            _GNU_SOURCE || _SVID_SOURCE)
+.fi
+.ad
+.SH ОПИСАНИЕ
+Все перечисленные интерфейсы доступны в Linux и используются для получения и
+установки идентификатора группы процессов (PGID). Предпочтительней
+использовать версию POSIX.1: \fBgetpgrp\fP(void) — для получения PGID
+вызывающего процесса; \fBsetpgid\fP() — для установки PGID вызывающего
+процесса.
+.PP
+Вызов \fBsetpgid\fP() устанавливает PGID у процесса с идентификатором \fIpid\fP
+равным \fIpgid\fP. Если значение \fIpid\fP равно 0, то используется идентификатор
+вызывающего процесса. Если значение \fIpgid\fP равно 0, то PGID процесса,
+указанного в \fIpid\fP, становится равным его идентификатору процесса. Если
+\fBsetpgid\fP() используется для перевода процесса из одной группы в другую
+(это делают некоторые оболочки командной строки для объединения каналов
+процессов), то обе группы процессов должны быть частью одного сеанса
+(см. \fBsetsid\fP(2) и \fBcredentials\fP(7)). В этом случае в \fIpgid\fP указывается
+существующая группа процессов, в которую нужно выполнить перевод и
+идентификатор сеанса этой группы должен совпадать с идентификатором сеанса
+переводимого процесса.
+.PP
+В версии POSIX.1 вызов \fBgetpgrp\fP() без аргументов возвращает PGID
+вызывающего процесса.
+.PP
+Вызов \fBgetpgid\fP() возвращает PGID процесса с заданным \fIpid\fP. Если значение
+\fIpid\fP равно нулю, то используется идентификатор вызывающего процесса
+(получение PGID процесса, отличного от вызывающего, требуется редко, а для
+этой задачи хорошо подходит POSIX.1 \fBgetpgrp\fP()).
+.PP
+В версии System\ V вызов \fBsetpgrp\fP() без аргументов эквивалентен
+\fIsetpgid(0,\ 0)\fP.
+.PP
+В версии BSD вызов \fBsetpgrp\fP() с аргументами \fIpid\fP и \fIpgid\fP является
+обёрточной функцией, которая вызывает
+.PP
+    setpgid(pid, pgid)
+.PP
+.\" The true BSD setpgrp() system call differs in allowing the PGID
+.\" to be set to arbitrary values, rather than being restricted to
+.\" PGIDs in the same session.
+Начиная с glibc 2.19, BSD\-функция \fBsetpgrp\fP() была удалена из
+\fI<unistd.h>\fP; вызовы должны быть заменены на вызов \fBsetpgid\fP(),
+как показано выше.
+.PP
+В версии BSD вызов \fBgetpgrp\fP() с аргументом \fIpid\fP является обёрточной
+функцией, которая вызывает
+.PP
+    getpgid(pid)
+.PP
+Начиная с glibc 2.19, BSD\-функция \fBgetpgrp\fP() была удалена из
+\fI<unistd.h>\fP; вызовы должны быть заменены на вызов POSIX.1
+\fBgetpgrp\fP(), который не имеет аргументов (если нужно получить PGID
+вызывающего), или на вызов \fBgetpgid\fP(), как показано выше.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsetpgid\fP()  and \fBsetpgrp\fP() возвращают 0. В
+случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в соответствующее
+значение.
+.PP
+Вызов \fBgetpgrp\fP() (POSIX.1) всегда возвращает PGID вызывающего процесса.
+.PP
+Вызовы \fBgetpgid\fP() и \fBgetpgrp\fP() (BSD) при успешном выполнении возвращают
+группу процессов. При ошибке возвращается \-1, а значение \fIerrno\fP
+устанавливается соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Попытка изменить идентификатор группы процессов у одного из потомков
+вызывающего процесса, но потомок уже вызвал \fBexecve\fP(2) (\fBsetpgid\fP(),
+\fBsetpgrp\fP()).
+.TP 
+\fBEINVAL\fP
+Значение \fIpgid\fP меньше 0 (\fBsetpgid\fP(), \fBsetpgrp\fP()).
+.TP 
+\fBEPERM\fP
+Попытка переместить процесс в группу процессов из другого сеанса или
+изменить идентификатор группы процессов у одного из потомков вызывающего
+процесса, но потомок находится в другом сеансе или изменить идентификатор
+группы процессов лидера сеанса (\fBsetpgid\fP(), \fBsetpgrp\fP()).
+.TP 
+\fBESRCH\fP
+Для \fBgetpgid\fP(): нет процесса с указанным \fIpid\fP. Для \fBsetpgid\fP():
+значение \fIpid\fP не равно идентификатору вызывающего процесса или
+идентификатору потомка вызывающего процесса.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызов \fBsetpgid\fP() и версия \fBgetpgrp\fP() без аргументов соответствуют
+POSIX.1\-2001.
+.PP
+В POSIX.1\-2001 также определён вызов \fBgetpgid\fP() и его версия \fBsetpgrp\fP(),
+у которых нет аргументов (в POSIX.1\-2008 определение \fBsetpgrp\fP() помечено
+как устаревшее).
+.PP
+Версия \fBgetpgrp\fP() с одним аргументом и версия \fBsetpgrp\fP() с двумя
+аргументами появились из 4.2BSD и отсутствуют в POSIX.1.
+.SH ЗАМЕЧАНИЯ
+Потомок, создаваемый с помощью \fBfork\fP(2), наследует идентификатор группы
+процессов своего родителя. Значение PGID сохраняется при вызове
+\fBexecve\fP(2).
+.PP
+Каждая группа процессов является членом сеанса и каждый процесс является
+членом сеанса, в который входит его группа процессов (смотрите
+\fBcredentials\fP(7)).
+.PP
+Сеанс может иметь управляющий терминал. В любой момент одна (и только одна)
+группа процессов в сеансе может являться приоритетной группой процессов
+(foreground process group) терминала; оставшиеся группы процессов
+выполняются в фоновом режиме. Если от терминала приходит сигнал (например,
+нажата клавиша прерывания и сгенерирован \fBSIGINT\fP), то сигнал посылается в
+приоритетную группу процессов (смотрите в \fBtermios\fP(3) описание символов,
+для которых генерируются сигналы). Только приоритетная группа процессов
+может выполнять вызов \fBread\fP(2) для терминала; если группа процессов в
+фоновом режиме пытается выполнить \fBread\fP(2) для терминала, то группе
+посылается сигнал \fBSIGTTIN\fP, который приостанавливает её
+выполнение. Функции \fBtcgetpgrp\fP(3) и \fBtcsetpgrp\fP(3) используются для
+получения/установки приоритетной группы процессов у управляющего терминала.
+.PP
+Вызовы \fBsetpgid\fP() и \fBgetpgrp\fP() используются программами, например
+\fBbash\fP(1), для создания группы процессов с целью реализации управления
+заданиями оболочки командной строки.
+.PP
+.\" exit.3 refers to the following text:
+Если завершение процесса лишает группу процессов главы и если любой из такой
+группы процессов остановлен, то каждому процессу в группе посылается сигнал
+\fBSIGHUP\fP с последующим \fBSIGCONT\fP. Осиротевшей считается группа процессов,
+у которой родитель каждого члена группы процессов сам является членом группы
+процессов или членом группы процессов другого сеанса (см. также
+\fBcredentials\fP(7)).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetuid\fP(2), \fBsetsid\fP(2), \fBtcgetpgrp\fP(3), \fBtcsetpgrp\fP(3), \fBtermios\fP(3),
+\fBcredentials\fP(7)

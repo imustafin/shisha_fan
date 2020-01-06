@@ -1,0 +1,253 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" %%%LICENSE_START(PUBLIC_DOMAIN)
+.\" This page is in the public domain.
+.\" %%%LICENSE_END
+.\"
+.\" Almost all details are from RFC 2553.
+.\"
+.\" 2004-12-14, mtk, Added EAI_OVERFLOW error
+.\" 2004-12-14 Fixed description of error return
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETNAMEINFO 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+getnameinfo \- перевод адреса в имя не зависящим от протокола способом
+.SH ОБЗОР
+.nf
+\fB#include <sys/socket.h>\fP
+\fB#include <netdb.h>\fP
+.PP
+\fBint getnameinfo(const struct sockaddr *\fP\fIaddr\fP\fB, socklen_t \fP\fIaddrlen\fP\fB,\fP
+\fB                char *\fP\fIhost\fP\fB, socklen_t \fP\fIhostlen\fP\fB,\fP
+\fB                char *\fP\fIserv\fP\fB, socklen_t \fP\fIservlen\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.ad l
+.in
+.PP
+\fBgetnameinfo\fP():
+    начиная с glibc 2.22: _POSIX_C_SOURCE >= 201112L
+    в glibc 2.21 и старее: _POSIX_C_SOURCE
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBgetnameinfo\fP() выполняет операцию, обратную \fBgetaddrinfo\fP(3); она
+преобразует адрес сокета в соответствующие узел и службу, способом, который
+не зависит от протокола. Она сочетает в себе действия функций
+\fBgethostbyaddr\fP(3) и \fBgetservbyport\fP(3), но в отличии от этих функций
+\fBgetnameinfo\fP() реентерабельна и позволяет программам не зависеть от типа
+IPv4 и IPv6.
+.PP
+Аргумент \fIaddr\fP — это указатель на обобщённую структуру адреса сокета (типа
+\fIsockaddr_in\fP или \fIsockaddr_in6\fP) размером \fIaddrlen\fP, которая содержит
+IP\-адрес и номер порта. Аргументы \fIhost\fP и \fIserv\fP указывают на выделенные
+вызывающим буферы (размером \fIhostlen\fP и \fIservlen\fP, соответственно), в
+которые \fBgetnameinfo\fP() помещает строки (заканчивающееся null), содержащие
+имя узла и службы, соответственно.
+.PP
+Вызывающий может указать, что имя узла (или службы) не требуется, указав в
+аргументе \fIhost\fP (или \fIserv\fP) NULL или в \fIhostlen\fP (или \fIservlen\fP)
+значение 0. Однако, по крайней мере один параметр, имя узла или службы,
+должно быть запрошено.
+.PP
+Аргумент \fIflags\fP меняет поведение функции \fBgetnameinfo\fP() следующим
+образом:
+.TP 
+\fBNI_NAMEREQD\fP
+Если этот флаг установлен, то возвращается ошибка, если имя машины не может
+быть определено.
+.TP 
+\fBNI_DGRAM\fP
+Если этот флаг установлен, то сначала используется имя службы на основе
+дейтаграмм (UDP), а не потоков (TCP). Это требуется для немногих портов
+(512\(en514), которые имеют различные службы для UDP и TCP.
+.TP 
+\fBNI_NOFQDN\fP
+Если этот флаг установлен, то возвращается только часть имени машины от
+полностью определённого доменного имени (FQDN) для локальных машин.
+.TP 
+\fBNI_NUMERICHOST\fP
+.\" For example, by calling
+.\" .BR inet_ntop ()
+.\" instead of
+.\" .BR gethostbyaddr ().
+.\" POSIX.1-2003 has NI_NUMERICSCOPE, but glibc doesn't have it.
+Если этот флаг установлен, то имя узла возвращается в числовой форме (если
+этот флаг не установлен, то это также произойдёт в случае, когда имя узла
+невозможно определить).
+.TP 
+\fBNI_NUMERICSERV\fP
+Если этот флаг установлен, тогда имя службы возвращается в числовой форме
+(если этот флаг не установлен, то это также произойдёт в случае, когда имя
+узла невозможно определить).
+.SS "Расширения getnameinfo() для интернациональных доменных имён"
+.PP
+Начиная с glibc 2.3.4, \fBgetnameinfo\fP() была расширена для выборочного
+прозрачного разрешения имён для формата интернациональных доменных имён
+(IDN) (смотрите RFC 3490, \fIInternationalizing Domain Names in Applications
+(IDNA)\fP). Было определено четыре новых флага:
+.TP 
+\fBNI_IDN\fP
+Если этот флаг установлен, то при необходимости искомое имя преобразуется из
+формата IDN в кодировку локали. Имена из только ASCI\-символов не меняются
+при преобразовании, из\-за чего данный флаг можно использовать в существующих
+программах и средах.
+.TP 
+\fBNI_IDN_ALLOW_UNASSIGNED\fP, \fBNI_IDN_USE_STD3_ASCII_RULES\fP
+Установка этих флагов включает IDNA_ALLOW_UNASSIGNED (разрешать не
+назначенные кодовые точки Юникода) и IDNA_USE_STD3_ASCII_RULES (проверять
+вывод на соответствие имени узла STD3) соответственно для возможности работы
+с IDNA.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.\" FIXME glibc defines the following additional errors, some which
+.\" can probably be returned by getnameinfo(); they need to
+.\" be documented.
+.\"
+.\"     #ifdef __USE_GNU
+.\"     #define EAI_INPROGRESS  -100  /* Processing request in progress.  */
+.\"     #define EAI_CANCELED    -101  /* Request canceled.  */
+.\"     #define EAI_NOTCANCELED -102  /* Request not canceled.  */
+.\"     #define EAI_ALLDONE     -103  /* All requests done.  */
+.\"     #define EAI_INTR        -104  /* Interrupted by a signal.  */
+.\"     #define EAI_IDN_ENCODE  -105  /* IDN encoding failed.  */
+.\"     #endif
+При успешном выполнении возвращается 0, а строки (оканчивающееся null) имени
+узла и службы (если запрашивались) записываются в соответствующий буфер
+заданной длины. При ошибке возвращается одно из следующих ненулевых значений
+ошибки:
+.TP 
+\fBEAI_AGAIN\fP
+Имя не может быть определено в настоящий момент. Попробуйте повторить
+попытку позже.
+.TP 
+\fBEAI_BADFLAGS\fP
+Параметр \fIflags\fP имеет неверное значение.
+.TP 
+\fBEAI_FAIL\fP
+Произошла неисправимая ошибка.
+.TP 
+\fBEAI_FAMILY\fP
+Не распознано семейство адресов, или для данного семейства была указана
+неверно длина адреса.
+.TP 
+\fBEAI_MEMORY\fP
+Не хватает памяти.
+.TP 
+\fBEAI_NONAME\fP
+Имя не может быть определено для указанных параметров. Установлен флаг
+\fBNI_NAMEREQD\fP и имя машины не может быть определено, или не было запрошено
+не имя машины и не имя службы.
+.TP 
+\fBEAI_OVERFLOW\fP
+Размер буфера, на который указывает \fIhost\fP или \fIserv\fP слишком мал.
+.TP 
+\fBEAI_SYSTEM\fP
+Произошла системная ошибка. Код системной ошибки можно найти в переменной
+\fIerrno\fP.
+.PP
+Функция \fBgai_strerror\fP(3) транслирует эти коды ошибок в читаемый формат,
+подходящий для сообщений об ошибке.
+.SH ФАЙЛЫ
+\fI/etc/hosts\fP
+.br
+\fI/etc/nsswitch.conf\fP
+.br
+\fI/etc/resolv.conf\fP
+.SH ВЕРСИИ
+Функция \fBgetnameinfo\fP() появилась в glibc начиная с версии 2.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetnameinfo\fP()
+T}	Безвредность в нитях	MT\-Safe env locale
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, RFC\ 2553.
+.SH ЗАМЕЧАНИЯ
+Чтобы помочь программисту выбрать нужный размер буферов в
+\fI<netdb.h>\fP определены константы
+.PP
+.in +4n
+.EX
+#define NI_MAXHOST      1025
+#define NI_MAXSERV      32
+.EE
+.in
+.PP
+Начиная с glibc 2.8, эти определения доступны только, если определён
+подходящий макрос тестирования свойств: \fB_GNU_SOURCE\fP, \fB_DEFAULT_SOURCE\fP
+(начиная с glibc 2.19) или (в версиях glibc с 2.19 включительно)
+\fB_BSD_SOURCE\fP или \fB_SVID_SOURCE\fP.
+.PP
+Первая — это константа \fBMAXDNAME\fP из новых версий заголовочного файла
+\fI<arpa/nameser.h>\fP  BIND. Последняя — вычислена на основе служб,
+перечисленных в текущем RFC «Assigned Numbers».
+.PP
+В glibc до версии 2.2 аргументы \fIhostlen\fP и \fIservlen\fP имели тип \fIsize_t\fP.
+.SH ПРИМЕР
+Следующий код пытается получить имя машины и службы в числовой форме для
+указанного адреса сокета. Обратите внимание, что здесь нет прямых упоминаний
+определённого семейства адресов.
+.PP
+.in +4n
+.EX
+struct sockaddr *addr;     /* входные */
+socklen_t addrlen;         /* входные */
+char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
+
+if (getnameinfo(addr, addrlen, hbuf, sizeof(hbuf), sbuf,
+            sizeof(sbuf), NI_NUMERICHOST | NI_NUMERICSERV) == 0)
+    printf("host=%s, serv=%s\en", hbuf, sbuf);
+.EE
+.in
+.PP
+Следующая версия проверяет, имеет ли адрес сокета обратное отображение
+адреса.
+.PP
+.in +4n
+.EX
+struct sockaddr *addr;     /* входные */
+socklen_t addrlen;         /* входные */
+char hbuf[NI_MAXHOST];
+
+if (getnameinfo(addr, addrlen, hbuf, sizeof(hbuf),
+            NULL, 0, NI_NAMEREQD))
+    printf("не удалось определить имя узла");
+else
+    printf("host=%s\en", hbuf);
+.EE
+.in
+.PP
+Пример программы, использующей \fBgetnameinfo\fP(), можно найти в
+\fBgetaddrinfo\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBaccept\fP(2), \fBgetpeername\fP(2), \fBgetsockname\fP(2), \fBrecvfrom\fP(2),
+\fBsocket\fP(2), \fBgetaddrinfo\fP(3), \fBgethostbyaddr\fP(3), \fBgetservbyname\fP(3),
+\fBgetservbyport\fP(3), \fBinet_ntop\fP(3), \fBhosts\fP(5), \fBservices\fP(5),
+\fBhostname\fP(7), \fBnamed\fP(8)
+.PP
+R.\& Gilligan, S.\& Thomson, J.\& Bound and W.\& Stevens, \fIBasic Socket
+Interface Extensions for IPv6\fP, RFC\ 2553, March 1999.
+.PP
+Tatsuya Jinmei and Atsushi Onoe, \fIAn Extension of Format for IPv6 Scoped
+Addresses\fP, черновик
+.UR ftp://ftp.ietf.org\:/internet\-drafts\:/draft\-ietf\-ipngwg\-scopedaddr\-format\-02.txt
+.UE .
+.PP
+Craig Metz, \fIProtocol Independence Using the Sockets API\fP, Продолжение темы
+freenix: 2000 USENIX ежегодной технической конференции, июнь 2000
+.ad l
+.UR http://www.usenix.org\:/publications\:/library\:/proceedings\:/usenix2000\:/freenix\:/metzprotocol.html
+.UE .

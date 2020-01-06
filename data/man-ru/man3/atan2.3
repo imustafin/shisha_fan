@@ -1,0 +1,140 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified 1993-07-24 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 2002-07-27 by Walter Harms
+.\" 	(walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ATAN2 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+atan2, atan2f, atan2l \- функция вычисления арктангенcа двух переменных
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble atan2(double \fP\fIy\fP\fB, double \fP\fIx\fP\fB);\fP
+\fBfloat atan2f(float \fP\fIy\fP\fB, float \fP\fIx\fP\fB);\fP
+\fBlong double atan2l(long double \fP\fIy\fP\fB, long double \fP\fIx\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBatan2f\fP(), \fBatan2l\fP():
+.RS
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Эти функции вычисляют арктангенс \fIy/x\fP; знак обоих аргументов используется
+для определения квадранта результата.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении данные функции возвращают значение арктангенса
+\fIy/x\fP в радианах; возвращаемое значение находится в диапазоне [\-pi,\ pi].
+.PP
+Если \fIy\fP равно +0 (\-0) и \fIx\fP меньше 0, то возвращается +pi (\-pi).
+.PP
+Если \fIy\fP равно +0 (\-0) и \fIx\fP больше 0, то возвращается +0 (\-0).
+.PP
+Если \fIy\fP меньше 0 и и \fIx\fP равно +0 или \-0, то возвращается \-pi/2.
+.PP
+Если \fIy\fP больше 0 и и \fIx\fP равно +0 или \-0, то возвращается pi/2.
+.PP
+.\" POSIX.1 says:
+.\" If
+.\" .I x
+.\" is 0, a pole error shall not occur.
+.\"
+Если \fIx\fP или \fIy\fP равно NaN, тот возвращается NaN.
+.PP
+.\" POSIX.1 says:
+.\" If the result underflows, a range error may occur and
+.\" .I y/x
+.\" should be returned.
+.\"
+Если \fIx\fP равно +0 (\-0) и \fIx\fP равно \-0, то возвращается +pi (\-pi).
+.PP
+Если \fIx\fP равно +0 (\-0) и \fIx\fP равно +0, то возвращается +0 (\-0).
+.PP
+Если \fIy\fP — конечное значение большее (меньшее) 0 и \fIx\fP стремится к минус
+бесконечности, то возвращается +pi (\-pi).
+.PP
+Если \fIy\fP — конечное значение большее (меньшее) 0 и \fIx\fP стремится к плюс
+бесконечности, то возвращается +0 (\-0).
+.PP
+Если \fIy\fP стремится к плюс бесконечности (минус бесконечности) и \fIx\fP имеет
+конечное значение, то будет возвращено pi/2 (\-pi/2).
+.PP
+Если \fIy\fP стремится к плюс бесконечности (минус бесконечности) и \fIx\fP
+стремится к минус бесконечности, то будет возвращено +3*pi/4 (\-3*pi/4).
+.PP
+.\"
+.\" POSIX.1 says:
+.\" If both arguments are 0, a domain error shall not occur.
+Если \fIy\fP стремится к плюс бесконечности (минус бесконечности) и \fIx\fP
+стремится к плюс бесконечности, то будет возвращено +pi/4 (\-pi/4).
+.SH ОШИБКИ
+.\" POSIX.1 documents an optional underflow error
+.\" glibc 2.8 does not do this.
+Ошибки не возникают.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw28 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBatan2\fP(),
+\fBatan2f\fP(),
+\fBatan2l\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.PP
+Вариант, возвращающий значение типа \fIdouble\fP, также соответствует SVr4,
+4.3BSD, C89.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBacos\fP(3), \fBasin\fP(3), \fBatan\fP(3), \fBcarg\fP(3), \fBcos\fP(3), \fBsin\fP(3),
+\fBtan\fP(3)

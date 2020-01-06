@@ -1,0 +1,73 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ISATTY 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+isatty \- проверяет, указывает ли файловый дескриптор на терминал
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBint isatty(int \fP\fIfd\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBisatty\fP() проверяет, указывает ли открытый файловый дескриптор
+\fIfd\fP на терминал.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+\fBisatty\fP() возвращает 1, если \fIfd\fP является открытым файловым
+дескриптором, указывающим на терминал; в противном случае возвращается 0, а
+в \fIerrno\fP записывается номер соответствующей ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBENOTTY\fP
+.\" e.g., FIFOs and pipes on 2.6.32
+Значение \fIfd\fP указывает на файл, не являющийся терминалом. В некоторых
+старых ядрах с некоторыми типами файлов это приводило к ошибке \fBEINVAL\fP
+(что нарушает POSIX, согласно которому в этом случае должна возвращаться
+ошибка \fBENOTTY\fP).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBisatty\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfstat\fP(2), \fBttyname\fP(3)

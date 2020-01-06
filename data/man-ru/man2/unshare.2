@@ -1,0 +1,360 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006, Janak Desai <janak@us.ibm.com>
+.\" and Copyright (C) 2006, 2012 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Licensed under the GPL
+.\" %%%LICENSE_END
+.\"
+.\" Patch Justification:
+.\" unshare system call is needed to implement, using PAM,
+.\" per-security_context and/or per-user namespace to provide
+.\" polyinstantiated directories. Using unshare and bind mounts, a
+.\" PAM module can create private namespace with appropriate
+.\" directories(based on user's security context) bind mounted on
+.\" public directories such as /tmp, thus providing an instance of
+.\" /tmp that is based on user's security context. Without the
+.\" unshare system call, namespace separation can only be achieved
+.\" by clone, which would require porting and maintaining all commands
+.\" such as login, and su, that establish a user session.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH UNSHARE 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+unshare \- отделяет части процесса контекста выполнения
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP
+\fB#include <sched.h>\fP
+.PP
+\fBint unshare(int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBunshare\fP() позволяет процессу (или потоку) отделить части своего
+контекста выполнения, которые используются совместно с другими процессами
+(или потоками). Часть контекста выполнения, например пространство имён
+монтирования, неявно делается общей при создании нового процесса с помощью
+\fBfork\fP(2) или \fBvfork\fP(2), в то время как другие части, такие как
+виртуальная память, могут стать общими по явному запросу при создании
+процесса или потока с помощью \fBclone\fP(2).
+.PP
+Основное предназначение \fBunshare\fP() \(em позволить процессу контролировать
+свой общий контекст выполнения без создания нового процесса.
+.PP
+Значение аргумента \fIflags\fP представляет собой битовую маску, в которой
+указывается какие части контекста выполнения должны перестать быть
+общими. Значение составляется из нескольких следующих констант (через OR):
+.TP 
+\fBCLONE_FILES\fP
+Обратный эффект флагу \fBCLONE_FILES\fP для \fBclone\fP(2). Отделяет таблицу
+файловых дескрипторов таким образом, что вызывающий процесс больше не имеет
+общих файловых дескрипторов с другими процессами.
+.TP 
+\fBCLONE_FS\fP
+Обратный эффект флагу \fBCLONE_FS\fP для \fBclone\fP(2). Отделяет атрибуты
+файловой системы таким образом, что вызывающий процесс больше не имеет общих
+атрибутов корневого каталога (\fBchroot\fP(2)), текущего каталога (\fBchdir\fP(2))
+и umask (\fBumask\fP(2)) с другими процессами.
+.TP 
+\fBCLONE_NEWCGROUP\fP (начиная с Linux 4.6)
+Этот флаг имеет действие подобное флагу \fBCLONE_NEWCGROUP\fP для
+\fBclone\fP(2). Отделяет пространство имён cgroup. Для использования
+\fBCLONE_NEWCGROUP\fP требуется мандат \fBCAP_SYS_ADMIN\fP.
+.TP 
+\fBCLONE_NEWIPC\fP (начиная с Linux 2.6.19)
+Этот флаг имеет действие подобное флагу \fBCLONE_NEWIPC\fP для
+\fBclone\fP(2). Отделяет пространство имён IPC таким образом, что вызывающий
+процесс будет иметь свою личную копию пространства имён IPC, неиспользуемую
+другими процессами. Задание данного флага автоматически устанавливает флаг
+\fBCLONE_SYSVSEM\fP. Для использования \fBCLONE_NEWIPC\fP требуется мандат
+\fBCAP_SYS_ADMIN\fP.
+.TP 
+\fBCLONE_NEWNET\fP (начиная с Linux 2.6.24)
+Этот флаг имеет действие подобное флагу \fBCLONE_NEWNET\fP для
+\fBclone\fP(2). Отделяет сетевое пространство имён таким образом, что
+вызывающий процесс будет иметь свою личную копию сетевого пространства имён,
+неиспользуемую другими процессами. Для использования \fBCLONE_NEWNET\fP
+требуется мандат \fBCAP_SYS_ADMIN\fP.
+.TP 
+\fBCLONE_NEWNS\fP
+.\" These flag name are inconsistent:
+.\" CLONE_NEWNS does the same thing in clone(), but CLONE_VM,
+.\" CLONE_FS, and CLONE_FILES reverse the action of the clone()
+.\" flags of the same name.
+Этот флаг имеет действие подобное флагу \fBCLONE_NEWNS\fP для
+\fBclone\fP(2). Отделяет пространство имён монтирования таким образом, что
+вызывающий процесс будет иметь свою личную копию данного пространства имён,
+неиспользуемую другими процессами. Задание данного флага автоматически
+устанавливает флаг \fBCLONE_FS\fP. Для использования \fBCLONE_NEWNS\fP требуется
+мандат \fBCAP_SYS_ADMIN\fP. Дополнительная информация доступна в
+\fBmount_namespaces\fP(7).
+.TP 
+\fBCLONE_NEWPID\fP (начиная с Linux 3.8)
+Данный флаг позволяет то же что и \fBCLONE_NEWPID\fP у \fBclone\fP(2). Выполняется
+отключение от пространства имён PID; вызывающий процесс создаёт новое
+пространство имён PID для своих потомков, которые до этого не были
+объединены с существующим процессом. Вызывающий процесс \fIне\fP перемещается в
+новое пространство имён. Первый потомок, созданный вызывающим процессом,
+будет иметь ID процесса 1 и считаться \fBinit\fP(1) в новом пространстве
+имён. Также флаг \fBCLONE_NEWPID\fP автоматически подразумевает
+\fBCLONE_THREAD\fP. Для использования \fBCLONE_NEWPID\fP требуется мандат
+\fBCAP_SYS_ADMIN\fP. Подробней смотрите \fBpid_namespaces\fP(7).
+.TP 
+\fBCLONE_NEWUSER\fP (начиная с Linux 3.8)
+Данный флаг позволяет то же что и \fBCLONE_NEWUSER\fP у
+\fBclone\fP(2). Выполняется отключение от пользовательского пространства имён;
+вызывающий процесс перемещается в новое пользовательское пространство имён,
+которое до этого не был общим для существующего процесса. Как потомок
+процесса, созданный \fBclone\fP(2) с флагом \fBCLONE_NEWUSER\fP, вызывающий
+получает полный набор мандатов в новом пользовательском пространстве имён.
+.IP
+.\" commit e66eded8309ebf679d3d3c1f5820d1f2ca332c71
+.\" https://lwn.net/Articles/543273/
+Для \fBCLONE_NEWUSER\fP требуется, чтобы вызывающий процесс не имел нитей;
+указание \fBCLONE_NEWUSER\fP автоматически подразумевает
+\fBCLONE_THREAD\fP. Начиная с Linux 3.9, \fBCLONE_NEWUSER\fP также автоматически
+подразумевает \fBCLONE_FS\fP. Для \fBCLONE_NEWUSER\fP требуется, чтобы ID
+пользователя и группы вызывающего процесса отображались в ID пользователя и
+группы в пользовательском пространстве имён вызывающего процесса на момент
+вызова.
+.IP
+Дополнительную информацию о пространствах имён пользователя смотрите в
+\fBuser_namespaces\fP(7).
+.TP 
+\fBCLONE_NEWUTS\fP (начиная с Linux 2.6.19)
+Этот флаг имеет действие подобное флагу \fBCLONE_NEWUTS\fP для
+\fBclone\fP(2). Отделяет пространство имён UTS IPC таким образом, что
+вызывающий процесс будет иметь свою личную копию пространства имён UTS,
+неиспользуемую другими процессами. Для использования \fBCLONE_NEWUTS\fP
+требуется мандат \fBCAP_SYS_ADMIN\fP.
+.TP 
+\fBCLONE_SYSVSEM\fP (начиная с Linux 2.6.26)
+.\" commit 9edff4ab1f8d82675277a04e359d0ed8bf14a7b7
+.\" CLONE_NEWNS If CLONE_SIGHAND is set and signals are also being shared
+.\" (i.e., current->signal->count > 1), force CLONE_THREAD.
+С данным флагом выполняется обратное действие \fBclone\fP(2) с флагом
+\fBCLONE_SYSVSEM\fP. Выполняется отмена изменения значений семафоров System\ V
+(\fIsemadj\fP) таким образом, что вызывающий процесс получает новый пустой
+список \fIsemadj\fP, который не является общим ни с одним другим
+процессом. Если это последний процесс, который ссылается на текущий список
+\fIsemadj\fP процесса, то изменения (adjustments) в этом списке применяются к
+соответствующим семафорам как описано в \fBsemop\fP(2).
+.PP
+.\" As at 3.9, the following forced implications also apply,
+.\" although the relevant flags are not yet implemented.
+.\" If CLONE_THREAD is set force CLONE_VM.
+.\" If CLONE_VM is set, force CLONE_SIGHAND.
+.\"
+.\" See kernel/fork.c::check_unshare_flags()
+Также в \fIflags\fP могут быть указаны флаги \fBCLONE_THREAD\fP, \fBCLONE_SIGHAND\fP
+и \fBCLONE_VM\fP, если вызывающий состоит из одной нити (т. е., он не делит
+своё адресное пространство с другим процессом или нитью). Иначе данные флаги
+не работают\ (также заметим, что указание \fBCLONE_THREAD\fP автоматически
+подразумевает \fBCLONE_VM\fP, а указание \fBCLONE_VM\fP автоматически
+подразумевает \fBCLONE_SIGHAND\fP). Если процесс состоит из нескольких нитей,
+то использование данных флагов приведёт к ошибке.
+.PP
+Если значение \fIflags\fP равно нулю, то \fBunshare\fP() ничего не делает, то есть
+в контексте выполнения вызывающего процесса ничего не изменяется.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. При ошибке возвращается \-1, а
+\fIerrno\fP присваивается значение ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+В значении \fIflags\fP установлен недопустимый бит.
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указан \fBCLONE_THREAD\fP, \fBCLONE_SIGHAND\fP или \fBCLONE_VM\fP, а
+вызывающий состоит из нескольких нитей.
+.TP 
+\fBEINVAL\fP
+Указан флаг \fBCLONE_NEWIPC\fP в \fIflags\fP, но ядро собрано без параметров
+\fBCONFIG_SYSVIPC\fP и \fBCONFIG_IPC_NS\fP.
+.TP 
+\fBEINVAL\fP
+Указан флаг \fBCLONE_NEWNET\fP в \fIflags\fP, но ядро собрано без параметра
+\fBCONFIG_NET_NS\fP.
+.TP 
+\fBEINVAL\fP
+Указан флаг \fBCLONE_NEWPID\fP в \fIflags\fP, но ядро собрано без параметра
+\fBCONFIG_PID_NS\fP.
+.TP 
+\fBEINVAL\fP
+Указан флаг \fBCLONE_NEWUSER\fP в \fIflags\fP, но ядро собрано без параметра
+\fBCONFIG_USER_NS\fP.
+.TP 
+\fBEINVAL\fP
+Указан флаг \fBCLONE_NEWUTS\fP в \fIflags\fP, но ядро собрано без параметра
+\fBCONFIG_UTS_NS\fP.
+.TP 
+\fBEINVAL\fP
+Указан флаг \fBCLONE_NEWPID\fP в \fIflags\fP, но процесс был ранее вызван
+\fBunshare\fP() с флагом \fBCLONE_NEWPID\fP.
+.TP 
+\fBENOMEM\fP
+Не удалось выделить достаточно памяти для копирования части контекста
+вызывающего, которая должна быть отделена.
+.TP 
+\fBENOSPC\fP (начиная с Linux 3.7)
+.\" commit f2302505775fd13ba93f034206f1e2a587017929
+В флагах указан \fBCLONE_NEWPID\fP, но вызов привёл бы к превышению ограничения
+на количество вложенных имён PID; смотрите \fBpid_namespaces\fP(7).
+.TP 
+\fBENOSPC\fP (начиная с Linux 4.9; до этого \fBEUSERS\fP)
+Флаг \fBCLONE_NEWUSER\fP указан в \fIflags\fP, и вызов привёл бы к превышению
+ограничения на количество вложенных пользовательских пространств
+имён. Смотрите \fBuser_namespaces\fP(7).
+.IP
+В этом случае в Linux 3.11 по Linux 4.8 возвращалась ошибка \fBEUSERS\fP.
+.TP 
+\fBENOSPC\fP (начиная с Linux 4.9)
+Одним из значений в \fIflags\fP задаётся создание нового пространства
+пространства имён пользователя, но это превысило бы ограничение,
+определённое в соответствующем файле в каталоге
+\fI/proc/sys/user\fP. Дополнительную информацию смотрите в \fBnamespaces\fP(7).
+.TP 
+\fBEPERM\fP
+Вызывающий процесс не имеет требуемых привилегий для этой операции.
+.TP 
+\fBEPERM\fP
+Флаг \fBCLONE_NEWUSER\fP указан в \fIflags\fP, но эффективный пользовательский ID
+или эффективный ID группы вызывающего не отображён в родительское
+пространство имён (смотрите \fBuser_namespaces\fP(7)).
+.TP 
+\fBEPERM\fP (начиная с Linux 3.9)
+.\" commit 3151527ee007b73a0ebd296010f1c0454a919c7d
+.\" FIXME What is the rationale for this restriction?
+В \fIflags\fP был указан флаг \fBCLONE_NEWUSER\fP и вызывающий выполняется в
+окружении chroot (т. е. корневой каталог вызывающего не совпадает с корневым
+каталогом пространства имён монтирования, в котором он находится).
+.TP 
+\fBEUSERS\fP (Linux 3.11 по Linux 4.8)
+Флаг \fBCLONE_NEWUSER\fP указан в \fIflags\fP, и вызов привёл бы к превышению
+ограничения на количество вложенных пользовательских пространств
+имён. Смотрите описание ошибки \fBENOSPC\fP, представленное выше.
+.SH ВЕРСИИ
+Системный вызов \fBunshare\fP() был добавлен в ядро Linux версии 2.6.16.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Системный вызов \fBunshare\fP() есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+.\" FIXME all of the following needs to be reviewed for the current kernel
+.\" However, we can do unshare(CLONE_SIGHAND) if CLONE_SIGHAND
+.\" was not specified when doing clone(); i.e., unsharing
+.\" signal handlers is permitted if we are not actually
+.\" sharing signal handlers.   mtk
+.\" However, we can do unshare(CLONE_VM) if CLONE_VM
+.\" was not specified when doing clone(); i.e., unsharing
+.\" virtual memory is permitted if we are not actually
+.\" sharing virtual memory.   mtk
+.\"
+.\"9) Future Work
+.\"--------------
+.\"The current implementation of unshare does not allow unsharing of
+.\"signals and signal handlers. Signals are complex to begin with and
+.\"to unshare signals and/or signal handlers of a currently running
+.\"process is even more complex. If in the future there is a specific
+.\"need to allow unsharing of signals and/or signal handlers, it can
+.\"be incrementally added to unshare without affecting legacy
+.\"applications using unshare.
+.\"
+Не все атрибуты процесса, которые могут использоваться совместно при
+создании нового процесса с помощью \fBclone\fP(2), могут быть отделены с
+помощью \fBunshare\fP(). В частности, начиная с ядра 3.8 в \fBunshare\fP() не
+реализована поддержка флагов, которые были имели обратное действие
+\fBCLONE_SIGHAND\fP, \fBCLONE_THREAD\fP или \fBCLONE_VM\fP. Эти возможности могут
+быть добавлены позднее, если потребуется.
+.SH ПРИМЕР
+Программа, представленная далее, предоставляет простую реализацию команды
+\fBunshare\fP(1), которая отключает использование одного или более пространств
+имён и выполняет команду, переданную в аргументах командной строки. Вот
+пример использования этой программы; запускается оболочка в новом
+пространстве имён монтирования и проверяется, что первоначальная оболочка и
+новая оболочка находятся в разных пространствах имён монтирования:
+.PP
+.in +4n
+.EX
+$ \fBreadlink /proc/$$/ns/mnt\fP
+mnt:[4026531840]
+$ \fBsudo ./unshare \-m /bin/bash\fP
+# \fBreadlink /proc/$$/ns/mnt\fP
+mnt:[4026532325]
+.EE
+.in
+.PP
+Различающийся вывод двух команд \fBreadlink\fP(1) показывает, что две оболочки
+находятся в разных пространствах имён монтирования.
+.SS "Исходный код программы"
+\&
+.EX
+/* unshare.c
+
+   Простая реализация команды unshare(1): отключение от
+   пространств имён и выполнение команды.
+*/
+#define _GNU_SOURCE
+#include <sched.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+/* Простая функция обработки ошибок: выводит сообщение об ошибке согласно
+   значению в «errno» и завершает вызвавший процесс */
+
+#define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \e
+                        } while (0)
+
+static void
+usage(char *pname)
+{
+    fprintf(stderr, "Использование: %s [параметры] программа [аргументы…]\en", pname);
+    fprintf(stderr, "Параметры:\en");
+    fprintf(stderr, "    \-i   отключиться от пространства имён IPC\en");
+    fprintf(stderr, "    \-m   отключиться от пространства имён монтирования\en");
+    fprintf(stderr, "    \-n   отключиться от сетевого пространства имён\en");
+    fprintf(stderr, "    \-p   отключиться от пространства имён PID\en");
+    fprintf(stderr, "    \-u   отключиться от пространства имён UTS\en");
+    fprintf(stderr, "    \-U   отключиться от пользовательского пространства имён\en");
+    exit(EXIT_FAILURE);
+}
+
+int
+main(int argc, char *argv[])
+{
+    int flags, opt;
+
+    flags = 0;
+
+    while ((opt = getopt(argc, argv, "imnpuU")) != \-1) {
+        switch (opt) {
+        case \(aqi\(aq: flags |= CLONE_NEWIPC;        break;
+        case \(aqm\(aq: flags |= CLONE_NEWNS;         break;
+        case \(aqn\(aq: flags |= CLONE_NEWNET;        break;
+        case \(aqp\(aq: flags |= CLONE_NEWPID;        break;
+        case \(aqu\(aq: flags |= CLONE_NEWUTS;        break;
+        case \(aqU\(aq: flags |= CLONE_NEWUSER;       break;
+        default:  usage(argv[0]);
+        }
+    }
+
+    if (optind >= argc)
+        usage(argv[0]);
+
+    if (unshare(flags) == \-1)
+        errExit("unshare");
+
+    execvp(argv[optind], &argv[optind]);
+    errExit("execvp");
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBunshare\fP(1), \fBclone\fP(2), \fBfork\fP(2), \fBkcmp\fP(2), \fBsetns\fP(2),
+\fBvfork\fP(2), \fBnamespaces\fP(7)
+.PP
+.\" commit f504d47be5e8fa7ecf2bf660b18b42e6960c0eb2
+Файл \fIDocumentation/userspace\-api/unshare.rst\fP из дерева исходного кода
+ядра Linux (или \fIDocumentation/unshare.txt\fP до Linux 4.12)

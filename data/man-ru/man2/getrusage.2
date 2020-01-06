@@ -1,0 +1,234 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt, March 28, 1992
+.\" and Copyright (c) 2002 Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2004-11-16 -- mtk: the getrlimit.2 page, which formerly included
+.\" coverage of getrusage(2), has been split, so that the latter is
+.\" now covered in its own getrusage.2.  For older details of change
+.\" history, etc., see getrlimit.2
+.\"
+.\" Modified 2004-11-16, mtk, Noted that the nonconformance
+.\"	when SIGCHLD is being ignored is fixed in 2.6.9.
+.\" 2008-02-22, Sripathi Kodi <sripathik@in.ibm.com>: Document RUSAGE_THREAD
+.\" 2008-05-25, mtk, clarify RUSAGE_CHILDREN + other clean-ups.
+.\" 2010-05-24, Mark Hills <mark@pogo.org.uk>: Description of fields,
+.\"     document ru_maxrss
+.\" 2010-05-24, mtk, enhanced description of various fields
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETRUSAGE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getrusage \- считывает использованные ресурсы
+.SH ОБЗОР
+\fB#include <sys/time.h>\fP
+.br
+\fB#include <sys/resource.h>\fP
+.PP
+\fBint getrusage(int \fP\fIwho\fP\fB, struct rusage *\fP\fIusage\fP\fB);\fP
+.SH ОПИСАНИЕ
+.PP
+\fBgetrusage\fP() возвращает текущие ограничения на ресурсы для значения
+\fIwho\fP, которое может быть:
+.TP 
+\fBRUSAGE_SELF\fP
+Возвращает статистику по использованию ресурсов вызывающим процессом
+(суммируются значения всех нитей процесса).
+.TP 
+\fBRUSAGE_CHILDREN\fP
+Возвращает статистику по использованию ресурсов всех потомков вызывающего
+процесса, которые завершились или завершение которых ожидается. Эта
+статистика включает в себя ресурсы, использованные внучками и дальнейшими
+потомками, если все промежуточные потомки завершились или их завершение
+ожидается.
+.TP 
+\fBRUSAGE_THREAD\fP (начиная с Linux 2.6.26)
+Возвращает статистику по использованию ресурсов вызывающей нити. Чтобы
+получить определение этой константы из \fI<sys/resource.h>\fP должен
+быть определён макрос тестирования свойств \fB_GNU_SOURCE\fP (до включения всех
+заголовочных файлов).
+.PP
+Данные по использованным ресурсам возвращаются в структуре, на которую
+указывает \fIusage\fP; она имеет следующий вид:
+.PP
+.in +4n
+.EX
+struct rusage {
+    struct timeval ru_utime; /* время ЦП, исполь. в режиме пользователя */
+    struct timeval ru_stime; /* время ЦП, исполь. в режиме системы */
+    long   ru_maxrss;        /* максимальный rss */
+    long   ru_ixrss;         /* полный объём общей памяти */
+    long   ru_idrss;         /* полный объём собственной памяти */
+    long   ru_isrss;         /* полный объём собственного стека */
+    long   ru_minflt;        /* количество восстановленных страниц
+                                (мягких отказов) */
+    long   ru_majflt;        /* количество отказавших страниц
+                                (жёстких отказов) */
+    long   ru_nswap;         /* количество обращений при подкачке */
+    long   ru_inblock;       /* количество операций блокового ввода */
+    long   ru_oublock;       /* количество операций блокового вывода */
+    long   ru_msgsnd;        /* количество посланных сообщений IPC */
+    long   ru_msgrcv;        /* количество принятых сообщений IPC */
+    long   ru_nsignals;      /* количество принятых сигналов */
+    long   ru_nvcsw;         /* количество переключений контекста */
+    long   ru_nivcsw;        /* кол\-во принудительных переключений контекста */
+};
+.EE
+.in
+.PP
+Не все поля заполняются; несопровождаемые поля устанавливаются ядром в
+ноль. (Несопровождаемые поля предоставляются для совместимости с другими
+системами, и когда\-нибудь станут поддерживаться в Linux.) Поля следует
+понимать так:
+.TP 
+\fIru_utime\fP
+Общее количество времени, проведённое в режиме пользователя, выражается
+структурой \fItimeval\fP (секунды и микросекунды).
+.TP 
+\fIru_stime\fP
+Общее количество времени, проведённое в режиме ядра, выражается структурой
+\fItimeval\fP (секунды и микросекунды).
+.TP 
+\fIru_maxrss\fP (начиная с Linux 2.6.32)
+Максимальный используемый размер постоянно занимаемый в памяти (в
+килобайтах). Для \fBRUSAGE_CHILDREN\fP определяется наибольший размер
+постоянной памяти среди потомков, а не максимальный размер постоянной памяти
+всего дерева процесса.
+.TP 
+\fIru_ixrss\fP (не ведётся)
+.\" On some systems,
+.\" this is the integral of the text segment memory consumption,
+.\" expressed in kilobyte-seconds.
+В настоящее время в Linux не учитывается.
+.TP 
+\fIru_idrss\fP (не ведётся)
+.\" On some systems, this is the integral of the data segment memory consumption,
+.\" expressed in kilobyte-seconds.
+В настоящее время в Linux не учитывается.
+.TP 
+\fIru_isrss\fP (не ведётся)
+.\" On some systems, this is the integral of the stack memory consumption,
+.\" expressed in kilobyte-seconds.
+В настоящее время в Linux не учитывается.
+.TP 
+\fIru_minflt\fP
+Количество сбойных страниц, обслуженных без операций ввода\-вывода; в данном
+случае страницы «восстановлены» из списка страниц, ожидающих перемещения.
+.TP 
+\fIru_majflt\fP
+Количество сбойных страниц, обслуженных с помощью операций ввода\-вывода.
+.TP 
+\fIru_nswap\fP (не ведётся)
+.\" On some systems, this is the number of swaps out of physical memory.
+В настоящее время в Linux не учитывается.
+.TP 
+\fIru_inblock\fP (начиная с Linux 2.6.22)
+Количество обращений на чтение из файловой системы.
+.TP 
+\fIru_oublock\fP (начиная с Linux 2.6.22)
+Количество обращений на запись в файловую систему.
+.TP 
+\fIru_msgsnd\fP (не ведётся)
+.\" On FreeBSD 6.2, this appears to measure messages sent over sockets
+.\" On some systems,
+.\" this field records the number of messages sent over sockets.
+В настоящее время в Linux не учитывается.
+.TP 
+\fIru_msgrcv\fP (не ведётся)
+.\" On FreeBSD 6.2, this appears to measure messages received over sockets
+.\" On some systems,
+.\" this field records the number of messages received over sockets.
+В настоящее время в Linux не учитывается.
+.TP 
+\fIru_nsignals\fP (не ведётся)
+.\" On some systems, this field records the number of signals received.
+В настоящее время в Linux не учитывается.
+.TP 
+\fIru_nvcsw\fP (начиная с Linux 2.6)
+Количество переключений контекста в следствии добровольной отдачи процессом
+процессора до того, как истёк его рабочий временной интервал (обычно, из\-за
+ожидания доступности ресурса).
+.TP 
+\fIru_nivcsw\fP (начиная с Linux 2.6)
+Количество переключений контекста в следствии вытеснения процессом с более
+высоким приоритетом или из\-за истечения рабочего временного интервала
+процесса.
+.PP
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+\fIusage\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+Неверное значение \fIwho\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetrusage\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD. В POSIX.1 определён вызов
+\fBgetrusage\fP(), но указаны только поля \fIru_utime\fP и \fIru_stime\fP.
+.PP
+\fBRUSAGE_THREAD\fP есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Значения использованных ресурсов сохраняются при \fBexecve\fP(2).
+.PP
+Включать \fI<sys/time.h>\fP в настоящее время не требуется, но это
+увеличивает переносимость. (Хотя \fIstruct timeval\fP определена в
+\fI<sys/time.h>\fP.)
+.PP
+.\" See the description of getrusage() in XSH.
+.\" A similar statement was also in SUSv2.
+В ядрах Linux до версии 2.6.9, если значение \fBSIGCHLD\fP равно \fBSIG_IGN\fP, то
+использованные ресурсы потомков процессов автоматически включаются в
+значение, возвращаемое \fBRUSAGE_CHILDREN\fP, хотя в POSIX.1\-2001 это явно
+запрещено. Это несоответствие исправлено в Linux 2.6.9 и более новых
+версиях.
+.PP
+Определение структуры, показанное в начале страницы, взято из 4.3BSD Reno.
+.PP
+В старых системах была функция \fBvtimes\fP() с подобным \fBgetrusage\fP()
+назначением. Для обратной совместимости в glibc также есть функция
+\fBvtimes\fP(). Во всех новых приложениях должен быть использован
+\fBgetrusage\fP().
+.PP
+Смотрите также описание \fI/proc/[pid]/stat\fP в \fBproc\fP(5).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclock_gettime\fP(2), \fBgetrlimit\fP(2), \fBtimes\fP(2), \fBwait\fP(2), \fBwait4\fP(2),
+\fBclock\fP(3)

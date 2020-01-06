@@ -1,0 +1,156 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sun Jul 25 10:54:03 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Fixed typo, aeb, 950823
+.\" 2002-02-22, joey, mihtjel: Added strtoull()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STRTOUL 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+strtoul, strtoull, strtouq \- преобразование строки в целое с типом unsigned
+long integer
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBunsigned long int strtoul(const char *\fP\fInptr\fP\fB, char **\fP\fIendptr\fP\fB, int \fP\fIbase\fP\fB);\fP
+.PP
+\fBunsigned long long int strtoull(const char *\fP\fInptr\fP\fB, char **\fP\fIendptr\fP\fB,\fP
+\fB                                int \fP\fIbase\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBstrtoull\fP():
+.RS 4
+_ISOC99_SOURCE ||
+    || /* в версии glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBstrtoul\fP() преобразует начальную часть строки \fInptr\fP в число с
+типом \fIunsigned long int\fP согласно системе счисления \fIbase\fP, значение
+которой может быть от 2 до 36 включительно или равно специальному значению
+0.
+.PP
+Строка может начинаться с произвольного количества пробельных символов
+(определяемых при помощи \fBisspace\fP(3)), затем может быть указан знак «+»
+или «\-». Если \fIbase\fP равно 0 или 16, то строка может начинаться с приставки
+«0x», что означает использование шестнадцатеричной системы исчисления;
+иначе, если \fIbase\fP равно нулю, то используется десятичная система счисления
+(кроме, когда последующий символ также равен «0»: в этом случае используется
+восьмеричная система исчисления).
+.PP
+Остаток строки преобразуется в число с типом \fIunsigned long int\fP. Этот
+процесс останавливается, если в строке встречается некорректный символ для
+указанной системе счисления. В системах счисления больших 10, символ «A» в
+верхнем или нижнем регистре означает 10, «B» означает 11 и так далее до «Z»,
+означающего 35.
+.PP
+Если значение \fIendptr\fP не NULL, то \fBstrtoul\fP() записывает адрес первого
+некорректного символа в \fI*endptr\fP. Если в строке вообще нет цифр, то
+\fBstrtoul\fP() сохраняет изначальное значение \fInptr\fP в \fI*endptr\fP (и
+возвращает 0). В частности, если \fI*nptr\fP не равно \(aq\e0\(aq, но
+\fI**endptr\fP равно \(aq\e0\(aq при возврате, то вся строка состоит из
+корректных символов.
+.PP
+Функция \fBstrtoull\fP() работает так же, как и \fBstrtoul\fP(), но возвращает
+число с типом \fIunsigned long long int\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBstrtoul\fP() возвращает результат преобразования, либо, если был
+указан знак минуса, возвращается отрицательный результат преобразования,
+представленный в виде положительного числа, если изначальное
+(неотрицательное) значение не вызывает переполнения; в этом случае
+\fBstrtoul\fP() возвращает \fBULONG_MAX\fP, а переменной \fIerrno\fP присваивается
+значение \fBERANGE\fP. То же самое относится к \fBstrtoull\fP(), только вместо
+\fBULONG_MAX\fP возвращается \fBULLONG_MAX\fP.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+(нет в C99) Аргумент \fIbase\fP содержит неподдерживаемое значение.
+.TP 
+\fBERANGE\fP
+Полученное значение вне диапазона.
+.PP
+Реализация может также устанавливать \fIerrno\fP в \fBEINVAL\fP в случае, когда
+преобразование не было выполнено (не было встречено цифр и возвращён 0).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw32 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBstrtoul\fP(),
+\fBstrtoull\fP(),
+\fBstrtouq\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBstrtoul\fP(): POSIX.1\-2001, POSIX.1\-2008, C89, C99 SVr4.
+.PP
+\fBstrtoull\fP(): POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Так как \fBstrtoul\fP() может обоснованно вернуть 0 или \fBULONG_MAX\fP
+(\fBULLONG_MAX\fP для \fBstrtoull\fP()) при успешном выполнении и ошибке,
+вызывающая программа до вызова должна присвоить \fIerrno\fP значение 0, а после
+вызова определить возникновение ошибки по ненулевому значению \fIerrno\fP.
+.PP
+При помощи локалей могут приниматься строки, отличные от допустимых в локали
+«C» (например, может поддерживаться разделитель тысяч из текущей локали).
+.PP
+В BSD также есть функция
+.PP
+.in +4n
+.EX
+\fBu_quad_t strtouq(const char *\fP\fInptr\fP\fB, char **\fP\fIendptr\fP\fB, int \fP\fIbase\fP\fB);\fP
+.EE
+.in
+.PP
+с полностью аналогичным определением. В зависимости от длины слова в текущей
+архитектуре, она может быть аналогом \fBstrtoull\fP() или \fBstrtoul\fP().
+.PP
+Отрицательные значения допустимы во входных данных и без ошибки
+преобразуются в эквивалентное значение с типом \fIunsigned long int\fP.
+.SH ПРИМЕР
+Пример можно найти в справочной странице \fBstrtol\fP(3); в ней показано
+использование похожих функций.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBa64l\fP(3), \fBatof\fP(3), \fBatoi\fP(3), \fBatol\fP(3), \fBstrtod\fP(3), \fBstrtol\fP(3),
+\fBstrtoumax\fP(3)

@@ -1,0 +1,280 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Michael Haardt, Ian Jackson.
+.\" and Copyright (C) 2006, 2014 Michael Kerrisk
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1993-07-23 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1994-08-21 by Michael Haardt
+.\" Modified 2004-06-23 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\" Modified 2005-04-04, as per suggestion by Michael Hardt for rename.2
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LINK 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+link, linkat \- создаёт новое имя файла
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBint link(const char *\fP\fIoldpath\fP\fB, const char *\fP\fInewpath\fP\fB);\fP
+.PP
+\fB#include <fcntl.h>           \fP/* определения констант of AT_* */
+\fB#include <unistd.h>\fP
+.PP
+\fBint linkat(int \fP\fIolddirfd\fP\fB, const char *\fP\fIoldpath\fP\fB,\fP
+\fB           int \fP\fInewdirfd\fP\fB, const char *\fP\fInewpath\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBlinkat\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_ATFILE_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+\fBlink\fP() создаёт новую ссылку (также называемую жёсткую ссылку) на
+существующий файл.
+.PP
+Если \fInewpath\fP существует, то он \fIне\fP будет перезаписан.
+.PP
+Это новое имя может использоваться как и старое для любых операций; оба
+имени ссылаются на один файл (и имеют одинаковые права и владельцев) и
+невозможно сказать какое имя считать "изначальным".
+.SS linkat()
+Системный вызов \fBlinkat\fP() работает также как системный вызов \fBlink\fP(), за
+исключением случаев, описанных здесь.
+.PP
+Если в \fIoldpath\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIolddirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBlink\fP()).
+.PP
+Если в \fIoldpath\fP задан относительный путь и \fIolddirfd\fP равно специальному
+значению \fBAT_FDCWD\fP, то \fIoldpath\fP рассматривается относительно текущего
+рабочего каталога вызывающего процесса (как \fBlink\fP()).
+.PP
+Если в \fIoldpath\fP задан абсолютный путь, то \fIolddirfd\fP игнорируется.
+.PP
+Значение \fInewpath\fP интерпретируется как \fIoldpath\fP, за исключением того,
+что относительный путь интерпретируется относительно каталога, на который
+ссылается файловый дескриптор \fInewdirfd\fP.
+.PP
+Следующие значения можно побитово (OR) объединять в \fIflags\fP:
+.TP 
+\fBAT_EMPTY_PATH\fP (начиная с Linux 2.6.39)
+.\" commit 11a7b371b64ef39fc5fb1b6f2218eef7c4d035e3
+.\" Before glibc 2.16, defining _ATFILE_SOURCE sufficed
+Если значение \fIoldpath\fP равно пустой строке, то создаётся ссылка на файл,
+на который указывает \fIolddirfd\fP (который может быть получен с помощью
+\fBopen\fP(2) с флагом \fBO_PATH\fP). В этом случае \fIolddirfd\fP может указывать на
+файл любого типа кроме каталога. Это, обычно, не работает, если файл имеет
+счётчик ссылок равный нулю (исключение — файлы, созданные с флагом
+\fBO_TMPFILE\fP и без \fBO_EXCL\fP). Вызывающий должен иметь мандат
+\fBCAP_DAC_READ_SEARCH\fP, чтобы использовать этот флаг. Данный флаг есть
+только в Linux; для получения его определения определите \fB_GNU_SOURCE\fP.
+.TP 
+\fBAT_SYMLINK_FOLLOW\fP (начиная с Linux 2.6.18)
+По умолчанию, \fBlinkat\fP() не разыменовывает \fIoldpath\fP, если это символьная
+ссылка (подобно \fBlink\fP()). В \fIflags\fP можно указать флаг
+\fBAT_SYMLINK_FOLLOW\fP, и тогда значение \fIoldpath\fP будет разыменовано, если
+это символьная ссылка. Если смонтирована procfs, то это может быть
+использовано как альтернатива \fBAT_EMPTY_PATH\fP, например:
+.IP
+.in +4n
+.EX
+linkat(AT_FDCWD, "/proc/self/fd/<fd>", newdirfd,
+       newname, AT_SYMLINK_FOLLOW);
+.EE
+.in
+.PP
+До версии ядра 2.6.18 аргумент \fIflags\fP не использовался и должен был быть
+равен 0.
+.PP
+Смотрите в \fBopenat\fP(2) объяснение необходимости \fBlinkat\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Нет прав на запись в каталог, содержащий \fInewpath\fP, или в одном из
+каталогов пути до \fIoldpath\fP или \fInewpath\fP не разрешён поиск (см. также
+\fBpath_resolution\fP(7)).
+.TP 
+\fBEDQUOT\fP
+Исчерпана пользовательская квота на дисковые блоки файловой системы.
+.TP 
+\fBEEXIST\fP
+\fInewpath\fP уже существует.
+.TP 
+\fBEFAULT\fP
+Значения \fIoldpath\fP и \fInewpath\fP указывают за пределы доступного адресного
+пространства.
+.TP 
+\fBEIO\fP
+Произошла ошибка ввода\-вывода.
+.TP 
+\fBELOOP\fP
+Во время определения \fIoldpath\fP или \fInewpath\fP встретилось слишком много
+символьных ссылок.
+.TP 
+\fBEMLINK\fP
+На файл, на который указывает \fIoldpath\fP, уже создано максимальное
+количество ссылок. Например, для файловой системы \fBext4\fP(5), в которой не
+используется свойство \fIdir_index\fP, ограничение по количеству жёстких ссылок
+на файл равно 65000; в \fBbtrfs\fP(5) — 65535 ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fIoldpath\fP или \fInewpath\fP.
+.TP 
+\fBENOENT\fP
+Компонент каталога в \fIoldpath\fP или \fInewpath\fP не существует или является
+повисшей ссылкой.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBENOSPC\fP
+На устройстве, содержащем файл, нет места для создания нового элемента
+каталога.
+.TP 
+\fBENOTDIR\fP
+Компонент, используемый как каталог в \fIoldpath\fP или \fInewpath\fP, на самом
+деле не является каталогом.
+.TP 
+\fBEPERM\fP
+\fIoldpath\fP является каталогом.
+.TP 
+\fBEPERM\fP
+Файловая система, содержащая \fIoldpath\fP и \fInewpath\fP, не поддерживает
+создание жёстких ссылок.
+.TP 
+\fBEPERM\fP (начиная с Linux 3.6)
+Вызывающий не имеет прав для создания жёстких ссылок на этот файл (смотрите
+описание \fI/proc/sys/fs/protected_hardlinks\fP в \fBproc\fP(5)).
+.TP 
+\fBEPERM\fP
+Файл \fIoldpath\fP помечен как неизменяемый (immutable) или только для
+добавления (смотрите \fBioctl_iflags\fP(2)).
+.TP 
+\fBEROFS\fP
+Файл расположен в файловой системе, доступной только для чтения.
+.TP 
+\fBEXDEV\fP
+\fIoldpath\fP и \fInewpath\fP находятся не в одной смонтированной файловой системе
+(Linux позволяет монтировать файловую систему в несколько точек, но
+\fBlink\fP() не работает с отличающими точками монтирования, даже если в них
+смонтирована идентичная файловая система).
+.PP
+В \fBlinkat\fP() дополнительно могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+В \fIolddirfd\fP или \fInewdirfd\fP указаны неправильные файловые дескрипторы.
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указано неверное значение флага.
+.TP 
+\fBENOENT\fP
+Флаг \fBAT_EMPTY_PATH\fP указан в \fIflags\fP, но вызывающий не имеет мандата
+\fBCAP_DAC_READ_SEARCH\fP.
+.TP 
+\fBENOENT\fP
+Предпринята попытка сделать ссылку на файл \fI/proc/self/fd/NN\fP, который
+соответствует файловому дескриптору, созданному с помощью
+.IP
+    open(path, O_TMPFILE | O_EXCL, mode);
+.IP
+Смотрите \fBopen\fP(2).
+.TP 
+\fBENOENT\fP
+Значение \fIoldpath\fP является относительным путём и \fIolddirfd\fP ссылается на
+каталог, который был удалён, или \fInewpath\fP является относительным путём и
+\fInewdirfd\fP ссылается на каталог, который был удалён.
+.TP 
+\fBENOTDIR\fP
+Значение \fIoldpath\fP содержит относительный путь и \fIolddirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог; или произошло
+тоже самое с \fInewpath\fP и \fInewdirfd\fP.
+.TP 
+\fBEPERM\fP
+Значение \fBAT_EMPTY_PATH\fP было указано в \fIflags\fP, значение \fIoldpath\fP равно
+пустой строке и \fIolddirfd\fP указывает на каталог.
+.SH ВЕРСИИ
+Вызов \fBlinkat\fP() был добавлен в ядро Linux версии 2.6.16; поддержка в glibc
+доступна с версии 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents additional ENOLINK and
+.\" EMULTIHOP error conditions; POSIX.1 does not document ELOOP.
+.\" X/OPEN does not document EFAULT, ENOMEM or EIO.
+\fBlink\fP(): SVr4, 4.3BSD, POSIX.1\-2001 (но смотрите ЗАМЕЧАНИЯ), POSIX.1\-2008.
+.PP
+\fBlinkat\fP(): POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Жёсткие ссылки, создаваемые \fBlink\fP(), не могут располагаться в разных
+файловых системах. Если это необходимо, используйте \fBsymlink\fP(2).
+.PP
+.\" more precisely: since kernel 1.3.56
+.\" For example, the default Solaris compilation environment
+.\" behaves like Linux, and contributors to a March 2005
+.\" thread in the Austin mailing list reported that some
+.\" other (System V) implementations did/do the same -- MTK, Apr 05
+В POSIX.1\-001 сказано, что \fBlink\fP() должен разыменовывать \fIoldpath\fP, если
+он является символьной ссылкой. Однако, начиная с ядра версии 2.0, Linux
+также не поступает: если \fIoldpath\fP является символьной ссылкой, то
+\fInewpath\fP создаётся как (жёсткая) ссылка на файл этой символьной ссылки
+(т.е., \fInewpath\fP становится символьной ссылкой на файл, содержащий ссылку
+на \fIoldpath\fP). Некоторые другие реализации поступают также как Linux. В
+POSIX.1\-2008 изменено описание \fBlink\fP(), теперь разыменование символьной
+ссылки \fIoldpath\fP зависит от реализации. Для точного управления по обработке
+символьных ссылок при создании используйте \fBlinkat\fP().
+.SS "Замечания по glibc"
+В старых ядрах, где \fBlinkat\fP() отсутствует (и если не указан флаг
+\fBAT_SYMLINK_NOFOLLOW\fP), обёрточная функция glibc использует \fBlink\fP(). Если
+\fIoldpath\fP и \fInewpath\fP являются относительными путями, то glibc собирает
+пути относительно символической ссылки в \fI/proc/self/fd\fP, которая
+соответствует аргументам \fIolddirfd\fP и \fInewdirfd\fP.
+.SH ДЕФЕКТЫ
+В файловых системах NFS возвращаемый код может быть неправильным, если
+сервер NFS выполнит создание ссылки и завершит работу до возврата результата
+операции. Используйте \fBstat\fP(2), чтобы выяснить была ли создана ссылка.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBln\fP(1), \fBopen\fP(2), \fBrename\fP(2), \fBstat\fP(2), \fBsymlink\fP(2), \fBunlink\fP(2),
+\fBpath_resolution\fP(7), \fBsymlink\fP(7)

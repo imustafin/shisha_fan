@@ -1,0 +1,205 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MQ_OPEN 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+mq_open \- открывает очередь сообщений
+.SH ОБЗОР
+.nf
+\fB#include <fcntl.h>\fP           /* Постоянные вида O_* */
+\fB#include <sys/stat.h>\fP        /* Постоянные для mode */
+\fB#include <mqueue.h>\fP
+.PP
+\fBmqd_t mq_open(const char *\fP\fIname\fP\fB, int \fP\fIoflag\fP\fB);\fP
+\fBmqd_t mq_open(const char *\fP\fIname\fP\fB, int \fP\fIoflag\fP\fB, mode_t \fP\fImode\fP\fB,\fP
+\fB              struct mq_attr *\fP\fIattr\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lrt\fP.
+.SH ОПИСАНИЕ
+Функция \fBmq_open\fP() создает новую очередь сообщений POSIX или открывает
+существующую очередь. Очередь опознаётся по имени \fIname\fP. Для получения
+дополнительной информации о создании имени \fIname\fP, смотрите
+\fBmq_overview\fP(7).
+.PP
+В параметре \fIoflag\fP задаются флаги, которые управляют работой вызова
+(значения флагов могут быть получены при включении
+\fI<fcntl.h>\fP). Поместить в параметр \fIoflag\fP можно только один из
+ниже приведенных флагов:
+.TP 
+\fBO_RDONLY\fP
+Открыть очередь только для получения сообщений.
+.TP 
+\fBO_WRONLY\fP
+Открыть очередь только для отправки сообщений.
+.TP 
+\fBO_RDWR\fP
+Открыть очередь для отправки и получения сообщений.
+.PP
+Также в  \fIoflag\fP можно добавить ноль и более флагов, объединённых через
+ИЛИ:
+.TP 
+\fBO_CLOEXEC\fP (начиная с Linux 2.6.26)
+.\" commit 269f21344b23e552c21c9e2d7ca258479dcd7a0a
+Установить флаг close\-on\-exec на файловом дескрипторе очереди
+сообщений. Описание полезности этого флага смотрите в \fBopen\fP(2).
+.TP 
+\fBO_CREAT\fP
+.\" In reality the filesystem IDs are used on Linux.
+Создать очередь сообщений, если она не существует. Владельцем (ID
+пользователя) очереди сообщений назначается эффективный ID пользователя
+вызывающего процесса. Владельцем\-группой (ID группы) назначается эффективный
+ID группы вызывающего процесса.
+.TP 
+\fBO_EXCL\fP
+Если в поле \fIoflag\fP выставлен флаг \fBO_CREAT\fP и очередь с заданным именем
+\fIname\fP  уже существует, то завершить вызов ошибкой \fBEEXIST\fP.
+.TP 
+\fBO_NONBLOCK\fP
+Открыть очередь в неблокирующем режиме. При обстоятельствах, из\-за которых
+\fBmq_receive\fP(3) и \fBmq_send\fP(3), обычно, блокируются, теперь эти функции
+будут завершаться ошибкой \fBEAGAIN\fP.
+.PP
+Если в \fIoflag\fP указан \fBO_CREAT\fP, требуется задать два дополнительных
+аргумента. В аргументе \fImode\fP задаются права доступа к новой очереди, как
+для \fBopen\fP(2) (символические определения бит прав можно получить, включив
+\fI<sys/stat.h>\fP). В настройках прав учитывается umask процесса.
+.PP
+В полях структуры \fIstruct mq_attr\fP, на которую указывает \fIattr\fP, задаётся
+максимальное количество сообщений и максимальный размер сообщений,
+разрешённых в очереди. Эта структура определена следующим образом:
+.PP
+.PP
+.in +4n
+.EX
+struct mq_attr {
+    long mq_flags;       /* флаги (игнорируются в mq_open()) */
+    long mq_maxmsg;      /* макс. кол\-во сообщений в очереди */
+    long mq_msgsize;     /* макс. размер сообщения (в байтах) */
+    long mq_curmsgs;     /* кол\-во сообщений в очереди в данный момент
+                            (игнорируется в mq_open()) */
+};
+.EE
+.in
+.PP
+В функции \fBmq_open\fP() используются только поля \fImq_maxmsg\fP и
+\fImq_msgsize\fP; остальные значения полей игнорируются.
+.PP
+Если \fIattr\fP равно NULL, то очередь создаётся с атрибутами по умолчанию,
+зависящими от реализации. Начиная с Linux 3.5, для управления атрибутами по
+умолчанию можно управлять через два файла в \fI/proc\fP; подробности смотрите в
+\fBmq_overview\fP(7).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBmq_open\fP()  возвращает файловый дескриптор очереди
+для использования в других функциях работы с очередями сообщений. При ошибке
+\fBmq_open\fP() возвращает \fI(mqd_t)\ \-1\fP, а в \fIerrno\fP записывается код
+ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEACCES\fP
+Очередь существует, но вызывающий не имеет прав для её открытия с заданным в
+\fImode\fP режиме.
+.TP 
+\fBEACCES\fP
+.\" Note that this isn't consistent with the same case for sem_open()
+Поле \fIname\fP содержит больше чем одну косую черту.
+.TP 
+\fBEEXIST\fP
+В \fIoflag\fP указаны \fBO_CREAT\fP и \fBO_EXCL\fP, но очередь \fIname\fP уже
+существует.
+.TP 
+\fBEINVAL\fP
+.\" glibc checks whether the name starts with a "/" and if not,
+.\" gives this error
+Параметр \fIname\fP не соответствует формату, описанному в \fBmq_overview\fP(7).
+.TP 
+\fBEINVAL\fP
+В \fIoflag\fP указан \fBO_CREAT\fP и \fIattr\fP не равно NULL, но в
+\fIattr\->mq_maxmsg\fP или \fIattr\->mq_msqsize\fP  содержится некорректное
+значение. Оба этих поля должны быть больше нуля. Если процесс без прав (не
+имеет мандата \fBCAP_SYS_RESOURCE\fP), то \fIattr\->mq_maxmsg\fP должно быть
+меньше или равно ограничению \fImsg_max\fP и \fIattr\->mq_msgsize\fP должно
+быть меньше или равно ограничению \fImsgsize_max\fP. Также, даже для
+привилегированных процессов, значение \fIattr\->mq_maxmsg\fP не должно
+превышать ограничения \fBHARD_MAX\fP (описание ограничений смотрите в
+\fBmq_overview\fP(7)).
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение на количество открытых дескрипторов файлов и
+очередей сообщений (смотрите описание \fBRLIMIT_NOFILE\fP в \fBgetrlimit\fP(2)).
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fIname\fP.
+.TP 
+\fBENFILE\fP
+Достигнуто ограничение на общее количество открытых файлов в системе и
+очередей сообщений.
+.TP 
+\fBENOENT\fP
+В \fIoflag\fP не указан \fBO_CREAT\fP и не существует очередь \fIname\fP.
+.TP 
+\fBENOENT\fP
+.\" Note that this isn't consistent with the same case for sem_open()
+В \fIname\fP есть только «/» и нет других символов.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти.
+.TP 
+\fBENOSPC\fP
+Недостаточно места для создания новой очереди сообщений. Вероятно, это
+произошло из\-за ограничения \fIqueues_max\fP; смотрите \fBmq_overview\fP(7).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmq_open\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.SS "Отличия между библиотекой C и ядром"
+Библиотечная функция \fBmq_open\fP() реализована поверх системного вызова с тем
+же именем. Библиотечная функция выполняет проверку того, что \fIname\fP
+начинается с косой черты (/) и выдаёт ошибку \fBEINVAL\fP, если это не
+так. Системный вызов ядра ожидает \fIname\fP без начальной косой черты, поэтому
+библиотечная функция C  передаёт в системный вызов \fIname\fP без начальной
+косой черты (т. е., \fIname+1\fP).
+.SH ДЕФЕКТЫ
+В ядрах до версии 2.6.14, значение umask процесса не накладывалось на права,
+указанные в \fImode\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmq_close\fP(3), \fBmq_getattr\fP(3), \fBmq_notify\fP(3), \fBmq_receive\fP(3),
+\fBmq_send\fP(3), \fBmq_unlink\fP(3), \fBmq_overview\fP(7)

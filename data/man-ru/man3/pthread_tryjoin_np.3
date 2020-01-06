@@ -1,0 +1,136 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_TRYJOIN_NP 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_tryjoin_np, pthread_timedjoin_np \- пытается присоединиться к
+завершённой нити
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_tryjoin_np(pthread_t \fP\fIthread\fP\fB, void **\fP\fIretval\fP\fB);\fP
+.PP
+\fBint pthread_timedjoin_np(pthread_t \fP\fIthread\fP\fB, void **\fP\fIretval\fP\fB,\fP
+\fB                         const struct timespec *\fP\fIabstime\fP\fB);\fP
+.fi
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.SH ОПИСАНИЕ
+Эти функции работают также как \fBpthread_join\fP(3) за исключением различий,
+описанных в данной справочной странице.
+.PP
+Функция \fBpthread_tryjoin_np\fP() выполняет неблокирующую присоединение к нити
+\fIthread\fP, возвращая в \fI*retval\fP код выхода нити. Если \fIthread\fP ещё не
+завершилась, то вместо блокировки, как это делает \fBpthread_join\fP(3), вызов
+возвращает ошибку.
+.PP
+Функция \fBpthread_timedjoin_np\fP() выполняет присоединение\-с\-ожиданием. Если
+\fIthread\fP ещё не завершилась, то вызов блокируется на максимальное время,
+заданное в \fIabstime\fP. Если время истекло до завершения \fIthread\fP, то вызов
+возвращает ошибку. Аргумент \fIabstime\fP представляет собой структуру
+представления абсолютного времени, измеряемого с начала Эпохи (смотрите
+\fBtime\fP(2)):
+.PP
+.in +4n
+.EX
+struct timespec {
+    time_t tv_sec;     /* секунды */
+    long   tv_nsec;    /* наносекунды */
+};
+.EE
+.in
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0; при ошибке возвращается
+номер ошибки.
+.SH ОШИБКИ
+Эти функции могут завершиться с теми же ошибками что и
+\fBpthread_join\fP(3). Дополнительно, функция \fBpthread_tryjoin_np\fP() может
+завершиться со следующей ошибкой:
+.TP 
+\fBEBUSY\fP
+Нить \fIthread\fP не завершилась на момент вызова.
+.PP
+Дополнительно, функция \fBpthread_timedjoin_np\fP() может завершиться со
+следующими ошибками:
+.TP 
+\fBETIMEDOUT\fP
+Истёк период ожидания раньше завершения \fIthread\fP.
+.TP 
+\fBEINVAL\fP
+Некорректное значение \fIabstime\fP (\fItv_sec\fP меньше 0 или \fItv_nsec\fP больше
+1e9).
+.PP
+Функция \fBpthread_timedjoin_np\fP() никогда не возвращает ошибку \fBEINTR\fP.
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.3.3.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.ad l
+.TS
+allbox;
+lbw22 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_tryjoin_np\fP(),
+\fBpthread_timedjoin_np\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.ad
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции являются не стандартизированными расширениями GNU, о чём
+свидетельствует наличие суффикса «_np» (nonportable).
+.SH ПРИМЕР
+Следующий код ждёт присоединения к нити не более 5 секунд:
+.PP
+.in +4n
+.EX
+struct timespec ts;
+int s;
+
+\&...
+
+if (clock_gettime(CLOCK_REALTIME, &ts) == \-1) {
+    /* обработка ошибки */
+}
+
+ts.tv_sec += 5;
+
+s = pthread_timedjoin_np(thread, NULL, &ts);
+if (s != 0) {
+    /* обработка ошибки */
+}
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclock_gettime\fP(2), \fBpthread_exit\fP(3), \fBpthread_join\fP(3), \fBpthreads\fP(7)

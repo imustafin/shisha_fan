@@ -1,0 +1,498 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Written by Mike Frysinger <vapier@gentoo.org>
+.\"
+.\" %%%LICENSE_START(PUBLIC_DOMAIN)
+.\" This page is in the public domain.
+.\" %%%LICENSE_END
+.\"
+.\" Useful background:
+.\"   http://articles.manugarg.com/systemcallinlinux2_6.html
+.\"   https://lwn.net/Articles/446528/
+.\"   http://www.linuxjournal.com/content/creating-vdso-colonels-other-chicken
+.\"   http://www.trilithium.com/johan/2005/08/linux-gate/
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH VDSO 7 2019\-08\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+vdso \- обзор виртуального динамически компонуемого общего объекта ELF
+.SH ОБЗОР
+\fB#include <sys/auxv.h>\fP
+.PP
+\fBvoid *vdso = (uintptr_t) getauxval(AT_SYSINFO_EHDR);\fP
+.SH ОПИСАНИЕ
+«vDSO» (virtual dynamic shared object, виртуальный динамический общий
+объект) — это маленькая общая библиотека, которую ядро автоматически
+отображает в адресное пространство всех приложений пользовательского
+пространства. Обычно, приложениям она не нужна, так как vDSO, чаще всего,
+вызывается из библиотеки C. Вы можете использовать стандартные функции как
+обычно, а библиотека C самостоятельно позаботится об использовании
+возможностей vDSO.
+.PP
+И всё же, зачем нужна vDSO? Есть несколько системных вызовов ядра, которые
+используются в пользовательском коде настолько часто, что это сильно влияет
+на общую производительность. Это происходит из\-за частого повторения
+вызовов, а также затрат на переключение контекста, которые возникают при
+выходе из пользовательского пространства и входа в ядро.
+.PP
+Оставшаяся часть этой документации предназначена для любопытных и/или
+авторов библиотеки C, а не для обычных разработчиков. Если вы попытаетесь
+вызвать vDSO в своём приложении не через библиотеку C, то, наиболее
+вероятно, сделаете это неправильно.
+.SS "В качестве примера"
+Выполнение системных вызовов может быть медленным. В 32\-битных системах x86
+вы можете использовать программное прерывание (\fIint $0x80\fP), чтобы
+заставить ядро выполнить системный вызов. Однако, эта инструкция очень
+затратна: она проходит по полному маршруту обработки прерываний в микрокоде
+процессора, а также в ядре. Новые процессоры содержат более быстрые
+инструкции (но обратно совместимые) для запуска системных вызовов. Вместо
+того, чтобы требовать от библиотеки C выяснения во время выполнения есть ли
+такая возможность, библиотека C может использовать функции, предоставляемые
+ядром в vDSO.
+.PP
+Заметим, что можно запутаться в терминологии. В системах x86 функция vDSO,
+используемая для определения предпочтительного метода выполнения системного
+вызова, называется «__kernel_vsyscall», но в x86\-64 термин «vsyscall» также
+ссылается на устаревший метод запроса ядра о времени или на каком ЦП
+выполняется вызывающий.
+.PP
+Одним из наиболее часто используемых системных вызовов является
+\fBgettimeofday\fP(2). Данный вызов используется прямо в приложениях, а также
+неявно из библиотеки C. Метка времени, временной цикл или опрос — для всего
+этого часто нужно знать сколько времени в данный момент. Также, это
+информация не секретна — многие приложения с любыми правами (root или любого
+не привилегированного пользователя) получат одинаковый ответ. Поэтому ядро
+размещает информацию, требуемую для ответа на этот вопрос, в памяти
+процесса. Теперь системный вызов \fBgettimeofday\fP(2) заменяется на вызов
+обычной функции и доступ к памяти.
+.SS "Нахождение vDSO"
+Базовый адрес vDSO (если есть) передаётся ядром каждой программе во
+вспомогательном векторе инициализации (смотрите \fBgetauxval\fP(3)) через тег
+\fBAT_SYSINFO_EHDR\fP.
+.PP
+Вы не должны рассчитывать на то, что vDSO отображается в каком\-то
+определённом месте карты пользовательской памяти. Обычно, базовый адрес во
+время выполнения выбирается произвольным образом каждый раз при создании
+нового образа процесса (с помощью \fBexecve\fP(2)). Это делается в целях
+безопасности для предотвращения атак «возврат в libc».
+.PP
+Для некоторых архитектур также существует тег \fBAT_SYSINFO\fP. Он используется
+только для нахождения точки входа vsyscall и часто отсутствует или равен 0
+(то есть недоступен). Этот тег — атавизм первых версий vDSO (смотрите
+\fIИстория\fP ниже) и не должен использоваться.
+.SS "Формат файла"
+Так как vDSO — полноценный образ ELF, вы можете искать в нём символы. Это
+позволяет добавлять новые символы в новых версиях ядра и библиотеке C
+находить доступные свойства во время выполнения с различными версиями
+ядер. Зачастую, библиотека C выполняет обнаружение при первом вызове и затем
+кэширует результат для последующих вызовов.
+.PP
+Все символы имеют версии (в формате версий GNU). Это позволяет ядру
+обновлять сигнатуру функции без нарушения обратной совместимости. Смена
+версии означает изменение аргументов функции или возвращаемого
+значения. Таким образом, при поиске символа в vDSO, вы всегда должны
+включать версию для нахождения ожидаемого ABI.
+.PP
+Обычно, vDSO удовлетворяет соглашению об именовании, начиная все символы с
+«__vdso_» или «__kernel_», для их выделения среди других стандартных
+символов. Например, функция «gettimeofday» называется «__vdso_gettimeofday».
+.PP
+Для вызова этих функций используйте стандартные соглашения о вызове языка
+Си. Учитывать поведение регистров и стека не требуется.
+.SH ЗАМЕЧАНИЯ
+.SS "Исходный код"
+Код vDSO автоматически компилируется и компонуется при сборке ядра. Обычно,
+его можно найти в каталоге соответствующей архитектуры:
+.PP
+.\"
+    find arch/$ARCH/ \-name \(aq*vdso*.so*\(aq \-o \-name \(aq*gate*.so*\(aq
+.SS "Имена vDSO"
+Имя vDSO отличается на разных архитектурах. Часто его можно увидеть в выводе
+утилит, подобных \fBldd\fP(1) из glibc. Точное имя не должно влиять на код,
+поэтому жёстко оно нигде не задаётся.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWABI пользователя\fP	\f(CWимя vDSO\fP
+\f(CW_\fP
+\f(CWaarch64\fP	\f(CWlinux\-vdso.so.1\fP
+\f(CWarm\fP	\f(CWlinux\-vdso.so.1\fP
+\f(CWia64\fP	\f(CWlinux\-gate.so.1\fP
+\f(CWmips\fP	\f(CWlinux\-vdso.so.1\fP
+\f(CWppc/32\fP	\f(CWlinux\-vdso32.so.1\fP
+\f(CWppc/64\fP	\f(CWlinux\-vdso64.so.1\fP
+\f(CWriscv\fP	\f(CWlinux\-vdso.so.1\fP
+\f(CWs390\fP	\f(CWlinux\-vdso32.so.1\fP
+\f(CWs390x\fP	\f(CWlinux\-vdso64.so.1\fP
+\f(CWsh\fP	\f(CWlinux\-gate.so.1\fP
+\f(CWi386\fP	\f(CWlinux\-gate.so.1\fP
+\f(CWx86\-64\fP	\f(CWlinux\-vdso.so.1\fP
+\f(CWx86/x32\fP	\f(CWlinux\-vdso.so.1\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS "strace(1), seccomp(2) и vDSO"
+При трассировке системных вызовов с помощью \fBstrace\fP(1), символы (системные
+вызовы), экспортируемые vDSO, \fIне\fP показываются в результате
+трассировки. Также данные системные вызовы будут невидимы в фильтрах
+\fBseccomp\fP(2).
+.SH "ЗАМЕЧАНИЯ ДЛЯ РАЗЛИЧНЫХ АРХИТЕКТУР"
+Далее приведены замечания по vDSO для различных архитектур.
+.PP
+Заметим, что используемая vDSO основывается на ABI вашего кода
+пользовательского пространства, а не на ABI ядра. Например, когда вы
+запускаете 32\-битный исполняемый файл ELF на i386, то вы получаете ту же
+vDSO независимо от того, выполняете ли вы его под 32\-битном ядром на i386
+или под 64\-битном ядром под x86\-64. Таким образом, для определения нужного
+раздела ниже нужно использовать имя ABI пользовательского пространства.
+.SS "Функции на ARM"
+.\" See linux/arch/arm/vdso/vdso.lds.S
+.\" Commit: 8512287a8165592466cb9cb347ba94892e9c56a5
+В таблице ниже перечислены символы, экспортируемые vDSO.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__vdso_gettimeofday\fP	\f(CWLINUX_2.6 (экспортируется начиная с Linux 4.1)\fP
+\f(CW__vdso_clock_gettime\fP	\f(CWLINUX_2.6 (экспортируется начиная с Linux 4.1)\fP
+.TE
+.if " t \{\"
+.in
+\}
+.PP
+.\" See linux/arch/arm/kernel/entry-armv.S
+.\" See linux/Documentation/arm/kernel_user_helpers.txt
+Также, перенос ARM содержит страницу кода со вспомогательными функциями. Так
+как это просто страница с кодом, информация ELF отсутствует и поиск функций
+невозможен и неизвестны их версии. Хотя в коде есть функции нескольких
+версий.
+.PP
+Эта страница с кодом хорошо описана в документации к ядру и в ней есть всё,
+что вам нужно знать: \fIDocumentation/arm/kernel_user_helpers.txt\fP.
+.SS "Функции на aarch64"
+.\" See linux/arch/arm64/kernel/vdso/vdso.lds.S
+В таблице ниже перечислены символы, экспортируемые vDSO.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__kernel_rt_sigreturn\fP	\f(CWLINUX_2.6.39\fP
+\f(CW__kernel_gettimeofday\fP	\f(CWLINUX_2.6.39\fP
+\f(CW__kernel_clock_gettime\fP	\f(CWLINUX_2.6.39\fP
+\f(CW__kernel_clock_getres\fP	\f(CWLINUX_2.6.39\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS "Функции на bfin (Blackfin) (перенос удалён в Linux 4.17)"
+.\" See linux/arch/blackfin/kernel/fixed_code.S
+.\" See http://docs.blackfin.uclinux.org/doku.php?id=linux-kernel:fixed-code
+Так как в этом ЦП отсутствует устройство управления памятью (MMU), на данной
+архитектуре не создаётся vDSO в обычном понимании. Вместо этого, ядро
+отображает несколько функций в постоянное расположение в памяти. Приложения
+пользовательского пространства могут вызывать их из этой области
+напрямую. Здесь отсутствует обратная совместимость кроме как слежение за
+кодами операций (sniffing raw opcodes), но для таких встраиваемых ЦП это
+нормально — некоторые форматы объектов, запускаемых на нём, даже не основаны
+на ELF (например, bFLT/FLAT).
+.PP
+Эта страница с кодом хорошо описана в открытой документации:
+.br
+http://docs.blackfin.uclinux.org/doku.php?id=linux\-kernel:fixed\-code
+.SS "Функции на mips"
+.\" See linux/arch/mips/vdso/vdso.ld.S
+.PP
+В таблице ниже перечислены символы, экспортируемые vDSO.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__kernel_gettimeofday\fP	\f(CWLINUX_2.6 (экспортируется начиная с Linux 4.4)\fP
+\f(CW__kernel_clock_gettime\fP	\f(CWLINUX_2.6 (экспортируется начиная с Linux 4.4)\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS "Функции на ia64 (Itanium)"
+.\" See linux/arch/ia64/kernel/gate.lds.S
+.\" Also linux/arch/ia64/kernel/fsys.S and linux/Documentation/ia64/fsys.txt
+В таблице ниже перечислены символы, экспортируемые vDSO.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__kernel_sigtramp\fP	\f(CWLINUX_2.5\fP
+\f(CW__kernel_syscall_via_break\fP	\f(CWLINUX_2.5\fP
+\f(CW__kernel_syscall_via_epc\fP	\f(CWLINUX_2.5\fP
+.TE
+.if " t \{\"
+.in
+\}
+.PP
+Перенос на Itanium, в некоторой степени, неоднозначный. Кроме vDSO,
+показанной выше, также есть «легковесные системные вызовы» (также называемые
+как «быстрые syscall» или «fsys»). Вы можете вызвать их через
+вспомогательную функцию vDSO \fI__kernel_syscall_via_epc\fP. Перечисленные
+здесь системные вызовы имеют ту же семантику, как если бы вызывались
+напрямую через \fBsyscall\fP(2), поэтому обратитесь к соответствующей
+документации по каждому из них. В таблице ниже перечислены функции,
+доступные через этот механизм.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l.
+\f(CWфункция\fP
+\f(CW_\fP
+\f(CWclock_gettime\fP
+\f(CWgetcpu\fP
+\f(CWgetpid\fP
+\f(CWgetppid\fP
+\f(CWgettimeofday\fP
+\f(CWset_tid_address\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS "Функции на parisc (hppa)"
+.\" See linux/arch/parisc/kernel/syscall.S
+.\" See linux/Documentation/parisc/registers
+Перенос parisc содержит страницу кода со вспомогательными функциями,
+называемую шлюзовой (gateway) страницей. Вместо того, чтобы использовать
+обычный вспомогательный вектор ELF, передаётся адрес страницы для обработки
+через регистр SR2. Права на страницу таковы, что простое выполнение этих
+адресов автоматически выполняется с правами ядра и не в пространстве
+пользователя. Подобный способ применяется в HP\-UX.
+.PP
+Так как это просто страница с кодом, информация ELF отсутствует и поиск
+функций невозможен и неизвестны их версии. Просто вызывайте функцию по
+соответствующему смещению через инструкцию ветвления, например:
+.PP
+    ble <смещение>(%sr2, %r0)
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсмещение\fP	\f(CWфункция\fP
+\f(CW_\fP
+\f(CW00b0\fP	\f(CWlws_entry (операции CAS)\fP
+\f(CW00e0\fP	\f(CWset_thread_pointer (используется в glibc)\fP
+\f(CW0100\fP	\f(CWlinux_gateway_entry (syscall)\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS "Функции на ppc/32"
+.\" See linux/arch/powerpc/kernel/vdso32/vdso32.lds.S
+В таблице ниже перечислены символы, экспортируемые vDSO. Функции, помеченные
+\fI*\fP, доступны только в ядре PowerPC64 (64\-бита).
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__kernel_clock_getres\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_clock_gettime\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_datapage_offset\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_get_syscall_map\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_get_tbfreq\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_getcpu \fP\fI*\fP	LINUX_2.6.15
+__kernel_gettimeofday	LINUX_2.6.15
+__kernel_sigtramp_rt32	LINUX_2.6.15
+__kernel_sigtramp32	LINUX_2.6.15
+__kernel_sync_dicache	LINUX_2.6.15
+__kernel_sync_dicache_p5	LINUX_2.6.15
+.TE
+.if " t \{\"
+.in
+\fI\}\fP
+.PP
+Часы \fBCLOCK_REALTIME_COARSE\fP и \fBCLOCK_MONOTONIC_COARSE\fP \fIне
+поддерживаются\fP в интерфейсах \fI__kernel_clock_getres\fP и
+\fI__kernel_clock_gettime\fP; ядро вернется к использованию реального
+системного вызова.
+.SS "Функции на ppc/64"
+.\" See linux/arch/powerpc/kernel/vdso64/vdso64.lds.S
+В таблице ниже перечислены символы, экспортируемые vDSO.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__kernel_clock_getres\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_clock_gettime\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_datapage_offset\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_get_syscall_map\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_get_tbfreq\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_getcpu\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_gettimeofday\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_sigtramp_rt64\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_sync_dicache\fP	\f(CWLINUX_2.6.15\fP
+\f(CW__kernel_sync_dicache_p5\fP	\f(CWLINUX_2.6.15\fP
+.TE
+.if " t \{\"
+.in
+\}
+.PP
+Часы \fBCLOCK_REALTIME_COARSE\fP и \fBCLOCK_MONOTONIC_COARSE\fP \fIне
+поддерживаются\fP в интерфейсах \fI__kernel_clock_getres\fP и
+\fI__kernel_clock_gettime\fP; ядро вернется к использованию реального
+системного вызова.
+.SS "Функции на riscv"
+.\" See linux/arch/riscv/kernel/vdso/vdso.lds.S
+В таблице ниже перечислены символы, экспортируемые vDSO.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__kernel_rt_sigreturn\fP	\f(CWLINUX_4.15\fP
+\f(CW__kernel_gettimeofday\fP	\f(CWLINUX_4.15\fP
+\f(CW__kernel_clock_gettime\fP	\f(CWLINUX_4.15\fP
+\f(CW__kernel_clock_getres\fP	\f(CWLINUX_4.15\fP
+\f(CW__kernel_getcpu\fP	\f(CWLINUX_4.15\fP
+\f(CW__kernel_flush_icache\fP	\f(CWLINUX_4.15\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS "Функции на s390"
+.\" See linux/arch/s390/kernel/vdso32/vdso32.lds.S
+В таблице ниже перечислены символы, экспортируемые vDSO.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__kernel_clock_getres\fP	\f(CWLINUX_2.6.29\fP
+\f(CW__kernel_clock_gettime\fP	\f(CWLINUX_2.6.29\fP
+\f(CW__kernel_gettimeofday\fP	\f(CWLINUX_2.6.29\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS "Функции на s390x"
+.\" See linux/arch/s390/kernel/vdso64/vdso64.lds.S
+В таблице ниже перечислены символы, экспортируемые vDSO.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__kernel_clock_getres\fP	\f(CWLINUX_2.6.29\fP
+\f(CW__kernel_clock_gettime\fP	\f(CWLINUX_2.6.29\fP
+\f(CW__kernel_gettimeofday\fP	\f(CWLINUX_2.6.29\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS "Функции на sh (SuperH)"
+.\" See linux/arch/sh/kernel/vsyscall/vsyscall.lds.S
+В таблице ниже перечислены символы, экспортируемые vDSO.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__kernel_rt_sigreturn\fP	\f(CWLINUX_2.6\fP
+\f(CW__kernel_sigreturn\fP	\f(CWLINUX_2.6\fP
+\f(CW__kernel_vsyscall\fP	\f(CWLINUX_2.6\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS "Функции на i386"
+.\" See linux/arch/x86/vdso/vdso32/vdso32.lds.S
+В таблице ниже перечислены символы, экспортируемые vDSO.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__kernel_sigreturn\fP	\f(CWLINUX_2.5\fP
+\f(CW__kernel_rt_sigreturn\fP	\f(CWLINUX_2.5\fP
+\f(CW__kernel_vsyscall\fP	\f(CWLINUX_2.5\fP
+.\" Added in 7a59ed415f5b57469e22e41fc4188d5399e0b194 and updated
+.\" in 37c975545ec63320789962bf307f000f08fabd48.
+\f(CW__vdso_clock_gettime\fP	\f(CWLINUX_2.6 (экспортируется начиная с Linux 3.15)\fP
+\f(CW__vdso_gettimeofday\fP	\f(CWLINUX_2.6 (экспортируется начиная с Linux 3.15)\fP
+\f(CW__vdso_time\fP	\f(CWLINUX_2.6 (экспортируется начиная с Linux 3.15)\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS "Функции x86\-64"
+.\" See linux/arch/x86/vdso/vdso.lds.S
+В таблице ниже перечислены символы, экспортируемые vDSO. Все эти символы
+также доступны без префикса «__vdso_», но вы не должны пользоваться этим,
+применяйте имена, перечисленные ниже.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__vdso_clock_gettime\fP	\f(CWLINUX_2.6\fP
+\f(CW__vdso_getcpu\fP	\f(CWLINUX_2.6\fP
+\f(CW__vdso_gettimeofday\fP	\f(CWLINUX_2.6\fP
+\f(CW__vdso_time\fP	\f(CWLINUX_2.6\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS "Функции на x86/x32"
+.\" See linux/arch/x86/vdso/vdso32.lds.S
+В таблице ниже перечислены символы, экспортируемые vDSO.
+.if " t \{\"
+\f(CW\}\fP
+.TS
+l l.
+\f(CWсимвол\fP	\f(CWверсия\fP
+\f(CW_\fP
+\f(CW__vdso_clock_gettime\fP	\f(CWLINUX_2.6\fP
+\f(CW__vdso_getcpu\fP	\f(CWLINUX_2.6\fP
+\f(CW__vdso_gettimeofday\fP	\f(CWLINUX_2.6\fP
+\f(CW__vdso_time\fP	\f(CWLINUX_2.6\fP
+.TE
+.if " t \{\"
+.in
+\}
+.SS История
+Первоначально vDSO представляла собой одну функцию — vsyscall. В старых
+ядрах вы можете видеть это имя в карте памяти процесса вместо «vdso». Со
+временем, люди поняли, что этот механизм является отличным способом
+перенести больше возможностей в пользовательское пространство, результатом
+чего стала vDSO в текущем виде.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsyscalls\fP(2), \fBgetauxval\fP(3), \fBproc\fP(5)
+.PP
+Документация, примеры и исходный код в дереве исходного кода Linux:
+.PP
+.in +4n
+.EX
+Documentation/ABI/stable/vdso
+Documentation/ia64/fsys.txt
+Documentation/vDSO/* (содержит примеры использования vDSO)
+
+find arch/ \-iname \(aq*vdso*\(aq \-o \-iname \(aq*gate*\(aq
+.EE
+.in

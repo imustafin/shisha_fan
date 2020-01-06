@@ -1,0 +1,81 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2007 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYSV_SIGNAL 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+sysv_signal \- обрабатывает сигналы согласно семантике System V
+.SH ОБЗОР
+\fB#define _GNU_SOURCE\fP /* смотрите feature_test_macros(7) */
+.br
+\fB#include <signal.h>\fP
+.PP
+\fBtypedef void (*sighandler_t)(int);\fP
+.PP
+\fBsighandler_t sysv_signal(int \fP\fIsignum\fP\fB, sighandler_t \fP\fIhandler\fP\fB);\fP
+.SH ОПИСАНИЕ
+Функция \fBsysv_signal\fP() ожидает те же аргументы и выполняет ту же задачу,
+что и \fBsignal\fP(2).
+.PP
+Однако \fBsysv_signal\fP() предоставляет ненадёжную семантику сигналов System
+V, то есть: a) обработчик сигнала сбрасывается в значение по умолчанию, при
+его вызове; b) доставка последующих экземпляров сигнала не блокируется на
+время выполнения обработчика сигнала; c) если обработчик сигнала прерывает
+(некоторые) блокирующие системные вызовы, то системный вызов автоматически
+не перезапускается.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBsysv_signal\fP() возвращает предыдущее значение обработчика сигнала
+или \fBSIG_ERR\fP при ошибке.
+.SH ОШИБКИ
+Как в \fBsignal\fP(2).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsysv_signal\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эта функция не является стандартной.
+.SH ЗАМЕЧАНИЯ
+Избегайте использования \fBsysv_signal\fP(), используйте вместо неё
+\fBsigaction\fP(2).
+.PP
+В старых Linux\-системах \fBsysv_signal\fP() и \fBsignal\fP(2) были
+эквивалентны. Однако в новых системах \fBsignal\fP(2) предоставляет надежную
+семантику сигналов. Подробности смотрите в \fBsignal\fP(2).
+.PP
+Используемый параметр \fIsighandler_t\fP является расширением GNU; данный тип
+определён только в том случае, если определён макрос \fB_GNU_SOURCE\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsigaction\fP(2), \fBsignal\fP(2), \fBbsd_signal\fP(3), \fBsignal\fP(7)

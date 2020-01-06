@@ -1,0 +1,110 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1980, 1991 Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)ioctl.2	6.4 (Berkeley) 3/10/91
+.\"
+.\" Modified 1993-07-23 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-10-22 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified 1999-06-25 by Rachael Munns <vashti@dream.org.uk>
+.\" Modified 2000-09-21 by Andries Brouwer <aeb@cwi.nl>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IOCTL 2 2017\-05\-03 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ioctl \- управляет устройством
+.SH ОБЗОР
+\fB#include <sys/ioctl.h>\fP
+.PP
+.\" POSIX says 'request' is int, but glibc has the above
+.\" See https://bugzilla.kernel.org/show_bug.cgi?id=42705
+\fBint ioctl(int \fP\fIfd\fP\fB, unsigned long \fP\fIrequest\fP\fB, ...);\fP
+.SH ОПИСАНИЕ
+Системный вызов \fBioctl\fP() изменяет параметры нижележащего устройства
+специальных файлов. В частности, через запросы \fBioctl\fP() можно управлять
+многими оперативными характеристиками специальных символьных файлов
+(например, терминалов). В качестве аргумента \fIfd\fP должен быть указан
+открытый файловый дескриптор.
+.PP
+Второй аргумент является кодом запроса, значение которого зависит от
+устройства. Третий аргумент является нетипизированным указателем на
+память. Обычно, это \fBchar *\fP\fIargp\fP (было до тех пор, пока в C не появился
+v\fBvoid *\fP) и далее он будет называться именно так.
+.PP
+В значении \fIrequest\fP функции \fBioctl\fP() кодируется информация является ли
+параметр \fIвходным\fP или \fIвыходным\fP и размер аргумента \fIargp\fP в
+байтах. Макросы и определения, используемые при указании в \fBioctl\fP()
+запросах \fIrequest\fP, определены в файле \fI<sys/ioctl.h>\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Обычно, при успешном завершении возвращается ноль. В некоторых \fBioctl\fP()
+запросах возвращаемое значение считается выходным параметром и при успешном
+завершении возвращается неотрицательное значение. В случае ошибки
+возвращается \-1 и значение \fIerrno\fP устанавливается соответствующим образом.
+.SH ОШИБКИ
+.TP  0.7i
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEFAULT\fP
+\fIargp\fP ссылается на недоступную область памяти.
+.TP 
+\fBEINVAL\fP
+Неправильное значение \fIrequest\fP или \fIargp\fP.
+.TP 
+\fBENOTTY\fP
+Значение \fIfd\fP не связано со специальным символьным устройством.
+.TP 
+\fBENOTTY\fP
+Указанный запрос не применяется к типу объекта, на который ссылается
+файловый дескриптор \fIfd\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Нет единого стандарта. Аргументы, возвращаемые значения и семантика
+\fBioctl\fP() варьируются в соответствии с драйвером устройства (вызов,
+используемый как всеохватывающий, не полностью соответствует потоковой
+модели ввода/вывода в UNIX). В \fBioctl_list\fP(2) можно найти список многих
+известных вызовов \fBioctl\fP(). Системный вызов \fBioctl\fP() появился в AT&T
+UNIX версии 7.
+.SH ЗАМЕЧАНИЯ
+Чтобы использовать этот вызов требуется открытый файловый дескриптор. Часто
+вызов \fBopen\fP(2) приводит к нежелательным эффектам, которых в Linux можно
+избежать указав флаг \fBO_NONBLOCK\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+.\" .BR mt (4),
+\fBexecve\fP(2), \fBfcntl\fP(2), \fBioctl_console\fP(2), \fBioctl_fat\fP(2),
+\fBioctl_ficlonerange\fP(2), \fBioctl_fideduperange\fP(2), \fBioctl_getfsmap\fP(2),
+\fBioctl_iflags\fP(2), \fBioctl_list\fP(2), \fBioctl_ns\fP(2), \fBioctl_tty\fP(2),
+\fBioctl_userfaultfd\fP(2), \fBopen\fP(2), \fBsd\fP(4), \fBtty\fP(4)

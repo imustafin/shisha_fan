@@ -1,0 +1,75 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage copyright 1998 by Andi Kleen.
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Subject to the GPL.
+.\" %%%LICENSE_END
+.\"
+.\" Based on the original comments from Alexey Kuznetsov
+.\" $Id: netlink.3,v 1.1 1999/05/14 17:17:24 freitag Exp $
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH NETLINK 3 2014\-03\-20 GNU "Руководство программиста Linux"
+.SH ИМЯ
+netlink \- макросы netlink
+.SH ОБЗОР
+.nf
+\fB#include <asm/types.h>\fP
+\fB#include <linux/netlink.h>\fP
+.PP
+\fBint NLMSG_ALIGN(size_t \fP\fIlen\fP\fB);\fP
+\fBint NLMSG_LENGTH(size_t \fP\fIlen\fP\fB);\fP
+\fBint NLMSG_SPACE(size_t \fP\fIlen\fP\fB);\fP
+\fBvoid *NLMSG_DATA(struct nlmsghdr *\fP\fInlh\fP\fB);\fP
+\fBstruct nlmsghdr *NLMSG_NEXT(struct nlmsghdr *\fP\fInlh\fP\fB, int \fP\fIlen\fP\fB);\fP
+\fBint NLMSG_OK(struct nlmsghdr *\fP\fInlh\fP\fB, int \fP\fIlen\fP\fB);\fP
+\fBint NLMSG_PAYLOAD(struct nlmsghdr *\fP\fInlh\fP\fB, int \fP\fIlen\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+В \fI<linux/netlink.h>\fP описаны различные стандартные макросы для
+доступа или создания дейтаграмм netlink. По сути, они подобны макросам,
+определённым в \fBcmsg\fP(3) для обычных данных. Работа с буфером, передаваемом
+или получаемом из сокета netlink, должна выполняться только с помощью этих
+макросов.
+.TP 
+\fBNLMSG_ALIGN\fP()
+Выравнивает длину сообщения netlink до корректного значения.
+.TP 
+\fBNLMSG_LENGTH\fP()
+Рассматривает длину полезной нагрузки \fIlen\fP как аргумент и возвращает
+выравненную длину в поле \fInlmsg_len\fP структуры \fInlmsghdr\fP.
+.TP 
+\fBNLMSG_SPACE\fP()
+Возвращает количество байтов сообщения netlink с полезной нагрузкой длинной
+\fIlen\fP.
+.TP 
+\fBNLMSG_DATA\fP()
+Возвращает указатель на полезную нагрузку, относящуюся к указанной структуре
+\fInlmsghdr\fP.
+.TP 
+.\" this is bizarre, maybe the interface should be fixed.
+\fBNLMSG_NEXT\fP()
+Получает следующую структуру \fInlmsghdr\fP в сообщении, состоящем из
+нескольких частей. При вызове необходимо убедиться, что в текущей структуре
+\fInlmsghdr\fP не установлен флаг \fBNLMSG_DONE\fP — эта функция не возвращает
+NULL в конце. Параметр \fIlen\fP — это величина lvalue, указывающая на
+оставшуюся длину буфера сообщения. Этот макрос уменьшает её на размер
+заголовка сообщения.
+.TP 
+\fBNLMSG_OK\fP()
+Возвращает значение «истина», если сообщение netlink не обрезано и готово к
+обработке.
+.TP 
+\fBNLMSG_PAYLOAD\fP()
+Возвращает длину полезной нагрузки, связанной с \fInlmsghdr\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти макросы являются нестандартными расширениями Linux.
+.SH ЗАМЕЧАНИЯ
+В большинстве случаев лучше использовать netlink с помощью функций
+библиотеки \fIlibnetlink\fP, а не через низкоуровневый интерфейс ядра.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlibnetlink\fP(3), \fBnetlink\fP(7)

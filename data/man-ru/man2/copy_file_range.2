@@ -1,0 +1,234 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"This manpage is Copyright (C) 2015 Anna Schumaker <Anna.Schumaker@Netapp.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of
+.\" this manual under the conditions for verbatim copying, provided that
+.\" the entire resulting derived work is distributed under the terms of
+.\" a permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume
+.\" no responsibility for errors or omissions, or for damages resulting
+.\" from the use of the information contained herein.  The author(s) may
+.\" not have taken the same level of care in the production of this
+.\" manual, which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH COPY_FILE_RANGE 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+copy_file_range \- копирует часть данных из одного файла в другой
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP
+\fB#include <unistd.h>\fP
+.PP
+\fBssize_t copy_file_range(int \fP\fIfd_in\fP\fB, loff_t *\fP\fIoff_in\fP\fB,\fP
+\fB                        int \fP\fIfd_out\fP\fB, loff_t *\fP\fIoff_out\fP\fB,\fP
+\fB                        size_t \fP\fIlen\fP\fB, unsigned int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBcopy_file_range\fP()  выполняет внутриядерное копирование
+между двумя файловыми дескрипторами без дополнительных накладных расходов по
+передаче данных из ядра в пользовательское пространство и затем обратно в
+ядро. Он копирует до \fIlen\fP байт данных из файлового дескриптора \fIfd_in\fP
+источника в файловый дескриптор \fIfd_out\fP приёмника, перезаписывая
+существующие данные внутри запрашиваемой области файла назначения.
+.PP
+Следующая семантика применяется к \fIoff_in\fP и подобная ей к \fIoff_out\fP:
+.IP * 3
+Если \fIoff_in\fP равно NULL, то байты читаются из \fIfd_in\fP начиная с файлового
+смещения, а файловое смещение корректируется на количество скопированных
+байт.
+.IP *
+Если \fIoff_in\fP не равно NULL, то \fIoff_in\fP должно указывать на буфер,
+задающий начальное смещение в \fIfd_in\fP, из которого будут читаться
+байты. Файловое смещение \fIfd_in\fP не изменяется, но \fIoff_in\fP изменяется
+соответствующим образом.
+.PP
+Значения \fIfd_in\fP и \fIfd_out\fP могут ссылаться на один и тот же файл. Если
+это так, то диапазонам источника и приёмника нельзя перекрываться.
+.PP
+Аргумент \fIflags\fP предназначен для будущих расширений, а пока его значение
+должно быть равно 0.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBcopy_file_range\fP() возвращает количество
+скопированных между файлами байт. Оно может быть меньше запрашиваемой
+длины. Если файловое смещение \fIfd_in\fP в конце или за концом файла, то байты
+не копирются и \fBcopy_file_range\fP() возвращает ноль.
+.PP
+В случае ошибки \fBcopy_file_range\fP() возвращает \-1, а \fIerrno\fP
+устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Один или оба файловых дескриптора недействительны.
+.TP 
+\fBEBADF\fP
+Дескриптор \fIfd_in\fP не открыт на чтение или дескриптор \fIfd_out\fP не открыт
+на запись.
+.TP 
+\fBEBADF\fP
+В открытом файловом описании, на которое ссылается файловый дескриптор
+\fIfd_out\fP, установлен флаг \fBO_APPEND\fP (смотрите \fBopen\fP(2)).
+.TP 
+\fBEFBIG\fP
+Попытка записать в позицию вне максимально поддерживаемого ядром файлового
+смещения.
+.TP 
+\fBEFBIG\fP
+Попытка записи диапазона, который превышает разрешённый максимальный размер
+файла. Максимальный размер файла различается в реализациях файловых систем и
+может отличаться от разрешённого максимального файлового смещения.
+.TP 
+\fBEFBIG\fP
+Попытка записи, выходящее за ограничение ресурса процесса на размер
+файла. Также это может вызвать получение процессом сигнала \fISIGXFSZ\fP.
+.TP 
+\fBEINVAL\fP
+Аргумент \fIflags\fP не равен 0.
+.TP 
+\fBEINVAL\fP
+Значения \fIfd_in\fP и \fIfd_out\fP ссылаются на один и тот же файл и диапазоны
+источника и приёмника перекрываются.
+.TP 
+\fBEINVAL\fP
+Значение \fIfd_in\fP или \fIfd_out\fP указывает на необычный файл.
+.TP 
+\fBEIO\fP
+Во время копирования возникла низкоуровневая ошибка ввода\-вывода.
+.TP 
+\fBEISDIR\fP
+Значение \fIfd_in\fP или \fIfd_out\fP указывает на каталог.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти.
+.TP 
+\fBENOSPC\fP
+Недостаточно места на файловой системе назначения для завершения
+копирования.
+.TP 
+\fBEOVERFLOW\fP
+Запрошенный диапазон источника и приёмника слишком большой для представления
+в указанном типе данных.
+.TP 
+\fBEPERM\fP
+Значение \fIfd_out\fP ссылается на файл с постоянными данными (immutable).
+.TP 
+\fBTXTBSY\fP
+Значение \fIfd_in\fP или \fIfd_out\fP указывает на активный файл подкачки.
+.TP 
+\fBEXDEV\fP
+Файлы, на которые ссылаются \fIfile_in\fP и \fIfile_out\fP, находятся не в одной
+смонтированной файловой системе (до Linux 5.3).
+.SH ВЕРСИИ
+.\" https://sourceware.org/git/?p=glibc.git;a=commit;f=posix/unistd.h;h=bad7a0c81f501fbbcc79af9eaa4b8254441c4a1f
+Системный вызов \fBcopy_file_range\fP() впервые появился в Linux 4.5, но если
+он недоступен, в glibc 2.27 предоставляется эмуляция в пользовательском
+пространстве.
+.PP
+В ядре версии 5.3 произошли значительные перемены. Уточнены области API,
+которые были нечётно определены, и границы API теперь строже проверяются, по
+сравнению с ранними ядрами. Приложения должны следовать поведению и
+требованиям ядер 5.3.
+.PP
+В Linux 5.3 появилась поддержка копирования между файловыми системами. В
+старых ядрах при попытках копирования между файловыми системами возвращается
+ошибка \-EXDEV.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Системный вызов \fBcopy_file_range\fP() является нестандартным расширением
+Linux и GNU.
+.SH ЗАМЕЧАНИЯ
+Если файл \fIfile_in\fP является разреженным (sparse), то \fBcopy_file_range\fP()
+может расширить дыры, существующие в запрашиваемой области. Пользователи
+могут получить преимущество от вызова \fBcopy_file_range\fP() в цикле, и
+используя операции \fBlseek\fP(2) \fBSEEK_DATA\fP и \fBSEEK_HOLE\fP для поиска
+расположений сегментов данных.
+.PP
+Вызов \fBcopy_file_range\fP() даёт файловым системам возможность реализовать
+«ускорение копирования», например, использовать ссылочные связи (т. е., две
+или более инод, использующих общие указатели для одного
+копирования\-при\-записи дисковых блоков) или копирование\-на\-сервере
+(server\-side\-copy, в случае использования NFS).
+.SH ПРИМЕР
+.EX
+#define _GNU_SOURCE
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
+#include <unistd.h>
+
+/ * В версиях glibc до 2.27, мы должны ссылаться на copy_file_range ()
+ используя syscall(2) * /
+
+static loff_t
+copy_file_range(int fd_in, loff_t *off_in, int fd_out,
+                loff_t *off_out, size_t len, unsigned int flags)
+{
+    return syscall(__NR_copy_file_range, fd_in, off_in, fd_out,
+                   off_out, len, flags);
+}
+
+int
+main(int argc, char **argv)
+{
+    int fd_in, fd_out;
+    struct stat stat;
+    loff_t len, ret;
+
+    if (argc != 3) {
+        fprintf(stderr, "Использование: %s <источник> <приёмник>\en", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    fd_in = open(argv[1], O_RDONLY);
+    if (fd_in == \-1) {
+        perror("открытие (argv[1])");
+        exit(EXIT_FAILURE);
+    }
+
+    if (fstat(fd_in, &stat) == \-1) {
+        perror("fstat");
+        exit(EXIT_FAILURE);
+    }
+
+    len = stat.st_size;
+
+    fd_out = open(argv[2], O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (fd_out == \-1) {
+        perror("открытие (argv[2])");
+        exit(EXIT_FAILURE);
+    }
+
+    do {
+        ret = copy_file_range(fd_in, NULL, fd_out, NULL, len, 0);
+        if (ret == \-1) {
+            perror("copy_file_range");
+            exit(EXIT_FAILURE);
+        }
+
+        len \-= ret;
+    } while (len > 0 && ret > 0);
+
+    close(fd_in);
+    close(fd_out);
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlseek\fP(2), \fBsendfile\fP(2), \fBsplice\fP(2)

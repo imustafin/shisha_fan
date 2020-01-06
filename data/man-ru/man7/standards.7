@@ -1,0 +1,226 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2006, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH STANDARDS 7 2017\-11\-26 Linux "Руководство программиста Linux"
+.SH ИМЯ
+standards \- стандарты Си и UNIX
+.SH ОПИСАНИЕ
+В разделе СООТВЕТСТВИЕ СТАНДАРТАМ, который имеется во многих справочных
+страницах, перечисляются различные стандарты, которым соответствует
+описываемый интерфейс. В следующем списке кратко описаны эти стандарты.
+.TP 
+\fBV7\fP
+Version 7 (также известная как седьмая редакция) UNIX, выпущена AT&T/Bell
+Labs в 1979 году. После этого системы UNIX разделились на два основных
+диалекта: BSD и System V.
+.TP 
+\fB4.2BSD\fP
+Так называется реализация стандарта, определённого выпуском 4.2 \fIBerkeley
+Software Distribution\fP, выпущенном Калифорнийским университетом в
+Беркли. Это первый выпуск Berkeley со стеком TCP/IP и программным
+интерфейсом сокетов. 4.2BSD выпущена 1983 году.
+.IP
+Предыдущие основные версии BSD: \fI3BSD\fP (1980 год), \fI4BSD\fP (1980 год) и
+\fI4.1BSD\fP (1981 год).
+.TP 
+\fB4.3BSD\fP
+Преемник 4.2BSD, выпущен в 1986 году.
+.TP 
+\fB4.4BSD\fP
+Преемник 4.3BSD, выпущен в 1993 году. Это был последний крупный выпуск от
+Университета Беркли.
+.TP 
+\fBSystem V\fP
+Так называется реализация стандарта, определённого выпуском AT&T в 1983 году
+своего коммерческого выпуска System V (пять). Предыдущий основной выпуск
+AT&T называется \fISystem III\fP и выпущен в 1981 году.
+.TP 
+\fBSystem V release 2 (SVr2)\fP
+Это следующий выпуск System V, выпущенный в 1985 году. SVr2 формально описан
+в \fISystem V Interface Definition version 1\fP (\fISVID 1\fP), опубликованном в
+1985 году.
+.TP 
+\fBSystem V release 3 (SVr3)\fP
+Это следующий выпуск SVr2, выпущен в 1986 году. Данный выпуск формально
+описан в \fISystem V Interface Definition version 2\fP (\fISVID 2\fP).
+.TP 
+\fBSystem V release 4 (SVr4)\fP
+Это следующий выпуск SVr3, выпущен в 1989 году. Эта версия System V описана
+в «Programmer's Reference Manual: Operating System API (Intel processors)»
+(Prentice\-Hall 1992, ISBN 0\-13\-951294\-2). Данный выпуск формально описан в
+\fISystem V Interface Definition version 3\fP (\fISVID 3\fP) и считается
+определяющим выпуском System V.
+.TP 
+\fBSVID 4\fP
+Определение интерфейса System V, версия 4, выпущено в 1995 году. Доступно по
+адресу
+.UR http://www.sco.com\:/developers\:/devspecs/
+.UE .
+.TP 
+\fBC89\fP
+Это первая версия стандарта языка Си, одобрена ANSI (Американский
+национальный институт стандартов) в 1989 году (\fIX3.159\-1989\fP). Иногда её
+называют \fIANSI C\fP, но так как C99 также является стандартом ANSI, этот
+термин противоречив. Данный стандарт также одобрен ISO (Международная
+организация по стандартизации) в 1990 году (\fIISO/IEC 9899:1990\fP) и поэтому
+изредка называется \fIISO C90\fP.
+.TP 
+\fBC99\fP
+Данная редакция стандарта языка Си была одобрена ISO в 1999 году (\fIISO/IEC
+9899:1999\fP). Доступна по адресу
+.UR http://www.open\-std.org\:/jtc1\:/sc22\:/wg14\:/www\:/standards
+.UE .
+.TP 
+\fBC11\fP
+Данная редакция стандарта языка Си была одобрена ISO в 2011 году (\fIISO/IEC
+9899:2011\fP).
+.TP 
+\fBPOSIX.1\-1990\fP
+«Переносимый интерфейс операционных систем для вычислительных сред». IEEE
+1003.1\-1990 часть 1 одобрена ISO в 1990 году (\fIISO/IEC
+9945\-1:1990\fP). Термин «POSIX» был предложен Ричардом Столлманом.
+.TP 
+\fBPOSIX.2\fP
+IEEE Std 1003.2\-1992 описывает команды и утилиты, одобрен ISO в 1993 году
+(\fIISO/IEC 9945\-2:1993\fP).
+.TP 
+\fBPOSIX.1b\fP (ранее известен как \fIPOSIX.4\fP)
+IEEE Std 1003.1b\-1993 описывает средства реального времени в переносимых
+операционных системах, одобрен ISO в 1996 году (\fIISO/IEC 9945\-1:1996\fP).
+.TP 
+\fBPOSIX.1c\fP
+IEEE Std 1003.1c\-1995 описывает интерфейс нитей POSIX.
+.TP 
+\fBPOSIX.1d\fP
+IEEE Std 1003.1c\-1999 описывает дополнительные расширения реального времени.
+.TP 
+\fBPOSIX.1g\fP
+IEEE Std 1003.1g\-2000 описывает сетевые программные интерфейсы (включая
+сокеты).
+.TP 
+\fBPOSIX.1j\fP
+IEEE Std 1003.1j\-2000 описывает развитые расширения реального времени.
+.TP 
+\fBPOSIX.1\-1996\fP
+Ревизия POSIX.1 1996 года с включёнными POSIX.1b и POSIX.1c.
+.TP 
+\fBXPG3\fP
+Выпущен в 1989 году, первый существенный выпуск \fIX/Open Portability Guide\fP,
+разработанный X/Open Company — консорциумом производителей. Данное
+многотомное руководство основано на стандартах POSIX.
+.TP 
+\fBXPG4\fP
+Ревизия X/Open Portability Guide, выпущенная в 1992 году.
+.TP 
+\fBXPG4v2\fP
+Ревизия XPG4, выпущенная в 1994 году. Также называется \fISpec 1170\fP, где
+1170 — количество интерфейсов, определённых в этом стандарте.
+.TP 
+\fBSUS (SUSv1)\fP
+Single UNIX Specification. Перепакованный вариант XPG4v2 и других стандартов
+X/Open (X/Open Curses Issue 4 version 2, X/Open Networking Service (XNS)
+Issue 4). Системы, удовлетворяющие этому стандарту, могут маркироваться как
+\fIUNIX 95\fP.
+.TP 
+\fBSUSv2\fP
+Single UNIX Specification, версия 2. Иногда называется \fIXPG5\fP. Данный
+стандарт появился в 1997 году. Системы, удовлетворяющие этому стандарту,
+могут маркироваться как \fIUNIX 98\fP. Смотрите также
+.UR http://www.UNIX\-systems.org\:/version2/
+.UE .)
+.TP 
+\fBPOSIX.1\-2001, SUSv3\fP
+Это выпуск 2001 года и объединение стандартов POSIX.1, POSIX.2 и SUS в один
+документ, проводимый под покровительством Austin Group
+.UR http://www.opengroup.org\:/austin/
+.UE .
+Стандарт доступен в сети по
+адресу
+.UR http://www.unix\-systems.org\:/version3/
+.UE ,
+а интерфейсы,
+которые он описывает, также доступны в пакете справочных страниц Linux в
+разделах 1p и 3p (например, «man 3p open»).
+.IP
+В стандарте определено два уровня соответствия: \fIPOSIX conformance\fP —
+базовый набор интерфейсов, требуемых в системе для соответствия и \fIXSI
+Conformance\fP — дополнительный набор интерфейсов («расширение XSI»), которые
+не являются обязательными для соответствия POSIX. Системы, удовлетворяющие
+XSI, могут маркироваться как \fIUNIX 03\fP. (соответствием XSI определяется
+\fISingle UNIX Specification version 3\fP (\fISUSv3\fP)).
+.IP
+Документ POSIX.1\-2001 разделён на четыре части:
+.IP
+\fBXBD\fP: Определения, обозначения и положения, описание заголовочных файлов.
+.IP
+\fBXSH\fP: Описание функций (т. е., реальные реализации системных вызовов и
+библиотечных функций).
+.IP
+\fBXCU\fP: Описания команд и утилит (т. е., то, что описывалось ранее в
+POSIX.2).
+.IP
+\fBXRAT\fP: Справочные данные на другие части стандарта.
+.IP
+POSIX.1\-2001 выверен с C99, поэтому все библиотечные функции,
+стандартизованные в C99, также стандартизованы в POSIX.1\-2001.
+.IP
+Было проведено две технические поправки (небольшие исправления и улучшения)
+оригинального стандарта 2001 года: TC1 в 2003 году (известна как
+\fIPOSIX.1\-2003\fP) и TC2 в 2004 году (известна как \fIPOSIX.1\-2004\fP).
+.TP 
+\fBPOSIX.1\-2008, SUSv4\fP
+Следующий выпуск POSIX.1/SUS, утверждён в 2008 году.
+.IP
+Изменения в этом выпуске не столь велики как в POSIX.1\-2001/SUSv3, но
+добавлено несколько новых интерфейсов и внесены изменения в описание
+существующих. Многие необязательные в POSIX.1\-2001 интерфейсы стали
+обязательными в выпуске стандарта 2008 года. Некоторые интерфейсы из
+POSIX.1\-2001 помечены как устаревшие в POSIX.1\-2008, или удалены вообще.
+.IP
+Выпуск стандарта делится на те же части что и POSIX.1\-2001 и также
+существует два уровня соответствия: основной \fIPOSIX Conformance\fP и \fIXSI
+Conformance\fP, который описывает дополнительный набор интерфейсов вне
+основного.
+.IP
+В общем, если в разделе справочных страниц «СООТВЕТСТВИЕ СТАНДАРТАМ» указан
+POSIX.1\-2001, то можно считать, что интерфейс также соответствует
+POSIX.1\-2008, если не указано обратного.
+.IP
+Техническая поправка 1 (небольшие исправления и улучшения) данного стандарта
+была выпущена в 2013 году (также известна как \fIPOSIX.1\-2013\fP).
+.IP
+Техническая поправка 2 данного стандарта вошла в выпуск 2016 года (также
+известна как \fIPOSIX.1\-2016\fP).
+.IP
+Дополнительную информацию можно найти на веб\-сайте Austin Group по адресу:
+.UR http://www.opengroup.org\:/austin/
+.UE .
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetconf\fP(1), \fBconfstr\fP(3), \fBpathconf\fP(3), \fBsysconf\fP(3),
+\fBattributes\fP(7), \fBfeature_test_macros\fP(7), \fBlibc\fP(7), \fBposixoptions\fP(7)

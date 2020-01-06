@@ -1,0 +1,133 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2002 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" added note on self-signaling, aeb, 2002-06-07
+.\" added note on CAP_KILL, mtk, 2004-06-16
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGQUEUE 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sigqueue \- вставляет сигнал и данные в очередь процесса
+.SH ОБЗОР
+\fB#include <signal.h>\fP
+.PP
+\fBint sigqueue(pid_t \fP\fIpid\fP\fB, int \fP\fIsig\fP\fB, const union sigval
+\fP\fIvalue\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsigqueue\fP(): _POSIX_C_SOURCE\ >=\ 199309L
+.SH ОПИСАНИЕ
+Вызов \fBsigqueue\fP() отправляет сигнал, указанный в \fIsig\fP, процессу с
+идентификатором PID, определённом в \fIpid\fP. Требуются определённые права для
+отправки сигнала, такие же как для \fBkill\fP(2). Как и в случае с \fBkill\fP(2),
+пустой сигнал (0) может использоваться для проверки того, что заданный PID
+вообще существует.
+.PP
+Аргумент \fIvalue\fP используется для указания сопутствующего элемента данных
+(либо целого, либо указателя), отправляемых сигналу, и имеет следующий тип:
+.PP
+.in +4n
+.EX
+union sigval {
+    int   sival_int;
+    void *sival_ptr;
+};
+.EE
+.in
+.PP
+Если у процесса, принимающего сигнал, установлен обработчик посредством
+\fBsigaction\fP(2) с флагом \fBSA_SIGINFO\fP, то он может получить данные через
+поле \fIsi_value\fP структуры \fIsiginfo_t\fP, передаваемой как второй аргумент
+для обработчика. Кроме этого, значение поля \fIsi_code\fP этой структуры будет
+установлено в \fBSI_QUEUE\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsigqueue\fP() возвращается 0, что означает, что
+сигнал попал в очередь принимающего процесса. При ошибке возвращается \-1 и в
+\fIerrno\fP содержится код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Достигнуто ограничение на количество сигналов в очереди (подробней об этом
+смотрите в \fBsignal\fP(7)).
+.TP 
+\fBEINVAL\fP
+Значение \fIsig\fP некорректно.
+.TP 
+\fBEPERM\fP
+Процесс не имеет прав для отправки сигнала принимающему процессу. Требуемые
+права смотрите в \fBkill\fP(2).
+.TP 
+\fBESRCH\fP
+Нет процесса с идентификатором PID, соответствующем указанному \fIpid\fP.
+.SH ВЕРСИИ
+Функция \fBsigqueue\fP() и используемый ей системный вызов \fBrt_sigqueueinfo\fP()
+впервые появились в Linux 2.2.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsigqueue\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Если этот вызов приводит к отправке сигнала процессу, который его вызвал, и
+этот сигнал не заблокирован вызывающей нитью, и никакие другие нити не
+желают обрабатывать сигнал (либо он для них не заблокирован, либо они
+ожидали его с помощью \fBsigwait\fP(3), то, по меньшей мере, сигнал должен быть
+доставлен этой нити до завершения этого вызова.
+.SS "Отличия между библиотекой C и ядром"
+В Linux \fBsigqueue\fP() реализована через системный вызов
+\fBrt_sigqueueinfo\fP(2). Данный системный вызов отличается от неё третьим
+аргументом: структура \fIsiginfo_t\fP, которая будет предоставляться
+обработчику сигнала принимающего процесса или возвращаться вызовом
+\fBsigtimedwait\fP(2) из принимающего процесса. В обёрточной функции glibc
+\fBsigqueue\fP() этот аргумент, \fIuinfo\fP, инициализируется следующим образом:
+.PP
+.in +4n
+.EX
+uinfo.si_signo = sig;      /* аргумент, передаваемый в sigqueue() */
+uinfo.si_code = SI_QUEUE;
+uinfo.si_pid = getpid();   /* ID процесса отправителя */
+uinfo.si_uid = getuid();   /* реальный UID отправителя */
+uinfo.si_value = val;      /* аргумент, передаваемый в sigqueue() */
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBrt_sigqueueinfo\fP(2), \fBsigaction\fP(2), \fBsignal\fP(2),
+\fBpthread_sigqueue\fP(3), \fBsigwait\fP(3), \fBsignal\fP(7)

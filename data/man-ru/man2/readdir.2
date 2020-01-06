@@ -1,0 +1,106 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1995 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Written 11 June 1995 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 22 July 1995 by Michael Chastain <mec@duracef.shout.net>:
+.\"   In 1.3.X, returns only one entry each time; return value is different.
+.\" Modified 2004-12-01, mtk, fixed headers listed in SYNOPSIS
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH READDIR 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+readdir \- читает элемент каталога
+.SH ОБЗОР
+.nf
+.PP
+\fBint readdir(unsigned int \fP\fIfd\fP\fB, struct old_linux_dirent *\fP\fIdirp\fP\fB,\fP
+\fB            unsigned int \fP\fIcount\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Эта не та функция, которая должна представлять для вас интерес. Смотрите
+описание функции \fBreaddir\fP(3), которая является интерфейсом библиотеки
+языка C, соответствующим стандарту POSIX. В этой странице описан минимальный
+интерфейс системного вызова ядра, который заменён на \fBgetdents\fP(2).
+.PP
+Вызов \fBreaddir\fP() читает структуру \fIold_linux_dirent\fP из каталога,
+заданного файловым дескриптором \fIfd\fP, в буфер, указываемый в
+\fIdirp\fP. Аргумент \fIcount\fP игнорируется; всегда считывается только одна
+структура \fIold_linux_dirent\fP.
+.PP
+Структура \fIold_linux_dirent\fP определена (в файле ядра Linux
+\fBfs/readdir.c\fP, недоступна извне) следующим образом:
+.PP
+.in +4n
+.EX
+struct old_linux_dirent {
+    unsigned long d_ino;     /* номер иноды */
+    unsigned long d_offset;  /* смещение на данную \fIold_linux_dirent\fP */
+    unsigned short d_namlen; /* длина данной \fId_name\fP */
+    char  d_name[1];         /* имя файла (с null в конце) */
+}
+.EE
+.in
+.PP
+Значением \fId_ino\fP является номер иноды. В \fId_offset\fP задаётся смещение
+данной \fIold_linux_dirent\fP от начала каталога. В \fId_reclen\fP задаётся размер
+\fId_name\fP без учета завершающего байта null (\(aq\e0\(aq). В \fId_name\fP
+указывается имя файла, завершающееся null.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 1. Если каталог закончился возвращается
+0. При ошибке возвращается \-1, а переменной \fIerrno\fP присваивается номер
+ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Неверный файловый дескриптор \fIfd\fP.
+.TP 
+\fBEFAULT\fP
+Аргумент указывает за пределы адресного пространства вызывающего процесса.
+.TP 
+\fBEINVAL\fP
+Буфер результата слишком мал.
+.TP 
+\fBENOENT\fP
+Заданный каталог не существует.
+.TP 
+\fBENOTDIR\fP
+Файловый дескриптор указывает не на каталог.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёртки для данного системного вызова; запускайте его с помощью
+\fBsyscall\fP(2). Структуру \fIold_linux_dirent\fP нужно определить
+самостоятельно. Однако лучше использовать \fBreaddir\fP(3).
+.PP
+Этот системный вызов отсутствует на x86\-64.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetdents\fP(2), \fBreaddir\fP(3)

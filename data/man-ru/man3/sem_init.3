@@ -1,0 +1,95 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SEM_INIT 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sem_init \- инициализирует безымянный семафор
+.SH ОБЗОР
+.nf
+\fB#include <semaphore.h>\fP
+.PP
+\fBint sem_init(sem_t *\fP\fIsem\fP\fB, int \fP\fIpshared\fP\fB, unsigned int \fP\fIvalue\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-pthread\fP.
+.SH ОПИСАНИЕ
+Функция \fBsem_init\fP() инициализирует безымянный семафор по адресу,
+указанному в \fIsem\fP. В аргументе \fIvalue\fP задаётся начальное значение
+семафора.
+.PP
+Аргументом \fIpshared\fP определяется, будет ли данный семафор доступен в нитях
+процесса или в разных процессах.
+.PP
+Если значение \fIpshared\fP равно 0, то семафор будет коллективно
+использоваться в нитях процесса, и должен располагаться по адресу, который
+доступен из всех нитей (например, глобальная переменная или динамически
+выделенная из кучи переменная).
+.PP
+Если значение \fIpshared\fP не равно нулю, то семафор будет коллективно
+использоваться несколькими процессами, и должен располагаться в области
+общей памяти (смотрите \fBshm_open\fP(3), \fBmmap\fP(2) и \fBshmget\fP(2)) (так как
+потомок, создаваемый \fBfork\fP(2), наследует отображение памяти родителя, то
+ему также доступен и семафор). Любой процесс, имеющий доступ к области общей
+памяти, может обращаться к семафору с помощью \fBsem_post\fP(3), \fBsem_wait\fP(3)
+и т. п. функций.
+.PP
+Инициализация семафора, который уже был инициализирован, приводит к
+непредсказуемым результатам.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsem_init\fP() возвращается 0; при ошибке
+возвращается \-1, а в \fIerrno\fP содержится код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Значение \fIvalue\fP превышает \fBSEM_VALUE_MAX\fP.
+.TP 
+\fBENOSYS\fP
+Значение \fIpshared\fP не равно нулю, то система не поддерживает семафоры,
+коллективно используемые процессами (смотрите \fBsem_overview\fP(7)).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsem_init\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001.
+.SH ЗАМЕЧАНИЯ
+Странно, но в POSIX.1\-2001 не определено значение, которое должно
+возвращаться при успешном выполнении вызова \fBsem_init\fP(). В POSIX.1\-2008
+это исправлено: при успешном выполнении должен возвращаться ноль.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsem_destroy\fP(3), \fBsem_post\fP(3), \fBsem_wait\fP(3), \fBsem_overview\fP(7)

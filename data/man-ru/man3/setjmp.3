@@ -1,0 +1,208 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2016 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SETJMP 3 2017\-03\-13 "" "Руководство программиста Linux"
+.SH ИМЯ
+setjmp, sigsetjmp, longjmp, siglongjmp \- выполняет нелокальный переход
+.SH ОБЗОР
+.nf
+\fB#include <setjmp.h>\fP
+.PP
+\fBint setjmp(jmp_buf \fP\fIenv\fP\fB);\fP
+\fBint sigsetjmp(sigjmp_buf \fP\fIenv\fP\fB, int \fP\fIsavesigs\fP\fB);\fP
+.PP
+\fBvoid longjmp(jmp_buf \fP\fIenv\fP\fB, int \fP\fIval\fP\fB);\fP
+\fBvoid siglongjmp(sigjmp_buf \fP\fIenv\fP\fB, int \fP\fIval\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsetjmp\fP(): смотрите ЗАМЕЧАНИЯ.
+.PP
+\fBsigsetjmp\fP(): _POSIX_C_SOURCE
+.SH ОПИСАНИЕ
+Функции, описываемые в этой странице, используются для выполнения
+«нелокального goto»: передачи исполнения из одной функции в заранее
+определённое место другой. Функция \fBsetjmp\fP() динамически устанавливает
+точку для будущей передачи исполнения, а \fBlongjmp\fP() выполняет передачу
+исполнения.
+.PP
+Функция \fBsetjmp\fP() сохраняет различную информацию об окружении вызова
+(обычно, указатель стека, указатель инструкции, значения других регистров и
+маску сигналов) в буфер \fIenv\fP для последующего использования в
+\fBlongjmp\fP(). В этом случае \fBsetjmp\fP() возвращает 0.
+.PP
+Функция \fBlongjmp\fP() использует информацию, сохранённую в \fIenv\fP, для
+передачи управления обратно в точку, откуда была вызвана \fBsetjmp\fP(), и
+восстанавливает («отматывает») стек до состояния на время вызова
+\fBsetjmp\fP(). Также, в зависимости от реализации (смотрите ЗАМЕЧАНИЯ),
+значения некоторых регистров маска сигналов процесса могут быть
+восстановлены в их состояние на момент вызова \fBsetjmp\fP().
+.PP
+После успешного вызова \fBlongjmp\fP() выполнение продолжается как если бы
+\fBsetjmp\fP() была вызвана второй раз. Этот «фиктивный» возврат можно
+распознать от настоящего вызова \fBsetjmp\fP(), так как «фиктивный» возврат
+возвращает значение, указанное в \fIval\fP. Если программист ошибочно передаст
+значение 0 в \fIval\fP, то «фиктивный» возврат вернёт вместо него 1.
+.PP
+.SS "sigsetjmp() и siglongjmp()"
+Функции \fBsigsetjmp\fP() и \fBsiglongjmp\fP() также выполняют нелокальные
+переходы, но предоставляют предсказуемую обработку сигнальной маски
+процесса.
+.PP
+Если, и только если, аргумент \fIsavesigs\fP, передаваемый в \fBsigsetjmp\fP(), не
+равен нулю, то текущая маска сигналов процесса сохраняется в \fIenv\fP и будет
+восстановлена, если позднее будет запущена \fBsiglongjmp\fP() с этим \fIenv\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBsetjmp\fP() и \fBsigsetjmp\fP() возвращают 0, если вызывают явно; при
+«фиктивном» возврате, который возникает после \fBlongjmp\fP() или
+\fBsiglongjmp\fP(), возвращается ненулевое значение, указанное в \fIval\fP.
+.PP
+Функции \fBlongjmp\fP() и \fBsiglongjmp\fP() не выполняют возврат.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw23 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsetjmp\fP(),
+\fBsigsetjmp\fP()
+T}	Безвредность в нитях	MT\-Safe
+T{
+\fBlongjmp\fP(),
+\fBsiglongjmp\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.PP
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBsetjmp\fP(), \fBlongjmp\fP(): POSIX.1\-2001, POSIX.1\-2008, C89, C99.
+.PP
+\fBsigsetjmp\fP(), \fBsiglongjmp\fP(): POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.\" so that _FAVOR_BSD is triggered
+.\" .BR _XOPEN_SOURCE_EXTENDED ,
+В POSIX не уточняется, должна ли \fBsetjmp\fP() сохранять сигнальную маску
+(чтобы позднее восстановить её при \fBlongjmp\fP()). В System V — не должна. В
+4.3BSD сохранение выполняется и есть функция \fB_setjmp\fP, в которой этого не
+происходит. Поведение в Linux зависит от версии glibc и установленных
+макросов тестирования свойств. В Linux с glibc до версии 2.19 функция
+\fBsetjmp\fP() по умолчанию ведёт себя как в System V, но можно включить
+поведение как в BSD, если определить макрос тестирования свойств
+\fB_BSD_SOURCE\fP и будут не определены \fB_POSIX_SOURCE\fP, \fB_POSIX_C_SOURCE\fP,
+\fB_XOPEN_SOURCE\fP, \fB_GNU_SOURCE\fP или \fB_SVID_SOURCE\fP. Начиная с glibc 2.19,
+в \fI<setjmp.h>\fP представляется только версия System V для
+\fBsetjmp\fP(). Если в программе нужно задействовать семантику BSD, замените
+вызовы \fBsetjmp\fP() на вызовы \fBsigsetjmp\fP() с ненулевым аргументом
+\fIsavesigs\fP.
+.PP
+Функции \fBsetjmp\fP() и \fBlongjmp\fP() можно использовать для обработки ошибок
+внутри глубоко вложенных вызовов функций или чтобы позволить обработчику
+сигналов передать управление в определённую точку программы, и не возвращать
+исполнение главной программе в точку прерывания обработчиком. В последнем
+случае, если вы хотите сохранить и восстановить маску сигналов переносимым
+образом, то используйте \fBsigsetjmp\fP() и \fBsiglongjmp\fP(). Также смотрите
+раздел про читаемость программы далее.
+.PP
+Компилятор может оптимизировать переменные в регистрах и \fBlongjmp\fP() может
+восстановить значения регистров помимо указателя стека и счётчика
+программы. Следовательно, значения автоматических переменных непредсказуемы
+после вызова \fBlongjmp\fP(), если они удовлетворяют следующим критериям:
+.IP \(bu 3
+они локальны для функции, которая сделала соответствующий вызов \fBsetjmp\fP();
+.IP \(bu
+их значения изменились между вызовами \fBsetjmp\fP() и \fBlongjmp\fP(); и
+.IP \(bu
+они не объявлены как \fIvolatile\fP.
+.PP
+.\"
+Аналогичные замечания относятся и к \fBsiglongjmp\fP().
+.SS "Нелокальные переходы и читаемость программы"
+Хотя этим и можно злоупотребить, обычный оператор C «goto» имеет
+преимущество в виде лексических отметок (оператор goto и метка перехода),
+которые позволяют программисту легко понять поток выполнения. Нелокальные
+переходы не имеют таких отметок: многократные вызовы \fBsetjmp\fP() могут
+использовать одну переменную \fIjmp_buf\fP, то есть контекст переменной может
+изменяться на протяжении времени работы приложения. Следовательно,
+программисту придёт вчитываться в код для определения динамической точки
+перехода определённого вызова \fBlongjmp\fP() (для облегчения жизни
+программиста в каждом вызове \fBsetjmp\fP() должна использоваться уникальная
+переменная \fIjmp_buf\fP).
+.PP
+Дополнительная сложность: вызовы \fBsetjmp\fP() и \fBlongjmp\fP() даже могут быть
+в разных модулях исходного кода.
+.PP
+.\"
+Таким образом, нелокальные переходы могут сделать программу тяжелее для
+понимания и поддержки, и, если это возможно, нужно использовать
+альтернативные варианты.
+.SS Предостережения
+Если функция, вызвавшая \fBsetjmp\fP() завершилась до вызова \fBlongjmp\fP(), то
+поведение не определено. Результатом может стать маленький (или не очень)
+хаос.
+.PP
+.\"
+.\" The following statement appeared in versions up to POSIX.1-2008 TC1,
+.\" but is set to be removed in POSIX.1-2008 TC2:
+.\"
+.\"     According to POSIX.1, if a
+.\"     .BR longjmp ()
+.\"     call is performed from a nested signal handler
+.\"     (i.e., from a handler that was invoked in response to a signal that was
+.\"     generated while another signal was already in the process of being
+.\"     handled), the behavior is undefined.
+Если в многонитевой программе вызов \fBlongjmp\fP() использует буфер \fIenv\fP,
+инициализированный вызовом \fBsetjmp\fP() в другой нити, то поведение не
+определено.
+.PP
+.\" http://austingroupbugs.net/view.php?id=516#c1195
+В POSIX.1\-2008 Technical Corrigendum 2 вызовы \fBlongjmp\fP() и \fBsiglongjmp\fP()
+добавлены в список функций async\-signal\-safe. Однако стандарт рекомендует
+избегать использования этих функций в обработчиках сигналов и указывает, что
+если эти функции вызваны из обработчика сигналов, который прервал вызов
+функции не async\-signal\-safe (или её эквивалент, например шагам \fBexit\fP(3),
+который возникают  при возврате из начального вызова \fImain\fP()), то
+поведение не определено, если программа далее вызывает функцию не
+async\-signal\-safe. Единственным способом избежать неопределённого поведения,
+является проверка следующего:
+.IP * 3
+После длинного перехода из обработчика сигналов программа не вызывает
+каких\-либо функций не async\-signal\-safe и не возвращается из первоначального
+вызова в \fImain\fP().
+.IP *
+Любой сигнал, чей обработчик выполняет длинный переход, должен быть
+заблокирован на время \fIкаждого\fP вызова функции не async\-signal\-safe и не
+вызывать функции не async\-signal\-safe после возврата из начального вызова в
+\fImain\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsignal\fP(7), \fBsignal\-safety\fP(7)

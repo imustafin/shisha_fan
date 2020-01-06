@@ -1,0 +1,94 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"     @(#)getsockname.2	6.4 (Berkeley) 3/10/91
+.\"
+.\" Modified Sat Jul 24 16:30:29 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Oct 22 00:22:35 EDT 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Sun Mar 28 21:26:46 1999 by Andries Brouwer <aeb@cwi.nl>
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETSOCKNAME 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getsockname \- получить имя сокета
+.SH ОБЗОР
+.nf
+\fB#include <sys/socket.h>\fP
+.PP
+\fBint getsockname(int \fP\fIsockfd\fP\fB, struct sockaddr *\fP\fIaddr\fP\fB, socklen_t *\fP\fIaddrlen\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+\fBgetsockname\fP() возвращает текущий адрес, к которому привязан сокет
+\fIsockfd\fP, в буфере, указываемом \fIaddr\fP. В параметре \fIaddrlen\fP должно быть
+указано, сколько места выделено (в байтах), на которое указывает
+\fIaddr\fP. При возврате в этом параметре передается реальный размер адреса
+сокета.
+.PP
+Возвращаемый адрес урежется, если предоставленный буфер окажется слишком
+маленьким; в этом случае в \fIaddrlen\fP будет возвращено значение большее чем
+было в вызове.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении возвращается 0. В случае ошибки возвращается \-1, а
+\fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Аргумент \fIsockfd\fP не является допустимым файловым дескриптором.
+.TP 
+\fBEFAULT\fP
+Аргумент \fIaddr\fP указывает на память в недопустимой части адресуемого
+пространства процесса.
+.TP 
+\fBEINVAL\fP
+Неправильное значение аргумента \fIaddrlen\fP (например, отрицательное).
+.TP 
+\fBENOBUFS\fP
+Недостаточно ресурсов в системе для выполнения операции.
+.TP 
+\fBENOTSOCK\fP
+Файловый дескриптор \fIsockfd\fP указывает не на каталог.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" SVr4 documents additional ENOMEM
+.\" and ENOSR error codes.
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.4BSD, (\fBgetsockname\fP() впервые появился
+в 4.2BSD).
+.SH ЗАМЕЧАНИЯ
+Описание типа \fIsocklen_t\fP смотрите в \fBaccept\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbind\fP(2), \fBsocket\fP(2), \fBgetifaddrs\fP(3), \fBip\fP(7), \fBsocket\fP(7),
+\fBunix\fP(7)

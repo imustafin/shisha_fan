@@ -1,0 +1,138 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1995-2000 David Engel (david@ods.com)
+.\" Copyright 1995 Rickard E. Faith (faith@cs.unc.edu)
+.\" Copyright 2000 Ben Collins (bcollins@debian.org)
+.\"    Redone for GLibc 2.2
+.\" Copyright 2000 Jakub Jelinek (jakub@redhat.com)
+.\"    Corrected.
+.\" and Copyright (C) 2012, 2016, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Do not restrict distribution.
+.\" May be distributed under the GNU General Public License
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH LDD 1 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+ldd \- выдаёт список зависимостей от общих объектов
+.SH ОБЗОР
+\fBldd\fP [\fIпараметр\fP]… \fIфайл\fP…
+.SH ОПИСАНИЕ
+Программа \fBldd\fP выдаёт список общих объектов (общих библиотек), которые
+требуются для каждой из заданных в командной строке программы или общего
+объекта. Пример использования и результат работы:
+.PP
+.in +2n
+.EX
+$ \fBldd /bin/ls\fP
+        linux\-vdso.so.1 (0x00007ffcc3563000)
+        libselinux.so.1 => /lib64/libselinux.so.1 (0x00007f87e5459000)
+        libcap.so.2 => /lib64/libcap.so.2 (0x00007f87e5254000)
+        libc.so.6 => /lib64/libc.so.6 (0x00007f87e4e92000)
+        libpcre.so.1 => /lib64/libpcre.so.1 (0x00007f87e4c22000)
+        libdl.so.2 => /lib64/libdl.so.2 (0x00007f87e4a1e000)
+        /lib64/ld\-linux\-x86\-64.so.2 (0x00005574bf12e000)
+        libattr.so.1 => /lib64/libattr.so.1 (0x00007f87e4817000)
+        libpthread.so.0 => /lib64/libpthread.so.0 (0x00007f87e45fa000)
+.EE
+.in
+.PP
+.\"
+Обычно, \fBldd\fP вызывает стандартный динамический компоновщик (смотрите
+\fBld.so\fP(8)), установив значение переменной окружения
+\fBLD_TRACE_LOADED_OBJECTS\fP в 1. Это заставляет компоновщик просмотреть
+динамические зависимости программы и найти (согласно правилам, описанным в
+\fBld.so\fP(8)) и загрузить объекты, удовлетворяющие этим зависимостям. Для
+каждой зависимости \fBldd\fP показывает расположение подошедшего объекта и
+адрес (шестнадцатеричный) загрузки (общие зависимости \fIlinux\-vdso\fP и
+\fIld\-linux\fP являются специальными; смотрите \fBvdso\fP(7) и \fBld.so\fP(8)).
+.SS Безопасность
+.\" The circumstances are where the program has an interpreter
+.\" other than ld-linux.so. In this case, ldd tries to execute the
+.\" program directly with LD_TRACE_LOADED_OBJECTS=1, with the
+.\" result that the program interpreter gets control, and can do
+.\" what it likes, or pass control to the program itself.
+.\" Much more detail at
+.\" http://www.catonmat.net/blog/ldd-arbitrary-code-execution/
+.\" Mainline glibc's ldd allows this possibility (the line
+.\"      try_trace "$file"
+.\" in glibc 2.15, for example), but many distro versions of
+.\" ldd seem to remove that code path from the script.
+.\" glibc commit eedca9772e99c72ab4c3c34e43cc764250aa3e3c
+Однако заметим, что при определённых условиях (например, в программе указан
+интерпретатор ELF не \fIld\-linux.so\fP) некоторые версии \fBldd\fP могут
+попытаться получить информацию о зависимостях посредством прямого запуска
+программы,что может привести к выполнению какого угодно кода, указанного в
+интерпретаторе ELF программы и, возможно, выполнению самой программы (до
+glibc версии 2.27 так, например, поступала авторская реализация \fBldd\fP, хотя
+в большинстве дистрибутивов содержалась изменённая версия, которая так не
+делала).
+.PP
+Поэтому \fIникогда\fP не запускайте \fBldd\fP для недоверенных исполняемых файлов,
+так как это может привести к выполнению произвольного кода. Безопасной
+альтернативой при работе с недоверенными исполняемыми файлами является
+команда:
+.PP
+.in +4n
+.EX
+$ \fBobjdump \-p /путь/к/программе | grep NEEDED\fP
+.EE
+.in
+.PP
+Однако заметим, что эта альтернатива показывает только непосредственные
+зависимости исполняемого файла, а \fBldd\fP показывает всё его дерево
+зависимостей.
+.SH ПАРАМЕТРЫ
+.TP 
+\fB\-\-version\fP
+Выдать номер версии \fBldd\fP.
+.TP 
+\fB\-v\fP, \fB\-\-verbose\fP
+Выдать всю информацию, включая, например, информацию о версии символов.
+.TP 
+\fB\-u\fP, \fB\-\-unused\fP
+Выдать неиспользуемые явные зависимости. (Начиная с glibc 2.3.4.)
+.TP 
+\fB\-d\fP, \fB\-\-data\-relocs\fP
+Выполнить перемещения и показать все отсутствующие объекты (только для ELF).
+.TP 
+\fB\-r\fP, \fB\-\-function\-relocs\fP
+Выполнить перемещения и для объектов данных и для функций, и показать все
+отсутствующие объекты или функции (только для ELF).
+.TP 
+\fB\-\-help\fP
+.\" .SH NOTES
+.\" The standard version of
+.\" .B ldd
+.\" comes with glibc2.
+.\" Libc5 came with an older version, still present
+.\" on some systems.
+.\" The long options are not supported by the libc5 version.
+.\" On the other hand, the glibc2 version does not support
+.\" .B \-V
+.\" and only has the equivalent
+.\" .BR \-\-version .
+.\" .LP
+.\" The libc5 version of this program will use the name of a library given
+.\" on the command line as-is when it contains a \(aq/\(aq; otherwise it
+.\" searches for the library in the standard locations.
+.\" To run it
+.\" on a shared library in the current directory, prefix the name with "./".
+Выдать справку по использованию.
+.SH ДЕФЕКТЫ
+\fBldd\fP не работает с динамическими библиотеками в формате a.out.
+.PP
+.\" .SH AUTHOR
+.\" David Engel.
+.\" Roland McGrath and Ulrich Drepper.
+\fBldd\fP не работает с некоторыми очень старыми a.out программами, которые
+были скомпилированы до добавления поддержки \fBldd\fP в компиляторы. Если вы
+используете \fBldd\fP для одной из таких программ, то будет предпринята попытка
+выполнить программу с \fIargc\fP = 0, и результаты будут непредсказуемы.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpldd\fP(1), \fBsprof\fP(1), \fBld.so\fP(8), \fBldconfig\fP(8)

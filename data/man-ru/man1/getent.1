@@ -1,0 +1,189 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2011, Mark R. Bannister <cambridge@users.sourceforge.net>
+.\" Copyright (c) 2015, Robin H. Johnson <robbat2@gentoo.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETENT 1 2019\-03\-06 Linux "Пользовательские команды"
+.SH ИМЯ
+getent \- возвращает записи из библиотек диспетчера службы имён
+.SH ОБЗОР
+\fBgetent\ [\fP\fIпараметр\fP\fB]...\ \fP\fIбаза_данных\fP\fB\ \fP\fIключ\fP\fB...\fP
+.SH ОПИСАНИЕ
+Команда \fBgetent\fP отображает записи из баз данных, поддерживаемых
+библиотеками диспетчера службы имён (Name Service Switch), которые
+настраиваются в \fI/etc/nsswitch.conf\fP. Если указан один или более аргументов
+\fIключ\fP, то отображаются только записи, совпадающие с заданными ключами. В
+противном случае, если \fIключ\fP не указан, то будут показаны все записи (если
+база данных поддерживает перечисление).
+.PP
+Значение \fIбазы данных\fP может быть любым из поддерживаемых библиотекой GNU
+C:
+.RS 3
+.TP  10
+\fBahosts\fP
+Если \fIключ\fP не указан, то используются \fBsethostent\fP(3), \fBgethostent\fP(3) и
+\fBendhostent\fP(3) для перечисления базы данных hosts. Идентично использованию
+\fBhosts\fP. Если указан один или более \fIключ\fP, то каждый \fIключ\fP
+последовательно передаётся в \fBgetaddrinfo\fP(3) с адресным семейством
+\fBAF_UNSPEC\fP, которая возвращает каждую перечисляемую адресную структуру
+сокета.
+.TP 
+\fBahostsv4\fP
+То же, что и \fBahosts\fP, но используется адресное семейство \fBAF_INET\fP.
+.TP 
+\fBahostsv6\fP
+То же, что и \fBahosts\fP, но используется адресное семейство \fBAF_INET6\fP. В
+этом случае при вызове \fBgetaddrinfo\fP(3) включается флаг \fBAI_V4MAPPED\fP.
+.TP 
+\fBaliases\fP
+Если \fIключ\fP не указан, используется \fBsetaliasent\fP(3), \fBgetaliasent\fP(3) и
+\fBendaliasent\fP(3) для перечисления базы данных aliases. Если указан один или
+более \fIключ\fP, то каждый \fIключ\fP последовательно передаётся в
+\fBgetaliasbyname\fP(3) и показывается результат.
+.TP 
+\fBethers\fP
+Если указан один или более \fIключ\fP, то каждый \fIключ\fP последовательно
+передаётся в \fBether_aton\fP(3) и \fBether_hostton\fP(3), пока не будет возвращён
+результат, и показывается результат. Перечисление \fBethers\fP не
+поддерживается, поэтому \fIключ\fP обязателен.
+.TP 
+\fBgroup\fP
+Если \fIключ\fP не указан, используется \fBsetgrent\fP(3), \fBgetgrent\fP(3) и
+\fBendgrent\fP(3) для перечисления базы данных group. Если указан один или
+более \fIключ\fP, то каждый числовой \fIключ\fP передаётся в \fBgetgrgid\fP(3) и
+каждый не числовой \fIключ\fP в \fBgetgrnam\fP(3) и показывается результат.
+.TP 
+\fBgshadow\fP
+Если \fIключ\fP не указан, используется \fBsetsgent\fP(3), \fBgetsgent\fP(3) и
+\fBendsgent\fP(3) для перечисления базы данных gshadow. Если указан один или
+более \fIключ\fP, то каждый \fIключ\fP последовательно передаётся в \fBgetsgnam\fP(3)
+и показывается результат.
+.TP 
+\fBhosts\fP
+Если \fIключ\fP не указан, используется \fBsethostent\fP(3), \fBgethostent\fP(3) и
+\fBendhostent\fP(3) для перечисления базы данных hosts. Если указан один или
+более \fIключ\fP, то каждый \fIключ\fP последовательно передаётся в
+\fBgethostbyaddr\fP(3) или \fBgethostbyname2\fP(3), в зависимости от результата
+вызова \fBinet_pton\fP(3), определяющего, является ли \fIключ\fP адресом IPv6 или
+IPv4, и показывается результат.
+.TP 
+\fBinitgroups\fP
+Если указан один или более \fIключ\fP, то каждый \fIключ\fP последовательно
+передаётся в \fBgetgrouplist\fP(3) и показывается результат. Перечисление
+\fBinitgroups\fP не поддерживается, поэтому \fIключ\fP обязателен.
+.TP 
+\fBnetgroup\fP
+Если указан один \fIключ\fP, то он передаётся в \fBsetnetgrent\fP(3) и, с помощью
+\fBgetnetgrent\fP(3), отображается полученная строковая тройка (\fIhostname\fP,
+\fIusername\fP, \fIdomainname\fP). В противном случае могут быть указаны три
+\fIключа\fP, которые рассматриваются как \fIhostname\fP, \fIusername\fP и
+\fIdomainname\fP для поиска имени netgroup посредством
+\fBinnetgr\fP(3). Перечисление \fBnetgroup\fP не поддерживается, поэтому должен
+быть указан либо один, либо три \fIключа\fP.
+.TP 
+\fBnetworks\fP
+Если \fIключ\fP не указан, используется \fBsetnetent\fP(3), \fBgetnetent\fP(3) и
+\fBendnetent\fP(3) для перечисления базы данных networks. Если указан один или
+более \fIключ\fP, то каждый числовой \fIключ\fP передаётся в \fBgetnetbyaddr\fP(3) и
+каждый не числовой \fIключ\fP в \fBgetnetbyname\fP(3) и показывается результат.
+.TP 
+\fBpasswd\fP
+Если \fIключ\fP не указан, используется \fBsetpwent\fP(3), \fBgetpwent\fP(3) и
+\fBendpwent\fP(3) для перечисления базы данных passwd. Если указан один или
+более \fIключ\fP, то  каждый числовой \fIключ\fP передаётся в \fBgetpwuid\fP(3) и
+каждый не числовой \fIключ\fP в \fBgetpwnam\fP(3) и показывается результат.
+.TP 
+\fBprotocols\fP
+Если \fIключ\fP не указан, используется \fBsetprotoent\fP(3), \fBgetprotoent\fP(3) и
+\fBendprotoent\fP(3) для перечисления базы данных protocols. Если указан один
+или более \fIключ\fP, то каждый числовой \fIключ\fP передаётся в
+\fBgetprotobynumber\fP(3) и каждый не числовой \fIключ\fP в \fBgetprotobyname\fP(3) и
+показывается результат.
+.TP 
+\fBrpc\fP
+Если \fIключ\fP не указан, используется \fBsetrpcent\fP(3), \fBgetrpcent\fP(3) и
+\fBendrpcent\fP(3) для перечисления базы данных rpc. Если указан один или более
+\fIключ\fP, то каждый числовой \fIключ\fP передаётся в \fBgetrpcbynumber\fP(3) и
+каждый не числовой \fIключ\fP в \fBgetrpcbyname\fP(3) и показывается результат.
+.TP 
+\fBservices\fP
+Если \fIключ\fP не указан, используется \fBsetservent\fP(3), \fBgetservent\fP(3) и
+\fBendservent\fP(3) для перечисления базы данных services. Если указан один или
+более \fIключ\fP, то  каждый числовой \fIключ\fP передаётся в
+\fBgetservbynumber\fP(3) и каждый не числовой \fIключ\fP в \fBgetservbyname\fP(3) и
+показывается результат.
+.TP 
+\fBshadow\fP
+Если \fIключ\fP не указан, используется \fBsetspent\fP(3), \fBgetspent\fP(3) и
+\fBendspent\fP(3) для перечисления базы данных shadow. Если указан один или
+более \fIключ\fP, то каждый \fIключ\fP последовательно передаётся в \fBgetspnam\fP(3)
+и показывается результат.
+.RE
+.SH ПАРАМЕТРЫ
+.TP 
+\fB\-s\ \fP\fIслужба\fP, \fB\-\-service\ \fP\fIслужба\fP
+.\" commit 9d0881aa76b399e6a025c5cf44bebe2ae0efa8af (glibc)
+Заменить все базы данных с указанной службой (начиная с glibc 2.2.5).
+.TP 
+\fB\-s\ \fP\fIбаза_данных\fP\fB:\fP\fIслужба\fP, \fB\-\-service\ \fP\fIбаза_данных\fP\fB:\fP\fIслужба\fP
+.\" commit b4f6f4be85d32b9c03361c38376e36f08100e3e8 (glibc)
+Заменить только указанные базы данных с указанной службой. Параметр может
+указываться несколько раз, но будет использоваться только последняя служба
+для каждой базы данных (начиная с glibc 2.4).
+.TP 
+\fB\-i\fP, \fB\-\-no\-idn\fP
+.\" commit a160f8d808cf8020b13bd0ef4a9eaf3c11f964ad (glibc)
+Отключить кодировку IDN в поиске \fBahosts\fP/\fBgetaddrinfo\fP(3) (начиная с
+glibc\-2.13).
+.TP 
+\fB\-?\fP, \fB\-\-help\fP
+Показать справку по использованию и завершить работу.
+.TP 
+\fB\-\-usage\fP
+Показать краткую справку по использованию и завершить работу.
+.TP 
+\fB\-V\fP, \fB\-\-version\fP
+Показать номер версии, лицензию и уведомление о гарантиях для \fBgetent\fP.
+.SH "КОД РЕЗУЛЬТАТА"
+Программа \fBgetent\fP может возвращать один из следующих кодов завершения:
+.RS 3
+.TP  10
+\fB0\fP
+Команда успешно выполнена.
+.TP 
+\fB1\fP
+Отсутствуют аргументы или неизвестная \fIбаза данных\fP.
+.TP 
+\fB2\fP
+Один или более указанных \fIключей\fP невозможно найти в \fIбазе данных\fP.
+.TP 
+\fB3\fP
+Перечисление не поддерживается в этой \fIбазе данных\fP.
+.RE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBnsswitch.conf\fP(5)

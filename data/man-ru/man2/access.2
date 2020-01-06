@@ -1,0 +1,279 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1992 Drew Eckhardt;
+.\"             and Copyright (C) 1993 Michael Haardt, Ian Jackson.
+.\" and Copyright (C) 2004, 2006, 2007, 2014 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1993-07-21 Rik Faith (faith@cs.unc.edu)
+.\" Modified 1994-08-21 by Michael Chastain (mec@shell.portal.com):
+.\"   Removed note about old kernel (pre-1.1.44) using wrong id on path.
+.\" Modified 1996-03-18 by Martin Schulze (joey@infodrom.north.de):
+.\"   Stated more clearly how it behaves with symbolic links.
+.\" Added correction due to Nick Duffek (nsd@bbc.com), aeb, 960426
+.\" Modified 1996-09-07 by Michael Haardt:
+.\"   Restrictions for NFS
+.\" Modified 1997-09-09 by Joseph S. Myers <jsm28@cam.ac.uk>
+.\" Modified 1998-01-13 by Michael Haardt:
+.\"   Using access is often insecure
+.\" Modified 2001-10-16 by aeb
+.\" Modified 2002-04-23 by Roger Luethi <rl@hellgate.ch>
+.\" Modified 2004-06-23 by Michael Kerrisk
+.\" 2007-06-10, mtk, various parts rewritten, and added BUGS section.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ACCESS 2 2016\-03\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+access, faccessat \- проверить права доступа пользователя к файлу
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBint access(const char *\fP\fIpathname\fP\fB, int \fP\fImode\fP\fB);\fP
+
+\fB#include <fcntl.h>           \fP/* определения констант of AT_* */
+\fB#include <unistd.h>\fP
+.PP
+\fBint faccessat(int \fP\fIdirfd\fP\fB, const char *\fP\fIpathname\fP\fB, int \fP\fImode\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBfaccessat\fP():
+.PD 0
+.ad l
+.RS 4
+.TP  4
+Начиная с glibc 2.10:
+_POSIX_C_SOURCE\ >=\ 200809L
+.TP 
+До glibc 2.10:
+_ATFILE_SOURCE
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+\fBaccess\fP проверяет, имеет ли вызвавший процесс права доступа к файлу
+\fIpathname\fP. Если \fIpathname\fP является символьной ссылкой, то проверяются
+права доступа к файлу, на который она ссылается.
+.PP
+.\" F_OK is defined as 0 on every system that I know of.
+Аргумент \fImode\fP \(em это маска выполняемых проверок доступа; может быть
+равна значению \fBF_OK\fP, или состоять из одного или несколько побитово
+сложенных \fBR_OK\fP, \fBW_OK\fP и \fBX_OK\fP. \fBF_OK\fP проверяет существование
+файла. \fBR_OK\fP, \fBW_OK\fP и \fBX_OK\fP запрашивают проверку, соответственно,
+существования файла и возможности его чтения, записи или выполнения.
+.PP
+Проверка осуществляется с использованием \fIреального\fP, а не эффективного
+идентификатора пользователя (UID) и группы (GID) вызвавшего
+процесса. Эффективные идентификаторы будут использоваться при действительной
+попытке выполнения той или иной операции с файлом (например,
+\fBopen\fP(2)). Аналогичным образом, для пользователя root, при проверке
+используется набор разрешающих мандатов, а не набор эффективных мандатов;
+для не root\-пользователей при проверке используется пустой набор мандатов.
+.PP
+Это дает программам с set\-user\-ID или снабжённых мандатами простой способ
+проверить права доступа вызвавшего пользователя. Другими словами,
+\fBaccess\fP() не отвечает на вопрос «могу я прочитать/записать/выполнить этот
+файл?». Он отвечает на немного другой вопрос: «(предположим я исполняемый
+файл с setuid) может ли \fIпользователь, запустивший меня\fP
+прочитать/записать/выполнить этот файл?», что даёт программам с set\-user\-ID
+возможность не дать злонамеренным пользователям прочитать файлы, которые
+пользователи не должны читать.
+.PP
+Если вызвавший процесс имеет соответствующие привилегии (например, его
+реальный UID равен нулю), то проверка \fBX_OK\fP пройдёт успешно для обычного
+файла, если у него установлено право на выполнение в любой группе бит: у
+владельца, группы или остальных.
+.SS faccessat()
+Системный вызов \fBfaccessat\fP() работает также как системный вызов
+\fBaccess\fP(), за исключением случаев, описанных здесь.
+.PP
+Если в \fIpathname\fP задан относительный путь, то он считается относительно
+каталога, на который ссылается файловый дескриптор \fIdirfd\fP (а не
+относительно текущего рабочего каталога вызывающего процесса, как это
+делается в \fBaccess\fP()).
+.PP
+Если в \fIpathname\fP задан относительный путь и \fIdirfd\fP равно специальному
+значению \fBAT_FDCWD\fP, то \fIpathname\fP рассматривается относительно текущего
+рабочего каталога вызывающего процесса (как \fBaccess\fP()).
+.PP
+Если в \fIpathname\fP задан абсолютный путь, то \fIdirfd\fP игнорируется.
+.PP
+Значение \fIflags\fP составляется из побитово сложенных следующих значений:
+.TP 
+\fBAT_EACCESS\fP
+Выполнять проверку, доступа используя эффективный идентификатор пользователя
+и группы. По умолчанию в \fBfaccessat\fP() используются реальные идентификаторы
+(как в \fBaccess\fP()).
+.TP 
+\fBAT_SYMLINK_NOFOLLOW\fP
+Если значение \fIpathname\fP является символьной ссылкой, не разыменовывать её,
+а выдать информацию о самой ссылке.
+.PP
+Смотрите в \fBopenat\fP(2) объяснение необходимости \fBfaccessat\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении (есть все запрошенные права или значение \fImode\fP
+равно \fBF_OK\fP и файл существует) возвращается ноль. При ошибке (по крайней
+мере, одно право из \fImode\fP было не удовлетворено, значение \fImode\fP равно
+\fBF_OK\fP и файл не существует, или случилась другая ошибка), возвращается \-1,
+а \fIerrno\fP устанавливается должным образом.
+.SH ОШИБКИ
+Вызов \fBaccess\fP() и \fBfaccessat\fP() будут завершаться с ошибкой если:
+.TP 
+\fBEACCES\fP
+Запрошенный тип доступа не удовлетворён или в одном из каталогов в
+\fIpathname\fP не разрешён поиск. (См. также \fBpath_resolution\fP(7).)
+.TP 
+\fBELOOP\fP
+Во время определения \fIpathname\fP встретилось слишком много символьных
+ссылок.
+.TP 
+\fBENAMETOOLONG\fP
+Слишком длинное значение аргумента \fIpathname\fP.
+.TP 
+\fBENOENT\fP
+Компонент пути \fIpathname\fP не существует или является повисшей символьной
+ссылкой.
+.TP 
+\fBENOTDIR\fP
+Компонент пути, использованный как каталог в \fIpathname\fP, в действительности
+таковым не является.
+.TP 
+\fBEROFS\fP
+Запрошено право на запись в файл, расположенный в файловой системе,
+доступной только для чтения.
+.PP
+Вызов \fBaccess\fP() и \fBfaccessat\fP() могут завершиться с ошибкой, если:
+.TP 
+\fBEFAULT\fP
+Аргумент \fIpathname\fP указывает за пределы доступного адресного пространства.
+.TP 
+\fBEINVAL\fP
+Аргумент \fImode\fP был задан неверно.
+.TP 
+\fBEIO\fP
+Произошла ошибка ввода\-вывода.
+.TP 
+\fBENOMEM\fP
+Недостаточное количество памяти ядра.
+.TP 
+\fBETXTBSY\fP
+Запрошены права на запись для исполняемого файла, который сейчас
+выполняется.
+.PP
+В \fBfaccessat\fP() дополнительно могут возникнуть следующие ошибки:
+.TP 
+\fBEBADF\fP
+\fIdirfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+Указано неверное значение в \fIflags\fP.
+.TP 
+\fBENOTDIR\fP
+Значение \fIpathname\fP содержит относительный путь и \fIdirfd\fP содержит
+файловый дескриптор, указывающий на файл, а не на каталог.
+.SH ВЕРСИИ
+Вызов \fBfaccessat\fP() был добавлен в ядро Linux версии 2.6.16; поддержка в
+glibc доступна с версии 2.4.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+\fBaccess\fP(): SVr4, 4.3BSD, POSIX.1\-2001, POSIX.1\-2008.
+.PP
+\fBfaccessat\fP(): POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+.PP
+\fBПредупреждение\fP: Использование этих вызовов для проверки, например,
+разрешено ли пользователю открытие файла перед реальным выполнением
+\fBopen\fP(2), создаёт брешь в безопасности, так как пользователь может
+использовать короткий промежуток времени между проверкой и открытием файла
+для управления им. \fBПо этой причине лучше избегать использования данного
+системного вызова\fP (в только что описанном примере, безопасной альтернативой
+будет временное переключение эффективного пользовательского идентификатора
+процесса на реальный идентификатор и вызов \fBopen\fP(2)).
+.PP
+Вызов \fBaccess\fP() всегда разыменовывает символьные ссылки. Если вам нужно
+проверить права символьной ссылки, используйте вызов \fBfaccessat\fP() с флагом
+\fBAT_SYMLINK_NOFOLLOW\fP.
+.PP
+Эти вызовы возвращают ошибку, если отказано в любом из типов доступа
+\fImode\fP, даже если разрешены остальные типы.
+.PP
+.\" HPU-UX 11 and Tru64 5.1 do this.
+Если вызывающий процесс имеет соответствующие привилегии (например,
+суперпользователя), то POSIX.1\-2001 разрешает реализации сообщить об
+успешном выполнении при проверке \fBX_OK\fP даже, если ни один из битов
+выполнения файла не установлен. В Linux так не происходит.
+.PP
+Файл доступен только в случае, если для каждого каталога в пути, указанном в
+\fIpathname\fP, имеется право выполнять поиск (то есть, установлен бит
+выполнения). Если какой\-то каталог недоступен, то вызов \fBaccess\fP()
+завершается ошибкой, независимо от имеющихся прав на файл.
+.PP
+Проверяются только биты доступа, но не тип файла или его
+содержимое. Поэтому, если обнаруживается, что в каталог можно писать, то
+это, вероятно, означает, что в этом каталоге можно создавать файлы, и что в
+этот каталог нельзя писать как в файл. Также, файл DOS может быть посчитан
+как «исполняемый», но вызов \fBexecve\fP(2) всё равно не сможет его запустить.
+.PP
+.\"
+.\"
+Эти вызовы \fBaccess\fP() могут некорректно работать на файловых системах NFSv2
+со включённым преобразованием UID\-ов, потому что это преобразование
+происходит на сервере и спрятано от клиента, который пытается проверить
+права (в NFS версии 3 и выше выполняется проверка на сервере). Похожие
+проблемы могут возникать при монтировании FUSE.
+.SS "Отличия между библиотекой C и ядром"
+Нижележащий системный вызов \fBfaccessat\fP() имеет только первые три
+аргумента. Флаги \fBAT_EACCESS\fP и \fBAT_SYMLINK_NOFOLLOW\fP на самом деле
+реализованы внутри обёрточной функции glibc \fBfaccessat\fP(). Если задан
+какой\-то из этих флагов, то обёрточная функция использует \fBfstatat\fP(2) для
+определения прав доступа.
+.SS "Замечания по glibc"
+В старых ядрах, где \fBfaccessat\fP() отсутствует (и если не указаны флаги
+\fBAT_EACCESS\fP и \fBAT_SYMLINK_NOFOLLOW\fP), обёрточная функция glibc использует
+\fBaccess\fP(). Если \fIpathname\fP является относительным путём, то glibc
+собирает путь относительно символической ссылки в \fI/proc/self/fd\fP, которая
+соответствует аргументу \fIdirfd\fP.
+.SH ДЕФЕКТЫ
+.\" This behavior appears to have been an implementation accident.
+В ядрах версии 2.4 (и более ранних) есть некоторая странность в работе теста
+\fBX_OK\fP для суперпользователя. Если для всех категорий право исполнения
+отключено для файла\-не каталога, то тест \fBaccess\fP() возвращает \-1 только
+когда \fImode\fP задан как \fBX_OK\fP; если в \fImode\fP также указан флаг \fBR_OK\fP
+или \fBW_OK\fP, то \fBaccess\fP() вернёт для таких файлов 0. Ранние версии ядер
+2.6 (до 2.6.3 включительно) ведут себя также как ядра 2.4.
+.PP
+В ядрах до версии 2.6.20 эти вызовы игнорировали влияние флага \fBMS_NOEXEC\fP,
+если он был установлен с помощью \fBmount\fP(2) для содержащей файл файловой
+системы. Начиная с версия ядра 2.6.20, этот флаг учитывается.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBchmod\fP(2), \fBchown\fP(2), \fBopen\fP(2), \fBsetgid\fP(2), \fBsetuid\fP(2),
+\fBstat\fP(2), \fBeuidaccess\fP(3), \fBcredentials\fP(7), \fBpath_resolution\fP(7),
+\fBsymlink\fP(7)

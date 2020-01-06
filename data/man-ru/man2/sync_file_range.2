@@ -1,0 +1,170 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2006 Andrew Morton <akpm@osdl.org>
+.\" and Copyright 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" 2006-07-05 Initial creation, Michael Kerrisk based on
+.\"     Andrew Morton's comments in fs/sync.c
+.\" 2010-10-09, mtk, Document sync_file_range2()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SYNC_FILE_RANGE 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sync_file_range \- синхронизирует сегмент файла на диске
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+\fB#include <fcntl.h>\fP
+.PP
+\fBint sync_file_range(int \fP\fIfd\fP\fB, off64_t \fP\fIoffset\fP\fB, off64_t \fP\fInbytes\fP\fB,\fP
+\fB                    unsigned int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBsync_file_range\fP() позволяет точно контролировать синхронизацию
+открытого файла, задаваемого файловым дескриптором \fIfd\fP, с диском.
+.PP
+В \fIoffset\fP задаётся начальный байт диапазона файла, который нужно
+синхронизировать. В \fInbytes\fP указывается длина синхронизируемого диапазона
+(в байтах); если \fInbytes\fP равно нулю, то синхронизируются все байты,
+начиная с \fIoffset\fP и до конца файла. Синхронизация выполняется в единицах
+размера системной страницы: значение \fIoffset\fP округляется к меньшей границе
+страницы; \fI(offset+nbytes\-1)\fP округляется к большей границе страницы.
+.PP
+В битовую маску аргумент \fIflags\fP можно включать следующие значения:
+.TP 
+\fBSYNC_FILE_RANGE_WAIT_BEFORE\fP
+Перед выполнением записи ждать, пока будут перезаписаны все страницы в
+указанном диапазоне, которые уже были отправлены в драйвер устройства.
+.TP 
+\fBSYNC_FILE_RANGE_WRITE\fP
+Начать перезапись всех изменённых страниц в указанном диапазоне, которые к
+настоящему моменту не были перезаписаны. Заметим, что это может привести к
+блокировке, если вы пытаетесь записать больше размера очереди запросов.
+.TP 
+\fBSYNC_FILE_RANGE_WAIT_AFTER\fP
+После выполнения записи ждать, пока не перезапишутся все страницы в
+диапазоне.
+.PP
+Указание 0 в \fIflags\fP допустимо; никаких действий выполнено не будет.
+.SS Предупреждение
+Данный системный вызов очень опасен и не должен использоваться в переносимых
+программах. Ни одна из этих операций перезаписи не касается метаданных
+файла. Поэтому, если приложение строго не выполняет перезаписи уже
+выделенных дисковых блоков, то нет никаких гарантий, что данные будут будьте
+доступны после катастрофического отказа. Не существует пользовательского
+интерфейса, который позволял бы узнать, действительно ли выполнилась
+перезапись. В файловых системах, использующих семантику копирования при
+записи (например, \fIbtrfs\fP) перезапись существующих выделенных блоков
+невозможна. Когда запись выполняется в уже выделенное пространство, многие
+файловые системы также вызывают выделитель блоков, которые данный системный
+вызов не синхронизирует с диском. Данный системный вызов не выполняет сброс
+дисковых кэшей для записи и поэтому не предоставляет какой\-либо целостности
+данных в системах с изменчивыми дисковыми кэшами на запись.
+.SS "Некоторые подробности"
+При \fBSYNC_FILE_RANGE_WAIT_BEFORE\fP и \fBSYNC_FILE_RANGE_WAIT_AFTER\fP будут
+обнаруживаться все ошибки ввода\-вывода или условия \fBENOSPC\fP, и они будут
+возвращены вызвавшему.
+.PP
+Полезные комбинации битов в \fIflags\fP:
+.TP 
+\fBSYNC_FILE_RANGE_WAIT_BEFORE | SYNC_FILE_RANGE_WRITE\fP
+Гарантировать, что все изменённые страницы в указанном диапазоне при вызове
+\fBsync_file_range\fP() помещаются для записи. Это начало операции по целостной
+записи данных.
+.TP 
+\fBSYNC_FILE_RANGE_WRITE\fP
+Начать запись всех изменённых страниц указанного диапазона, которые ещё не
+были размещены для записи. Это анонимная операция сброса данных на диск. Она
+не подходит для операций целостности данных.
+.TP 
+\fBSYNC_FILE_RANGE_WAIT_BEFORE\fP (или \fBSYNC_FILE_RANGE_WAIT_AFTER\fP)
+Ждать завершения записи всех страниц указанного диапазона. Можно
+использовать после операции \fBSYNC_FILE_RANGE_WAIT_BEFORE |
+SYNC_FILE_RANGE_WRITE\fP, дождаться завершения этой операции и получить её
+результат.
+.TP 
+\fBSYNC_FILE_RANGE_WAIT_BEFORE | SYNC_FILE_RANGE_WRITE | SYNC_FILE_RANGE_WAIT_AFTER\fP
+Это операция по целостной записи данных, которая позволит быть уверенным,
+что все изменённые на момент вызова \fBsync_file_range\fP() страницы указанного
+диапазона записаны на диск.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsync_file_range\fP() возвращает 0. При ошибке
+возвращается \-1, и \fIerrno\fP устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEBADF\fP
+Значение \fIfd\fP не является правильным файловым дескриптором.
+.TP 
+\fBEINVAL\fP
+В \fIflags\fP указан некорректный бит; или некорректное значение в \fIoffset\fP
+или \fInbytes\fP.
+.TP 
+\fBEIO\fP
+Ошибка ввода\-вывода.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти.
+.TP 
+\fBENOSPC\fP
+Недостаточно места на диске.
+.TP 
+\fBESPIPE\fP
+Значение \fIfd\fP ссылается не на обычный файл, блочное устройство, или
+каталог.
+.SH ВЕРСИИ
+Вызов \fBsync_file_range\fP() появился в Linux в ядре версии 2.6.17.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный системный вызов есть только в Linux, и не должен использоваться в
+переносимых приложениях.
+.SH ЗАМЕЧАНИЯ
+.SS sync_file_range2()
+.\" See kernel commit edd5cd4a9424f22b0fa08bef5e299d41befd5622
+Для некоторых архитектур (например, PowerPC, ARM) требуется, чтобы 64\-битные
+аргументы были выровнены в нужных парах регистров. На таких архитектурах для
+объявления вызова \fBsync_file_range\fP(), показанного в СИНТАКСИСЕ, для
+заполнения между аргументами \fIfd\fP и \fIoffset\fP расходовался бы ещё один
+регистр впустую (подробности смотрите в \fBsyscall\fP(2)). Поэтому в этих
+архитектурах определён другой системный вызов с подходящим порядком
+аргументов:
+.PP
+.in +4n
+.EX
+\fBint sync_file_range2(int \fP\fIfd\fP\fB, unsigned int \fP\fIflags\fP\fB,\fP
+\fB                     off64_t \fP\fIoffset\fP\fB, off64_t \fP\fInbytes\fP\fB);\fP
+.EE
+.in
+.PP
+Поведение данного системного вызова такое же как \fBsync_file_range\fP().
+.PP
+Системный вызов с таких объявлением впервые появился для архитектуры ARM в
+Linux 2.6.20 под именем \fBarm_sync_file_range\fP(). В Linux 2.6.22 он был
+переименован, так как аналогичный системный вызов был добавлен для
+PowerPC. Для архитектур, поддерживаемых glibc, glibc прозрачно обёртывает
+\fBsync_file_range2\fP() именем \fBsync_file_range\fP().
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfdatasync\fP(2), \fBfsync\fP(2), \fBmsync\fP(2), \fBsync\fP(2)

@@ -1,0 +1,128 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\"
+.\" Updated with additions from Mitchum DSouza <m.dsouza@mrc-apu.cam.ac.uk>
+.\" Portions Copyright 1993 Mitchum DSouza <m.dsouza@mrc-apu.cam.ac.uk>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Tue Oct 22 00:22:35 EDT 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETHOSTID 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+gethostid, sethostid \- возвращает или назначает уникальный идентификатор
+текущего узла
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBlong gethostid(void);\fP
+.br
+\fBint sethostid(long \fP\fIhostid\fP\fB);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+.br
+\fBgethostid\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.RE
+\fBsethostid\fP():
+.nf
+.\"             commit 266865c0e7b79d4196e2cc393693463f03c90bd8
+    начиная с glibc 2.21:
+        _DEFAULT_SOURCE
+    в glibc 2.19 и 2.20:
+        _DEFAULT_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+    до glibc 2.19, включительно:
+        _BSD_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE\ <\ 500)
+.fi
+.ad b
+.SH ОПИСАНИЕ
+Функции \fBgethostid\fP() и \fBsethostid\fP(), соответственно, возвращают и
+устанавливают уникальный 32\-битный идентификатор текущей машины. Данный
+32\-битный идентификатор считается уникальным среди всех существующих систем
+UNIX. Обычно это напоминает Интернет\-адрес локальной машины, возвращаемый
+\fBgethostbyname\fP(3), и поэтому, как правило, его не нужно изменять.
+.PP
+Только суперпользователь может вызывать \fBsethostid\fP().
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBgethostid\fP() возвращает 32\-битный идентификатор текущего узла,
+установленный \fBsethostid\fP().
+.PP
+При успешном выполнении \fBsethostid\fP() возвращает 0; при ошибке — \-1, а в
+\fIerrno\fP задаётся код ошибки.
+.SH ОШИБКИ
+Вызов \fBsethostid\fP() может завершиться со следующими ошибками:
+.TP 
+\fBEACCES\fP
+Вызывающий не имеет прав на запись в файл, используемый для хранения ID
+узла.
+.TP 
+\fBEPERM\fP
+Эффективный идентификатор пользователя или группы вызывающего процесса не
+совпадает с его соответствующим реальным идентификатором.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lbw25
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgethostid\fP()
+T}	Безвредность в нитях	MT\-Safe hostid env locale
+T{
+\fBsethostid\fP()
+T}	Безвредность в нитях	MT\-Unsafe const:hostid
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+42BSD; эти функции удалены в 4.4BSD. В SVr4 содержится \fBgethostid\fP(), но
+отсутствует \fBsethostid\fP().
+.PP
+В POSIX.1\-2001 и POSIX.1\-2008 определена \fBgethostid\fP(), но отсутствует
+\fBsethostid\fP().
+.SH ЗАМЕЧАНИЯ
+.\" libc5 used /etc/hostid; libc4 didn't have these functions
+В реализации glibc \fIhostid\fP сохраняет значение в файле \fI/etc/hostid\fP (в
+glibc до версии 2.2 используется файл \fI/var/adm/hostid\fP).
+.PP
+В реализации glibc, если \fBgethostid\fP() не может открыть файл, содержащий ID
+узла, она получает имя узла с помощью \fBgethostname\fP(2), передаёт это имя
+\fBgethostbyname_r\fP(3) для получения адреса IPv4 узла, и возвращает значение,
+получаемое преобразованием битов полученного адреса IPv4 (такое значение
+может быть не уникально).
+.SH ДЕФЕКТЫ
+Невозможно достоверно сказать, что идентификатор является глобально
+уникальным.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBhostid\fP(1), \fBgethostbyname\fP(3)

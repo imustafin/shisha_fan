@@ -1,0 +1,167 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2003 Free Software Foundation, Inc.
+.\" Copyright (C) 2015 Andrew Lutomirski
+.\" Author: Kent Yoder
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" This file is distributed according to the GNU General Public License.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SET_THREAD_AREA 2 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+get_thread_area, set_thread_area \- управляют информацией области локального
+хранилища нити
+.SH ОБЗОР
+.nf
+\fB#include <linux/unistd.h>\fP
+
+\fB#if defined __i386__ || defined __x86_64__\fP
+\fB# include <asm/ldt.h>\fP
+.PP
+\fBint get_thread_area(struct user_desc *\fP\fIu_info\fP\fB);\fP
+\fBint set_thread_area(struct user_desc *\fP\fIu_info\fP\fB);\fP
+.PP
+\fB#elif defined __m68k__\fP
+.PP
+\fBint get_thread_area(void);\fP
+\fBint set_thread_area(unsigned long \fP\fItp\fP\fB);\fP
+.PP
+\fB#elif defined __mips__\fP
+.PP
+\fBint set_thread_area(unsigned long \fP\fIaddr\fP\fB);\fP
+.PP
+\fB#endif\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточных функций для этих системных вызовов;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+Эти вызовы предоставляют зависимую от архитектуры реализацию поддержки
+информации области локального хранилища нити. В настоящее время вызов
+\fBset_thread_area\fP() доступен для m68k, MIPS и x86 (32\-битный и 64\-битный
+вариант); \fBget_thread_area\fP() доступен для m68k и x86.
+.PP
+Для m68k и MIPS, \fBset_thread_area\fP() позволяет сохранить произвольный
+указатель (указанный в аргументе \fBtp\fP на m68k и в аргументе \fBaddr\fP на
+MIPS) структуре данных ядра, связанной с вызывающей нитью; этот указатель
+позднее может быть получен с помощью \fBget_thread_area\fP() (информацию о
+получении указателя нити на MIPS также смотрите ЗАМЕЧАНИЯ).
+.PP
+На x86 в Linux под локальное хранилище нити отдано три элемента глобальной
+таблицы дескрипторов (GDT). Подробней о GDT читайте в Intel Software
+Developer's Manual или AMD Architecture Programming Manual.
+.PP
+Этим системным вызовам передаётся указатель на структуру вида:
+.PP
+.in +4n
+.EX
+struct user_desc {
+    unsigned int  entry_number;
+    unsigned long base_addr;
+    unsigned int  limit;
+    unsigned int  seg_32bit:1;
+    unsigned int  contents:2;
+    unsigned int  read_exec_only:1;
+    unsigned int  limit_in_pages:1;
+    unsigned int  seg_not_present:1;
+    unsigned int  useable:1;
+#ifdef __x86_64__
+    unsigned int  lm:1;
+#endif
+};
+.EE
+.in
+.PP
+Вызов \fBget_thread_area\fP() читает элемент GDT, указанный в
+\fIu_info\->entry_number\fP и заполняет оставшиеся поля в \fIu_info\fP.
+.PP
+Вызов \fBset_thread_area\fP() изменяет элемент TLS в GDT.
+.PP
+Элемент массива TLS, устанавливаемый \fBset_thread_area\fP(), соответствует
+значению  \fIu_info\->entry_number\fP, которое передал пользователь. Если
+это значение находится в допустимых пределах, то \fBset_thread_area\fP()
+записывает дескриптор TLS, на который указывает \fIu_info\fP, в массив TLS
+нити.
+.PP
+Когда \fBset_thread_area\fP() передаётся \fIentry_number\fP со значением \-1, то
+ищется свободный элемент TLS. Если \fBset_thread_area\fP() находит свободный
+элемент TLS, то значение \fIu_info\->entry_number\fP устанавливается после
+возврата для показа того, какой же элемент был изменён.
+.PP
+Структура \fIuser_desc\fP считается «пустой», если \fIread_exec_only\fP и
+\fIseg_not_present\fP равны 1, а все остальные поля равны 0. Если «пустой»
+дескриптор передаётся в \fBset_thread_area\fP(), то соответствующий элемент TLS
+будет очищен. Дополнительную информацию смотрите в разделе ДЕФЕКТЫ.
+.PP
+Начиная с Linux 3.19, \fBset_thread_area\fP() нельзя использовать для записи
+отсутствующих сегментов, 16\-битных сегментов или сегментов кода, но
+допускается очистка таких сегментов.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+На x86 данные системные вызовы возвращают 0 при успешном выполнении и 1 при
+ошибке, записывая в \fIerrno\fP соответствующее значение.
+.PP
+На MIPS и m68k вызов \fBset_thread_area\fP() всегда возвращает 0. На m68k вызов
+\fBget_thread_area\fP() возвращает значение указателя области нити
+(установленный ране с помощью \fBset_thread_area\fP()).
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+\fIu_info\fP является некорректным указателем.
+.TP 
+\fBEINVAL\fP
+\fIu_info\->entry_number\fP вне допустимых границ.
+.TP 
+\fBENOSYS\fP
+Вызов \fBget_thread_area\fP() или \fBset_thread_area\fP() был вызван как 64\-битный
+системный вызов.
+.TP 
+\fBESRCH\fP
+(\fBset_thread_area\fP()) Невозможно найти свободный элемент TLS.
+.SH ВЕРСИИ
+Вызов \fBset_thread_area\fP() появился в версии 2.5.29. Вызов
+\fBget_thread_area\fP() появился в Linux 2.5.32.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Вызовы \fBset_thread_area\fP() и \fBget_thread_area\fP() есть только в Linux, и
+они не должны использоваться в переносимых программах.
+.SH ЗАМЕЧАНИЯ
+В glibc нет обёрточных функций для этих системных вызовов, так как они
+предназначены только для использования в библиотеках нитей. Если вам
+всё\-таки нужно их вызвать, используйте \fBsyscall\fP(2).
+.PP
+На x86 вызов \fBarch_prctl\fP(2) может влиять на
+\fBset_thread_area\fP(). Подробней смотрите в \fBarch_prctl\fP(2). Обычно это не
+вызывает проблем, так как \fBarch_prctl\fP(2) обычно используется только в
+64\-битных программах.
+.PP
+На MIPS текущее значение указателя области нити можно получить с помощью
+инструкции:
+.PP
+.in +4n
+.EX
+rdhwr dest, $29
+.EE
+.in
+.PP
+Эта инструкция ловится и обрабатывается ядром.
+.SH ДЕФЕКТЫ
+.\" commit e30ab185c490e9a9381385529e0fd32f0a399495
+В 64\-битных ядрах до Linux 3.19, если был установлен один из битов
+заполнения в \fIuser_desc\fP, то это приводило к тому, что дескриптор не
+считался пустым (смотрите \fBmodify_ldt\fP(2)). В результате, единственным
+надёжным способом очистить элемент TLS было задействование \fBmemset\fP(3) для
+обнуления всей структуры \fIuser_desc\fP, включая биты заполнения, и затем
+установка битов \fIread_exec_only\fP и \fIseg_not_present\fP. В Linux 3.19,
+структура \fIuser_desc\fP, полностью состоящая из нулей кроме \fIentry_number\fP,
+также будет считаться запросом на очистку элемента TLS, что отличается от
+работы старых ядер.
+.PP
+До Linux 3.19, сегментные регистры DS и ES не должны ссылаться на элементы
+TLS.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBarch_prctl\fP(2), \fBmodify_ldt\fP(2), \fBptrace\fP(2)  (\fBPTRACE_GET_THREAD_AREA\fP
+and \fBPTRACE_SET_THREAD_AREA\fP)

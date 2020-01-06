@@ -1,0 +1,143 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2017, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_SPIN_INIT 3 2017\-09\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_spin_init, pthread_spin_destroy \- инициализирует или уничтожает
+циклическую блокировку
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_spin_init(pthread_spinlock_t *\fP\fIlock\fP\fB, int \fP\fIpshared\fP\fB);\fP
+\fBint pthread_spin_destroy(pthread_spinlock_t *\fP\fIlock\fP\fB);\fP
+.fi
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBpthread_spin_init\fP(), \fBpthread_spin_destroy\fP():
+.br
+.RS 4
+.ad l
+_POSIX_C_SOURCE >= 200112L
+.RE
+.ad
+.SH ОПИСАНИЕ
+\fIОбщее замечание\fP: Большинству программ достаточно использования мьютексов,
+а не циклических блокировок. В основном, циклические блокировки полезны при
+применении алгоритмов планирования реального времени. Смотрите ЗАМЕЧАНИЯ.
+.PP
+Функция \fBpthread_spin_init\fP() выделяет ресурсы, требуемые для работы
+циклической блокировки, на которую указывает \fIlock\fP, и инициализирует
+блокировку в неблокированном состоянии. В аргументе \fIpshared\fP должно быть
+одно из следующих значений:
+.TP 
+\fBPTHREAD_PROCESS_PRIVATE\fP
+Циклическая блокировка будет использоваться только нитями одного процесса,
+которому принадлежит вызвавшая \fBpthread_spin_init\fP() нить (попытка
+использования такой циклической блокировки между процессами приводит к
+непредсказуемому поведению).
+.TP 
+\fBPTHREAD_PROCESS_SHARED\fP
+Циклическая блокировка может использоваться любой нитью любого процесса,
+который имеет доступ к памяти, содержащей блокировку (т. е., блокировка
+может находиться в объекте общей памяти, который используется несколькими
+процессами).
+.PP
+Вызов \fBpthread_spin_init\fP() с уже инициализированной циклической
+блокировкой приводит к непредсказуемому поведению.
+.PP
+Функция \fBpthread_spin_destroy\fP() уничтожает ранее инициализированную
+циклическую блокировку, освобождая все выделенные ей ресурсы. Уничтожение
+ещё не инициализированной циклической блокировки или уничтожение циклической
+блокировки, которая захвачена другой нитью,приводит к непредсказуемым
+результатам.
+.PP
+После того, как циклическая блокировка уничтожена, выполнение с ней любой
+операции кроме инициализации \fBpthread_spin_init\fP() приводит к
+непредсказуемому поведению.
+.PP
+Результат выполнения операций \fBpthread_spin_lock\fP(3),
+\fBpthread_spin_unlock\fP(3) и \fBpthread_spin_destroy\fP(3) с \fIкопией\fP объекта,
+на который указывает \fIlock\fP, не определён.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают ноль. При ошибке возвращается
+номер ошибки. Если ошибкой завершается \fBpthread_spin_init\fP(), то
+инициализация блокировки не происходит.
+.SH ОШИБКИ
+.\" These errors don't occur on the glibc implementation
+Функция \fBpthread_spin_init\fP() может завершаться со следующими ошибками:
+.TP 
+\fBEAGAIN\fP
+В системе не хватает ресурсов для инициализации новой циклической
+блокировки.
+.TP 
+\fBENOMEM\fP
+Недостаточно памяти для инициализации циклической блокировки.
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.2.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001.
+.PP
+Поддержка общих для процессов циклических блокировок указана в POSIX. Она
+поддерживается реализацией glibc.
+.SH ЗАМЕЧАНИЯ
+Циклические блокировки должны использоваться вместе с алгоритмами выполнения
+реального времени (\fBSCHED_FIFO\fP или, возможно, \fBSCHED_RR\fP). Использование
+циклических блокировок с недерминированными алгоритмами планирования, такими
+как \fBSCHED_OTHER\fP, вероятно, указывают на ошибки при
+проектировании. Проблема в том, что если нить, выполняющаяся по такому
+алгоритму, вытеснится с ЦП в момент когда она удерживает циклическую
+блокировку, остальные нити будут впустую тратить время на ожидание
+блокировки, пока держатель не будет запланирован к выполнению и не освободит
+блокировку.
+.PP
+Если нити создают ситуацию взаимной блокировки при работе с циклическими
+блокировками, то эти нити будут ждать блокировку бесконечно потребляя время
+ЦП.
+.PP
+.\" FIXME . When PTHREAD_MUTEX_ADAPTIVE_NP is one day document
+.\" make reference to it here
+Циклические блокировки пользовательского пространства \fIне\fP применяются в
+качестве обычного решения по блокировкам. Они, по определению, подвержены
+смене приоритетов и неограниченны по времени ожидания. Программист,
+использующий циклические блокировки, должен быть исключительно осмотрителен
+не только с кодом, но и с настройкой системы, размещением нити и назначением
+приоритета.
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBpthread_mutex_init\fP(3), \fBpthread_mutex_lock\fP(3), \fBpthread_spin_lock\fP(3),
+\fBpthread_spin_unlock\fP(3), \fBpthreads\fP(7)

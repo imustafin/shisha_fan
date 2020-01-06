@@ -1,0 +1,77 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) Bruno Haible <haible@clisp.cons.org>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_ONEPARA)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"   GNU glibc-2 source code and manual
+.\"   Dinkumware C library reference http://www.dinkumware.com/
+.\"   OpenGroup's Single UNIX specification http://www.UNIX-systems.org/online.html
+.\"   ISO/IEC 9899:1999
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH WCTOMB 3 2015\-08\-08 GNU "Руководство программиста Linux"
+.SH ИМЯ
+wctomb \- преобразует широкий символ в многобайтовую последовательность
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint wctomb(char *\fP\fIs\fP\fB, wchar_t \fP\fIwc\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Если значение \fIs\fP не равно NULL, то функция \fBwctomb\fP() преобразует широкий
+символ \fIwc\fP в его многобайтовое представление и сохраняет его в начале
+массива символов, на который указывает \fIs\fP. Изменяется переменная смещения,
+которая хранится в статической анонимной переменной, известной только
+функции \fBwctomb\fP(), затем возвращается длина полученного многобайтового
+представления, т.е. число байтов, записанных в \fIs\fP.
+.PP
+Программист должен убедиться, что в \fIs\fP существует достаточно места хотя бы
+для записи \fBMB_CUR_MAX\fP байт.
+.PP
+.\" The Dinkumware doc and the Single UNIX specification say this, but
+.\" glibc doesn't implement this.
+Если значение \fIs\fP равно NULL, то функция \fBwctomb\fP() обнуляет состояние
+смещения (известное только этой функции), переводя его начальное положение,
+и возвращает ненулевое значение, если кодировка имеет необычное смещение;
+ноль будет возвращён, если кодировка не имеет смещения.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если значение \fIs\fP не равно NULL, то функция \fBwctomb\fP() возвращает
+количество байтов, записанных в байтовый массив по адресу \fIs\fP. Если \fIwc\fP
+не может быть представлен в виде многобайтовой последовательности (в
+соответствии с текущей системной локалью), то возвращается \-1.
+.PP
+Если значение \fIs\fP равно NULL, то функция \fBwctomb\fP() возвращает не ноль,
+если кодировка имеет необычное смещение, или ноль, если кодировка не имеет
+смещения.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBwctomb\fP()
+T}	Безвредность в нитях	MT\-Unsafe race
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, C99.
+.SH ЗАМЕЧАНИЯ
+Поведение \fBwctomb\fP() зависит от категории \fBLC_CTYPE\fP текущей локали.
+.PP
+Функция \fBwcrtomb\fP(3) предоставляет лучший интерфейс с теми же
+возможностями.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBMB_CUR_MAX\fP(3), \fBmblen\fP(3), \fBmbstowcs\fP(3), \fBmbtowc\fP(3), \fBwcrtomb\fP(3),
+\fBwcstombs\fP(3)

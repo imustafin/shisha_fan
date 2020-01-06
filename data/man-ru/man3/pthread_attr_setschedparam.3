@@ -1,0 +1,118 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_ATTR_SETSCHEDPARAM 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_attr_setschedparam, pthread_attr_getschedparam \- изменяет/возвращает
+атрибуты параметров планирования из объекта атрибутов нити
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_attr_setschedparam(pthread_attr_t *\fP\fIattr\fP\fB,\fP
+\fB                               const struct sched_param *\fP\fIparam\fP\fB);\fP
+\fBint pthread_attr_getschedparam(const pthread_attr_t *\fP\fIattr\fP\fB,\fP
+\fB                               struct sched_param *\fP\fIparam\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_attr_setschedparam\fP() изменяет атрибуты параметров
+планирования в объекте атрибутов нити, на который указывает \fIattr\fP, в
+значения из буфера, на который указывает \fIparam\fP. Данными атрибутами
+определяются параметры планирования нити, созданной с учётом объекта
+атрибутов нити \fIattr\fP.
+.PP
+Функция \fBpthread_attr_getschedparam\fP() возвращает атрибуты параметров
+планирования у объекта атрибутов нити, на который указывает \fIattr\fP, в буфер
+на который указывает \fIparam\fP.
+.PP
+Параметры планирования хранятся в структуре следующего вида:
+.PP
+.in +4n
+.EX
+struct sched_param {
+    int sched_priority;     /* планируемый приоритет */
+};
+.EE
+.in
+.PP
+Из той структуры видно, что поддерживается только один параметр. Подробности
+о разрешённых диапазонах планируемых приоритетов для каждого алгоритма
+планирования смотрите в \fBsched\fP(7).
+.PP
+Для учёта значения параметра, заданного \fBpthread_attr_setschedparam\fP(), при
+вызове \fBpthread_create\fP(3), вызывающий должен использовать
+\fBpthread_attr_setinheritsched\fP(3) для присвоения атрибуту inherit\-scheduler
+объекта атрибутов \fIattr\fP значения \fBPTHREAD_EXPLICIT_SCHED\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+Функция \fBpthread_attr_setschedparam\fP() может завершиться со следующей
+ошибкой:
+.TP 
+\fBEINVAL\fP
+Приоритет, указанный в \fIparam\fP, не имеет смысла при текущей политике
+планирования \fIattr\fP.
+.PP
+.\" .SH VERSIONS
+.\" Available since glibc 2.0.
+В POSIX.1 также описана ошибка \fBENOTSUP\fP для
+\fBpthread_attr_setschedparam\fP(). Это значение никогда не возвращается Linux
+(тем не менее, в переносимых и новых приложениях нужно учитывать возможность
+возврата этого значения ошибки).
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw29 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_attr_setschedparam\fP(),
+\fBpthread_attr_getschedparam\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Список алгоритмов планирования для нитей, поддерживаемых в Linux смотрите в
+\fBpthread_attr_setschedpolicy\fP(3).
+.SH ПРИМЕР
+Смотрите \fBpthread_setschedparam\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+.ad l
+.nh
+\fBsched_get_priority_min\fP(2), \fBpthread_attr_init\fP(3),
+\fBpthread_attr_setinheritsched\fP(3), \fBpthread_attr_setschedpolicy\fP(3),
+\fBpthread_create\fP(3), \fBpthread_setschedparam\fP(3),
+\fBpthread_setschedprio\fP(3), \fBpthreads\fP(7), \fBsched\fP(7)

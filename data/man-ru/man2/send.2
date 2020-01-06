@@ -1,0 +1,305 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1983, 1991 The Regents of the University of California.
+.\" All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 1993-07-24 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1996-10-22 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Oct 1998 by Andi Kleen
+.\" Modified Oct 2003 by aeb
+.\" Modified 2004-07-01 by mtk
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SEND 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+send, sendto, sendmsg \- отправляет сообщения в сокет
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <sys/socket.h>\fP
+.PP
+\fBssize_t send(int \fP\fIsockfd\fP\fB, const void *\fP\fIbuf\fP\fB, size_t \fP\fIlen\fP\fB, int \fP\fIflags\fP\fB);\fP
+.PP
+\fBssize_t sendto(int \fP\fIsockfd\fP\fB, const void *\fP\fIbuf\fP\fB, size_t \fP\fIlen\fP\fB, int \fP\fIflags\fP\fB,\fP
+\fB               const struct sockaddr *\fP\fIdest_addr\fP\fB, socklen_t \fP\fIaddrlen\fP\fB);\fP
+.PP
+\fBssize_t sendmsg(int \fP\fIsockfd\fP\fB, const struct msghdr *\fP\fImsg\fP\fB, int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системные вызовы \fBsend\fP(), \fBsendto\fP() и \fBsendmsg\fP() используются для
+пересылки сообщений в другой сокет.
+.PP
+Вызов \fBsend\fP() можно использовать, только если сокет находится в состоянии
+\fIсоединения\fP (то есть известен получатель). Вызов \fBsend\fP() отличается от
+\fBwrite\fP(2) только наличием аргумента \fIflags\fP. Если значение \fIflags\fP равно
+нулю, то вызов \fBsend\fP() эквивалентен \fBwrite\fP(2). Также, вызов
+.PP
+    send(sockfd, buf, len, flags);
+.PP
+эквивалентен
+.PP
+    sendto(sockfd, buf, len, flags, NULL, 0);
+.PP
+Аргумент \fIsockfd\fP представляет файловый дескриптор сокета отправления.
+.PP
+Если \fBsendto\fP() используется с сокетом в режиме с установлением соединения
+(\fBSOCK_STREAM\fP, \fBSOCK_SEQPACKET\fP), то аргументы \fIdest_addr\fP и \fIaddrlen\fP
+игнорируются (и может быть возвращена ошибка \fBEISCONN\fP, если их значения не
+равны NULL и 0) и возвращается ошибка \fBENOTCONN\fP, если соединение через
+сокет не установлено. Иначе в \fIdest_addr\fP задаётся адрес назначения и его
+размер в \fIaddrlen\fP. Для \fBsendmsg\fP() адрес назначения указывается в
+\fImsg.msg_name\fP, а его размер в \fImsg.msg_namelen\fP.
+.PP
+У \fBsend\fP() и \fBsendto\fP() сообщение находится в \fIbuf\fP, а его длина в
+\fIlen\fP. У \fBsendmsg\fP() сообщение указывается в элементах массива
+\fImsg.msg_iov\fP. Вызов \fBsendmsg\fP() также позволяет отправлять
+вспомогательные данные (так называемую управляющую информацию).
+.PP
+Если сообщение слишком длинно для передачи за раз через используемый
+нижележащий протокол, то возвращается ошибка \fBEMSGSIZE\fP и сообщение не
+передаётся.
+.PP
+Неудачная отправка с помощью \fBsend\fP() никак не отмечается. При обнаружении
+локальных ошибок возвращается значение \-1.
+.PP
+Когда сообщение не помещается в буфер отправки сокета, выполнение
+блокируется в \fBsend\fP(), если сокет не находится в неблокирующем
+режиме. Если сокет находится в неблокирующем режиме, то  возвращается ошибка
+\fBEAGAIN\fP или \fBEWOULDBLOCK\fP. Для выяснения, возможна ли отправка данных,
+можно использовать вызов \fBselect\fP(2).
+.SS "Аргумент флагов"
+.\" FIXME . ? document MSG_PROXY (which went away in 2.3.15)
+Аргумент \fIflags\fP является битовой маской и может содержать следующие флаги:
+.TP 
+\fBMSG_CONFIRM\fP (начиная с Linux 2.3.15)
+Сообщить уровню связи, что процесс пересылки произошел: вы получили успешный
+ответ с другой стороны. Если уровень связи не получит его, то он будет
+регулярно перепроверять наличие ответной стороны (например посредством
+однонаправленной передачи ARP). Это работает только с сокетами \fBSOCK_DGRAM\fP
+и \fBSOCK_RAW\fP и в настоящее время реализовано только для IPv4 и IPv6. В
+\fBarp\fP(7) представлена более подробная информация.
+.TP 
+\fBMSG_DONTROUTE\fP
+Не использовать маршрутизацию для отправки пакета, а посылать его только на
+узлы локальной сети. Обычно это используется в диагностических программах и
+программах маршрутизации. Этот флаг определён только для маршрутизируемых
+семейств протоколов; пакетные сокеты не используют маршрутизацию.
+.TP 
+\fBMSG_DONTWAIT\fP (начиная с Linux 2.2)
+Включить неблокирующий режим. Если операция могла бы привести к блокировке,
+возвращается \fBEAGAIN\fP или \fBEWOULDBLOCK\fP. Такое поведение подобно заданию
+флага \fBO_NONBLOCK\fP (в \fBfcntl\fP(2) операцией \fBF_SETFL\fP), но отличие в том,
+что \fBMSG_DONTWAIT\fP указывается в вызове, а \fBO_NONBLOCK\fP задаётся в
+описании открытого файла (смотрите \fBopen\fP(2)), что влияет на все нити
+вызывающего процесса, а также на другие процессы, у которых есть файловые
+дескрипторы, ссылающиеся на это описание открытого файла.
+.TP 
+\fBMSG_EOR\fP (начиная с Linux 2.2)
+Завершить запись (record) (если поддерживается, например в сокетах типа
+\fBSOCK_SEQPACKET\fP).
+.TP 
+\fBMSG_MORE\fP (начиная с Linux 2.4.4)
+Вызывающий имеет дополнительные данные для отправки. Этот флаг используется
+с сокетами TCP для получения такого же эффекта как с параметром сокета
+\fBTCP_CORK\fP (см. \fBtcp\fP(7)), с той разницей, что этот флаг можно
+устанавливать при каждом вызове.
+.IP
+Начиная с Linux 2.6 этот флаг также поддерживается для сокетов UDP и
+информирует ядро, о том что нужно упаковать все отправляемые данные вызовов
+с этим флагом в одну дейтаграмму, которая передаётся только когда
+выполняется вызов без указания этого флага (смотрите также описание
+параметра сокета \fBUDP_CORK\fP в \fBudp\fP(7)).
+.TP 
+\fBMSG_NOSIGNAL\fP (начиная с Linux 2.2)
+Не генерировать сигнал \fBSIGPIPE\fP, если сторона потокоориентированного
+сокета закрыла соединение. Ошибка \fBEPIPE\fP по прежнему возвращается. Это
+создаёт поведение как при использовании \fBsigaction\fP(2) для игнорирования
+\fBSIGPIPE\fP, но \fBMSG_NOSIGNAL\fP является свойством вызова, а установка
+\fBSIGPIPE\fP в атрибутах процесса влияет на все нити процесса.
+.TP 
+\fBMSG_OOB\fP
+Послать \fIвнепоточные данные\fP, если сокет это поддерживает (как, например,
+сокеты типа \fBSOCK_STREAM\fP); протокол более низкого уровня также должен
+поддерживать \fIвнепоточные данные\fP.
+.SS sendmsg()
+Определение структуры \fImsghdr\fP, используемой \fBsendmsg\fP():
+.PP
+.in +4n
+.EX
+struct msghdr {
+    void         *msg_name;       /* необязательный адрес */
+    socklen_t     msg_namelen;    /* размер адреса */
+    struct iovec *msg_iov;        /* массив приёма/передачи */
+    size_t        msg_iovlen;     /* # количество элементов в msg_iov */
+    void         *msg_control;    /* вспомогательные данные,
+                                     смотрите ниже */
+    size_t        msg_controllen; /* размер буфера вспомогательных
+                                     данных */
+    int           msg_flags;      /* флаги (не используется) */
+};
+.EE
+.in
+.PP
+Поле \fImsg_name\fP используется на неподключённом сокете для указания адреса
+назначения дейтаграммы. Оно указывает на буфер с адресом; в поле
+\fImsg_namelen\fP должен быть указан размер адреса. Для подключённого сокета
+значения этих полей должны быть равны NULL и 0, соответственно.
+.PP
+В полях \fImsg_iov\fP и \fImsg_iovlen\fP задаются места приёма/передачи, как для
+\fBwritev\fP(2).
+.PP
+Управляющую информацию можно посылать через поля \fImsg_control\fP и
+\fImsg_controllen\fP. Максимальная длина управляющего буфера, которую
+поддерживает ядро, ограничена значением \fI/proc/sys/net/core/optmem_max\fP;
+см. \fBsocket\fP(7).
+.PP
+.\" Still to be documented:
+.\"  Send file descriptors and user credentials using the
+.\"  msg_control* fields.
+Поле \fImsg_flags\fP игнорируется.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти вызовы возвращают количество отправленных
+байт. В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+Здесь представлено несколько стандартных ошибок, возвращаемых с уровня
+сокетов. Могут также появиться другие ошибки, возвращаемые из
+соответствующих модулей протоколов; их описание находится в соответствующих
+справочных страницах.
+.TP 
+\fBEACCES\fP
+(для доменных сокетов UNIX, которые идентифицируются по имени пути) Нет прав
+на запись в файл сокета назначения или в одном из каталогов пути запрещён
+поиск (см. также \fBpath_resolution\fP(7)).
+.IP
+(для сокетов UDP) Попытка отправки по сетевому/широковещательному адресу,
+как будто это был однозначный (unicast) адрес.
+.TP 
+\fBEAGAIN\fP или \fBEWOULDBLOCK\fP
+.\" Actually EAGAIN on Linux
+Сокет помечен как неблокирующий, но запрошенная операция привела бы к
+блокировке. POSIX.1\-2001 допускает в этих случаях возврат ошибки и не
+требует, чтобы эти константы имели одинаковое значение, поэтому переносимое
+приложение должно проверять обе возможности.
+.TP 
+\fBEAGAIN\fP
+(доменные датаграммные сокеты Интернета) Сокет, указанный \fIsockfd\fP, ранее
+не был привязан к адресу и при попытке привязать его к эфемеридному порту,
+было определено, что все номера в диапазоне эфемеридных портов уже
+используются. Смотрите обсуждение \fI/proc/sys/net/ipv4/ip_local_port_range\fP
+в \fBip\fP(7).
+.TP 
+\fBEALREADY\fP
+Сейчас выполняется другая операция Fast Open.
+.TP 
+\fBEBADF\fP
+Значение \fIsockfd\fP не является правильным открытым файловым дескриптором.
+.TP 
+\fBECONNRESET\fP
+Соединение сброшено другой стороной.
+.TP 
+\fBEDESTADDRREQ\fP
+Сокет в режиме без установления соединения и адрес второй стороны не задан.
+.TP 
+\fBEFAULT\fP
+В аргументе указано неверное значение адреса пользовательского пространства.
+.TP 
+\fBEINTR\fP
+Получен сигнал до начала передачи данных; смотрите \fBsignal\fP(7).
+.TP 
+\fBEINVAL\fP
+Передан неверный аргумент.
+.TP 
+\fBEISCONN\fP
+Сокет в режиме с установлением соединения уже выполнил подключение, но
+указан получатель (теперь или возвращается эта ошибка, или игнорируется
+указание получателя).
+.TP 
+\fBEMSGSIZE\fP
+.\" (e.g., SOCK_DGRAM )
+Для типа сокета требуется, чтобы сообщение было отослано за время одной
+операции (атомарно), а размер сообщения не позволяет этого.
+.TP 
+\fBENOBUFS\fP
+Исходящая очередь сетевого интерфейса заполнена. Обычно это означает, что
+интерфейс прекратил отправку, но это может быть также вызвано временной
+перегрузкой сети. Обычно, в Linux этого не происходит. Пакеты просто
+отбрасываются, когда очередь устройства переполняется.
+.TP 
+\fBENOMEM\fP
+Больше нет доступной памяти.
+.TP 
+\fBENOTCONN\fP
+Сокет не подключён и назначение не задано.
+.TP 
+\fBENOTSOCK\fP
+Файловый дескриптор \fIsockfd\fP указывает не на каталог.
+.TP 
+\fBEOPNOTSUPP\fP
+Один из битов в аргументе \fIflags\fP не может устанавливаться для этого типа
+сокета.
+.TP 
+\fBEPIPE\fP
+Локальный сокет, ориентированный на соединение, был закрыт. В этом случае
+процесс также получит сигнал \fBSIGPIPE\fP, если не установлен флаг
+\fBMSG_NOSIGNAL\fP.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.4BSD, SVr4, POSIX.1\-2001. Эти интерфейсы впервые появились в 4.2BSD.
+.PP
+В POSIX.1\-2001 описаны только флаги \fBMSG_OOB\fP и \fBMSG_EOR\fP. В POSIX.1\-2008
+добавлено описание \fBMSG_NOSIGNAL\fP. Флаг \fBMSG_CONFIRM\fP является
+нестандартным расширением Linux.
+.SH ЗАМЕЧАНИЯ
+.\" glibc bug raised 12 Mar 2006
+.\" http://sourceware.org/bugzilla/show_bug.cgi?id=2448
+.\" The problem is an underlying kernel issue: the size of the
+.\" __kernel_size_t type used to type this field varies
+.\" across architectures, but socklen_t is always 32 bits.
+В соответствие с POSIX.1\-2001 поле \fImsg_controllen\fP структуры \fImsghdr\fP
+должно иметь тип \fIsocklen_t\fP, но в настоящее время в glibc оно имеет тип
+\fIsize_t\fP.
+.PP
+В \fBsendmmsg\fP(2) можно найти информацию о специальном системном вызове
+Linux, который можно использовать для передачи нескольких дейтаграмм за один
+вызов.
+.SH ДЕФЕКТЫ
+Linux может вернуть \fBEPIPE\fP вместо \fBENOTCONN\fP.
+.SH ПРИМЕР
+Пример использования \fBsendto\fP() показан в \fBgetaddrinfo\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfcntl\fP(2), \fBgetsockopt\fP(2), \fBrecv\fP(2), \fBselect\fP(2), \fBsendfile\fP(2),
+\fBsendmmsg\fP(2), \fBshutdown\fP(2), \fBsocket\fP(2), \fBwrite\fP(2), \fBcmsg\fP(3),
+\fBip\fP(7), \fBipv6\fP(7), \fBsocket\fP(7), \fBtcp\fP(7), \fBudp\fP(7), \fBunix\fP(7)

@@ -1,0 +1,64 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2002 Walter Harms (walter.harms@informatik.uni-oldenburg.de)
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" Distributed under GPL
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH COMPLEX 7 2019\-03\-06 "" "Руководство программиста Linux"
+.SH ИМЯ
+complex \- основы комплексной математики
+.SH ОБЗОР
+\fB#include <complex.h>\fP
+.SH ОПИСАНИЕ
+Комплексные числа — это числа вида z = a+b*i, где a и b являются
+вещественными числами, и i = sqrt(\-1), где i*i = \-1.
+.PP
+Существуют и другие способы представления комплексных чисел. Пара
+вещественных чисел (a,b) может быть представлена как точка на плоскости,
+которая задаётся координатными осями X и Y. Эта же самая точка может быть
+также описана парой вещественных чисел (r,phi), где r — это расстояние от
+нулевой точки отсчёта 0, а phi — угол между осью X и прямой 0z. Итак, z =
+r*exp(i*phi) = r*(cos(phi)+i*sin(phi)).
+.PP
+Основные операции с комплексными числами, заданными в виде z = a+b*i и w =
+c+d*i, следующие:
+.TP 
+\fBсложение: z+w = (a+c) + (b+d)*i\fP
+.TP 
+\fBумножение: z*w = (a*c \- b*d) + (a*d + b*c)*i\fP
+.TP 
+\fBделение: z/w = ((a*c + b*d)/(c*c + d*d)) + ((b*c \- a*d)/(c*c + d*d))*i\fP
+.PP
+Почти все математические функции имеют своих комплексных собратьев, но есть
+и только комплексные функции.
+.SH ПРИМЕР
+Ваш C\-компилятор может работать с комплексными числами, если он поддерживает
+стандарт C99. Компоновку программы нужно производить с параметром \-lm. Здесь
+мнимая единица представлена как I.
+.PP
+.EX
+/* проверка что exp(i * pi) == \-1 */
+#include <math.h>        /* для atan */
+#include <stdio.h>
+#include <complex.h>
+
+int
+main(void)
+{
+    double pi = 4 * atan(1.0);
+    double complex z = cexp(I * pi);
+    printf("%f + %f * i\en", creal(z), cimag(z));
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcabs\fP(3), \fBcacos\fP(3), \fBcacosh\fP(3), \fBcarg\fP(3), \fBcasin\fP(3),
+\fBcasinh\fP(3), \fBcatan\fP(3), \fBcatanh\fP(3), \fBccos\fP(3), \fBccosh\fP(3),
+\fBcerf\fP(3), \fBcexp\fP(3), \fBcexp2\fP(3), \fBcimag\fP(3), \fBclog\fP(3), \fBclog10\fP(3),
+\fBclog2\fP(3), \fBconj\fP(3), \fBcpow\fP(3), \fBcproj\fP(3), \fBcreal\fP(3), \fBcsin\fP(3),
+\fBcsinh\fP(3), \fBcsqrt\fP(3), \fBctan\fP(3), \fBctanh\fP(3)

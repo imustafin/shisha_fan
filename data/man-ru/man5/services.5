@@ -1,0 +1,171 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 1996 Austin Donnelly <and1000@cam.ac.uk>,
+.\" with additional material Copyright (c) 1995 Martin Schulze
+.\"     <joey@infodrom.north.de>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"   This manpage was made by merging two independently written manpages,
+.\"   one written by Martin Schulze (18 Oct 95), the other written by
+.\"   Austin Donnelly, (9 Jan 96).
+.\"
+.\" Thu Jan 11 12:14:41 1996 Austin Donnelly  <and1000@cam.ac.uk>
+.\"   * Merged two services(5) manpages
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SERVICES 5 2010\-05\-22 Linux "Руководство программиста Linux"
+.SH ИМЯ
+services \- список служб сети Интернет
+.SH ОПИСАНИЕ
+\fBservices\fP — это простой файл в кодировке ASCII, обеспечивающий
+распределение соответствующих текстовых имён между службами интернет,
+связанных с ними назначений портов и типов протоколов. Любая сетевая
+программа должна сначала обратиться к этому файлу для получения номера порта
+(и протокола) для своей службы. Функции библиотеки C \fBgetservent\fP(3),
+\fBgetservbyname\fP(3), \fBgetservbyport\fP(3), \fBsetservent\fP(3) и
+\fBendservent\fP(3) выполняют запросы программ к этому файлу.
+.PP
+Номера портов назначаются IANA (Internet Assigned Numbers Authority), и их
+текущей политикой является указание TCP\- и UDP\-протоколов при назначении
+номера порта. Следовательно, большинство элементов будет иметь двойные
+значения даже для служб, которые используют только TCP.
+.PP
+Номера портов меньше 1024 (так называемые «привилегированные» порты) могут
+быть задействованы только суперпользователем (смотрите \fBbind\fP(2), \fBtcp\fP(7)
+и \fBudp\fP(7)). Это делается для того, чтобы клиенты, подключающиеся к
+привилегированным портам, могли не сомневаться в том, что служба, работающая
+на порту, обеспечивает стандартную реализацию, и не является «подставной»
+службой какого\-нибудь пользователя в машине. Известные номера портов,
+определённые IANA, обычно располагаются только в пространстве
+суперпользователя.
+.PP
+Присутствие элемента службы в файле \fBservices\fP не обязательно означает, что
+эта служба сейчас запущена на машине. Смотрите \fBinetd.conf\fP(5) для
+знакомства с настройкой служб интернета. Заметим, что не все сетевые службы
+запускаются с помощью \fBinetd\fP(8), и поэтому могут отсутствовать в
+\fBinetd.conf\fP(5). В частности, серверы новостей (NNTP) и почтовые серверы
+(SMTP) часто запускаются с помощью системных загрузочных сценариев.
+.PP
+Расположение файла \fBservices\fP определяется \fB_PATH_SERVICES\fP в
+\fI<netdb.h>\fP. Обычно значением является \fI/etc/services\fP.
+.PP
+Каждая строка определяет одну службу и имеет следующий формат:
+.IP
+\fIимя\-службы\ \ \ порт\fP\fB/\fP\fIпротокол\ \ \ \fP[\fIпсевдонимы ...\fP]
+.TP 
+где:
+.TP  10
+\fIимя\-службы\fP
+Известное имя службы, по которому она в дальнейшем будет
+определяться. Регистр символов имеет значение. Часто клиентские программы
+называются по \fIимени\-службы\fP.
+.TP 
+\fIпорт\fP
+Номер порта (в десятичном формате), используемый данной службой.
+.TP 
+\fIпротокол\fP
+Тип протокола, который будет использоваться. Это поле должно совпадать с
+элементом в файле \fBprotocols\fP(5). Обычно, значением является \fBtcp\fP и
+\fBudp\fP.
+.TP 
+\fIпсевдонимы\fP
+Дополнительный список имён этой службы, разделённых символами табуляции или
+пробелами. Снова заметим, что имеет значение регистр символов.
+.PP
+Для разделения полей могут использоваться пробелы или символы табуляции.
+.PP
+Комментарии начинаются с символа решетки (#) и продолжаются до конца
+строки. Пустые строки пропускаются.
+.PP
+\fIИмя службы\fP должно начинаться с первого столбца файла, так как начальные
+пробелы не удаляются В \fIимени службы\fP могут использоваться любые печатные
+символы (исключая пробелы и символы табуляции). Однако, лучше использовать
+стандартный набор символов для уменьшения проблем с
+совместимостью. Например, a\-z, 0\-9 и дефис (\-) наиболее подходящий набор.
+.PP
+В файле не должно быть строк в другом формате (в данный момент они просто
+пропускаются программами \fBgetservent\fP(3), \fBgetservbyname\fP(3) и
+\fBgetservbyport\fP(3). Однако, на это не стоит полагаться).
+.PP
+.\" The following is not true as at glibc 2.8 (a line with a comma is
+.\" ignored by getservent()); it's not clear if/when it was ever true.
+.\"   As a backward compatibility feature, the slash (/) between the
+.\"   .I port
+.\"   number and
+.\"   .I protocol
+.\"   name can in fact be either a slash or a comma (,).
+.\"   Use of the comma in
+.\"   modern installations is deprecated.
+.\"
+Данный файл может распространяться по сети с помощью сетевых служб имён,
+таких как Yellow Pages/NIS или BIND/Hesiod.
+.PP
+Пример файла \fBservices\fP:
+.PP
+.in +4n
+.EX
+netstat         15/tcp
+qotd            17/tcp          quote
+msp             18/tcp          # message send protocol
+msp             18/udp          # message send protocol
+chargen         19/tcp          ttytst source
+chargen         19/udp          ttytst source
+ftp             21/tcp
+# 22 \- unassigned
+telnet          23/tcp
+.EE
+.in
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/services\fP
+список сетевых служб интернет
+.TP 
+\fI<netdb.h>\fP
+.\" .SH BUGS
+.\" It's not clear when/if the following was ever true;
+.\" it isn't true for glibc 2.8:
+.\"    There is a maximum of 35 aliases, due to the way the
+.\"    .BR getservent (3)
+.\"    code is written.
+.\"
+.\" It's not clear when/if the following was ever true;
+.\" it isn't true for glibc 2.8:
+.\"    Lines longer than
+.\"    .B BUFSIZ
+.\"    (currently 1024) characters will be ignored by
+.\"    .BR getservent (3),
+.\"    .BR getservbyname (3),
+.\"    and
+.\"    .BR getservbyport (3).
+.\"    However, this will also cause the next line to be mis-parsed.
+Определение \fB_PATH_SERVICES\fP
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBlisten\fP(2), \fBendservent\fP(3), \fBgetservbyname\fP(3), \fBgetservbyport\fP(3),
+\fBgetservent\fP(3), \fBsetservent\fP(3), \fBinetd.conf\fP(5), \fBprotocols\fP(5),
+\fBinetd\fP(8)
+.PP
+RFC с назначенными номерами, последний RFC\ 1700, (т.н. STD0002).

@@ -1,0 +1,118 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sat Jul 24 18:48:06 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Fri Jun 23 01:26:34 1995 by Andries Brouwer (aeb@cwi.nl)
+.\" (prompted by Scott Burkett <scottb@IntNet.net>)
+.\" Modified Sun Mar 28 23:44:38 1999 by Andries Brouwer (aeb@cwi.nl)
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MKTEMP 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+mktemp \- создаёт уникальное имя для временного файла
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBchar *mktemp(char *\fP\fItemplate\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc (смотрите
+\fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBmktemp\fP():
+.ad l
+.PD 0
+.RS 4
+.TP  4
+Начиная с glibc 2.12:
+(_XOPEN_SOURCE\ >=\ 500) && ! (_POSIX_C_SOURCE\ >=\ 200112L)
+    || /* Glibc начиная с 2.19: */ _DEFAULT_SOURCE
+    || /* Glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.TP 
+До glibc 2.12:
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_BSD_SOURCE || _SVID_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.RE
+.PD
+.ad b
+.SH ОПИСАНИЕ
+\fIНикогда не используйте эту функцию\fP; см. ДЕФЕКТЫ
+.PP
+Функция \fBmktemp\fP() генерирует на основе шаблона \fItemplate\fP уникальное имя
+для временного файла. Последние шесть символов \fItemplate\fP должны быть равны
+XXXXXX, они будут заменены на строку, которая сделает имя файла
+уникальным. Так как \fItemplate\fP будет меняться, он должен быть объявлен не
+строковой константой, а массивом символов.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функция \fBmktemp\fP() всегда возвращает \fItemplate\fP. При создании уникального
+имени последние шесть байтов \fItemplate\fP заменяются так, что имя становится
+уникальным (то есть, такого имени ещё нет). Если уникальное имя невозможно
+создать, \fItemplate\fP будет равно пустой строке, а \fIerrno\fP будет назначен
+код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Последние шесть символов \fItemplate\fP не равны XXXXXX.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmktemp\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.\" .SH NOTES
+.\" The prototype is in
+.\" .I <unistd.h>
+.\" for libc4, libc5, glibc1; glibc2 follows the Single UNIX Specification
+.\" and has the prototype in
+.\" .IR <stdlib.h> .
+4.3BSD, POSIX.1\-2001. В POSIX.1\-2008 спецификация \fBmktemp\fP() удалена.
+.SH ДЕФЕКТЫ
+Никогда не используйте \fBmktemp\fP(). Некоторые реализации следуют 4.3BSD и
+заменяют XXXXXX текущим ID процесса и одним символом, поэтому может быть
+возвращено только 26 уникальных имен. С одной стороны такие имена легко
+подобрать, а с другой есть вероятность возникновения состязательности при
+проверке существования имени и открытия файла, поэтому каждое использование
+\fBmktemp\fP() является угрозой безопасности. Состязательность не может
+возникнуть, если использовать функции \fBmkstemp\fP(3) и \fBmkdtemp\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmktemp\fP(1), \fBmkdtemp\fP(3), \fBmkstemp\fP(3), \fBtempnam\fP(3), \fBtmpfile\fP(3),
+\fBtmpnam\fP(3)

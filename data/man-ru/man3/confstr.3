@@ -1,0 +1,126 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 19:53:02 1993 by Rik Faith (faith@cs.unc.edu)
+.\"
+.\" FIXME Many more values for 'name' are supported, some of which
+.\" are documented under 'info confstr'.
+.\" See <bits/confname.h> for the rest.
+.\" These should all be added to this page.
+.\" See also the POSIX.1-2001 specification of confstr()
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CONFSTR 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+confstr \- получает строковые переменные конфигурации
+.SH ОБЗОР
+.nf
+\fB#include <unistd.h>\fP
+.PP
+\fBsize_t confstr(int \fP\fIname\fP\fB, char *\fP\fIbuf\fP\fB, size_t \fP\fIlen\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBconfstr\fP(): _POSIX_C_SOURCE\ >=\ 2 || _XOPEN_SOURCE
+.SH ОПИСАНИЕ
+\fBconfstr\fP() получает значение строковой переменной, зависящей от
+конфигурации.
+.PP
+Аргумент \fIname\fP это название системной переменной, значение которой нужно
+получить. Поддерживаются следующие переменные:
+.TP 
+\fB_CS_GNU_LIBC_VERSION\fP (только библиотека GNU C; начиная с glibc 2.3.2)
+Строка с версией библиотеки GNU C в системе (например, «glibc 2.3.4»).
+.TP 
+\fB_CS_GNU_LIBPTHREAD_VERSION\fP (только библиотека GNU C; начиная с glibc 2.3.2)
+Строка, определяющая реализацию POSIX, которую предоставляет библиотека C
+(например, «NPTL 2.3.4» или «linuxthreads\-0.10»).
+.TP 
+\fB_CS_PATH\fP
+Значение переменной \fBPATH\fP, в которой указывается где можно найти все
+утилиты стандарта POSIX.2.
+.PP
+Если \fIbuf\fP не равно NULL и значение \fIlen\fP не равно нулю, то \fBconfstr\fP()
+копирует строку в \fIbuf\fP, укорачивая её до \fIlen \- 1\fP байт, если это
+необходимо; также добавляет байт null (\(aq\e0\(aq) в конец строки. Это
+может быть обнаружено сравнением возвращённого \fBconfstr\fP() значения с
+\fIlen\fP.
+.PP
+Если \fIlen\fP равно нулю и \fIbuf\fP равно NULL, то \fBconfstr\fP() просто
+возвращает значение, как сказано ниже.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если значение \fIname\fP — корректная переменная настройки, то \fBconfstr\fP()
+возвращает количество байт (включая завершающий байт null), которое
+необходимо для хранения всего значения этой переменной. Это значение может
+быть больше \fIlen\fP, что означает, что значение в \fIbuf\fP обрезанное.
+.PP
+Если значение \fIname\fP — корректная переменная настройки, но эта переменная
+не имеет значения, то \fBconfstr\fP() возвращает 0. Если значение \fIname\fP не
+соответствует ни одной корректной переменной настройки, то \fBconfstr\fP()
+возвращает 0 и \fIerrno\fP устанавливается в \fBEINVAL\fP.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Некорректное значение \fIname\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBconfstr\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ПРИМЕР
+Следующий фрагмент кода определяет расположение всех системных утилит
+POSIX.2:
+.PP
+.in +4n
+.EX
+char *pathbuf;
+size_t n;
+
+n = confstr(_CS_PATH, NULL, (size_t) 0);
+pathbuf = malloc(n);
+if (pathbuf == NULL)
+    abort();
+confstr(_CS_PATH, pathbuf, n);
+.EE
+.in
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetconf\fP(1), \fBsh\fP(1), \fBexec\fP(3), \fBfpathconf\fP(3), \fBpathconf\fP(3),
+\fBsysconf\fP(3), \fBsystem\fP(3)

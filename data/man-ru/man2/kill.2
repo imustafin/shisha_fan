@@ -1,0 +1,157 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1992 Drew Eckhardt (drew@cs.colorado.edu), March 28, 1992
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt <michael@moria.de>
+.\" Modified by Thomas Koenig <ig25@rz.uni-karlsruhe.de>
+.\" Modified 1993-07-23 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1993-07-25 by Rik Faith <faith@cs.unc.edu>
+.\" Modified 1995-11-01 by Michael Haardt
+.\"  <michael@cantor.informatik.rwth-aachen.de>
+.\" Modified 1996-04-14 by Andries Brouwer <aeb@cwi.nl>
+.\"  [added some polishing contributed by Mike Battersby <mib@deakin.edu.au>]
+.\" Modified 1996-07-21 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 1997-01-17 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 2001-12-18 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified 2002-07-24 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"	Added note on historical rules enforced when an unprivileged process
+.\"	sends a signal.
+.\" Modified 2004-06-16 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added note on CAP_KILL
+.\" Modified 2004-06-24 by aeb
+.\" Modified, 2004-11-30, after idea from emmanuel.colbus@ensimag.imag.fr
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH KILL 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+kill \- послать сигнал процессу
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <signal.h>\fP
+.PP
+\fBint kill(pid_t \fP\fIpid\fP\fB, int \fP\fIsig\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBkill\fP(): _POSIX_C_SOURCE
+.ad b
+.SH ОПИСАНИЕ
+Системный вызов \fBkill\fP() может быть использован для посылки какого\-либо
+сигнала какому\-либо процессу или группе процессов.
+.PP
+Если значение \fIpid\fP является положительным, то сигнал \fIsig\fP посылается
+процессу с идентификатором \fIpid\fP.
+.PP
+Если значение \fIpid\fP равно 0, то \fIsig\fP посылается каждому процессу, который
+входит в группу вызывающего процесса.
+.PP
+Если значение \fIpid\fP равно \-1, то \fIsig\fP посылается каждому процессу,
+которым вызывающий процесс имеет право отправлять сигналы, за исключением
+процесса с номером 1 (\fIinit\fP), подробности смотрите далее.
+.PP
+Если значение \fIpid\fP меньше \-1, то \fIsig\fP посылается каждому процессу,
+который входит в группу процессов, чей ID равен \fI\-pid\fP.
+.PP
+Если значение \fIsig\fP равно 0, то никакой сигнал не посылается, но
+выполняется проверка существования и права; это можно использовать для
+проверки существования процесса или группы процессов с заданным ID и
+допустимости отправки сигнала вызывающим.
+.PP
+Чтобы процесс мог посылать сигнал, он должен быть привилегированным (в
+Linux: иметь мандат \fBCAP_KILL\fP в пользовательском пространстве имён
+процесса назначения), либо реальный или эффективный идентификатор
+пользователя посылающего процесса должен быть равен реальному или
+сохранённому идентификатору пользователя процесса, которому отправляется
+сигнал. Для сигнала \fBSIGCONT\fP посылающий и получающий процессы должны
+принадлежать одному сеансу (сложилось исторически; правила разные; смотрите
+ЗАМЕЧАНИЯ).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении (по крайней мере, был послан один сигнал)
+возвращается 0. В случае ошибки возвращается \-1, а \fIerrno\fP устанавливается
+в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Указан некорректный сигнал.
+.TP 
+\fBEPERM\fP
+Вызывающий процесс не имеет достаточно прав для отправки сигнала ни одному
+из группы процессов\-получателей.
+.TP 
+\fBESRCH\fP
+Процесс\-получатель или группа процессов не существует. Заметим, что
+существующий процесс может быть в состоянии зомби — процесс, завершивший
+выполнение, но которого ещё не дождались с помощью \fBwait\fP(2).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Процессу \fIinit\fP  с идентификатором 1 можно послать только те сигналы, для
+которых он явно установил обработчики сигналов. Так сделано, чтобы быть
+уверенным, что в случае какой\-либо нештатной ситуации работа системы не
+будет завершена аварийно.
+.PP
+В POSIX.1 требуется, чтобы \fIkill(\-1,sig)\fP посылал \fIsig\fP всем процессам,
+которым вызывающий процесс может послать сигналы, возможно за исключением
+некоторых процессов, определяемых реализацией системы. Linux позволяет
+процессу послать сигнал самому себе, но при вызове \fIkill(\-1,sig)\fP
+вызывающий процесс сигнала не получит.
+.PP
+В POSIX.1 говорится, что если процесс посылает себе сигнал и посылающая нить
+не блокирует сигнал, и нет ещё нити, которая его не блокирует или не ждёт
+его с помощью \fBsigwait\fP(3), то, по крайней мере, один незаблокированный
+сигнал должен быть доставлен посылающей нити до возврата из \fBkill\fP().
+.SS "Замечания, касающиеся Linux"
+.\" In the 0.* kernels things chopped and changed quite
+.\" a bit - MTK, 24 Jul 02
+В различных версиях ядра Linux применяются разные правила, касающиеся прав
+доступа, которые требуются для непривилегированного процесса, чтобы посылать
+сигнал другому процессу. В ядрах с 1.0 по 1.2.2 сигнал может быть послан,
+если эффективный идентификатор пользователя отправителя совпадает с
+эффективным идентификатором пользователя цели или реальный идентификатор
+пользователя отправителя совпадает с реальным идентификатором пользователя
+цели. В ядрах с версии 1.2.3 по 1.3.77 сигнал может быть послан, если
+эффективный идентификатор пользователя отправителя совпадает или с реальным
+или с эффективным идентификатором пользователя цели. Текущие правила,
+которые соответствуют стандартам POSIX.1, были введены, начиная с ядра
+версии 1.3.78.
+.SH ДЕФЕКТЫ
+В ядрах 2.6 до 2.6.7 включительно есть дефект: когда посылаются сигналы
+группе процессов, вызов \fBkill\fP() завершается с ошибкой \fBEPERM\fP, если
+вызывающий не имеет право посылать сигнал \fIлюбому\fP (но не \fIвсем\fP) члену
+группы процессов. Хотя возвращается ошибка, сигнал всё равно доставляется
+всем процессам, которым вызывающий имеет право послать сигнал.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(1), \fB_exit\fP(2), \fBsignal\fP(2), \fBtkill\fP(2), \fBexit\fP(3),
+\fBkillpg\fP(3), \fBsigqueue\fP(3), \fBcapabilities\fP(7), \fBcredentials\fP(7),
+\fBsignal\fP(7)

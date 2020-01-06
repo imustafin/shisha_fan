@@ -1,0 +1,152 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+'\" t
+.\" This manpage is Copyright (C) 1996 Michael Haardt.
+.\" Updates Nov 1998, Andries Brouwer
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MOUSE 4 2016\-10\-08 Linux "Руководство программиста Linux"
+.SH ИМЯ
+mouse \- последовательный интерфейс мыши
+.SH НАСТРОЙКА
+Мышь подключается последовательному порту RS232/V24, описание смотрите в
+\fBttyS\fP(4).
+.SH ОПИСАНИЕ
+.SS Введение
+Описание разъёма c 9 контактами, используемого для подключения мыши:
+.PP
+.TS
+center;
+r c l.
+контакт	название	назначение
+2	RX	Данные
+3	TX	\-12 В, Iмакс = 10 мА
+4	DTR	+12 В, Iмакс = 10 мА
+7	RTS	+12 В, Iмакс = 10 мА
+5	GND	Земля
+.TE
+.PP
+Такое описание приводится в документации, почти любой мыши хватает 9 V.
+.PP
+Драйвер мыши может распознать мышь, посылая низкий сигнал RTS и затем
+высокий. Примерно через 14 миллисекунд мышь пошлёт 0x4D (\(aqM\(aq) по линии
+данных. Ещё через 63 миллисекунды трёх\-кнопочная Microsoft\-совместимая мышь
+пошлёт 0x33 (\(aq3\(aq).
+.PP
+Относительное движение мыши посылается как \fIdx\fP (положительное значение
+означает движение направо) и \fIdy\fP (положительное значение означает движение
+вниз). Различные мыши могут работать на разных скоростях. Для определения
+скорости устанавливаются следующие её значения (по очереди): 9600, 4800,
+2400 и 1200 бит/с; каждый раз при установке значения скорости пишутся 2
+символа из таблицы, приведённой ниже, и после этого выполняется ожидание,
+равное 0,1 секунды. В таблице указаны скорости и символы, соответствующие
+им:
+.PP
+.TS
+center;
+l l.
+бит/с	строка
+9600	*q
+4800	*p
+2400	*o
+1200	*n
+.TE
+.PP
+Первый байт из пакета данных может использоваться для синхронизации.
+.SS "Протокол Microsoft"
+В протоколе \fBMicrosoft\fP используется один начальный бит, 7 битов данных
+(без проверки четности), один стоп\-бит; протокол работает со скоростью 1200
+бит/с. Данные пересылаются по RxD трёх\-байтовыми пакетами. Движения по \fIdx\fP
+и \fIdy\fP пересылаются в коде дополнения до 2. Значения \fIlb\fP (\fIrb\fP),
+устанавливаемые при нажатии левой (правой) кнопки:
+.PP
+.TS
+center;
+r c c c c c c c.
+байт	d6	d5	d4	d3	d2	d1	d0
+1	1	lb	rb	dy7	dy6	dx7	dx6
+2	0	dx5	dx4	dx3	dx2	dx1	dx0
+3	0	dy5	dy4	dy3	dy2	dy1	dy0
+.TE
+.SS "Протокол Microsoft для трёх\-кнопочной мыши"
+Первоначально мышь Microsoft имела две кнопки. Но есть несколько
+трёх\-кнопочных мышей, также использующих протокол Microsoft. О нажатии или
+отпускании средней кнопки сообщается  отправкой пакета с нулевым движением и
+ненажатыми клавишами. (Таким образом, в отличие от двух других кнопок,
+состояние средней в каждом пакете не передаётся).
+.SS "Протокол Logitech"
+Трёх\-кнопочная мышь Logitech представляет собой расширенный вариант
+протокола Microsoft: когда средняя кнопка отпущена, посылается вышеописанный
+трёх\-байтовый пакет, а когда она нажата, посылается четырёх\-байтовый пакет,
+где четвёртый байт имеет значение 0x20 (или, как минимум, в нём установлен
+бит 0x20). В частности, о нажатии средней кнопки сообщается с помощью пакета
+0,0,0,0x20 при том, что остальные кнопки остаются ненажатыми.
+.SS "Протокол Mousesystems"
+В протоколе \fBMousesystems\fP используется один начальный бит, 8 битов данных,
+без проверки чётности и два стоп\-бита при скорости 1200 бит/с. Данные
+посылаются по RxD пяти\-байтовыми пакетами. \fIdx\fP посылается как сумма
+значений в коде дополнения до 2, \fIdy\fP посылается как отрицательная сумма
+значений в коде дополнения до 2. \fIlb\fP (\fImb\fP, \fIrb\fP) обнуляются при нажатии
+левой (средней, правой) кнопки:
+.PP
+.TS
+center;
+r c c c c c c c c.
+байт	d7	d6	d5	d4	d3	d2	d1	d0
+1	1	0	0	0	0	lb	mb	rb
+2	0	dxa6	dxa5	dxa4	dxa3	dxa2	dxa1	dxa0
+3	0	dya6	dya5	dya4	dya3	dya2	dya1	dya0
+4	0	dxb6	dxb5	dxb4	dxb3	dxb2	dxb1	dxb0
+5	0	dyb6	dyb5	dyb4	dyb3	dyb2	dyb1	dyb0
+.TE
+.PP
+Четвёртый и пятый байты описывают изменения, произошедшие за время передачи
+второго и третьего байта.
+.SS "Протокол Sun"
+Протокол \fBSun\fP представляет собой трёх\-байтовую версию протокола
+Mousesystems (описанного выше): два последних байта не отсылаются.
+.SS "Протокол MM"
+В протоколе \fBMM\fP  используется один начальный бит, 8 битов данных, контроль
+по нечётности и один стоп\-бит при скорости 1200 бит/с. Данные посылаются по
+RxD трёх\-байтовыми пакетами. \fIdx\fP и \fIdy\fP отсылаются как единичные значения
+со знаком, бит знака указывает на отрицательное значение. \fIlb\fP (\fImb\fP,
+\fIrb\fP) устанавливаются при нажатии левой (средней, правой) кнопки:
+.PP
+.TS
+center;
+r c c c c c c c c.
+байт	d7	d6	d5	d4	d3	d2	d1	d0
+1	1	0	0	dxs	dys	lb	mb	rb
+2	0	dx6	dx5	dx4	dx3	dx2	dx1	dx0
+3	0	dy6	dy5	dy4	dy3	dy2	dy1	dy0
+.TE
+.SH ФАЙЛЫ
+.TP 
+\fI/dev/mouse\fP
+Обычно используется символьная ссылка на устройство мыши.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBttyS\fP(4), \fBgpm\fP(8)

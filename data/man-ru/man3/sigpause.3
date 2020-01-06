@@ -1,0 +1,111 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2004 Andries Brouwer (aeb@cwi.nl)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGPAUSE 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+sigpause \- автоматически разблокирует сигналы и ждёт прерывания
+.SH ОБЗОР
+.nf
+\fB#include <signal.h>\fP
+.PP
+\fBint sigpause(int \fP\fIsigmask\fP\fB);  /* BSD (но см. ЗАМЕЧАНИЯ) */\fP
+.PP
+\fBint sigpause(int \fP\fIsig\fP\fB);      /* System V / UNIX 95 */\fP
+.fi
+.SH ОПИСАНИЕ
+Не используйте эту функцию. Вместо неё используйте \fBsigsuspend\fP(2).
+.PP
+Функция \fBsigpause\fP() предназначена для ожидания какого\-нибудь сигнала. Она
+изменяет сигнальную маску процесса (набор блокируемых сигналов) и ждёт
+появления сигнала. При прибытии сигнала первоначальная сигнальная маска
+восстанавливается.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Если \fBsigpause\fP() возвращает выполнение, то это означает, что она была
+прервана сигналом и возвращается значение \-1, а \fIerrno\fP присваивается
+значение \fBEINTR\fP.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsigpause\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.\" FIXME: The marking is different from that in the glibc manual,
+.\" marking in glibc manual is more detailed:
+.\"
+.\" sigpause: MT-Unsafe race:sigprocmask/!bsd!linux
+.\"
+.\" glibc manual says /!linux!bsd indicate the preceding marker only applies
+.\" when the underlying kernel is neither Linux nor a BSD kernel.
+.\" So, it is safe in Linux kernel.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Версия \fBsigpause\fP() из System V стандартизована в POSIX.1\-2001. Также она
+есть в POSIX.1\-2008, но помечена как устаревшая.
+.SH ЗАМЕЧАНИЯ
+.SS История
+.\" __xpg_sigpause: UNIX 95, spec 1170, SVID, SVr4, XPG
+Классическая BSD\-версия этой функции появилась в 4.2BSD. Она изменяет
+сигнальную маску процесса на \fIsigmask\fP. В UNIX 95 стандартизована
+несовместимая с System V версия этой функции, которая удаляет сигнальной
+маски процесса только указанный сигнал \fIsig\fP. Проблемная ситуация двух
+несовместимых функций с одним именем была исправлена функцией
+\fB\%sigsuspend\fP(2), которая ожидает аргумент с типом \fIsigset_t\ *\fP (вместо
+\fIint\fP).
+.SS "Замечания, касающиеся Linux"
+В Linux эта процедура является системным вызовом только на архитектуре Sparc
+(sparc64).
+.PP
+.\" Libc4 and libc5 know only about the BSD version.
+.\"
+В glibc используется версия BSD, если определён макрос тестирования свойств
+\fB_BSD_SOURCE\fP и отсутствуют \fB_POSIX_SOURCE\fP, \fB_POSIX_C_SOURCE\fP,
+\fB_XOPEN_SOURCE\fP, \fB_GNU_SOURCE\fP или \fB_SVID_SOURCE\fP. В противном случае
+используется версия System V и для получения объявления должен быть
+определен следующие макросы тестирования свойств:
+.IP * 3
+.\" || (_XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED)
+Начиная с glibc 2.26: _XOPEN_SOURCE >= 500
+.IP *
+glibc 2.25 и старее: _XOPEN_SOURCE
+.PP
+.\"
+.\" For the BSD version, one usually uses a zero
+.\" .I sigmask
+.\" to indicate that no signals are to be blocked.
+Начиная с glibc 2.19, в \fI<signal.h>\fP представлена только версия
+System V; в приложениях, которые использовали BSD\-версию \fBsigpause\fP(),
+нужно заменить его на \fBsigsuspend\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBkill\fP(2), \fBsigaction\fP(2), \fBsigprocmask\fP(2), \fBsigsuspend\fP(2),
+\fBsigblock\fP(3), \fBsigvec\fP(3), \fBfeature_test_macros\fP(7)

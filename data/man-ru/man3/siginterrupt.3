@@ -1,0 +1,97 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\" Modified Sun Jul 25 10:40:51 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified Sun Apr 14 16:20:34 1996 by Andries Brouwer (aeb@cwi.nl)
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SIGINTERRUPT 3 2016\-03\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+siginterrupt \- разрешает сигналам прерывать системные вызовы
+.SH ОБЗОР
+.nf
+\fB#include <signal.h>\fP
+.PP
+\fBint siginterrupt(int \fP\fIsig\fP\fB, int \fP\fIflag\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBsiginterrupt\fP():
+.ad l
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.12: */ _POSIX_C_SOURCE\ >=\ 200809L
+    || /* в версии glibc <= 2.19: */ _BSD_SOURCE
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBsiginterrupt\fP() изменяет поведение перезапуска когда системный
+вызов прерывается сигналом \fIsig\fP. Если аргумент \fIflag\fP ложен (0), то
+системные вызова будут перезапускаться, если они прерывались указанным
+сигналом \fIsig\fP. Это поведение Linux по умолчанию.
+.PP
+Если аргумент \fIflag\fP истинен (1) и не пересылались данные, то системный
+вызов, прерванный сигналом \fIsig\fP вернёт \-1 и \fIerrno\fP будет присвоено
+значение \fBEINTR\fP.
+.PP
+Если аргумент \fIflag\fP истинен (1) и началась пересылка данных, то системный
+вызов будет прерван и вернёт действительное количество пересланных данных.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsiginterrupt\fP() возвращает ноль. Она возвращает
+\-1, если был указан неправильный номер сигнала \fIsig\fP, ив \fIerrno\fP будет
+указан код ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Задан некорректный номер сигнала.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBsiginterrupt\fP()
+T}	Безвредность в нитях	MT\-Unsafe const:sigintr
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+4.3BSD, POSIX.1\-2001. В POSIX.1\-2008 функция \fBsiginterrupt\fP() помечена как
+устаревшая, вместо неё рекомендуется использовать \fBsigaction\fP(2) с флагом
+\fBSA_RESTART\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsignal\fP(2)

@@ -1,0 +1,154 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2012 by Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH MTRACE 3 2017\-09\-15 GNU "Руководство программиста Linux"
+.SH ИМЯ
+mtrace, muntrace \- трассировка malloc
+.SH ОБЗОР
+\fB#include <mcheck.h>\fP
+.PP
+\fBvoid mtrace(void);\fP
+.PP
+\fBvoid muntrace(void);\fP
+.SH ОПИСАНИЕ
+Функция \fBmtrace\fP() устанавливает перехватывающие функции (hook functions)
+на функции выделения памяти (\fBmalloc\fP(3), \fBrealloc\fP(3), \fBmemalign\fP(3),
+\fBfree\fP(3)). Эти перехватывающие функции записывают трассировочную
+информация о выделении и освобождении памяти. Информация о трассировке может
+использоваться в программе для обнаружения утечек памяти и попыток
+освобождения не выделенной памяти.
+.PP
+Функция \fBmuntrace\fP() отключает перехватывающие функции, установленные
+\fBmtrace\fP() и трассировка функций выделения памяти больше не
+выполняется. Если \fBmtrace\fP() не установила перехватывающие функции, то
+\fBmuntrace\fP() ничего не делает.
+.PP
+При вызове \fBmtrace\fP() она проверяет значение переменной окружения
+\fBMALLOC_TRACE\fP, в которой должен содержаться путь к файлу для записи
+информации о трассировке. При открытии этого файла он обрезается до нулевой
+длины.
+.PP
+Если \fBMALLOC_TRACE\fP не существует или указанный путь некорректен или
+недоступен для записи, то перехватывающие функции не устанавливаются и
+\fBmtrace\fP() ничего не делает. Для программ с установленными set\-user\-ID и
+set\-group\-ID переменная \fBMALLOC_TRACE\fP игнорируется и \fBmtrace\fP() ничего не
+делает.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw20 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBmtrace\fP(),
+\fBmuntrace\fP()
+T}	Безвредность в нитях	MT\-Unsafe
+.TE
+.\" FIXME: The marking is different from that in the glibc manual,
+.\" markings in glibc manual are more detailed:
+.\"
+.\"      mtrace: MT-Unsafe env race:mtrace const:malloc_hooks init
+.\"      muntrace: MT-Unsafe race:mtrace const:malloc_hooks locale
+.\"
+.\" But there is something wrong in glibc manual, for example:
+.\" glibc manual says muntrace should have marking locale because it calls
+.\" fprintf(), but muntrace does not execute area which cause locale problem.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются расширениями GNU.
+.SH ЗАМЕЧАНИЯ
+В обычной работе \fBmtrace\fP() вызывается один раз в начале выполнения
+программы, а \fBmuntrace\fP() никогда не вызывается.
+.PP
+Результат трассировки после вызова \fBmtrace\fP() имеет текстовый формат, не
+предназначенный для чтения человеком. В библиотеке GNU C есть сценарий Perl,
+\fBmtrace\fP(1), который преобразует журнал трассировки в читаемый вид. Для
+лучших результатов трассируемая программа должна быть скомпилирована с
+включённой отладкой для того, чтобы в исполняемый файл попала информация c
+номерами строк.
+.PP
+Трассировка, выполняемая \fBmtrace\fP(), ухудшает производительность (если
+\fBMALLOC_TRACE\fP указывает на корректный, доступный на запись файл).
+.SH ДЕФЕКТЫ
+Информация о номере строки, выдаваемая в \fBmtrace\fP(1), не всегда точна:
+номер строки может ссылаться на предыдущую или следующую (не пустую) строку
+исходного кода.
+.SH ПРИМЕР
+Далее представлен пример работы функции \fBmtrace\fP() и команды \fBmtrace\fP(1)
+для программы с утечкой памяти в двух местах. Для демонстрации используется
+следующая программа:
+.PP
+.in +4
+.EX
+$ \fBcat t_mtrace.c\fP
+#include <mcheck.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+int
+main(int argc, char *argv[])
+{
+    int j;
+
+    mtrace();
+
+    for (j = 0; j < 2; j++)
+        malloc(100);            /* никогда не освобождается — утечка памяти */
+
+    calloc(16, 16);             /* Никогда не освобождается — утечка памяти */
+    exit(EXIT_SUCCESS);
+}
+.EE
+.in
+.PP
+При выполнении этой программы мы видим, что \fBmtrace\fP() обнаружила утечку
+памяти в двух местах программы:
+.PP
+.in +4n
+.EX
+$ \fBcc \-g t_mtrace.c \-o t_mtrace\fP
+$ \fBexport MALLOC_TRACE=/tmp/t\fP
+$ \fB./t_mtrace\fP
+$ \fBmtrace ./t_mtrace $MALLOC_TRACE\fP
+Memory not freed:
+\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
+   Address     Size     Caller
+0x084c9378     0x64  at /home/cecilia/t_mtrace.c:12
+0x084c93e0     0x64  at /home/cecilia/t_mtrace.c:12
+0x084c9448    0x100  at /home/cecilia/t_mtrace.c:16
+.EE
+.in
+.PP
+Первые два сообщения о не освобожденной памяти относятся к двум вызовам
+\fBmalloc\fP(3), сделанным внутри цикла \fIfor\fP. Заключительное сообщение
+относится к вызову \fBcalloc\fP(3) (которая, в свою очередь, вызывает
+\fBmalloc\fP(3)).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBmtrace\fP(1), \fBmalloc\fP(3), \fBmalloc_hook\fP(3), \fBmcheck\fP(3)

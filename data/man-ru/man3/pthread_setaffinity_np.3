@@ -1,0 +1,181 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_SETAFFINITY_NP 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_setaffinity_np, pthread_getaffinity_np \- получить/назначить
+увязываемый ЦП для нити
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* Смотрите feature_test_macros(7) */
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_setaffinity_np(pthread_t \fP\fIthread\fP\fB, size_t \fP\fIcpusetsize\fP\fB,\fP
+\fB                           const cpu_set_t *\fP\fIcpuset\fP\fB);\fP
+\fBint pthread_getaffinity_np(pthread_t \fP\fIthread\fP\fB, size_t \fP\fIcpusetsize\fP\fB,\fP
+\fB                           cpu_set_t *\fP\fIcpuset\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+Функция \fBpthread_setaffinity_np\fP() устанавливает маску увязывания ЦП для
+нити \fIthread\fP равной набору ЦП, указанному в \fIcpuset\fP. Если вызов
+выполняется без ошибок и нить не запущена ни на одном из ЦП в \fIcpuset\fP, то
+она перемещается на один из этих ЦП.
+.PP
+Функция \fBpthread_getaffinity_np\fP() помещает маску увязывания ЦП для нити
+\fIthread\fP в буфер, на который указывает \fIcpuset\fP.
+.PP
+Дополнительную информацию по маскам увязывания ЦП смотрите в
+\fBsched_setaffinity\fP(2). Описание набора макросов, которые можно
+использовать для просмотра и изменения наборов ЦП, смотрите в \fBCPU_SET\fP(3).
+.PP
+В аргументе \fIcpusetsize\fP указывается длина буфера (в байтах), на который
+указывает \fIcpuset\fP. Обычно, этот аргумент должен задаваться как
+\fIsizeof(cpu_set_t)\fP (он может иметь и другое значение, если используются
+макросы динамического выделения набора ЦП, описанные в \fBCPU_SET\fP(3)).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Указан некорректный адрес памяти.
+.TP 
+\fBEINVAL\fP
+(\fBpthread_setaffinity_np\fP()) В маске увязывания ЦП \fImask\fP указаны
+процессоры, которых физически нет в системе, и которые разрешены нити
+согласно любым ограничениям, которые могут налагаться механизмом «cpuset»,
+описанном в \fBcpuset\fP(7).
+.TP 
+\fBEINVAL\fP
+.\" cpumask_t
+.\" The raw sched_getaffinity() system call returns the size (in bytes)
+.\" of the cpumask_t type.
+(\fBpthread_setaffinity_np\fP()) В \fIcpuset\fP указан ЦП, который находится вне
+набора поддерживаемых ядром (в параметре сборки ядра \fBCONFIG_NR_CPUS\fP
+определён диапазон для набора, поддерживаемого типом данных ядра, который
+используется для представления наборов ЦП).
+.TP 
+\fBEINVAL\fP
+(\fBpthread_getaffinity_np\fP()) Значение \fIcpusetsize\fP меньше размера маски
+увязывания, используемой в ядре.
+.TP 
+\fBESRCH\fP
+Нить с идентификатором \fIthread\fP не найдена.
+.SH ВЕРСИИ
+Эти функции определены в glibc начиная с версии 2.3.4.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw25 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_setaffinity_np\fP(),
+\fBpthread_getaffinity_np\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции являются не стандартизированными расширениями GNU, о чём
+свидетельствует наличие суффикса «_np» (nonportable).
+.SH ЗАМЕЧАНИЯ
+После вызова \fBpthread_setaffinity_np\fP() набор процессоров, на которых
+действительно будет выполняться нить, вычисляется пересечением набора из
+аргумента \fIcpuset\fP и набором процессоров, присутствующих в системе. В
+дальнейшем, система может ограничить набор процессоров нити, если
+задействован механизм «cpuset», описанный в \fBcpuset\fP(7). Эти ограничения на
+действительный набор процессоров, используемых для нити, без уведомления
+налагаются ядром.
+.PP
+Эти функции реализованы через системные вызовы \fBsched_setaffinity\fP(2) и
+\fBsched_getaffinity\fP(2).
+.PP
+В glibc 2.3.3 версии этих функций не имеют аргумента \fIcpusetsize\fP. Вместо
+него размер набора ЦП, передаваемый используемым системным вызовам, всегда
+равен \fIsizeof(cpu_set_t)\fP.
+.PP
+Новая нить, созданная \fBpthread_create\fP(3), наследует копию маски увязывания
+ЦП своего создателя.
+.SH ПРИМЕР
+В этой программе главная нить использует \fBpthread_setaffinity_np\fP() для
+включения в свою маску увязывания ЦП  процессоры с 0 по 7 (которых может не
+быть в системе), а затем вызывает \fBpthread_getaffinity_np\fP() для проверки
+получившейся маски увязывания ЦП у нити.
+.PP
+.EX
+#define _GNU_SOURCE
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+
+#define handle_error_en(en, msg) \e
+        do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
+
+int
+main(int argc, char *argv[])
+{
+    int s, j;
+    cpu_set_t cpuset;
+    pthread_t thread;
+
+    thread = pthread_self();
+
+    /* включаем ЦП с 0 по 7 в маску увязывания */
+
+    CPU_ZERO(&cpuset);
+    for (j = 0; j < 8; j++)
+        CPU_SET(j, &cpuset);
+
+    s = pthread_setaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+    if (s != 0)
+        handle_error_en(s, "pthread_setaffinity_np");
+
+    /* проверяем маску увязывания, назначенную нити */
+
+    s = pthread_getaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
+    if (s != 0)
+        handle_error_en(s, "pthread_getaffinity_np");
+
+    printf("Набор, возвращённый pthread_getaffinity_np(), содержит:\en");
+    for (j = 0; j < CPU_SETSIZE; j++)
+        if (CPU_ISSET(j, &cpuset))
+            printf("    ЦП %d\en", j);
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBsched_setaffinity\fP(2), \fBCPU_SET\fP(3), \fBpthread_attr_setaffinity_np\fP(3),
+\fBpthread_self\fP(3), \fBsched_getcpu\fP(3), \fBcpuset\fP(7), \fBpthreads\fP(7),
+\fBsched\fP(7)

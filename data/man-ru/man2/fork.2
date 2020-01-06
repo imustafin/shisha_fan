@@ -1,0 +1,220 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\" A few fragments remain from an earlier (1992) page by
+.\" Drew Eckhardt (drew@cs.colorado.edu),
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified by Michael Haardt (michael@moria.de)
+.\" Modified Sat Jul 24 13:22:07 1993 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 21 Aug 1994 by Michael Chastain (mec@shell.portal.com):
+.\"   Referenced 'clone(2)'.
+.\" Modified 1995-06-10, 1996-04-18, 1999-11-01, 2000-12-24
+.\"   by Andries Brouwer (aeb@cwi.nl)
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\" 2006-09-04, Michael Kerrisk
+.\"     Greatly expanded, to describe all attributes that differ
+.\"	parent and child.
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH FORK 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+fork \- создаёт дочерний процесс
+.SH ОБЗОР
+\fB#include <sys/types.h>\fP
+.br
+\fB#include <unistd.h>\fP
+.PP
+\fBpid_t fork(void);\fP
+.SH ОПИСАНИЕ
+Вызов \fBfork\fP() создаёт новый процесс посредством копирования вызывающего
+процесса. Новый процесс считается \fIдочерним\fP процессом. Вызывающий процесс
+считается \fIродительским\fP процессом.
+.PP
+Дочерний и родительский процессы находятся в отдельных пространствах
+памяти. Сразу после \fBfork\fP() эти пространства имеют одинаковое
+содержимое. Запись в память, отображение файлов (\fBmmap\fP(2)) и снятие
+отображения (\fBmunmap\fP(2)), выполненных в одном процессе, ничего не изменяет
+в другом.
+.PP
+Дочерний процесс является точной копией родительского процесса за
+исключением следующих моментов:
+.IP * 3
+Потомок имеет свой уникальный идентификатор процесса, и этот PID
+(идентификатор процесса) не совпадает ни с одним существующим
+идентификатором группы процессов (\fBsetpgid\fP(2)) или сеансов.
+.IP *
+Идентификатор родительского процесса у потомка равен идентификатору
+родительского процесса.
+.IP *
+Потомок не наследует блокировки памяти родителя (\fBmlock\fP(2),
+\fBmlockall\fP(2)).
+.IP *
+Счётчики использования ресурсов (\fBgetrusage\fP(2)) и времени ЦП у потомка
+сброшены в 0.
+.IP *
+Набор ожидающих сигналов потомка изначально пуст (\fBsigpending\fP(2)).
+.IP *
+Потомок не наследует значения семафоров родителя (\fBsemop\fP(2)).
+.IP *
+Потомок не наследует связанные с процессом блокировки родителя (\fBfcntl\fP(2))
+(с другой стороны, он наследует блокировки файловых описаний \fBfcntl\fP(2) и
+блокировки \fBflock\fP(2)).
+.IP *
+Потомок не наследует таймеры родителя (\fBsetitimer\fP(2), \fBalarm\fP(2),
+\fBtimer_create\fP(2)).
+.IP *
+Потомок не наследует ожидающие выполнения операции асинхронного ввода\-вывода
+(\fBaio_read\fP(3), \fBaio_write\fP(3)) и контексты асинхронного ввода\-вывода
+родителя (см. \fBio_setup\fP(2)).
+.PP
+Все перечисленные атрибуты указаны в POSIX.1. Родитель и потомок также
+отличаются по следующим атрибутам процесса, которые есть только в Linux:
+.IP * 3
+Потомок не наследует уведомления об изменении каталога (dnotify) родителя
+(смотрите описание \fBF_NOTIFY\fP в \fBfcntl\fP(2)).
+.IP *
+Настройка \fBPR_SET_PDEATHSIG\fP у \fBprctl\fP(2) сбрасывается, и поэтому потомок
+не принимает сигнал о завершении работы родителя.
+.IP *
+Резервное значение по умолчанию устанавливается равным родительскому
+текущему резервному значению таймера. Смотрите описание \fBPR_SET_TIMERSLACK\fP
+в \fBprctl\fP(2).
+.IP *
+Отображение памяти, помеченное с помощью флага \fBMADV_DONTFORK\fP через
+\fBmadvise\fP(2), при \fBfork\fP() не наследуется.
+.IP *
+Память в диапазонах адресов, которые были помечены с помощью \fBmadvise\fP(2)
+флагом \fBMADV_WIPEONFORK\fP, обнуляются в потомке после \fBfork\fP() (флаг
+\fBMADV_WIPEONFORK\fP остаётся в потомке у этих диапазонов адресов).
+.IP *
+Сигнал завершения работы потомка всегда \fBSIGCHLD\fP (см. \fBclone\fP(2)).
+.IP *
+Биты прав доступа к порту, установленные с помощью \fBioperm\fP(2), не
+наследуются потомком; потомок должен установить все нужные ему биты с
+помощью \fBioperm\fP(2).
+.PP
+Также стоит учитывать следующее:
+.IP * 3
+Процесс потомка создаётся с одиночной нитью — той, которая вызвала
+\fBfork\fP(). Всё виртуальное адресное пространство родителя копируется в
+потомок, включая состояние мьютексов, условных переменных и других объектов
+pthreads; в случае проблем с этим может помочь \fBpthread_atfork\fP(3).
+.IP *
+В многонитевой программе после \fBfork\fP() потомок может безопасно вызывать
+только безопасные\-асинхронные\-сигнальные функции (смотрите
+\fBsignal\-safety\fP(7)) до тех пор, пока не вызовет \fBexecve\fP(2).
+.IP *
+Потомок наследует копии набора открытых файловых дескрипторов
+родителя. Каждый файловый дескриптор в потомке ссылается на то же описание
+файла что и родитель (смотрите \fBopen\fP(2)). Это означает, что два файловых
+дескриптора совместно используют флаги состояния открытого файла, смещение
+файла и атрибуты ввода\-вывода, управляемые сигналами (смотрите описание
+\fBF_SETOWN\fP и \fBF_SETSIG\fP в \fBfcntl\fP(2)).
+.IP *
+Потомок наследует копии набора файловых дескрипторов открытых очередей
+сообщений родителя (смотрите \fBmq_overview\fP(7)). Каждый файловый дескриптор
+в потомке ссылается на то же описание открытой очереди сообщений что и
+родитель. Это означает, что два файловых дескриптора совместно используют
+флаги (\fImq_flags\fP).
+.IP *
+Потомок наследует копии набора потоков открытых каталогов родителя (смотрите
+\fBopendir\fP(3)). В POSIX.1 сказано, что соответствующие потоки каталогов в
+родителе и потомке \fIмогут\fP совместно использовать позицию в потоке
+каталога; в Linux/glibc они не могут этого делать.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном завершении родителю возвращается PID процесса\-потомка, а
+процессу\-потомку возвращается 0. При ошибке родительскому процессу
+возвращается \-1, процесс\-потомок не создаётся, а значение \fIerrno\fP
+устанавливается в соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+.\" NOTE! The following should match the description in pthread_create(3)
+Возникло системного ограничение на количество нитей. Есть несколько
+ограничений, которые могут вызвать эту ошибку:
+.RS
+.IP * 3
+\fBRLIMIT_NPROC\fP (задаётся с помощью \fBsetrlimit\fP(2)), который ограничивает
+количество процессов и ните для реального ID пользователя;
+.IP *
+было достигнуто системное ограничение ядра на количество процессов и нитей,
+\fI/proc/sys/kernel/threads\-max\fP (смотрите \fBproc\fP(5));
+.IP *
+достигнуто максимальное количество PID, \fI/proc/sys/kernel/pid_max\fP
+(смотрите \fBproc\fP(5)); или
+.IP *
+достигнуто ограничение на PID (\fIpids.max\fP), наложенное контроллером cgroup
+на «номер процесса» (PID).
+.RE
+.TP 
+\fBEAGAIN\fP
+Вызывающий работает по алгоритму планирования \fBSCHED_DEADLINE\fP и у него не
+установлен флаг сброса\-при\-fork (reset\-on\-fork). Смотрите \fBsched\fP(7).
+.TP 
+\fBENOMEM\fP
+Вызов \fBfork\fP() завершился с ошибкой из\-за невозможности разместить
+необходимые структуры ядра, потому что слишком мало памяти.
+.TP 
+\fBENOMEM\fP
+Была попытка создания дочерний процесс в пространстве имён PID, чей процесс
+«init» завершил работу. Смотрите \fBpid_namespaces\fP(7).
+.TP 
+\fBENOSYS\fP
+.\" e.g., arm (optionally), blackfin, c6x, frv, h8300, microblaze, xtensa
+Вызов \fBfork\fP() не поддерживается на этой платформе (например, из\-за того,
+что аппаратное обеспечение не содержит блока управления памятью (MMU)).
+.TP 
+\fBERESTARTNOINTR\fP (начиная с Linux 2.6.17)
+.\" commit 4a2c7a7837da1b91468e50426066d988050e4d56
+Системный вызов был прерван сигналом и перезапущен (может быть замечено
+только при трассировке).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+.PP
+В Linux, \fBfork\fP() реализован с помощью «копирования страниц при записи»
+(copy\-on\-write, COW), поэтому расходы на вызов состоят из времени и памяти,
+требуемой на копирование страничных таблиц родителя и создания уникальной
+структуры, описывающей задачу.
+.SS "Отличия между библиотекой C и ядром"
+.\" nptl/sysdeps/unix/sysv/linux/fork.c
+.\" and does some magic to ensure that getpid(2) returns the right value.
+Начиная с версии 2.3.3, вместо того, чтобы вызывать системный вызов
+\fBfork\fP(), обёрточная функция \fBfork\fP() в glibc, как часть реализации нитей
+NPTL, вызывает \fBclone\fP(2) с флагами, которые обеспечивают поведение
+традиционного системного вызова (вызов \fBfork\fP() эквивалентен вызову
+\fBclone\fP(2), если значение равно \fIflags\fP \fBSIGCHLD\fP). Обёртка в glibc
+вызывает все обработчики при ветвлении (fork), которые были зарегистрированы
+с помощью \fBpthread_atfork\fP(3).
+.SH ПРИМЕР
+Смотрите \fBpipe\fP(2) и \fBwait\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclone\fP(2), \fBexecve\fP(2), \fBexit\fP(2), \fBsetrlimit\fP(2), \fBunshare\fP(2),
+\fBvfork\fP(2), \fBwait\fP(2), \fBdaemon\fP(3), \fBpthread_atfork\fP(3),
+\fBcapabilities\fP(7), \fBcredentials\fP(7)

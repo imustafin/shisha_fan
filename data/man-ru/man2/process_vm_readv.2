@@ -1,0 +1,234 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2011 Christopher Yeoh <cyeoh@au1.ibm.com>
+.\" and Copyright (C) 2012 Mike Frysinger <vapier@gentoo.org>
+.\" and Copyright (C) 2012 Michael Kerrisk <mtk.man-pages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Commit fcf634098c00dd9cd247447368495f0b79be12d1
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PROCESS_VM_READV 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+process_vm_readv, process_vm_writev \- производит обмен данными между
+адресными пространствами процессов
+.SH ОБЗОР
+.nf
+\fB#include <sys/uio.h>\fP
+.PP
+\fBssize_t process_vm_readv(pid_t \fP\fIpid\fP\fB,\fP
+\fB                         const struct iovec *\fP\fIlocal_iov\fP\fB,\fP
+\fB                         unsigned long \fP\fIliovcnt\fP\fB,\fP
+\fB                         const struct iovec *\fP\fIremote_iov\fP\fB,\fP
+\fB                         unsigned long \fP\fIriovcnt\fP\fB,\fP
+\fB                         unsigned long \fP\fIflags\fP\fB);\fP
+.PP
+\fBssize_t process_vm_writev(pid_t \fP\fIpid\fP\fB,\fP
+\fB                          const struct iovec *\fP\fIlocal_iov\fP\fB,\fP
+\fB                          unsigned long \fP\fIliovcnt\fP\fB,\fP
+\fB                          const struct iovec *\fP\fIremote_iov\fP\fB,\fP
+\fB                          unsigned long \fP\fIriovcnt\fP\fB,\fP
+\fB                          unsigned long \fP\fIflags\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBprocess_vm_readv\fP(), \fBprocess_vm_writev\fP():
+.PD 0
+.ad l
+.RS 4
+\fB_GNU_SOURCE\fP
+.RE
+.ad
+.PD
+.SH ОПИСАНИЕ
+Данные системные вызовы перемещают данные между адресным пространством
+вызывающего процесса («локального процесса») и процесса с указанным \fIpid\fP
+(«удалённый процесс»). Данные перемещаются прямо между адресными
+пространствами двух процессов, без копирования через пространство ядра.
+.PP
+Системный вызов \fBprocess_vm_readv\fP()  перемещает данные из удалённого
+процесса в локальный. Перемещаемые данные задаются \fIremote_iov\fP и
+\fIriovcnt\fP: \fIremote_iov\fP — указатель на массив, описывающий адресные
+пространства в процессе \fIpid\fP, и в \fIriovcnt\fP указывается количество
+элементов в \fIremote_iov\fP. Данные перемещаются в расположения, задаваемые
+\fIlocal_iov\fP и \fIliovcnt\fP: \fIlocal_iov\fP — указатель на массив, описывающий
+адресные пространства в вызывающем процессе, а в \fIliovcnt\fP задаётся
+количество элементов в \fIlocal_iov\fP.
+.PP
+Системный вызов \fBprocess_vm_writev\fP() выполняет операцию, обратную
+\fBprocess_vm_readv\fP() — перемещает данные из локального процесса в
+удалённый. Кроме направления передачи, аргументы \fIliovcnt\fP, \fIlocal_iov\fP,
+\fIriovcnt\fP и \fIremote_iov\fP имеют то назначение что и для
+\fBprocess_vm_readv\fP().
+.PP
+Аргументы \fIlocal_iov\fP и \fIremote_iov\fP указывают на массив структур
+\fIiovec\fP, определённых в \fI<sys/uio.h>\fP:
+.PP
+.in +4n
+.EX
+struct iovec {
+    void  *iov_base;    /* начальный адрес */
+    size_t iov_len;     /* количество перемещаемых байт */
+};
+.EE
+.in
+.PP
+Буферы обрабатываются в порядке, в каком они указаны в массиве. Это
+означает, что \fBprocess_vm_readv\fP() сначала полностью заполнит
+\fIlocal_iov[0]\fP и только потом перейдёт к \fIlocal_iov[1]\fP и так
+далее. Подобным образом \fIremote_iov[0]\fP сначала полностью читается перед
+переходом к \fIremote_iov[1]\fP и так далее.
+.PP
+Подобным образом \fBprocess_vm_writev\fP() записывает всё содержимое
+\fIlocal_iov[0]\fP перед тем, как перейти к \fIlocal_iov[1]\fP, и это полностью
+заполняет \fIremote_iov[0]\fP перед тем как перейти к \fIremote_iov[1]\fP.
+.PP
+Длины \fIremote_iov[i].iov_len\fP и \fIlocal_iov[i].iov_len\fP могут быть не
+одинаковы. То есть, возможно разделить одни локальный буфер на несколько
+удалённых буферов и наоборот.
+.PP
+В настоящее время аргумент \fIflags\fP не используется и должен равняться 0.
+.PP
+.\" In time, glibc might provide a wrapper that works around this limit,
+.\" as is done for readv()/writev()
+Значения, указанные в аргументах \fIliovcnt\fP и \fIriovcnt\fP, должны быть меньше
+или равны \fBIOV_MAX\fP (определено в \fI<limits.h>\fP или доступно через
+вызов \fIsysconf(_SC_IOV_MAX)\fP).
+.PP
+Количество аргументов и \fIlocal_iov\fP проверяется перед началом
+передачи. Если количество слишком велико или \fIlocal_iov\fP содержит
+некорректное значение, или адреса областей недоступны локальному процессу,
+то ни один из векторов не будет обработан и сразу возвращается ошибка.
+.PP
+Однако заметим, что эти системные вызовы не проверяют области памяти в
+удалённом процессе до начала выполнения чтения/записи. Следовательно может
+выполниться частичное чтение/запись (смотрите ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ), если
+один из элементов \fIremote_iov\fP указывает на некорректную область памяти в
+удалённом процессе. После нахождения такого элемента дальнейшее
+чтение/запись не производится. Помните об этом, когда читаете данные
+неизвестной длины (например, строки C, завершающиеся null) из удалённого
+процесса, избегайте объединения страниц памяти (обычно, 4\ КиБ) одного
+удалённого элемента \fIiovec\fP (вместо этого разделите чтение удалённого
+элемента на два элемента \fIremote_iov\fP и объедините их обратно в одну запись
+\fIlocal_iov\fP entry. Первый читаемый элемент дойдёт до границы страницы, а
+второй начнётся на следующей границе страницы).
+.PP
+Право читать или писать в другой процесс определяется проверкой режима
+доступа ptrace \fBPTRACE_MODE_ATTACH_REALCREDS\fP; смотрите \fBptrace\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBprocess_vm_readv\fP() возвращает количество
+прочитанных байт, \fBprocess_vm_writev\fP() возвращает количество записанных
+байт. Это значение может быть меньше полного числа запрашиваемых байт, если
+произошло частичное чтение/запись (частичная передача выполняется с
+точностью по \fIiovec\fP элементам. Эти системные вызовы не выполняют частичной
+передачи, которая разделила бы один элемент \fIiovec\fP). Вызывающий должен
+проверить возвращаемое значение, чтобы определить возникало ли частичное
+чтение/запись.
+.PP
+В случае ошибки возвращается \-1 и значение \fIerrno\fP устанавливается
+соответствующим образом.
+.SH ОШИБКИ
+.TP 
+\fBEFAULT\fP
+Память, описываемая в \fIlocal_iov\fP, находится вне пределов доступного
+адресного пространства вызывающего.
+.TP 
+\fBEFAULT\fP
+Память, описываемая в \fIremote_iov\fP, находится вне пределов доступного
+адресного пространства процесса \fIpid\fP.
+.TP 
+\fBEINVAL\fP
+Сумма значений \fIiov_len\fP из \fIlocal_iov\fP или \fIremote_iov\fP превышает
+значение \fIssize_t\fP.
+.TP 
+\fBEINVAL\fP
+Значение \fIflags\fP не равно 0.
+.TP 
+\fBEINVAL\fP
+Значение \fIliovcnt\fP или \fIriovcnt\fP слишком велико.
+.TP 
+\fBENOMEM\fP
+Невозможно выделить память для внутренних копий структур \fIiovec\fP.
+.TP 
+\fBEPERM\fP
+Вызывающий не имеет прав на доступ к адресному пространству процесса \fIpid\fP.
+.TP 
+\fBESRCH\fP
+Процесс с идентификатором \fIpid\fP не существует.
+.SH ВЕРСИИ
+Данные системные вызовы были добавлены в Linux 3.2. Поддержка в glibc
+появилась в версии 2.15.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные системные вызовы являются нестандартными расширениями Linux.
+.SH ЗАМЕЧАНИЯ
+При пересылке данных с помощью \fBprocess_vm_readv\fP() и
+\fBprocess_vm_writev\fP() не гарантируется атомарность.
+.PP
+.\" Original user is MPI, http://www.mcs.anl.gov/research/projects/mpi/
+.\" See also some benchmarks at http://lwn.net/Articles/405284/
+.\" and http://marc.info/?l=linux-mm&m=130105930902915&w=2
+Эти системные вызовы были разработаны для быстрой передачи сообщений, чтобы
+позволить выполнить обмен за одну операцию копирования (а не двойного
+копирования, что требуется, например, при использовании общей памяти или
+каналов).
+.SH ПРИМЕР
+В следующем примере показано использование \fBprocess_vm_readv\fP(). Вызов
+читает 20 байт по адресу 0x10000 из процесса с PID 10 и записывает первые 10
+байт в \fIbuf1\fP, а вторые 10 байт в \fIbuf2\fP.
+.PP
+.EX
+#include <sys/uio.h>
+
+int
+main(void)
+{
+    struct iovec local[2];
+    struct iovec remote[1];
+    char buf1[10];
+    char buf2[10];
+    ssize_t nread;
+    pid_t pid = 10;             /* PID удалённого процесса */
+
+    local[0].iov_base = buf1;
+    local[0].iov_len = 10;
+    local[1].iov_base = buf2;
+    local[1].iov_len = 10;
+    remote[0].iov_base = (void *) 0x10000;
+    remote[0].iov_len = 20;
+
+    nread = process_vm_readv(pid, local, 2, remote, 1, 0);
+    if (nread != 20)
+        return 1;
+    else
+        return 0;
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBreadv\fP(2), \fBwritev\fP(2)

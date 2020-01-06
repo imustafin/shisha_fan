@@ -1,0 +1,177 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1990, 1993
+.\"	The Regents of the University of California.  All rights reserved.
+.\"
+.\" %%%LICENSE_START(BSD_4_CLAUSE_UCB)
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. All advertising materials mentioning features or use of this software
+.\"    must display the following acknowledgement:
+.\"	This product includes software developed by the University of
+.\"	California, Berkeley and its contributors.
+.\" 4. Neither the name of the University nor the names of its contributors
+.\"    may be used to endorse or promote products derived from this software
+.\"    without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\" %%%LICENSE_END
+.\"
+.\"	@(#)recno.3	8.5 (Berkeley) 8/18/94
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RECNO 3 2017\-09\-15 "" "Руководство программиста Linux"
+.UC 7
+.SH ИМЯ
+recno \- метод доступа к базам нумерованных данных
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>
+#include <db.h>\fP
+.fi
+.SH ОПИСАНИЕ
+\fIПримечание\fP: В этой странице описаны интерфейсы, предоставляемые glibc до
+версии 2.1. Начиная с версии 2.2, glibc больше не поддерживает эти
+интерфейсы. Вероятно, вы ищите API, предоставляемое библиотекой \fIlibdb\fP.
+.PP
+Функция \fBdbopen\fP(3) — это библиотечный интерфейс к файлам баз данных. Один
+из поддерживаемых форматов файлов — нумерованные данные. Общее описание
+методов доступа к базам данных находится в \fBdbopen\fP(3). Эта справочная
+страница содержит только информацию, относящуюся к нумерованным данным.
+.PP
+Структура нумерованных данных может описывать записи переменной или
+фиксированной длины, хранящиеся в файле в «плоском» формате, и доступные по
+логическому номеру записи. Существование записи с номером пять подразумевает
+существование записей от одного до четырёх и удаление записи с номером один
+вызывает перенумеровывание записи с номером пять в запись с номером четыре,
+а также сдвиг курсора вниз на одну запись, если он указывает на запись после
+номера один.
+.PP
+Специальная структура метода доступа к данным recno, предоставляемая
+\fBdbopen\fP(3), определена в \fI<db.h>\fP следующим образом:
+.PP
+.in +4n
+.EX
+typedef struct {
+    unsigned long flags;
+    unsigned int  cachesize;
+    unsigned int  psize;
+    int           lorder;
+    size_t        reclen;
+    unsigned char bval;
+    char         *bfname;
+} RECNOINFO;
+.EE
+.in
+.PP
+Элементы этой структуры определены так:
+.TP 
+\fIflags\fP
+Значение флага определяется логическим ИЛИ следующих значений:
+.RS
+.TP 
+\fBR_FIXEDLEN\fP
+Записи фиксированной длины без разделительного байта. Полем \fIreclen\fP
+определяется длина записи, а поле \fIbval\fP используется как дополняющий
+символ. Все вставляемые в базу данных записи, размер которых меньше
+\fIreclen\fP байт, автоматически дополняются.
+.TP 
+\fBR_NOKEY\fP
+В интерфейсе, определённом \fBdbopen\fP(3), последовательная выборка записей
+заполняет структуры данных и ключа вызывающего. Если указан флаг \fBR_NOKEY\fP,
+то процедурам \fIcursor\fP не обязательно заполнять структуру ключа. Это
+позволяет приложениям извлекать записи из конца файлов без чтения всех
+промежуточных записей.
+.TP 
+\fBR_SNAPSHOT\fP
+Этим флагом указывается, чтобы в момент вызова \fBdbopen\fP(3) был сделан
+снимок (snapshot) файла, а не выполнялось чтение каких\-либо не изменённых
+записей из оригинального файла.
+.RE
+.TP 
+\fIcachesize\fP
+Предполагаемый максимальный размер кэша памяти в байтах. Эта величина
+\fIтолько рекомендация\fP, метод доступа скорее выделит больше памяти, чем
+завершится с ошибкой. Если значение \fIcachesize\fP равно 0 (размер не указан),
+то используется кэш по умолчанию.
+.TP 
+\fIpsize\fP
+Метод доступа recno хранит копии своих записей в памяти в виде дерева
+btree. Это значение задаёт размер страниц (в байтах), используемых для узлов
+в этом дереве. Если значение \fIpsize\fP равно 0 (размер страницы не указан),
+то размер выбирается на основе размера блока ввода\-вывода нижележащей
+файловой системы. Подробней смотрите \fBbtree\fP(3).
+.TP 
+\fIlorder\fP
+Порядок расположения байтов, используемый при хранении целых чисел в
+метаданных базы данных. Число должно отражать порядок размещения в виде
+целого значения; например, порядок «big  endian» должен обозначаться числом
+4321. Если \fIlorder\fP равно 0 (порядок не определён), то используется
+значение по умолчанию, принятое на машине.
+.TP 
+\fIreclen\fP
+Длина записи фиксированной длины.
+.TP 
+\fIbval\fP
+Разделительный байт, для использования в качестве отметки конца записи с
+переменной длиной и как заполняющий символ для записи с фиксированной
+длиной. Если значение не указано, то для отметки конца записи с переменной
+длиной используется символ новой строки («\en»), а записи с фиксированной
+длиной дополняются пробелом.
+.TP 
+\fIbfname\fP
+Метод доступа recno хранит в памяти копии своих записей в дереве btree. Если
+значение \fIbfname\fP не равно NULL, то им задаётся имя btree\-файла в том же
+виде, что и при доступе \fBdbopen\fP(3) для доступа к btree\-файлу.
+.PP
+Часть «данные» из пары ключ/данные, используемая методом доступа \fIrecno\fP,
+является такой же, как в других методах доступа. Ключ используется
+иначе. Как следует из определения заголовочного файла \fI<db.h>\fP,
+поле ключа \fIdata\fP должно быть указателем на расположение памяти типа
+\fIrecno_t\fP. Этот тип, обычно, является наибольшим беззнаковым целочисленным
+типом данных, применяемым в реализации. Значение поля ключа \fIsize\fP должен
+задавать размер этого типа.
+.PP
+Так как в файлах с данными в формате recno могут отсутствовать метаданные,
+то любые изменения значений по умолчанию (например, длина фиксированной
+записи или разделяющий байт) должны явно указываться каждый раз при открытии
+файла.
+.PP
+В интерфейсе, определённым \fBdbopen\fP(3), использование интерфейса \fIput\fP для
+создания новой записи повлечёт за собой создание множества пустых записей,
+если номер записи больше, чем номер наибольшей записи, имеющейся в базе
+данных.
+.SH ОШИБКИ
+Функции метода доступа \fIrecno\fP могут завершиться с ошибкой и присвоить
+\fIerrno\fP любое значение из определённых для библиотеки функций \fBdbopen\fP(3),
+а также:
+.TP 
+\fBEINVAL\fP
+Попытка добавить слишком большую запись в базу данных фиксированной длины.
+.SH ДЕФЕКТЫ
+Поддерживаются значения только с прямым и обратным порядком байт.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbtree\fP(3), \fBdbopen\fP(3), \fBhash\fP(3), \fBmpool\fP(3)
+.PP
+\fIDocument Processing in a Relational Database System\fP, Michael Stonebraker,
+Heidi Stettner, Joseph Kalash, Antonin Guttman, Nadene Lynn, Memorandum
+No. UCB/ERL M82/32, May 1982.

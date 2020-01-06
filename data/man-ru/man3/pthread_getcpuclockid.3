@@ -1,0 +1,176 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2009 Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_GETCPUCLOCKID 3 2019\-03\-06 Linux "Руководство программиста Linux"
+.SH ИМЯ
+pthread_getcpuclockid \- возвращает ID таймера времени ЦП у нити
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+\fB#include <time.h>\fP
+.PP
+\fBint pthread_getcpuclockid(pthread_t \fP\fIthread\fP\fB, clockid_t *\fP\fIclock_id\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.fi
+.SH ОПИСАНИЕ
+.\" The clockid is constructed as follows:
+.\" *clockid = CLOCK_THREAD_CPUTIME_ID | (pd->tid << CLOCK_IDFIELD_SIZE)
+.\" where CLOCK_IDFIELD_SIZE is 3.
+Функция \fBpthread_getcpuclockid\fP() возвращает ID таймера времени ЦП у нити
+\fIthread\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении функция возвращает 0; при ошибке возвращается
+ненулевой номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBENOENT\fP
+.\" CLOCK_THREAD_CPUTIME_ID not defined
+.\"
+.\" Looking at nptl/pthread_getcpuclockid.c an ERANGE error would
+.\" be possible if kernel thread IDs took more than 29 bits (which
+.\" they currently cannot).
+В системе не поддерживаются выделенные таймеры времени ЦП для каждой нити.
+.TP 
+\fBESRCH\fP
+Нить с идентификатором \fIthread\fP не найдена.
+.SH ВЕРСИИ
+Эта функция доступна в glibc начиная с версии 2.2.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw23 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBpthread_getcpuclockid\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+Если \fIthread\fP указывает на вызвавшую нить, то функция возвращает
+идентификатор, указывающий на таймер, управляемый \fBclock_gettime\fP(2) и
+\fBclock_settime\fP(2), если ID таймера равно \fBCLOCK_THREAD_CPUTIME_ID\fP.
+.SH ПРИМЕР
+Программа, показанная далее, создаёт нить и используя \fBclock_gettime\fP(2)
+показывает общее время ЦП и время ЦП, затраченное на работу нитей по
+отдельности. Пример сеанса работы:
+.PP
+.in +4n
+.EX
+$ \fB./a.out\fP
+Главная нить спит
+Вторая нить входит в бесконечный цикл
+Главная нить использует немного времени ЦП…
+Общее время ЦП для процесса:    1.368
+Время ЦП для главной нити:      0.376
+Время ЦП для второй нити:       0.992
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+/* компоновка с "\-lrt" */
+
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <string.h>
+#include <errno.h>
+
+#define handle_error(msg) \e
+        do { perror(msg); exit(EXIT_FAILURE); } while (0)
+
+#define handle_error_en(en, msg) \e
+        do { errno = en; perror(msg); exit(EXIT_FAILURE); } while (0)
+
+static void *
+thread_start(void *arg)
+{
+    printf("Вторая нить входит в бесконечный цикл\en");
+    for (;;)
+        continue;
+}
+
+static void
+pclock(char *msg, clockid_t cid)
+{
+    struct timespec ts;
+
+    printf("%s", msg);
+    if (clock_gettime(cid, &ts) == \-1)
+        handle_error("clock_gettime");
+    printf("%4ld.%03ld\en", ts.tv_sec, ts.tv_nsec / 1000000);
+}
+
+int
+main(int argc, char *argv[])
+{
+    pthread_t thread;
+    clockid_t cid;
+    int j, s;
+
+    s = pthread_create(&thread, NULL, thread_start, NULL);
+    if (s != 0)
+        handle_error_en(s, "pthread_create");
+
+    printf("Главная нить спит\en");
+    sleep(1);
+
+    printf("Главная нить использует немного времени ЦП…\en");
+    for (j = 0; j < 2000000; j++)
+        getppid();
+
+    pclock("Общее время ЦП для процесса: ", CLOCK_PROCESS_CPUTIME_ID);
+
+    s = pthread_getcpuclockid(pthread_self(), &cid);
+    if (s != 0)
+        handle_error_en(s, "pthread_getcpuclockid");
+    pclock("Время ЦП для главной нити:   ", cid);
+
+    /* предыдущие 4 строки можно заменить на:
+       pclock("Время ЦП для главной нити:", CLOCK_THREAD_CPUTIME_ID); */
+
+    s = pthread_getcpuclockid(thread, &cid);
+    if (s != 0)
+        handle_error_en(s, "pthread_getcpuclockid");
+    pclock("Время ЦП для второй нити:     ", cid);
+
+    exit(EXIT_SUCCESS);         /* завершаем обе нити */
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclock_gettime\fP(2), \fBclock_settime\fP(2), \fBtimer_create\fP(2),
+\fBclock_getcpuclockid\fP(3), \fBpthread_self\fP(3), \fBpthreads\fP(7), \fBtime\fP(7)

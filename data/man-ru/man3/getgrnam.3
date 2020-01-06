@@ -1,0 +1,194 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 David Metcalfe (david@prism.demon.co.uk)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" References consulted:
+.\"     Linux libc source code
+.\"     Lewine's _POSIX Programmer's Guide_ (O'Reilly & Associates, 1991)
+.\"     386BSD man pages
+.\"
+.\" Modified 1993-07-24 by Rik Faith (faith@cs.unc.edu)
+.\" Modified 2003-11-15 by aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETGRNAM 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+getgrnam, getgrnam_r, getgrgid, getgrgid_r \- возвращают запись файла групп
+.SH ОБЗОР
+.nf
+\fB#include <sys/types.h>\fP
+\fB#include <grp.h>\fP
+.PP
+\fBstruct group *getgrnam(const char *\fP\fIname\fP\fB);\fP
+.PP
+\fBstruct group *getgrgid(gid_t \fP\fIgid\fP\fB);\fP
+.PP
+\fBint getgrnam_r(const char *\fP\fIname\fP\fB, struct group *\fP\fIgrp\fP\fB,\fP
+\fB          char *\fP\fIbuf\fP\fB, size_t \fP\fIbuflen\fP\fB, struct group **\fP\fIresult\fP\fB);\fP
+.PP
+\fBint getgrgid_r(gid_t \fP\fIgid\fP\fB, struct group *\fP\fIgrp\fP\fB,\fP
+\fB          char *\fP\fIbuf\fP\fB, size_t \fP\fIbuflen\fP\fB, struct group **\fP\fIresult\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.ad l
+.in
+.PP
+\fBgetgrnam_r\fP(), \fBgetgrgid_r\fP():
+.RS 4
+_POSIX_C_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Функция \fBgetgrnam\fP() возвращает указатель на структуру, содержащую
+разделённую на поля запись из базы данных групп (например, из локального
+файла групп \fI/etc/group\fP, NIS и LDAP), которая соответствует имени группы
+\fIname\fP.
+.PP
+Функция \fBgetgrgid\fP() возвращает указатель на структуру, содержащую
+разделённую на поля запись из базы данных групп, которая соответствует
+идентификатору группы \fIgid\fP.
+.PP
+Структура \fIgroup\fP определена в \fI<grp.h>\fP следующим образом:
+.PP
+.in +4n
+.EX
+struct group {
+    char   *gr_name;        /* имя группы */
+    char   *gr_passwd;      /* пароль группы */
+    gid_t   gr_gid;         /* ID группы */
+    char  **gr_mem;         /* массив, указателей
+                               имён членов группы, оканчивающийся NULL */
+};
+.EE
+.in
+.PP
+Подробней о полях этой структуры смотрите в \fBgroup\fP(5).
+.PP
+Функции \fBgetgrnam_r\fP() и \fBgetgrgid_r\fP() принимают ту же информацию что и
+\fBgetgrnam\fP() и \fBgetgrgid\fP(), но сохраняют полученную структуру \fIgroup\fP в
+пространство, указанное \fIgrp\fP. Строковые поля членов структуры \fIgroup\fP
+сохраняются в буфере \fIbuf\fP размера \fIbuflen\fP. Указатель на результат (при
+успешном выполнении) или NULL (если записи отсутствуют или произошла ошибка)
+сохраняется в \fI*result\fP.
+.PP
+Вызов
+.PP
+    sysconf(_SC_GETGR_R_SIZE_MAX)
+.PP
+возвращает или \-1 без изменения \fIerrno\fP или начальный предполагаемый размер
+\fIbuf\fP (если этот размер мал, то вызов завершается \fBERANGE\fP; в этом случае
+вызывающий может повторить вызов с большим буфером).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Функции \fBgetgrnam\fP() и \fBgetgrgid\fP() возвращают указатель на структуру
+\fIgroup\fP или NULL, если подходящих записей не найдено или возникла
+ошибка. При ошибке \fIerrno\fP устанавливается в соответствующее значение. Если
+нужно проверять переменную \fIerrno\fP после вызова, то перед этим нужно
+присвоить ей нулевое значение.
+.PP
+Возвращаемое значение может указывать на статическую область и может быть
+перезаписано при последующих вызовах \fBgetgrent\fP(3), \fBgetgrnam\fP() или
+\fBgetgrgid\fP() (не передавайте полученный указатель \fBfree\fP(3)).
+.PP
+При успешном выполнении \fBgetgrnam_r\fP() и \fBgetgrgid_r\fP() возвращают ноль, и
+устанавливают \fI*result\fP в \fIpwd\fP. Если совпадений не найдено, то эти
+функции возвращают 0 и сохраняют NULL в \fI*result\fP. При ошибке возвращается
+её номер и в \fI*result\fP сохраняется NULL.
+.SH ОШИБКИ
+.TP 
+\fB0\fP или \fBENOENT\fP или \fBESRCH\fP или \fBEBADF\fP или \fBEPERM\fP или … 
+Указанное значение \fIname\fP или \fIgid\fP не найдено.
+.TP 
+\fBEINTR\fP
+Поступил сигнал; смотрите \fBsignal\fP(7).
+.TP 
+\fBEIO\fP
+Ошибка ввода\-вывода.
+.TP 
+\fBEMFILE\fP
+Было достигнуто ограничение по количеству открытых файловых дескрипторов на
+процесс.
+.TP 
+\fBENFILE\fP
+Достигнуто максимальное количество открытых файлов в системе.
+.TP 
+\fBENOMEM\fP
+.\" not in POSIX
+.\" to allocate the group structure, or to allocate buffers
+Недостаточно памяти для структуры \fIgroup\fP.
+.TP 
+\fBERANGE\fP
+Недостаточно места в буфере.
+.SH ФАЙЛЫ
+.TP 
+\fI/etc/group\fP
+локальный файл базы данных групп
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetgrnam\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:grnam locale
+T{
+\fBgetgrgid\fP()
+T}	Безвредность в нитях	MT\-Unsafe race:grgid locale
+T{
+\fBgetgrnam_r\fP(),
+.br
+\fBgetgrgid_r\fP()
+T}	Безвредность в нитях	MT\-Safe locale
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+POSIX.1\-2001, POSIX.1\-2008, SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+.\" POSIX.1-2001, POSIX.1-2008
+.\" more precisely:
+.\" AIX 5.1 - gives ESRCH
+.\" OSF1 4.0g - gives EWOULDBLOCK
+.\" libc, glibc up to version 2.6, Irix 6.5 - give ENOENT
+.\" glibc since version 2.7 - give 0
+.\" FreeBSD 4.8, OpenBSD 3.2, NetBSD 1.6 - give EPERM
+.\" SunOS 5.8 - gives EBADF
+.\" Tru64 5.1b, HP-UX-11i, SunOS 5.7 - give 0
+Описание «ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ», приведённое выше, взято из POSIX.1. В нём
+«не найдено» не считается ошибкой и поэтому не указано, каким может быть
+значение \fIerrno\fP в этом случае. Но это делает невозможным определить тип
+ошибки. Из описание POSIX можно посчитать, что \fIerrno\fP не должно
+измениться, если запись не найдена. Эксперименты в различных UNIX\-подобных
+системах показывают, что в этой ситуации возвращается много разных значений:
+0, ENOENT, EBADF, ESRCH, EWOULDBLOCK, EPERM и, возможно, другие.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBendgrent\fP(3), \fBfgetgrent\fP(3), \fBgetgrent\fP(3), \fBgetpwnam\fP(3),
+\fBsetgrent\fP(3), \fBgroup\fP(5)

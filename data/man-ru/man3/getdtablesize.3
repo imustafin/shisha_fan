@@ -1,0 +1,95 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 1993 Rickard E. Faith (faith@cs.unc.edu)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified 2002-04-15 by Roger Luethi <rl@hellgate.ch> and aeb
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETDTABLESIZE 3 2016\-03\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getdtablesize \- возвращает размер таблицы файловых дескрипторов
+.SH ОБЗОР
+\fB#include <unistd.h>\fP
+.PP
+\fBint getdtablesize(void);\fP
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBgetdtablesize\fP():
+.ad l
+.RS 4
+.PD 0
+.TP  4
+Начиная с glibc 2.12:
+.nf
+/* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE
+    || ! (_POSIX_C_SOURCE\ >=\ 200112L)
+.TP  4
+.fi
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+До glibc 2.12: _BSD_SOURCE || _XOPEN_SOURCE\ >=\ 500
+.PD
+.RE
+.ad b
+.SH ОПИСАНИЕ
+\fBgetdtablesize\fP() возвращает максимальное количество файлов, которое может
+быть открыто в процессе, на единицу больше, чем наибольшее возможное
+значение для дескриптора файла.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Текущее ограничение на количество открытых файлов для процесса.
+.SH ОШИБКИ
+В Linux, \fBgetdtablesize\fP() может вернуть любую ошибку из описанных в
+\fBgetrlimit\fP(2); см. ЗАМЕЧАНИЯ далее.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetdtablesize\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4, 4.4BSD (функция \fBgetdtablesize\fP() впервые появилась в 4.2BSD). Она
+отсутствует в POSIX.1; переносимые приложения вместо неё должны применять
+\fIsysconf(_SC_OPEN_MAX)\fP.
+.SH ЗАМЕЧАНИЯ
+.\" The libc4 and libc5 versions return
+.\" .B OPEN_MAX
+.\" (set to 256 since Linux 0.98.4).
+Функция \fBgetdtablesize\fP() реализована в виде библиотечной функции
+libc. Версия glibc вызывает \fBgetrlimit\fP(2) и возвращает текущее ограничение
+\fBRLIMIT_NOFILE\fP; при ошибке возвращается \fBOPEN_MAX\fP.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBclose\fP(2), \fBdup\fP(2), \fBgetrlimit\fP(2), \fBopen\fP(2)

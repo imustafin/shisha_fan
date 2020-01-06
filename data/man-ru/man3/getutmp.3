@@ -1,0 +1,73 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH GETUTMP 3 2015\-03\-02 Linux "Руководство программиста Linux"
+.SH ИМЯ
+getutmp, getutmpx \- копирование структуры utmp в utmpx и наоборот
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP             /* См. feature_test_macros(7) */
+\fB#include <utmpx.h>\fP
+.PP
+\fB void getutmp(const struct utmpx *\fP\fIux\fP\fB, struct utmp *\fP\fIu\fP\fB);\fP
+\fB void getutmpx(const struct utmp *\fP\fIu\fP\fB, struct utmpx *\fP\fIux\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Функция \fBgetutmp\fP() копирует поля структуры \fIutmpx\fP, указанной в \fIux\fP в
+соответствующие поля структуры \fIutmp\fP, указанной в \fIu\fP. Функция
+\fBgetutmpx\fP() выполняет обратное действие.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Данные функции не возвращают никаких значений.
+.SH ВЕРСИИ
+Эти функции впервые появились в glibc 2.1.1.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw21 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBgetutmp\fP(),
+\fBgetutmpx\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Эти функции являются нестандартными, но имеются в некоторых системах,
+например в Solaris и NetBSD.
+.SH ЗАМЕЧАНИЯ
+.\" e.g., on Solaris, the utmpx structure is rather larger than utmp.
+В первую очередь, эти функции существуют для совместимости с другими
+системами, в которых структуры \fIutmp\fP и \fIutmpx\fP содержат разные поля или
+они разного размера. В Linux эти структуры содержат одинаковые поля и они
+одного размера.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fButmpdump\fP(1), \fBgetutent\fP(3), \fButmp\fP(5)

@@ -1,0 +1,1797 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (c) 1993 Michael Haardt <michael@moria.de>
+.\" Fri Apr  2 11:32:09 MET DST 1993
+.\"
+.\" and changes Copyright (C) 1999 Mike Coleman (mkc@acm.org)
+.\" -- major revision to fully document ptrace semantics per recent Linux
+.\"    kernel (2.2.10) and glibc (2.1.2)
+.\" Sun Nov  7 03:18:35 CST 1999
+.\"
+.\" and Copyright (c) 2011, Denys Vlasenko <vda.linux@googlemail.com>
+.\" and Copyright (c) 2015, 2016, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation; either version 2 of
+.\" the License, or (at your option) any later version.
+.\"
+.\" The GNU General Public License's references to "object code"
+.\" and "executables" are to be interpreted as the output of any
+.\" document formatting or typesetting system, including
+.\" intermediate and printed output.
+.\"
+.\" This manual is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public
+.\" License along with this manual; if not, see
+.\" <http://www.gnu.org/licenses/>.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Fri Jul 23 23:47:18 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Fri Jan 31 16:46:30 1997 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Thu Oct  7 17:28:49 1999 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified, 27 May 2004, Michael Kerrisk <mtk.manpages@gmail.com>
+.\"     Added notes on capability requirements
+.\"
+.\" 2006-03-24, Chuck Ebbert <76306.1226@compuserve.com>
+.\"    Added    PTRACE_SETOPTIONS, PTRACE_GETEVENTMSG, PTRACE_GETSIGINFO,
+.\"        PTRACE_SETSIGINFO, PTRACE_SYSEMU, PTRACE_SYSEMU_SINGLESTEP
+.\"    (Thanks to Blaisorblade, Daniel Jacobowitz and others who helped.)
+.\" 2011-09, major update by Denys Vlasenko <vda.linux@googlemail.com>
+.\" 2015-01, Kees Cook <keescook@chromium.org>
+.\"    Added PTRACE_O_TRACESECCOMP, PTRACE_EVENT_SECCOMP
+.\"
+.\" FIXME The following are undocumented:
+.\"
+.\" PTRACE_GETWMMXREGS
+.\" PTRACE_SETWMMXREGS
+.\"	ARM
+.\" 	Linux 2.6.12
+.\"
+.\" PTRACE_SET_SYSCALL
+.\"	ARM and ARM64
+.\"	Linux 2.6.16
+.\"	commit 3f471126ee53feb5e9b210ea2f525ed3bb9b7a7f
+.\"	Author: Nicolas Pitre <nico@cam.org>
+.\"	Date:   Sat Jan 14 19:30:04 2006 +0000
+.\"
+.\" PTRACE_GETCRUNCHREGS
+.\" PTRACE_SETCRUNCHREGS
+.\"	ARM
+.\"	Linux 2.6.18
+.\"	commit 3bec6ded282b331552587267d67a06ed7fd95ddd
+.\"	Author: Lennert Buytenhek <buytenh@wantstofly.org>
+.\"	Date:   Tue Jun 27 22:56:18 2006 +0100
+.\"
+.\" PTRACE_GETVFPREGS
+.\" PTRACE_SETVFPREGS
+.\"	ARM and ARM64
+.\"	Linux 2.6.30
+.\"	commit 3d1228ead618b88e8606015cbabc49019981805d
+.\"	Author: Catalin Marinas <catalin.marinas@arm.com>
+.\"	Date:   Wed Feb 11 13:12:56 2009 +0100
+.\"
+.\" PTRACE_GETHBPREGS
+.\" PTRACE_SETHBPREGS
+.\"	ARM and ARM64
+.\"	Linux 2.6.37
+.\"	commit 864232fa1a2f8dfe003438ef0851a56722740f3e
+.\"	Author: Will Deacon <will.deacon@arm.com>
+.\"	Date:   Fri Sep 3 10:42:55 2010 +0100
+.\"
+.\" PTRACE_SINGLEBLOCK
+.\"	Since at least Linux 2.4.0 on various architectures
+.\"	Since Linux 2.6.25 on x86 (and others?)
+.\"	commit 5b88abbf770a0e1975c668743100f42934f385e8
+.\"	Author: Roland McGrath <roland@redhat.com>
+.\"	Date:   Wed Jan 30 13:30:53 2008 +0100
+.\"	    ptrace: generic PTRACE_SINGLEBLOCK
+.\"
+.\" PTRACE_GETFPXREGS
+.\" PTRACE_SETFPXREGS
+.\"	Since at least Linux 2.4.0 on various architectures
+.\"
+.\" PTRACE_GETFDPIC
+.\" PTRACE_GETFDPIC_EXEC
+.\" PTRACE_GETFDPIC_INTERP
+.\"	blackfin, c6x, frv, sh
+.\"	First appearance in Linux 2.6.11 on frv
+.\"
+.\" and others that can be found in the arch/*/include/uapi/asm/ptrace files
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTRACE 2 2018\-04\-30 Linux "Руководство программиста Linux"
+.SH ИМЯ
+ptrace \- трассировка процесса
+.SH ОБЗОР
+.nf
+\fB#include <sys/ptrace.h>\fP
+.PP
+\fBlong ptrace(enum __ptrace_request \fP\fIrequest\fP\fB, pid_t \fP\fIpid\fP\fB, \fP
+\fB            void *\fP\fIaddr\fP\fB, void *\fP\fIdata\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Системный вызов \fBptrace\fP() позволяет указать какому процессу
+(«трассировщику») можно наблюдать и контролировать выполнение другого
+процесса («трассироемого»), просматривать и изменять его память и
+регистры. Обычно, он используется для реализации отладочных точек прерывания
+и для отслеживания системных вызовов.
+.PP
+Сначала, трассировщик должен присоединиться к трассируемой
+нити. Присоединение и последующие команды выполняются для нитей: в
+многонитевом процессе трассировщик может подключаться как к каждой нити
+(трассировщики могут быть у разных нитей разными), так и не подключаться к
+некоторым нитям вовсе. Поэтому на самом деле «трассируемая нить»  всегда
+означает «(одну) нить», а не «процесс в целом (возможно
+многонитевой)». Команды ptrace всегда посылаются определённой трассируемой
+нити с помощью вызова
+.PP
+    ptrace(PTRACE_foo, pid, …)
+.PP
+где \fIpid\fP — идентификатор соответствующей нити Linux.
+.PP
+Заметим, что в этой странице «многонитевой процесс» означает группу нитей,
+состоящую из нитей, созданных с помощью \fBclone\fP(2) с флагом
+\fBCLONE_THREAD\fP.
+.PP
+Процесс может начать трассировку с вызова \fBfork\fP(2), в получившемся
+дочернем процессе выполнить действие \fBPTRACE_TRACEME\fP, после чего (обычно)
+выполнить \fBexecve\fP(2). Или же один процесс может начать отладку другого
+процесса при помощи \fBPTRACE_ATTACH\fP или \fBPTRACE_SEIZE\fP.
+.PP
+При трассировке трассируемая нить останавливается каждый раз при получении
+сигнала, даже если этот сигнал игнорируется (исключением является
+\fBSIGKILL\fP, работающий обычным образом). Трассировщик будет уведомлён об
+этом при следующем вызове \fBwaitpid\fP(2) (или подобном «ожидающем» системном
+вызове); этот вызов вернёт значение \fIstatus\fP, в котором содержится
+информация, указывающая на причину остановки трассируемой нити. Так как
+трассируемая нить остановлена, трассировщик может использовать различные
+запросы ptrace для обследования и изменения трассируемой нити. По окончании
+трассировщик разрешает трассируемой нити продолжить работу, возможно
+подавляя посылаемый ему сигнал (или даже отправляя вместо него другой
+сигнал).
+.PP
+Если флаг \fBPTRACE_O_TRACEEXEC\fP не действует, то все успешные вызовы
+\fBexecve\fP(2) трассируемой нитью будут приводить к отправки сигнала
+\fBSIGTRAP\fP, давая таким образом родителю шанс перехватить управление до
+того, как начнёт выполняться новая программа.
+.PP
+По окончании трассировки трассировщик может заставить трассируемую нить
+продолжить свою работу в обычном не трассируемом режиме с помощью
+\fBPTRACE_DETACH\fP.
+.PP
+Значение аргумента \fIrequest\fP определяет выполняемое действие:
+.TP 
+\fBPTRACE_TRACEME\fP
+Указывает, что этот процесс будет трассирован своим родительским
+процессом. Вероятно, процессу не следует посылать этот запрос, если
+родительский процесс не готов к трассировке (аргументы \fIpid\fP, \fIaddr\fP и
+\fIdata\fP игнорируются).
+.IP
+Действие \fBPTRACE_TRACEME\fP используется только в трассируемой нити;
+остальные действия предназначены только для трассировщика. Для значений,
+описанных ниже, в параметре \fIpid\fP задаётся идентификатор трассируемой нити,
+над которой будет производиться действие. Перед выполнением действий (кроме
+\fBPTRACE_ATTACH\fP, \fBPTRACE_SEIZE\fP, \fBPTRACE_INTERRUPT\fP и \fBPTRACE_KILL\fP)
+трассируемая нить должна быть остановлена.
+.TP 
+\fBPTRACE_PEEKTEXT\fP, \fBPTRACE_PEEKDATA\fP
+Читает слово по адресу \fIaddr\fP, находящееся в памяти трассируемой нити,
+возвращая это слово как результат вызова \fBptrace\fP() Linux не разделяет
+адресные пространства текста и данных, поэтому оба вызова абсолютно
+идентичны (значение \fIdata\fP игнорируется; но смотрите ЗАМЕЧАНИЯ).
+.TP 
+\fBPTRACE_PEEKUSER\fP
+.\" PTRACE_PEEKUSR in kernel source, but glibc uses PTRACE_PEEKUSER,
+.\" and that is the name that seems common on other systems.
+Читает слово по смещению \fIaddr\fP из области USER трассируемой нити, которая
+содержит информацию о регистрах и процессе (смотрите
+\fI<sys/userh>\fP). Слово возвращается в качестве результата вызова
+\fBptrace\fP(). Обычно, смещение должно быть выровнено по границе слова, хотя
+это может зависеть от архитектуры системы. Смотрите ЗАМЕЧАНИЯ (значение
+\fIdata\fP игнорируется; но смотрите ЗАМЕЧАНИЯ).
+.TP 
+\fBPTRACE_POKETEXT\fP, \fBPTRACE_POKEDATA\fP
+Копирует слово \fIdata\fP в память трассируемой нити по адресу \fIaddr\fP. В
+настоящее время, как и для \fBPTRACE_PEEKTEXT\fP и \fBPTRACE_PEEKDATA\fP, эти два
+действия одинаковы.
+.TP 
+\fBPTRACE_POKEUSER\fP
+.\" PTRACE_POKEUSR in kernel source, but glibc uses PTRACE_POKEUSER,
+.\" and that is the name that seems common on other systems.
+.\" FIXME In the preceding sentence, which modifications are disallowed,
+.\" and when they are disallowed, how does user space discover that fact?
+Копирует слово \fIdata\fP по смещению \fIaddr\fP в область USER трассирумой
+нити. Как и для \fBPTRACE_PEEKUSER\fP, смещение должно быть выровнено по
+границе слова. Для того, чтобы сохранить целостность ядра, некоторые
+изменения в область USER вносить запрещено.
+.TP 
+\fBPTRACE_GETREGS\fP, \fBPTRACE_GETFPREGS\fP
+Копирует, соответственно, регистры общего назначения или регистры
+сопроцессора трассируемой нити в память трассировщика по адресу
+\fIdata\fP. Формат передаваемой структуры описан в файле
+\fI<sys/user.h>\fP (значение \fIaddr\fP игнорируется). Заметим, что в
+системах SPARC предназначение \fIdata\fP и \fIaddr\fP поменяны местами; то есть
+\fIdata\fP игнорируется, а регистры копируются по адресу
+\fIaddr\fP. \fBPTRACE_GETREGS\fP и \fBPTRACE_GETFPREGS\fP есть не на всех
+архитектурах.
+.TP 
+\fBPTRACE_GETREGSET\fP (начиная с Linux 2.6.34)
+Читает регистры трассируемой нити. В \fIaddr\fP указывается, в зависящей от
+архитектуры форме, тип читаемых регистров. Значение \fBNT_PRSTATUS\fP (равно 1)
+обычно служит для чтения регистров общего назначения. Если в ЦП есть,
+например, векторные регистры и для плавающей запятой, то их можно получить
+назначив \fIaddr\fP соответствующую константу \fBNT_foo\fP. Значение \fIdata\fP
+указывает на \fBstruct iovec\fP, которая описывает расположение буфера
+назначения и длину. При возврате ядро изменяет \fBiov.len\fP, возвращая
+реальное количество возвращаемых байт.
+.TP 
+\fBPTRACE_SETREGS\fP, \fBPTRACE_SETFPREGS\fP
+.\" FIXME . In the preceding sentence, which modifications are disallowed,
+.\" and when they are disallowed, how does user space discover that fact?
+Копирует, соответственно, регистры общего назначения или регистры для
+плавающей запятой трассируемой нити из памяти трассировщика по адресу
+\fIdata\fP. Как и в случае c \fBPTRACE_POKEUSER\fP, изменения некоторых регистров
+общего назначения запрещены (значение \fIaddr\fP игнорируется). Заметим, что в
+системах SPARC предназначение \fIdata\fP и \fIaddr\fP переставлены местами; то
+есть \fIdata\fP игнорируется, а регистры копируются из памяти, на которую
+указывает адрес \fIaddr\fP. \fBPTRACE_SETREGS\fP и \fBPTRACE_SETFPREGS\fP есть не для
+всех архитектур.
+.TP 
+\fBPTRACE_SETREGSET\fP (начиная с Linux 2.6.34)
+Изменяет регистры трассируемой нити. Значение \fIaddr\fP и \fIdata\fP аналогичны
+\fBPTRACE_GETREGSET\fP.
+.TP 
+\fBPTRACE_GETSIGINFO\fP (начиная с Linux 2.3.99\-pre6)
+Получает информацию о сигнале, который вызвал остановку. Копирует структуру
+\fIsiginfo_t\fP (смотрите \fBsigaction\fP(2)) из трассируемой нити в память
+трассировщика по адресу \fIdata\fP (значение \fIaddr\fP игнорируется).
+.TP 
+\fBPTRACE_SETSIGINFO\fP (начиная с Linux 2.3.99\-pre6)
+Устанавливает информацию о сигнале. Копирует структуру \fIsiginfo_t\fP,
+расположенную по адресу \fIdata\fP трассировщика, в память трассируемой
+нити. Влияет только на сигналы, которые обычно были бы доставлены
+трассируемой нити и были пойманы трассировщиком. Затруднительно отличить
+обычные сигналы от созданных самим \fBptrace\fP() (значение \fIaddr\fP
+игнорируется).
+.TP 
+\fBPTRACE_PEEKSIGINFO\fP (начиная с Linux 3.10)
+.\" commit 84c751bd4aebbaae995fe32279d3dba48327bad4
+Получает структуры \fIsiginfo_t\fP не удаляя сигналы из очереди. Значение
+\fIaddr\fP указывает на структуру \fIptrace_peeksiginfo_args\fP, которая задаёт
+начальную позицию, из которой нужно начать копирование сигналов, а также их
+количество. Структуры \fIsiginfo_t\fP копируются в буфер, указываемый в
+\fIdata\fP. Возвращаемое значение содержит количество скопированных сигналов
+(ноль означает, что сигналов в указанной позиции нет). Внутри возвращаемых
+структур \fIsiginfo\fP в поле \fIsi_code\fP включается информация (\fB__SI_CHLD\fP,
+\fB__SI_FAULT\fP и т. д.), которая по\-другому никак не выдаётся в
+пользовательское пространство.
+.PP
+.in +4n
+.EX
+struct ptrace_peeksiginfo_args {
+    u64 off;    /* начальная позиция в очереди, с которой
+                   начинается копирование сигналов */
+    u32 flags;  /* PTRACE_PEEKSIGINFO_SHARED или 0 */
+    s32 nr;     /* количество копируемых сигналов */
+};
+.EE
+.in
+.IP
+В настоящее время определён только один флаг, \fBPTRACE_PEEKSIGINFO_SHARED\fP,
+служащий для выборки сигналов из общей очереди сигналов процессов. Если этот
+флаг не указан, то сигналы читаются из очереди указанной нити.
+.in
+.PP
+.TP 
+\fBPTRACE_GETSIGMASK\fP (начиная с Linux 3.11)
+.\" commit 29000caecbe87b6b66f144f72111f0d02fbbf0c1
+Помещает копию маски блокированных сигналов (смотрите \fBsigprocmask\fP(2)) в
+буфер, указанный в \fIdata\fP (должен быть указателем на буфер с типом
+\fIsigset_t\fP). Аргумент \fIaddr\fP содержит размер буфера, указанного в \fIdata\fP
+(т. е. \fIsizeof(sigset_t)\fP).
+.TP 
+\fBPTRACE_SETSIGMASK\fP (начиная с Linux 3.11)
+Изменяет маску блокированных сигналов (смотрите \fBsigprocmask\fP(2)) на
+значение из буфера, указанного в \fIdata\fP (должен быть указателем на буфер с
+типом \fIsigset_t\fP). Аргумент \fIaddr\fP содержит размер буфера, указанного в
+\fIdata\fP (т. е. \fIsizeof(sigset_t)\fP).
+.TP 
+\fBPTRACE_SETOPTIONS\fP (начиная с Linux 2.4.6; см. предостережения в разделе ДЕФЕКТЫ)
+Устанавливает флаги ptrace из \fIdata\fP (значение \fIaddr\fP
+игнорируется). Значение \fIdata\fP воспринимается как битовая маска, в которой
+задаются следующие флаги:
+.RS
+.TP 
+\fBPTRACE_O_EXITKILL\fP (начиная с Linux 3.8)
+.\" commit 992fb6e170639b0849bace8e49bf31bd37c4123
+Посылать сигнал \fBSIGKILL\fP трассируемому, если трассировщик существует. Этот
+параметр полезен для надзирателей ptrace, которые хотят убедиться, что
+трассируемые никогда не выйдут из\-под контроля трассировщика.
+.TP 
+\fBPTRACE_O_TRACECLONE\fP (начиная с Linux 2.5.46)
+Останавливать трассируемую нить при следующем вызове \fBclone\fP(2) и
+автоматически запускать трассировку только что склонированного процесса,
+который начнёт выполнение с обработки сигнала \fBSIGSTOP\fP или
+\fBPTRACE_EVENT_STOP\fP, если используется \fBPTRACE_SEIZE\fP. Вызов \fBwaitpid\fP(2)
+вернёт трассировщику значение \fIstatus\fP, которое равно
+.IP
+.nf
+  status>>8 == (SIGTRAP | (PTRACE_EVENT_CLONE<<8))
+.fi
+.IP
+Значение PID нового процесса можно получить с помощью \fBPTRACE_GETEVENTMSG\fP.
+.IP
+В некоторых случаях вызовы \fBclone\fP(2) могут быть не пойманы. Если
+трассируемая нить вызывает \fBclone\fP(2) с флагом \fBCLONE_VFORK\fP, то будет
+доставлен \fBPTRACE_EVENT_VFORK\fP, если установлен \fBPTRACE_O_TRACEVFORK\fP; в
+противном случае, если трассируемая нить вызывает \fBclone\fP(2) с
+установленным сигналом выхода равным \fBSIGCHLD\fP, то будет доставлен
+\fBPTRACE_EVENT_FORK\fP, если установлен \fBPTRACE_O_TRACEFORK\fP.
+.TP 
+\fBPTRACE_O_TRACEEXEC\fP (начиная с Linux 2.5.46)
+Останавливать трассируемую нить при следующем вызове \fBexecve\fP(). Вызов
+\fBwaitpid\fP(2) вернёт трассировщику значение \fIstatus\fP, которое равно
+.IP
+.nf
+  status>>8 == (SIGTRAP | (PTRACE_EVENT_EXEC<<8))
+.fi
+.IP
+Если исполняемая нить не является лидером группы нитей, то идентификатор
+нити сбрасывается в значение идентификатора лидера группы нитей перед его
+остановкой. Начиная с Linux 3.0, предыдущий идентификатор нити может быть
+получен с помощью \fBPTRACE_GETEVENTMSG\fP.
+.TP 
+\fBPTRACE_O_TRACEEXIT\fP (начиная с Linux 2.5.60)
+Останавливать трассируемую нить при его завершении (exit). Вызов
+\fBwaitpid\fP() вернёт трассировщику значение \fIstatus\fP, которое равно
+.IP
+.nf
+  status>>8 == (SIGTRAP | (PTRACE_EVENT_EXIT<<8))
+.fi
+.IP
+Значение кода завершения трассируемой нити можно получить с помощью
+\fBPTRACE_GETEVENTMSG\fP.
+.IP
+Остановка трассируемой нити будет выполнена в начальный момент завершения,
+когда ещё доступны регистры, что позволяет трассировщику увидеть откуда
+выполнялось завершение (обычное уведомление о завершении выполняется после
+того как процесс уже завершил работу). Хотя в этот момент ещё доступен
+контекст, трассировщик уже не может предотвратить завершение.
+.TP 
+\fBPTRACE_O_TRACEFORK\fP (начиная с Linux 2.5.46)
+Останавливать трассируемую нить при следующем вызове \fBfork\fP(2) и
+автоматически запускать трассировку только что созданного с помощью fork
+процесса, который начнёт выполнение с обработки сигнала \fBSIGSTOP\fP или
+\fBPTRACE_EVENT_STOP\fP, если используется \fBPTRACE_SEIZE\fP. Вызов \fBwaitpid\fP(2)
+вернёт трассировщику значение \fIstatus\fP, которое равно
+.IP
+.nf
+  status>>8 == (SIGTRAP | (PTRACE_EVENT_FORK<<8))
+.fi
+.IP
+Значение PID нового процесса можно получить с помощью \fBPTRACE_GETEVENTMSG\fP.
+.TP 
+\fBPTRACE_O_TRACESYSGOOD\fP (начиная с Linux 2.4.6)
+При доставке сигналов ловушек системных вызовов, устанавливать бит 7 в
+номере сигнала (т. е., доставляется \fISIGTRAP|0x80\fP). Это позволяет
+трассировщику легко отличить обычные ловушки от тех, которые были вызваны
+системным вызовом.
+.TP 
+\fBPTRACE_O_TRACEVFORK\fP (начиная с Linux 2.5.46)
+Останавливать трассируемую нить при следующем вызове \fBvfork\fP(2) и
+автоматически запускать трассировку только что созданного с помощью vfork
+процесса, который начнёт выполнение с обработки сигнала \fBSIGSTOP\fP или
+\fBPTRACE_EVENT_STOP\fP, если используется \fBPTRACE_SEIZE\fP. Вызов \fBwaitpid\fP(2)
+вернёт трассировщику значение \fIstatus\fP, которое равно
+.IP
+.nf
+  status>>8 == (SIGTRAP | (PTRACE_EVENT_VFORK<<8))
+.fi
+.IP
+Значение PID нового процесса можно получить с помощью \fBPTRACE_GETEVENTMSG\fP.
+.TP 
+\fBPTRACE_O_TRACEVFORKDONE\fP (начиная с Linux 2.5.60)
+Останавливать трассируемую нить при следующем вызове \fBvfork\fP(2). Вызов
+\fBwaitpid\fP(2) вернёт трассировщику значение \fIstatus\fP, которое равно
+.IP
+.nf
+  status>>8 == (SIGTRAP | (PTRACE_EVENT_VFORK_DONE<<8))
+.fi
+.IP
+Значение PID нового процесса можно получить (начиная с Linux 2.6.18) с
+помощью \fBPTRACE_GETEVENTMSG\fP.
+.TP 
+\fBPTRACE_O_TRACESECCOMP\fP (начиная с Linux 3.5)
+Останавливать трассируемую нить при возникновении правила \fBseccomp\fP(2)
+\fBSECCOMP_RET_TRACE\fP. Вызов \fBwaitpid\fP(2) вернёт трассировщику значение
+\fIstatus\fP, которое равно
+.IP
+.nf
+  status>>8 == (SIGTRAP | (PTRACE_EVENT_SECCOMP<<8))
+.fi
+.IP
+Так как это останавливает \fBPTRACE_EVENT\fP, это похоже на
+syscall\-enter\-stop. Дополнительную информацию смотрите в замечании к
+\fBPTRACE_EVENT_SECCOMP\fP ниже. Данные сообщения события seccomp (из части
+\fBSECCOMP_RET_DATA\fP правила фильтрации seccomp) можно получить с помощью
+\fBPTRACE_GETEVENTMSG\fP.
+.TP 
+\fBPTRACE_O_SUSPEND_SECCOMP\fP (начиная с Linux 4.3)
+.\" commit 13c4a90119d28cfcb6b5bdd820c233b86c2b0237
+Приостановить защиты seccomp трассируемого. Это применяется независимо от
+режима и может быть использовано когда трассируемый ещё не установил фильтры
+seccomp. То есть, корректным действием будет приостановка защит seccomp
+трассируемого, до того как их установит трассируемый, позволить
+трассируемому установить фильтры, и затем очистить этот флаг, когда нужно
+возобновить работу фильтров. Установка этого параметра требует, чтобы
+трассировщик имел мандат \fBCAP_SYS_ADMIN\fP, не было установлено никаких защит
+seccomp и не установлен сам \fBPTRACE_O_SUSPEND_SECCOMP\fP.
+.RE
+.TP 
+\fBPTRACE_GETEVENTMSG\fP (начиная с Linux 2.5.46)
+Возвращает сообщения (с типом \fIunsigned long\fP) о событии ptrace, которое
+только что произошло, помещая его по адресу \fIdata\fP в памяти
+трассировщика. Для \fBPTRACE_EVENT_EXIT\fP это код завершения трассируемой
+нити. Для \fBPTRACE_EVENT_FORK\fP, \fBPTRACE_EVENT_VFORK\fP,
+\fBPTRACE_EVENT_VFORK_DONE\fP и \fBPTRACE_EVENT_CLONE\fP это PID нового
+процесса. Для \fBPTRACE_EVENT_SECCOMP\fP это \fBSECCOMP_RET_DATA\fP из фильтра
+\fBseccomp\fP(2), связанного со сработавшим правилом (значение \fIaddr\fP
+игнорируется).
+.TP 
+\fBPTRACE_CONT\fP
+Возобновляет работу остановленной трассируемой нити. Если значение \fIdata\fP
+не равно нулю, то оно считается номером сигнала, который надо доставить
+трассируемой нити; в противном случае сигнал не передаётся. Таким образом,
+например, трассировщик может контролировать передачу сигнала трассируемой
+нити (значение \fIaddr\fP игнорируется).
+.TP 
+\fBPTRACE_SYSCALL\fP, \fBPTRACE_SINGLESTEP\fP
+Аналогично \fBPTRACE_CONT\fP они перезапускают остановленную трассируемую нить,
+но указывают, что процесс должен быть остановлен перед входом/выходом из
+системного вызова, или после исполнения одной инструкции, соответственно
+(трассируемая нить также, как обычно, будет остановлена при получении
+сигнала). С точки зрения трассировщика кажется, что трассируемая нить
+остановлена из\-за получения сигнала \fBSIGTRAP\fP. Так, \fBPTRACE_SYSCALL\fP
+например, позволяет изучить содержимое аргументов перед системным вызовом, а
+при следующем \fBPTRACE_SYSCALL\fP можно просмотреть результат исполнения
+системного вызова. Аргумент \fIdata\fP используется как в \fBPTRACE_CONT\fP
+(значение \fIaddr\fP игнорируется).
+.TP 
+\fBPTRACE_SYSEMU\fP, \fBPTRACE_SYSEMU_SINGLESTEP\fP (начиная с Linux 2.6.14)
+.\" As at 3.7
+Действие \fBPTRACE_SYSEMU\fP приводит к продолжению и остановке на входе в
+следующий системный вызов, который не будет выполнен . Смотрите описание по
+syscall\-stop ниже. Действие \fBPTRACE_SYSEMU_SINGLESTEP\fP выполняет тоже
+самое, но для одиночной инструкции, если это не системный вызов. Это
+действие используется программами, подобными User Mode Linux, которым нужно
+эмулировать все системные вызовы трассируемых нитей. Аргумент \fIdata\fP
+используется также как у \fBPTRACE_CONT\fP.  Аргумент \fIaddr\fP игнорируется. Эти
+запросы поддерживаются только на x86.
+.TP 
+\fBPTRACE_LISTEN\fP (начиная с Linux 3.4)
+Перезапускает остановленную трассируемую нить, но её выполнение не
+начинается. Полученное состояние трассируемой нити подобно процессу, который
+был остановлен по \fBSIGSTOP\fP (или другим останавливающим
+сигналом). Дополнительную информацию смотрите в подразделе
+«group\-stop». \fBPTRACE_LISTEN\fP работает только для трассируемых нитей,
+присоединённых с помощью \fBPTRACE_SEIZE\fP.
+.TP 
+\fBPTRACE_KILL\fP
+Посылает трассируемой нити сигнал \fBSIGKILL\fP для его уничтожения (значения
+\fIaddr\fP и \fIdata\fP игнорируются).
+.IP
+.\" [Note from Denys Vlasenko:
+.\"     deprecation suggested by Oleg Nesterov. He prefers to deprecate it
+.\"     instead of describing (and needing to support) PTRACE_KILL's quirks.]
+\fIЭто действие устарело; не используйте его!\fP Вместо него отправляйте
+\fBSIGKILL\fP напрямую с помощью \fBkill\fP(2) или \fBtgkill\fP(2). Проблема с
+действием \fBPTRACE_KILL\fP в том, что оно требует, чтобы трассируемая нить
+была режиме signal\-delivery\-stop, в противном случае оно может не сработать
+(т. е., может завершиться без ошибок, но трассируемая нить не будет
+уничтожена). В отличие от него, отправка \fBSIGKILL\fP напрямую не имеет
+данного ограничения.
+.TP 
+\fBPTRACE_INTERRUPT\fP (начиная с Linux 3.4)
+Остановить трассируемый объект. Если трассируемый объект выполняется или
+спит в пространстве ядра и действует \fBPTRACE_SYSCALL\fP, то системный вызов
+прерывается и сообщается о syscall\-exit\-stop (прерванный системный вызов
+перезапускается при перезапуске трассируемого объекта). Если трассируемый
+объект был уже остановлен по сигналу и ему был послан \fBPTRACE_LISTEN\fP, то
+трассируемый объект останавливается с \fBPTRACE_EVENT_STOP\fP и
+\fIWSTOPSIG(status)\fP возвращает сигнал остановки. Если в этот же момент
+генерируется любое другое событие ptrace\-stop (например, если трассируемому
+посылается сигнал), то возникает ptrace\-stop. Если ничего из
+вышеперечисленного не происходит (например, если трассируемый выполняется в
+пространстве пользователя), то он останавливается с \fBPTRACE_EVENT_STOP\fP и
+\fIWSTOPSIG(status)\fP == \fBSIGTRAP\fP. \fBPTRACE_INTERRUPT\fP работает только для
+трассируемых объектов, к которым подключились с помощью \fBPTRACE_SEIZE\fP.
+.TP 
+\fBPTRACE_ATTACH\fP
+.\" No longer true (removed by Denys Vlasenko, 2011, who remarks:
+.\"        "I think it isn't true in non-ancient 2.4 and in 2.6/3.x.
+.\"         Basically, it's not true for any Linux in practical use.
+.\" ; the behavior of the tracee is as if it had done a
+.\" .BR PTRACE_TRACEME .
+.\" The calling process actually becomes the parent of the tracee
+.\" process for most purposes (e.g., it will receive
+.\" notification of tracee events and appears in
+.\" .BR ps (1)
+.\" output as the tracee's parent), but a
+.\" .BR getppid (2)
+.\" by the tracee will still return the PID of the original parent.
+Выполняет присоединение к процессу с указанным \fIpid\fP, делая его
+трассируемым для вызывающего процесса. Трассируемой нити посылается
+\fBSIGSTOP\fP, но нет жёсткого правила, что она будет остановлен по завершению
+этого вызова; используйте \fBwaitpid\fP(2) для ожидания остановки трассируемой
+нити. Дополнительную информацию смотрите в подразделе «Присоединение и
+отсоединение» (значения \fIaddr\fP и \fIdata\fP игнорируются).
+.IP
+Право выполнять \fBPTRACE_ATTACH\fP определяется проверкой режима доступа
+ptrace \fBPTRACE_MODE_READ_REALCREDS\fP; смотрите ниже.
+.TP 
+\fBPTRACE_SEIZE\fP (начиная с Linux 3.4)
+.\"
+.\" Noted by Dmitry Levin:
+.\"
+.\"     PTRACE_SEIZE was introduced by commit v3.1-rc1~308^2~28, but
+.\"     it had to be used along with a temporary flag PTRACE_SEIZE_DEVEL,
+.\"     which was removed later by commit v3.4-rc1~109^2~20.
+.\"
+.\"     That is, [before] v3.4 we had a test mode of PTRACE_SEIZE API,
+.\"     which was not compatible with the current PTRACE_SEIZE API introduced
+.\"     in Linux 3.4.
+.\"
+Выполняет присоединение к процессу, указанному в \fIpid\fP, делает его
+трассируемым для вызывающего процесса. В отличие от \fBPTRACE_ATTACH\fP,
+\fBPTRACE_SEIZE\fP не останавливает процесс. О group\-stops сообщается как
+\fBPTRACE_EVENT_STOP\fP и \fIWSTOPSIG(status)\fP возвращает сигнал
+остановки. Автоматически присоединённые потомки останавливаются с
+\fBPTRACE_EVENT_STOP\fP и \fIWSTOPSIG(status)\fP возвращает \fBSIGTRAP\fP вместо
+доставки им сигнала \fBSIGSTOP\fP. При вызове \fBexecve\fP(2) дополнительный
+\fBSIGTRAP\fP не посылается. Только подключённые с помощью \fBPTRACE_SEIZE\fP
+процессы могут принимать команды \fBPTRACE_INTERRUPT\fP и
+\fBPTRACE_LISTEN\fP. Только что описанное поведение «захвата» (seized)
+наследуется потомками, которые автоматически присоединяются с помощью
+\fBPTRACE_O_TRACEFORK\fP, \fBPTRACE_O_TRACEVFORK\fP и
+\fBPTRACE_O_TRACECLONE\fP. Значение \fIaddr\fP должно быть равно нулю. В \fIdata\fP
+содержится битовая маска параметров ptrace, которая применяется сразу же.
+.IP
+.\"
+Право выполнять \fBPTRACE_SEIZE\fP определяется проверкой режима доступа ptrace
+\fBPTRACE_MODE_READ_REALCREDS\fP; смотрите ниже.
+.TP 
+\fBPTRACE_SECCOMP_GET_FILTER\fP (начиная с Linux 4.4)
+.\" commit f8e529ed941ba2bbcbf310b575d968159ce7e895
+Эта операция позволяет трассировщику получить дамп классических фильтров BPF
+трассируемого.
+.IP
+Значение \fIaddr\fP имеет тип integer и задаёт индекс фильтра для дампа. Индекс
+последнего установленного фильтра равен 0. Если \fIaddr\fP больше количества
+установленных фильтров, то операция завершается ошибкой \fBENOENT\fP.
+.IP
+Значение \fIdata\fP является указателем на массив \fIstruct sock_filter\fP
+достаточного размера для сохранения программы BPF, или NULL, если программа
+не будет сохраняться.
+.IP
+При успешном выполнении возвращаемое значение — количество инструкций в
+программе BPF. Если \fIdata\fP равнялось NULL, то возвращается значение,
+которое можно использовать для создания массива \fIstruct sock_filter\fP
+корректного размера, который будет передан в последующем вызове.
+.IP
+Данная операция завершается ошибкой \fBEACCES\fP, если вызывающий не имеет
+мандата \fBCAP_SYS_ADMIN\fP, или если вызывающий находится в ограничительном
+или фильтрующем режиме. Если фильтр, на который ссылается адрес \fIaddr\fP, не
+является классическим фильтром BPF, то операция завершается ошибкой
+\fBEMEDIUMTYPE\fP.
+.IP
+Эта операция доступна только, если ядро собрано с параметрами
+\fBCONFIG_SECCOMP_FILTER\fP и \fBCONFIG_CHECKPOINT_RESTORE\fP.
+.TP 
+\fBPTRACE_DETACH\fP
+.\"
+Возобновляет работу остановленной трассируемой нити, аналогично
+\fBPTRACE_CONT\fP, но сначала отсоединяется от него. В Linux при помощи этого
+вызова трассируемая нить может быть отсоединёна независимо от того, каким
+методом была запущена трассировка (значение \fIaddr\fP игнорируется).
+.TP 
+\fBPTRACE_GET_THREAD_AREA\fP (начиная с Linux 2.6.0)
+Данная операция выполняет задачу, подобную \fBget_thread_area\fP(2). Она читает
+элемент TLS из GDT, чей индекс передан в \fIaddr\fP, помещает копию элемента в
+\fIstruct user_desc\fP, указанную в \fIdata\fP (в отличие от
+\fBget_thread_area\fP(2), значение \fIentry_number\fP структуры \fIstruct
+user_desc\fP игнорируется).
+.TP 
+\fBPTRACE_SET_THREAD_AREA\fP (начиная с Linux 2.6.0)
+Данная операция выполняет задачу, подобную \fBset_thread_area\fP(2). Она
+изменяет элемент TLS в GDT, чей индекс  указан в \fIaddr\fP, данными,
+переданными в структуре \fIstruct user_desc\fP, на которую указывает \fIdata\fP (в
+отличие от \fBset_thread_area\fP(2), значение \fIentry_number\fP структуры
+\fIstruct user_desc\fP игнорируется; иначе говоря, данная операция ptrace не
+может использоваться для выделения свободного элемента TLS).
+.TP 
+\fBPTRACE_GET_SYSCALL_INFO\fP (начиная с Linux 5.3)
+.\" commit 201766a20e30f982ccfe36bebfad9602c3ff574a
+Возвращает информацию о системном вызове, который привёл к
+останову. Информация помещается в буфер, указанный в аргументе \fIdata\fP,
+который должен быть указателем на буфер с типом \fIstruct
+ptrace_syscall_info\fP. Аргумент \fIaddr\fP содержит размер буфера, на который
+указывает аргумент \fIdata\fP (т. е., \fIsizeof(struct
+ptrace_syscall_info)\fP). Возвращаемое значение равно количеству байт,
+записанных ядром. Если размер записываемых ядром данных больше значения из
+аргумента \fIaddr\fP, то данные результата обрезаются.
+.IP
+Структура \fIptrace_syscall_info\fP содержит следующие поля:
+.IP
+.in +2n
+.EX
+struct ptrace_syscall_info {
+    __u8 op;         /* тип останова системного вызова */
+    __u32 arch;      /* значение AUDIT_ARCH_*; смотрите seccomp(2) */
+    __u64 instruction_pointer; /* указатель инструкции ЦП */
+    __u64 stack_pointer;       /* указатель стека ЦП */
+    union {
+        struct {     /* op == PTRACE_SYSCALL_INFO_ENTRY */
+            __u64 nr;          /* номер системного вызова */
+            __u64 args[6];     /* аргументы системного вызова */
+        } entry;
+        struct {     /* op == PTRACE_SYSCALL_INFO_EXIT */
+            __s64 rval;        /* возвращаемое значение системного вызова */
+            __u8 is_error;     /* флаг ошибки системного вызова;
+                                  логический: в rval содержится
+                                  значение ошибки (\-ERRCODE) или
+                                  или не ошибки? */
+        } exit;
+        struct {     /* op == PTRACE_SYSCALL_INFO_SECCOMP */
+            __u64 nr;          /* номер системного вызова */
+            __u64 args[6];     /* аргументы системного вызова */
+            __u32 ret_data;    /* часть SECCOMP_RET_DATA
+                                  возвращаемого значения
+                                  SECCOMP_RET_TRACE */
+        } seccomp;
+    };
+};
+.EE
+.in
+.IP
+Поля \fIop\fP, \fIarch\fP, \fIinstruction_pointer\fP и \fIstack_pointer\fP определены
+для всех видов остановов системных вызовов ptrace. Оставшаяся структура
+является объединением; из неё нужно читать только те поля, которые имеют
+смысл для конкретного вызова останова системного вызова, указанного в поле
+\fIop\fP.
+.IP
+В поле \fIop\fP указывается одно из следующих значений (определены в
+\fI<linux/ptrace.h>)\fP, определяющих тип возникшего останова и какая
+часть объединения заполнена:
+.RS
+.TP 
+\fBPTRACE_SYSCALL_INFO_ENTRY\fP
+Компонент объединения \fIentry\fP содержит информацию о входе в останов
+системного вызова.
+.TP 
+\fBPTRACE_SYSCALL_INFO_EXIT\fP
+Компонент объединения \fIexit\fP содержит информацию о выходе из останова
+системного вызова.
+.TP 
+\fBPTRACE_SYSCALL_INFO_SECCOMP\fP
+Компонент объединения \fIexit\fP содержит информацию об останове
+\fBPTRACE_EVENT_SECCOMP\fP.
+.TP 
+\fBPTRACE_SYSCALL_INFO_NONE\fP
+Компонент объединения не содержит информации.
+.RE
+.\"
+.SS "Смерть в момент ptrace"
+Когда (возможно, многонитевой) процесс получает уничтожающий сигнал (из\-за
+того, что обработчик равен \fBSIG_DFL\fP и что действием по умолчанию является
+уничтожение процесса), все нити завершают работу (exit). Трассируемые нити
+сообщают о своей смерти своим трассировщикам. Уведомления об этом событии
+доставляется с помощью \fBwaitpid\fP(2).
+.PP
+Заметим, что уничтожающий сигнал сначала вызовет вхождение в режим
+signal\-delivery\-stop (только для одной трассируемой нити), и только после
+этого будет внедрён трассировщиком (или после того, как был отослан нити,
+которая не является трассируемой), затем \fIвсе\fP трассируемые нити в
+многонитевом процессе завершаются по сигналу (термин «signal\-delivery\-stop»
+объяснён далее).
+.PP
+Сигнал \fBSIGKILL\fP не генерирует режим signal\-delivery\-stop и поэтому
+трассировщик не может подавить его. Сигнал \fBSIGKILL\fP уничтожает даже внутри
+системных вызовов (syscall\-exit\-stop не генерируется перед уничтожением по
+\fBSIGKILL\fP). Конечным результатом \fBSIGKILL\fP всегда является уничтожение
+процесса (всех его нитей), даже если для некоторых нитей процесса
+выполняется\ трассировка.
+.PP
+Когда трассируемая нить вызывает \fB_exit\fP(2), он сообщает о своём
+уничтожении своему трассировщику. На оставшиеся нити ни какого влияния не
+оказывается.
+.PP
+Если какая\-нибудь нить вызывает \fBexit_group\fP(2), то каждая трассируемая
+нить в этой группе нитей сообщает о своём уничтожении своему трассировщику.
+.PP
+Если установлен флаг \fBPTRACE_O_TRACEEXIT\fP, то перед непосредственным
+уничтожением возникает \fBPTRACE_EVENT_EXIT\fP. Это случается при выходе
+посредством \fBexit\fP(2), \fBexit_group\fP(2) и из\-за уничтожения по сигналу (за
+исключением \fBSIGKILL\fP, в зависимости от версии ядра; смотрите ДЕФЕКТЫ ниже)
+и когда нити многонитевой процесса разрушаются при \fBexecve\fP(2).
+.PP
+Трассировщик не может предполагать, что трассируемая нить, остановленная по
+ptrace, существует. Если много случаев, когда трассируемая нить может быть
+уничтожена будучи в остановленном состоянии (например, по
+\fBSIGKILL\fP). Поэтому, трассировщик должен быть готов обработать ошибку
+\fBESRCH\fP при любом действии ptrace. К сожалению, эта же ошибка возвращается,
+если трассируемая нить существует, но не остановлена по ptrace (для
+действий, которые требуют остановленной трассируемой нити), или если она не
+трассируется процессом, который вызвал ptrace. Трассировщику необходимо
+отслеживать состояние остановки/работы трассируемой нити и воспринимать
+\fBESRCH\fP как «трассируемая нить была неожиданно уничтожена» только, если он
+знает, что трассируемая нить была в состоянии ptrace\-stop. Заметим, что нет
+гарантии того, что \fIwaitpid(WNOHANG)\fP всегда сообщит о состоянии
+уничтожения трассируемой нити, если действие ptrace вернуло \fBESRCH\fP. Вызов
+\fIwaitpid(WNOHANG)\fP вместо этого может вернуть 0. Другими словами,
+трассируемая нить может быть «ещё не полностью уничтожена», но уже отклонять
+действия ptrace.
+.PP
+Трассировщик не может предполагать, что \fIвсегда\fP поймает завершение
+существования трассируемой нити с помощью \fIWIFEXITED(status)\fP или
+\fIWIFSIGNALED(status)\fP; есть несколько случаев, когда этого не
+происходит. Например, если нить — не лидер группы нитей — вызывает
+\fBexecve\fP(2) и исчезает; её PID больше не появится снова, и все последующие
+остановки по ptrace будут приходить от PID лидера группы нитей.
+.SS "Состояния останова"
+Трассируемый может находиться в двух состояниях: выполнения или остановки. В
+целях ptrace, трассируемый, заблокированный в системном вызове (например,
+\fBread\fP(2), \fBpause\fP(2) и т.д.), считается выполняющимся, даже если он
+заблокирован уже долго. Состояние трассируемого после \fBPTRACE_LISTEN\fP
+находится, отчасти, в «сумеречной зоне»: не не в каком\-либо из ptrace\-stop
+(команды ptrace не будут с ним работать и он будет посылать уведомления
+\fBwaitpid\fP(2)), но он также может считаться за «остановленный», так как он
+не выполняет инструкций (не планируется для этого), и если он был в
+group\-stop до \fBPTRACE_LISTEN\fP, он не будет отвечать на сигналы до тех пор,
+пока не получит \fBSIGCONT\fP.
+.PP
+Есть много разновидностей останова, и в обсуждении ptrace они часто
+объединены. Поэтому очень важно использовать точную терминологию.
+.PP
+В этой справочной странице любое состояние останова, в котором трассируемая
+нить готова выполнить действия ptrace трассировщика, называется
+\fIptrace\-stop\fP. В свою очередь, ptrace\-stop можно разделить на
+\fIsignal\-delivery\-stop\fP, \fIgroup\-stop\fP, \fIsyscall\-stop\fP, \fIPTRACE_EVENT
+stops\fP и так далее. Далее эти состояния останова будут описаны подробней.
+.PP
+Когда выполняющаяся трассируемая нить входит в ptrace\-stop, это видит
+трассировщик с помощью \fBwaitpid\fP(2) (или через другой системный вызов
+«wait»). В большей части текста данной справочной страницы предполагается,
+что трассировщик ждёт с помощью:
+.PP
+    pid = waitpid(pid_или_минус_1, &состояние, __WALL);
+.PP
+.\" Denys Vlasenko:
+.\"     Do we require __WALL usage, or will just using 0 be ok? (With 0,
+.\"     I am not 100% sure there aren't ugly corner cases.) Are the
+.\"     rules different if user wants to use waitid? Will waitid require
+.\"     WEXITED?
+.\"
+О трассируемой нити в состоянии ptrace\-stop сообщается возвратом \fIpid\fP
+большим 0 и значением истины по \fIWIFSTOPPED(status)\fP.
+.PP
+Флаг \fB__WALL\fP не содержит флагов \fBWSTOPPED\fP и \fBWEXITED\fP, но подразумевает
+их назначение.
+.PP
+Устанавливать флаг \fBWCONTINUED\fP при вызове \fBwaitpid\fP(2) не рекомендуется:
+состояние «continued» относится к определённому процессу и его поглощение
+может запутать реального родителя трассируемой нити.
+.PP
+Использование флага \fBWNOHANG\fP может привести к тому, что \fBwaitpid\fP(2)
+вернёт 0 («не ждать результатов, если они не готовы»), даже если
+трассировщик знает, что должно быть уведомление. Пример:
+.PP
+.in +4n
+.EX
+errno = 0;
+    ptrace(PTRACE_CONT, pid, 0L, 0L);
+    if (errno == ESRCH) {
+        /* трассируемая нить мертва */
+        r = waitpid(tracee, &status, __WALL | WNOHANG);
+        /* r может быть 0 ! */
+    }
+.EE
+.in
+.\" FIXME .
+.\"     waitid usage? WNOWAIT?
+.\"     describe how wait notifications queue (or not queue)
+.PP
+Существуют следующие разновидности ptrace\-stop: signal\-delivery\-stop,
+group\-stop, остановки \fBPTRACE_EVENT\fP, syscall\-stop. Все они могут быть
+получены по \fBwaitpid\fP(2) с значением истинным по \fIWIFSTOPPED(status)\fP. Их
+можно различить, если проверить значение \fIstatus>>8\fP, и, если есть
+неоднозначность этого значения, то запросив \fBPTRACE_GETSIGINFO\fP (замечание:
+для выполнения этой проверки не может использоваться макрос
+\fIWSTOPSIG(status)\fP, так как он возвращает значение \fI(status>>8)\ &\ 0xff\fP).
+.SS Signal\-delivery\-stop
+Когда процесс (возможно, многонитевой) принимает какой\-либо сигнал кроме
+\fBSIGKILL\fP, ядро выбирает произвольную нить для его обработки (если сигнал
+генерируется с помощью \fBtgkill\fP(2), то назначаемая нить может быть явно
+выбрана вызывающим). Если над выбранной нитью выполняется трассировка, то
+она попадает в режим signal\-delivery\-stop. В этот момент сигнал ещё не
+доставлен процессу и может быть отменён трассировщиком. Если трассировщик не
+отменил сигнал, то он передаётся трассируемой нити при следующем запросе
+перезапуска ptrace. Этот второй этап доставки сигнала называется в этой
+справочной странице \fIвнедрением сигнала\fP. Заметим, что если сигнал
+блокируется, то signal\-delivery\-stop не происходит пока сигнал не будет
+разблокирован (исключением, как обычно, является \fBSIGSTOP\fP, который нельзя
+заблокировать).
+.PP
+Signal\-delivery\-stop наблюдается трассировщиком посредством \fBwaitpid\fP(2),
+возвращающим истинное значения для \fIWIFSTOPPED(status)\fP с сигналом, который
+возвращается по \fIWSTOPSIG(status)\fP. Если возвращается сигнал \fBSIGTRAP\fP, то
+он может быть разновидностью ptrace\-stop; смотрите разделы «Syscall\-stops» и
+«execve» далее. Если \fIWSTOPSIG(status)\fP возвращает останавливающий сигнал,
+то это может быть group\-stop, смотрите далее.
+.SS "Внедрение и подавление сигнала"
+После обнаружения трассировщиком signal\-delivery\-stop, он должен
+перезапустить трассируемую нить вызовом
+.PP
+    ptrace(PTRACE_restart, pid, 0, sig)
+.PP
+где \fBPTRACE_restart\fP — одно из перезапускающих действий ptrace. Если
+значение \fIsig\fP равно 0, то сигнал не доставляется. В противном случае,
+доставляется сигнал \fIsig\fP. Данная операция в справочной странице называется
+\fIвнедрением сигнала\fP для того, чтобы можно отличить её от
+signal\-delivery\-stop.
+.PP
+Значение \fIsig\fP может отличаться от значения \fIWSTOPSIG(status)\fP:
+трассировщик может поменять внедряемый сигнал.
+.PP
+Заметим, что подавленный сигнал всё равно заставит системные вызовы
+завершиться как можно скорее. В этом случае системные вызовы будут
+перезапущены: если трассировщик использует \fBPTRACE_SYSCALL\fP, то обнаружит,
+когда трассируемая нить повторно выполнила прерванный системный вызов (или
+системный вызов \fBrestart_syscall\fP(2) для некоторых системных вызовов,
+которые используют другой механизм перезапуска). Даже системные вызовы
+(такие как \fBpoll\fP(2)), которые не перезапускаются по сигналу, будут
+перезапущены после подавления сигнала; однако, в ядре существуют дефекты,
+из\-за которых некоторые системные вызовы завершаются с ошибкой \fBEINTR\fP,
+даже если наблюдаемый сигнал не был внедрён в трассируемую нить.
+.PP
+Перезапускающие действия ptrace, выдаваемые в ptrace\-stops, отличные от
+signal\-delivery\-stop, не гарантируют внедрения сигнала, даже если значение
+\fIsig\fP не равно нулю. Об ошибках не сообщается; ненулевое значение \fIsig\fP
+может быть просто проигнорировано. Пользователи ptrace не должны пытаться
+«создать новый сигнал» таким способом — используйте вместо этого
+\fBtgkill\fP(2).
+.PP
+Тот факт, что запросы внедрения сигнала могут игнорироваться при перезапуске
+трассируемой нити после остановок ptrace не из signal\-delivery\-stops,
+вызывает путаницу у пользователей ptrace. Типичный сценарий: трассировщик
+обнаруживает group\-stop, принимает его за signal\-delivery\-stop,
+перезапускает трассируемую нить с помощью
+.PP
+    ptrace(PTRACE_restart, pid, 0, stopsig)
+.PP
+пытаясь внедрить \fIstopsig\fP, но \fIstopsig\fP игнорируется и трассируемая нить
+продолжает выполняться.
+.PP
+Сигнал \fBSIGCONT\fP имеет побочный эффект — пробуждает (все нити) процесс,
+находящийся в group\-stop. Это случается перед
+signal\-delivery\-stop. Трассировщик не может повлиять на это побочное
+действие (он может только подавить внедрение сигнала, что приводит к тому,
+что обработчик \fBSIGCONT\fP не будет выполнен в трассируемой нити, если он
+установлен). Фактически, пробуждение из group\-stop может следовать после
+signal\-delivery\-stop для сигнала(ов) \fIотличных от\fP \fBSIGCONT\fP, если они
+ожидают момента доставки \fBSIGCONT\fP. Другими словами, \fBSIGCONT\fP может быть
+не первым сигналом, который обнаруживает трассируемую нить после её посылки.
+.PP
+Останавливающие сигналы заставляют процесс (все его нити) войти в
+group\-stop. Данный побочный эффект возникает после внедрения сигнала, и
+поэтому может быть отменён трассировщиком.
+.PP
+.\" In the Linux 2.4 sources, in arch/i386/kernel/signal.c::do_signal(),
+.\" there is:
+.\"
+.\"             /* The debugger continued.  Ignore SIGSTOP.  */
+.\"             if (signr == SIGSTOP)
+.\"                     continue;
+В Linux 2.4 и более ранних версиях, сигнал \fBSIGSTOP\fP не может быть внедрён.
+.PP
+Действие \fBPTRACE_GETSIGINFO\fP может использоваться для получения структуры
+\fIsiginfo_t\fP, которая соответствует доставленному сигналу. Для её изменения
+можно использовать \fBPTRACE_SETSIGINFO\fP. Если \fBPTRACE_SETSIGINFO\fP
+использовалась для изменения \fIsiginfo_t\fP, то поле \fIsi_signo\fP и параметр
+\fIsig\fP в перезапускающем действии должны совпадать, иначе результат
+непредсказуем.
+.SS Group\-stop
+Когда (возможно многонитевой) процесс получает останавливающий сигнал, все
+нити останавливаются. Если для какой\-то нити выполняется трассировка, то она
+входит в режим group\-stop. Заметим, что останавливающий сигнал сначала
+приведёт к signal\-delivery\-stop (только в одной трассируемой нити) и только
+затем будет внедрён трассировщиком (или после того, как будет отправлен
+нити, над которой не выполняется трассировка), будет начат group\-stop в
+\fIвсех\fP трассируемых нитях многонитевого процесса. Как обычно, каждая
+трассируемая нить сообщает о group\-stop соответствующему трассировщику.
+.PP
+Group\-stop обнаруживается трассировщиком с помощью \fBwaitpid\fP(2), который
+возвращается с истинным значением \fIWIFSTOPPED(status)\fP и останавливающим
+сигналом из \fIWSTOPSIG(status)\fP. Тот же результат возвращается другими
+классами ptrace\-stops, поэтому рекомендуется выполнять вызов
+.PP
+    ptrace(PTRACE_GETSIGINFO, pid, 0, &siginfo)
+.PP
+Вызова можно избежать, если сигнал не равен \fBSIGSTOP\fP, \fBSIGTSTP\fP,
+\fBSIGTTIN\fP или \fBSIGTTOU\fP; только эти четыре сигнала являются
+останавливающими. Если трассировщик видит что\-то другое, то это не может
+быть group\-stop. В противном случае, трассировщику нужно вызвать
+\fBPTRACE_GETSIGINFO\fP. Если \fBPTRACE_GETSIGINFO\fP завершается с ошибкой
+\fBEINVAL\fP, то это определённо group\-stop (возможны другие коды ошибок,
+например, \fBESRCH\fP («нет такого процесса»), если трассируемая нить
+уничтожена по \fBSIGKILL\fP).
+.PP
+Если подключение к трассируемому было сделано с помощью \fBPTRACE_SEIZE\fP, то
+group\-stop указывается \fBPTRACE_EVENT_STOP\fP: \fIstatus>>16 ==
+PTRACE_EVENT_STOP\fP. Это позволяет обнаружить group\-stop без дополнительного
+вызова \fBPTRACE_GETSIGINFO\fP.
+.PP
+Начиная с Linux 2.6.38, после того как трассировщик увидит ptrace\-stop
+трассируемой нити и пока он не перезапустит или завершит её, трассируемая
+нить не будет выполняться, и не будет посылать уведомления (за исключением
+уничтожения по \fBSIGKILL\fP) трассировщику, даже если трассировщик войдёт в
+другой вызов \fBwaitpid\fP(2).
+.PP
+Поведение ядра, описанное в предыдущем параграфе, вызывает проблемы с
+прозрачностью обработки останавливающих сигналов. Если трассировщик
+перезапускает трассируемую нить после group\-stop, то останавливающий сигнал
+просто игнорируется — трассируемая нить продолжает выполняться. Если
+трассировщик не перезапускает трассируемую нить перед входом в следующий
+\fBwaitpid\fP(2), то о будущих сигналах \fBSIGCONT\fP не будет сообщено
+трассировщику; это привело бы к тому, что сигналы \fBSIGCONT\fP не повлияли бы
+на трассируемую нить.
+.PP
+Начиная с Linux 3.4, появился способ преодоления этой проблемы: вместо
+\fBPTRACE_CONT\fP для перезапуска трассируемой нити можно использовать
+\fBPTRACE_LISTEN\fP, при которой она не выполняется, а ждёт нового события, и
+это можно прочитать с помощью \fBwaitpid\fP(2) (например, когда был перезапуск
+по \fBSIGCONT\fP).
+.SS "Остановки PTRACE_EVENT"
+Если трассировщик устанавливает флаги \fBPTRACE_O_TRACE_*\fP, то трассируемая
+нить будет входить в ptrace\-stop\-ы, называемые остановками \fBPTRACE_EVENT\fP.
+.PP
+Остановки \fBPTRACE_EVENT\fP обнаруживаются трассировщиком когда \fBwaitpid\fP(2)
+возвращается с \fIWIFSTOPPED(status)\fP и \fIWSTOPSIG(status)\fP возвращает
+\fBSIGTRAP\fP. В старшем байте слова состояния устанавливается дополнительный
+бит: значение \fIstatus>>8\fP будет равно
+.PP
+    (SIGTRAP | PTRACE_EVENT_foo << 8).
+.PP
+Могут происходить следующие события:
+.TP 
+\fBPTRACE_EVENT_VFORK\fP
+Остановка перед возвратом из \fBvfork\fP(2) или \fBclone\fP(2) с флагом
+\fBCLONE_VFORK\fP. Когда трассируемая нить продолжает выполняться после этой
+остановки, она будет ждать выхода/exec потомка перед продолжением своего
+исполнения (другими словами, обычное поведение при \fBvfork\fP(2)).
+.TP 
+\fBPTRACE_EVENT_FORK\fP
+Остановка перед возвратом из \fBfork\fP(2) или \fBclone\fP(2) с установленным
+сигналом выхода \fBSIGCHLD\fP.
+.TP 
+\fBPTRACE_EVENT_CLONE\fP
+Остановка перед возвратом из \fBclone\fP(2).
+.TP 
+\fBPTRACE_EVENT_VFORK_DONE\fP
+Остановка перед возвратом из \fBvfork\fP(2) или \fBclone\fP(2) с установленным
+флагом \fBCLONE_VFORK\fP, но после того, как потомок разблокирует эту
+трассируемую нить, завершив работу или выполнив exec.
+.PP
+Для всех четырёх остановок, описанных выше, остановка происходит в родителе
+(т. е., трассируемой нити), а не в только что созданной нити. Для получения
+ID новой нити может использовать \fBPTRACE_GETEVENTMSG\fP.
+.TP 
+\fBPTRACE_EVENT_EXEC\fP
+Остановка перед возвратом из \fBexecve\fP(2). Начиная с Linux 3.0,
+\fBPTRACE_GETEVENTMSG\fP возвращает ID бывшей нити.
+.TP 
+\fBPTRACE_EVENT_EXIT\fP
+Остановка перед выходом (включая уничтожение из \fBexit_group\fP(2)),
+уничтожение от сигнала или выход, вызванный \fBexecve\fP(2) в многонитевом
+процессе. \fBPTRACE_GETEVENTMSG\fP возвращает код выхода. Можно прочитать
+значения регистров (в отличие от случая, когда происходит «реальный»
+выход). Трассируемая нить всё ещё существует; для завершения выхода должно
+быть выполнено отсоединение с помощью \fBPTRACE_CONT\fP или \fBPTRACE_DETACH\fP.
+.TP 
+\fBPTRACE_EVENT_STOP\fP
+Остановка вызвана командой \fBPTRACE_INTERRUPT\fP, или group\-stop, или
+начальным ptrace\-stop при присоединении к новому потомку (только если для
+присоединения использовалась \fBPTRACE_SEIZE\fP).
+.TP 
+\fBPTRACE_EVENT_SECCOMP\fP
+Остановка вызвана правилом \fBseccomp\fP(2) из\-за элемента syscall
+трассируемого, когда \fBPTRACE_O_TRACESECCOMP\fP была установлена
+трассировщиком. Данные сообщения события seccomp (из части
+\fBSECCOMP_RET_DATA\fP фильтрующего правила seccomp) можно получить с помощью
+\fBPTRACE_GETEVENTMSG\fP. Семантика данного останова подробно описана в
+отдельном разделе далее.
+.PP
+\fBPTRACE_GETSIGINFO\fP при остановке \fBPTRACE_EVENT\fP возвращает \fBSIGTRAP\fP в
+\fIsi_signo\fP, а значение \fIsi_code\fP устанавливается в \fI(event<<8)\ |\ SIGTRAP\fP.
+.SS Syscall\-stop
+Если трассируемый был перезапущен по \fBPTRACE_SYSCALL\fP или \fBPTRACE_SYSEMU\fP,
+то он входит в режим syscall\-enter\-stop сразу перед тем как войти в
+какой\-либо системный вызов (который не будет выполняться, если перезапуск
+был из\-за \fBPTRACE_SYSEMU\fP, независимо от каких\-либо изменений в регистрах
+на этот момент или если трассируемый перезапускается после своей
+остановки). Неважно какой метод вызвал syscall\-entry\-stop, если трассировщик
+перезапускает трассируемого с помощью \fBPTRACE_SYSCALL\fP, то трассируемый
+входит в syscall\-exit\-stop при окончании системного вызова, или если он
+прерывается сигналом (то есть, signal\-delivery\-stop никогда не возникает
+между syscall\-enter\-stop и syscall\-exit\-stop; он возникает \fIпосле\fP
+syscall\-exit\-stop). Если трассируемый продолжает выполнение с помощью
+какого\-то другого метода (включая \fBPTRACE_SYSEMU\fP), то syscall\-exit\-stop не
+возникает. Заметим, что все упоминания \fBPTRACE_SYSEMU\fP применяются и к
+\fBPTRACE_SYSEMU_SINGLESTEP\fP.
+.PP
+Однако даже если трассируемый продолжил выполнение с помощью
+\fBPTRACE_SYSCALL\fP, это не гарантирует, что следующая остановка будет
+syscall\-exit\-stop. Также, трассируемый может остановиться в остановке
+\fBPTRACE_EVENT\fP (включая остановку seccomp), при выходе (если он вошёл в
+\fB_exit\fP(2) или \fBexit_group\fP(2)), уничтожении по сигналу \fBSIGKILL\fP, или
+тихом уничтожении (если он является лидером группы нитей, возникает
+\fBexecve\fP(2) в другой нити, и эта нить не трассируется тем же
+трассировщиком; эта ситуация описана далее).
+.PP
+Syscall\-enter\-stop и syscall\-exit\-stop обнаруживаются трассировщиком из
+\fBwaitpid\fP(2), возвращающем истинное значение \fIWIFSTOPPED(status)\fP и
+\fIWSTOPSIG(status)\fP выдающем \fBSIGTRAP\fP. Если трассировщиком был установлен
+флаг \fBPTRACE_O_TRACESYSGOOD\fP, то \fIWSTOPSIG(status)\fP выдаст значение
+\fI(SIGTRAP\ |\ 0x80)\fP.
+.PP
+Syscall\-stop можно отличить от signal\-delivery\-stop по \fBSIGTRAP\fP, запросив
+\fBPTRACE_GETSIGINFO\fP в следующих случаях:
+.TP 
+\fIsi_code\fP <= 0
+\fBSIGTRAP\fP был доставлен в результате действия из пространства пользователя,
+например, системного вызова (\fBtgkill\fP(2), \fBkill\fP(2), \fBsigqueue\fP(3) и
+т. д.), истечении таймера POSIX, изменении состояния очереди сообщений POSIX
+или выполнении асинхронного запроса ввода/вывода.
+.TP 
+\fIsi_code\fP == SI_KERNEL (0x80)
+\fBSIGTRAP\fP был послан ядром.
+.TP 
+\fIsi_code\fP == SIGTRAP или \fIsi_code\fP == (SIGTRAP|0x80)
+Это syscall\-stop.
+.PP
+Однако, syscall\-stop происходят очень часто (дважды за системный вызов), и
+выполнение \fBPTRACE_GETSIGINFO\fP для каждого syscall\-stop может быть отчасти
+накладно.
+.PP
+Некоторые архитектуры позволяют отличать эти случаи по значениям
+регистров. Например, на x86, при syscall\-enter\-stop \fIrax\fP ==
+\-\fBENOSYS\fP. Так как \fBSIGTRAP\fP (как и любой сигнал) всегда возникает
+\fIпосле\fP syscall\-exit\-stop, и в этот момент \fIrax\fP почти никогда не содержит
+\fBENOSYS\fP, \fBSIGTRAP\fP выглядит как «syscall\-stop, который не
+syscall\-enter\-stop»; другими словами, это выглядит как «блуждающий
+syscall\-exit\-stop» и таким способом может быть обнаружен. Но определение
+этим способом очень ненадёжно и лучше его не использовать.
+.PP
+Использование флага \fBPTRACE_O_TRACESYSGOOD\fP — рекомендуемый метод
+различения syscall\-stop от похожих на них других ptrace\-stop, так как это
+надёжно и не приводит к ухудшению производительности.
+.PP
+Syscall\-enter\-stop и syscall\-exit\-stop неотличимы друг от друга
+трассировщиком. Трассировщику требуется отслеживать последовательность
+ptrace\-stop, чтобы правильно истолковать syscall\-enter\-stop как
+syscall\-exit\-stop или наоборот. В общем, за syscall\-enter\-stop всегда
+следует syscall\-exit\-stop, \fBPTRACE_EVENT\fP остановка или уничтожение
+трассируемого; никаких других ptrace\-stop не может возникнуть между
+ними. Однако заметим, что остановки seccomp (смотрите ниже) могут приводить
+к syscall\-exit\-stop без предварительного syscall\-entry\-stop. Если
+используется seccomp, необходима осторожность чтобы не посчитать такие
+остановки за syscall\-entry\-stop.
+.PP
+Если после syscall\-enter\-stop трассировщик использует перезапускающее
+действие, отличное от \fBPTRACE_SYSCALL\fP, то syscall\-exit\-stop не
+генерируется.
+.PP
+.\"
+\fBPTRACE_GETSIGINFO\fP при syscall\-stop возвращает \fBSIGTRAP\fP в \fIsi_signo\fP,
+значение \fIsi_code\fP устанавливается в \fBSIGTRAP\fP или \fI(SIGTRAP|0x80)\fP.
+.SS "Остановки PTRACE_EVENT_SECCOMP (Linux 3.5 по 4.7)"
+Поведение остановок \fBPTRACE_EVENT_SECCOMP\fP и их взаимодействие с другими
+видами остановок ptrace различается от версии к версии. Здесь описано
+поведение от их появления до Linux 4.7 (включительно). Поведение в более
+новых версиях описано в следующем разделе.
+.PP
+Остановка \fBPTRACE_EVENT_SECCOMP\fP возникает из\-за срабатывания правила
+\fBSECCOMP_RET_TRACE\fP. Она не зависит от используемых методов перезапуска
+системного вызова. Примечательно, что seccomp по прежнему работает даже,
+если трассируемый был перезапущен с помощью \fBPTRACE_SYSEMU\fP и этот
+системный вызов безоговорочно пропускается.
+.PP
+.\"
+Перезапуск из этой остановки будет вести себя как если бы остановка возникла
+прямо перед рассматриваемым системным вызовом. В частности,
+\fBPTRACE_SYSCALL\fP и \fBPTRACE_SYSEMU\fP как обычно вызовут последующий
+syscall\-entry\-stop. Однако, если после \fBPTRACE_EVENT_SECCOMP\fP номер
+системного вызова отрицательный, то и syscall\-entry\-stop и сам системный
+вызов будут пропущены. Это означает, что если номер системного вызова
+отрицательный после \fBPTRACE_EVENT_SECCOMP\fP и трассируемый перезапущен с
+помощью \fBPTRACE_SYSCALL\fP, то следующая наблюдаемая остановка будет
+syscall\-exit\-stop, а не syscall\-entry\-stop, как можно было ожидать.
+.SS "Остановки PTRACE_EVENT_SECCOMP (начиная с Linux 4.8)"
+.\" commit 93e35efb8de45393cf61ed07f7b407629bf698ea
+Начиная с Linux 4.8, остановка \fBPTRACE_EVENT_SECCOMP\fP была преобразована
+при возникновении между syscall\-entry\-stop и syscall\-exit\-stop. Заметим, что
+seccomp больше не выполняется (и \fBPTRACE_EVENT_SECCOMP\fP не будет выдан),
+если системный вызов пропускается из\-за \fBPTRACE_SYSEMU\fP.
+.PP
+Функционально, остановка \fBPTRACE_EVENT_SECCOMP\fP работает как
+syscall\-entry\-stop (т. е., продолжение использования \fBPTRACE_SYSCALL\fP
+приведёт к syscall\-exit\-stop, может измениться номер системного вызова и
+любые другие регистры, видимые выполняемому в будущем системному
+вызову). Заметим, что это может быть, но не обязательно предваряется
+syscall\-entry\-stop.
+.PP
+.\"
+После остановки \fBPTRACE_EVENT_SECCOMP\fP,  seccomp будет выполнен повторно с
+правилом \fBSECCOMP_RET_TRACE\fP, которое теперь работает также как
+\fBSECCOMP_RET_ALLOW\fP. Точнее говоря, это означает, что если регистры не
+изменились во время остановки \fBPTRACE_EVENT_SECCOMP\fP,то после этого
+системный вызов будет разрешён.
+.SS "Остановки PTRACE_SINGLESTEP"
+.\"
+.\" FIXME .
+.\" document stops occurring with PTRACE_SINGLESTEP
+.\"
+[Пока не описаны.]
+.SS "Информационные и перезапускающие действия ptrace"
+Для большинства действий ptrace (все, за исключением \fBPTRACE_ATTACH\fP,
+\fBPTRACE_SEIZE\fP, \fBPTRACE_TRACEME\fP, \fBPTRACE_INTERRUPT\fP и \fBPTRACE_KILL\fP)
+требуется, чтобы трассируемая нить была в режиме ptrace\-stop, в противном
+случае они завершаются с ошибкой \fBESRCH\fP.
+.PP
+Когда трассируемая нить в ptrace\-stop, трассировщик может читать и
+записывать данные в трассируемую нить с помощью информационных действий. Эти
+действия оставляют трассируемую нить в состоянии ptrace\-stop:
+.PP
+.in +4n
+.EX
+ptrace(PTRACE_PEEKTEXT/PEEKDATA/PEEKUSER, pid, addr, 0);
+ptrace(PTRACE_POKETEXT/POKEDATA/POKEUSER, pid, addr, long_val);
+ptrace(PTRACE_GETREGS/GETFPREGS, pid, 0, &struct);
+ptrace(PTRACE_SETREGS/SETFPREGS, pid, 0, &struct);
+ptrace(PTRACE_GETREGSET, pid, NT_foo, &iov);
+ptrace(PTRACE_SETREGSET, pid, NT_foo, &iov);
+ptrace(PTRACE_GETSIGINFO, pid, 0, &siginfo);
+ptrace(PTRACE_SETSIGINFO, pid, 0, &siginfo);
+ptrace(PTRACE_GETEVENTMSG, pid, 0, &long_var);
+ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_flags);
+.EE
+.in
+.PP
+Заметим, что о некоторых ошибках не сообщается. Например, установка
+информации о сигнале (\fIsiginfo\fP) может никак не отразиться в некоторых
+ptrace\-stop, при этом вызов может завершиться без ошибок (возвращается 0 и
+значение \fIerrno\fP не устанавливается); действие \fBPTRACE_GETEVENTMSG\fP может
+выполниться без ошибок и вернуть произвольное значение, если текущий
+ptrace\-stop не описан как возвращающий какое\-то осмысленное сообщение о
+событии.
+.PP
+Вызов
+.PP
+    ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_flags);
+.PP
+затрагивает одну трассируемую нить. Текущие флаги трассируемой нити
+заменяются. Флаги, наследуемые новой трассируемой нитью, создаются и
+«автоматически присоединяются» через активные флаги \fBPTRACE_O_TRACEFORK\fP,
+\fBPTRACE_O_TRACEVFORK\fP или \fBPTRACE_O_TRACECLONE\fP.
+.PP
+Другая группа действий заставляет трассируемую нить, находящуюся в
+ptrace\-stop, выполняться. Они могут иметь вид:
+.PP
+    ptrace(cmd, pid, 0, sig);
+.PP
+где значение \fIcmd\fP равно \fBPTRACE_CONT\fP, \fBPTRACE_LISTEN\fP,
+\fBPTRACE_DETACH\fP, \fBPTRACE_SYSCALL\fP, \fBPTRACE_SINGLESTEP\fP, \fBPTRACE_SYSEMU\fP
+или \fBPTRACE_SYSEMU_SINGLESTEP\fP. Если трассируемая нить в
+signal\-delivery\-stop, то в \fIsig\fP указывается сигнал, который будет внедрён
+(если не равен нулю). В противном случае, \fIsig\fP может игнорироваться (при
+перезапуске трассируемой нити из ptrace\-stop в отличный от
+signal\-delivery\-stop, рекомендуется передавать в \fIsig\fP значение 0).
+.SS "Присоединение и отсоединение"
+Нить можно присоединить к трассировщику с помощью вызова
+.PP
+    ptrace(PTRACE_ATTACH, pid, 0, 0);
+.PP
+или
+.PP
+    ptrace(PTRACE_SEIZE, pid, 0, PTRACE_O_flags);
+.PP
+.\"
+.\" FIXME Describe how to attach to a thread which is already group-stopped.
+\fBPTRACE_ATTACH\fP посылает в нить \fBSIGSTOP\fP. Если трассировщик хочет
+отменить действие \fBSIGSTOP\fP, ему нужно его подавить. Заметим, что если при
+присоединении в эту нить в тоже время посылаются другие сигналы, то
+трассировщик может увидеть, что трассируемая нить сначала вошла в
+signal\-delivery\-stop из этих сигналов! Обычной практикой является повторное
+внедрение этих сигналов до тех пор, пока не будет обнаружен \fBSIGSTOP\fP, а
+затем подавление внедрения \fBSIGSTOP\fP. Здесь есть ошибка в проектировании в
+том, что присоединение ptrace и одновременно доставляемый \fBSIGSTOP\fP могут
+состязаться и одновременный \fBSIGSTOP\fP может быть утерян.
+.PP
+Так как при присоединении посылается \fBSIGSTOP\fP и трассировщик обычно
+подавляет его, то это может привести к блуждающему возврату \fBEINTR\fP из в
+данный момент выполняемого системного вызова в трассируемой нити, как
+описано в разделе «Внедрение и отмена сигнала».
+.PP
+Начиная с Linux 3.4, вместо \fBPTRACE_ATTACH\fP можно использовать
+\fBPTRACE_SEIZE\fP. \fBPTRACE_SEIZE\fP не останавливает присоединённый. Если вам
+нужно остановить его после присоединения (или в любое другое время) без
+отправки каких\-либо, используйте действие \fBPTRACE_INTERRUPT\fP.
+.PP
+Запрос
+.PP
+    ptrace(PTRACE_TRACEME, 0, 0, 0);
+.PP
+включает трассировку вызвавшей нити. Нить продолжает выполняться (не входит
+в ptrace\-stop). Обычно, за \fBPTRACE_TRACEME\fP следует
+.PP
+    raise(SIGSTOP);
+.PP
+и это позволяет родителю (который теперь трассировщик) отследить
+signal\-delivery\-stop.
+.PP
+Если включены флаги \fBPTRACE_O_TRACEFORK\fP, \fBPTRACE_O_TRACEVFORK\fP или
+\fBPTRACE_O_TRACECLONE\fP, то потомок, создаваемый, соответственно, \fBvfork\fP(2)
+или \fBclone\fP(2) с флагом \fBCLONE_VFORK\fP, \fBfork\fP(2) или \fBclone\fP(2) с
+установленным выходным сигналом равным \fBSIGCHLD\fP, и другими видами
+\fBclone\fP(2), автоматически присоединяется к тому же трассировщику, которой
+трассирует их родителя. Сигнал \fBSIGSTOP\fP доставляется потомку, заставляя
+его войти в signal\-delivery\-stop после завершения системного вызова, который
+его создал.
+.PP
+Отсоединение от трассируемой нити выполняется с помощью:
+.PP
+    ptrace(PTRACE_DETACH, pid, 0, sig);
+.PP
+\fBPTRACE_DETACH\fP является перезапускающей операцией, поэтому она требует,
+чтобы трассируемая нить была в ptrace\-stop. Если трассируемая нить в
+signal\-delivery\-stop, то может быть внедрён сигнал. В противном случае
+параметр \fIsig\fP может быть проигнорирован.
+.PP
+.\" FIXME Describe how to detach from a group-stopped tracee so that it
+.\" doesn't run, but continues to wait for SIGCONT.
+Если трассировщик хочет отсоединиться,а трассируемая нить выполняется, то
+решением является посылка сигнала \fBSIGSTOP\fP (с помощью \fBtgkill\fP(2), чтобы
+точно достичь текущей нити), ожидание пока трассируемая нить не войдёт в
+signal\-delivery\-stop для доставки \fBSIGSTOP\fP и затем отсоединение от неё
+(подавив внедрение \fBSIGSTOP\fP). Ошибкой проектирования является возможность
+гонок с параллельно отправленными \fBSIGSTOP\fP. Другая трудность в том, что
+трассируемая нить может войти в другой ptrace\-stop и потребуется его
+перезапуск и повторное ожидание появления \fBSIGSTOP\fP. Ещё одной сложностью
+является в проверки, что трассируемая нить уже не в ptrace\-stop, так как в
+этом случае доставки сигнала не происходит — даже \fBSIGSTOP\fP.
+.PP
+Если трассировщик завершает работу, то все трассируемые нити автоматически
+отсоединяются и перезапускаются, если они не в group\-stop. Выполнение
+перезапуска из group\-stop в настоящее время содержит ошибки, но «плановым»
+поведением считается оставить трассируемую нить остановленной и подождать
+\fBSIGCONT\fP. Если трассируемая нить перезапускается из signal\-delivery\-stop,
+то внедряется ожидающий сигнал.
+.SS "Выполнение execve(2) во время ptrace"
+.\" clone(2) CLONE_THREAD says:
+.\"     If  any  of the threads in a thread group performs an execve(2),
+.\"     then all threads other than the thread group leader are terminated,
+.\"     and the new program is executed in the thread group leader.
+.\"
+.\" In kernel 3.1 sources, see fs/exec.c::de_thread()
+Когда одна нить многонитевого процесса вызывает \fBexecve\fP(2), то ядро
+уничтожает все остальные нити процесса и сбрасывает ID выполняющейся нити в
+значение ID группы нитей (ID процесса. Или, говоря иначе, когда многонитевой
+процесс выполняет \fBexecve\fP(2), то по завершению вызова это выглядит как
+если бы \fBexecve\fP(2) произошёл в лидере группе нитей, независимо от того,
+какая нить вызвала \fBexecve\fP(2)). Такой сброс ID нити запутывает
+трассировщиков:
+.IP * 3
+Все остальные нити останавливаются в останове \fBPTRACE_EVENT_EXIT\fP, если
+включён флаг \fBPTRACE_O_TRACEEXIT\fP. Затем все остальные нити, за исключением
+лидера группы нитей, сообщают о завершении, как если бы они кончили работу с
+помощью \fB_exit\fP(2) с кодом выхода 0.
+.IP *
+У исполняемой трассируемой нити изменяется ID, так как она выполняет
+\fBexecve\fP(2) (помните, что в ptrace «pid», возвращаемый из \fBwaitpid\fP(2) или
+подаваемый в вызовы ptrace, это ID трассируемой нити). То есть ID
+трассируемой нити сбрасывается в значение ID своего процесса, который равен
+ID лидера группы нитей.
+.IP *
+Затем происходит остановка \fBPTRACE_EVENT_EXEC\fP, если включён флаг
+\fBPTRACE_O_TRACEEXEC\fP.
+.IP *
+Если в это время лидер группы нитей сообщил о своей остановке
+\fBPTRACE_EVENT_EXIT\fP в это время, то трассировщику кажется, что
+завершившийся лидер группы «возник из ниоткуда» (замечание: лидер группы
+нитей не сообщает о завершении через \fIWIFEXITED(status)\fP до тех пор, пока
+есть одна работающая нить. Это не даёт возможности трассировщику увидеть его
+завершение и повторное появление). Если лидер группы нитей всё ещё
+выполнялся, то для трассировщика может казаться, что лидер группы нитей
+вернулся из другого системного вызова в который входил, или даже «вернулся
+из системного вызова, хотя не был ни в каком системном вызове». Если лидер
+группы нитей не трассируется (или трассируется другим трассировщиком), то во
+время \fBexecve\fP(2) он выглядит так, как если бы стал трассируемым
+трассировщиком выполняющейся трассируемой нити.
+.PP
+Все перечисленные выше эффекты происходят из\-за смены ID трассируемой нити.
+.PP
+В этой ситуации рекомендуется использовать флаг
+\fBPTRACE_O_TRACEEXEC\fP. Во\-первых, он включает остановку
+\fBPTRACE_EVENT_EXEC\fP, которая происходит перед возвратом из \fBexecve\fP(2). В
+этой остановке трассировщик может использовать \fBPTRACE_GETEVENTMSG\fP для
+получения предыдущего ID трассируемой нити (эта возможность появилась в
+Linux 3.0). Во\-вторых, флаг \fBPTRACE_O_TRACEEXEC\fP отключает устаревшую
+генерацию \fBSIGTRAP\fP при \fBexecve\fP(2).
+.PP
+Когда трассировщик получает уведомление об остановке \fBPTRACE_EVENT_EXEC\fP,
+гарантируется, что за исключением этой трассируемой нити и лидера группы
+нитей, больше живых нитей в этом процессе нет.
+.PP
+По получению уведомления об остановке \fBPTRACE_EVENT_EXEC\fP трассировщик
+должен очистить все свои внутренние структуры данных, описывающие нити этого
+процесса, и оставить только одну структуру данных, которая описывает одну
+ещё выполняющуюся трассируемую нить, у которой
+.PP
+    ID нити == ID группы нитей == ID процесса.
+.PP
+Пример: две нити вызывают \fBexecve\fP(2) одновременно:
+.PP
+.nf
+*** мы получаем syscall\-enter\-stop в нити 1: **
+PID1 execve("/bin/foo", "foo" <unfinished ...>
+*** мы выдаём PTRACE_SYSCALL для нити 1 **
+*** мы получаем syscall\-enter\-stop в нити 2: **
+PID2 execve("/bin/bar", "bar" <unfinished ...>
+*** мы выдаём PTRACE_SYSCALL для нити 2 **
+*** мы получаем PTRACE_EVENT_EXEC for PID0, мы выдаём PTRACE_SYSCALL **
+*** мы получаем syscall\-exit\-stop для PID0: **
+PID0 <... execve resumed> )             = 0
+.fi
+.PP
+Если флаг \fBPTRACE_O_TRACEEXEC\fP \fIне\fP действует на выполняющуюся
+трассируемую нить и если трассируемая нить подключена с помощью
+\fBPTRACE_ATTACH\fP, а не \fBPTRACE_SEIZE\fP, то ядро доставляет ей дополнительный
+\fBSIGTRAP\fP после возврата из \fBexecve\fP(2). Это обычный сигнал (похожий на
+тот, который генерируется с помощью \fIkill \-TRAP\fP), а не какая\-то
+специальная разновидность ptrace\-stop. Выдача \fBPTRACE_GETSIGINFO\fP для этого
+сигнала возвращает \fIsi_code\fP равный 0 (\fISI_USER\fP). Этот сигнал может быть
+блокирован маской сигналов и поэтому может быть доставлен (намного) позже.
+.PP
+Обычно, трассировщик (например, \fBstrace\fP(1)) не хотел бы показывать этот
+дополнительный пост\-execve \fBSIGTRAP\fP сигнал пользователю, и хотел бы
+подавить его доставку в трассируемую нить (если обработчик \fBSIGTRAP\fP равен
+\fBSIG_DFL\fP, то это уничтожающий сигнал). Однако, определить \fIкакой\fP
+\fBSIGTRAP\fP подавлять, нелегко. Рекомендуется установить флаг
+\fBPTRACE_O_TRACEEXEC\fP или \fBPTRACE_SEIZE\fP и затем подавить этот
+дополнительный \fBSIGTRAP\fP.
+.SS "Настоящий родитель"
+Программный интерфейс ptrace использует стандартный обмен сигналами UNIX
+между родителем и потомком через \fBwaitpid\fP(2). Это приводит к тому, что
+настоящий родитель процесса перестаёт получать некоторые виды уведомлений
+\fBwaitpid\fP(2), когда дочерний процесс трассируется другим процессом.
+.PP
+Многие из этих дефектов были исправлены, но на момент версии Linux 2.6.38
+некоторые из них всё ещё существуют; смотрите ДЕФЕКТЫ далее.
+.PP
+На момент версии Linux 2.6.38 работает правильно:
+.IP * 3
+при выходе/уничтожении по сигналу об этом сначала сообщается трассировщику,
+а затем,когда трассировщик подтвердит результат \fBwaitpid\fP(2), настоящему
+родителю (настоящему родителю только когда завершается многонитевой процесс
+целиком). Если трассировщик и реальный родитель — один и тот же процесс, то
+сообщение приходит лишь однажды.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении запросы \fBPTRACE_PEEK*\fP возвращают запрашиваемые
+данные (но смотрите ЗАМЕЧАНИЯ), запрос \fBPTRACE_SECCOMP_GET_FILTER\fP
+возвращает количество инструкций в программе BPF, а другие запросы
+возвращают ноль.
+.PP
+При ошибке для всех действий возвращается \-1, а переменной \fIerrno\fP
+присваивается номер ошибки. Так как значение, возвращаемое при удачном
+выполнении \fBPTRACE_PEEK*\fP, может равняться \-1, перед вызовом вызывающий
+должен очистить содержимое \fIerrno\fP, чтобы узнать, возникала ошибка или нет.
+.SH ОШИБКИ
+.TP 
+\fBEBUSY\fP
+(только для i386) Произошла ошибка при размещении или освобождении
+отладочного регистра.
+.TP 
+\fBEFAULT\fP
+Была сделана попытка чтения или записи информации в область памяти
+трассируемой нити или трассировщика, но, скорее всего, эта память не
+отображена или недоступна. К сожалению, в Linux в разных ситуациях в
+результате этой ошибки возвращаются значения \fBEIO\fP или \fBEFAULT\fP, что не
+всегда поддается объяснению.
+.TP 
+\fBEINVAL\fP
+Попытка установить недопустимое значение.
+.TP 
+\fBEIO\fP
+Задано неверное значение \fIrequest\fP, или была попытка чтения или записи
+информации в неподходящую область памяти трассируемой нити или
+трассировщика; ошибка выравнивания слов по границе, или при запросе
+возобновления работы дочернего процесса был задан неверно номер сигнала.
+.TP 
+\fBEPERM\fP
+Указанный процесс не может быть трассирован. Это может произойти потому, что
+трассировщик не имеет прав на трассировку (требуется мандат
+\fBCAP_SYS_PTRACE\fP); непривилегированные процессы не могут трассировать
+процессы, так как они не могут посылать сигналы, или если у них установлен
+set\-user\-ID/set\-group\-ID бит. Также, процесс может уже трассироваться или
+(на ядрах до версии 2.6.26) быть \fBinit\fP(1) (PID 1).
+.TP 
+\fBESRCH\fP
+Указанный процесс не существует, в данный момент не трассируется вызывающим
+процессом, или не остановлен (для выполнения действий, которые требуют
+остановки трассируемой нити).
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+SVr4, 4.3BSD.
+.SH ЗАМЕЧАНИЯ
+Хотя параметры \fBptrace\fP() воспринимаются согласно заданному прототипу, в
+настоящее время в glibc \fBptrace\fP() объявлена как функция с переменным
+числом параметров, в которой фиксирован только параметр
+\fIrequest\fP. Рекомендуется всегда передавать четыре параметра, даже если в
+запрашиваемом действии они не используются (неиспользуемые аргументы
+указывайте как \fI0L\fP или \fI(void\ *)\ 0\fP).
+.PP
+.\" See commit 00cd5c37afd5f431ac186dd131705048c0a11fdb
+В ядрах Linux до версии 2.6.26, процесс \fBinit\fP(1) с PID 1 не может быть
+трассирован.
+.PP
+Родитель трассируемой нити остаётся трассировщиком даже, если трассировщик
+вызывает \fBexecve\fP(2).
+.PP
+.\" See http://lkml.org/lkml/2008/5/8/375
+Структура памяти и области USER зависят от ОС и архитектуры
+системы. Указываемое смещение и возвращаемые данные могут не полностью
+соответствовать определению \fIstruct user\fP.
+.PP
+Размер «слова» определяется вариантом ОС (например, для 32\-битного варианта
+Linux слово будет 32\-битным).
+.PP
+.\"
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\"
+Эта страница описывает работу системного вызова \fBptrace\fP() в Linux. Его
+работа значительно отличается от поведения в других системах UNIX. В любом
+случае, использование \fBptrace\fP() очень сильно зависит от ОС и архитектуры.
+.SS "Проверка режима доступа ptrace"
+Для различных частей программного интерфейса ядро — пользовательское
+пространство (не только операции \fBptrace\fP()) требуются так называемые
+проверки «режима доступа ptrace», чьими результатами определяется будет ли
+разрешена операция (или это, в некоторых случаях, заставит операцию «чтения»
+цензурировать возвращаемые данные). Эти проверки выполняются в случаях,
+когда один процесс может просмотреть конфиденциальную информацию или, в
+некоторых случаях, изменять состояние другого процесса. Проверки
+основываются на учётных данных и мандатах двух процессов, разрешено ли
+создание дампа «целевого» процесса, а результаты проверок выполняются любым
+включённым модулем безопасности Linux (LSM) — например, SELinux, Yama и
+Smack — и commoncap LSM (который вызывается всегда).
+.PP
+.\" commit 006ebb40d3d65338bd74abb03b945f8d60e362bd
+До Linux 2.6.27 все проверки доступа были одного вида. Начиная с Linux
+2.6.27 различают два уровня проверок доступа:
+.TP 
+\fBPTRACE_MODE_READ\fP
+Для операций «чтения» или других менее опасных операций:
+\fBget_robust_list\fP(2); \fBkcmp\fP(2); чтение \fI/proc/[pid]/auxv\fP,
+\fI/proc/[pid]/environ\fP или \fI/proc/[pid]/stat\fP, или \fBreadlink\fP(2) для файла
+\fI/proc/[pid]/ns/*\fP.
+.TP 
+\fBPTRACE_MODE_ATTACH\fP
+.\"
+.\" Regarding the above description of the distinction between
+.\" PTRACE_MODE_READ and PTRACE_MODE_ATTACH, Stephen Smalley notes:
+.\"
+.\"     That was the intent when the distinction was introduced, but it doesn't
+.\"     appear to have been properly maintained, e.g. there is now a common
+.\"     helper lock_trace() that is used for
+.\"     /proc/pid/{stack,syscall,personality} but checks PTRACE_MODE_ATTACH, and
+.\"     PTRACE_MODE_ATTACH is also used in timerslack_ns_write/show().  Likely
+.\"     should review and make them consistent.  There was also some debate
+.\"     about proper handling of /proc/pid/fd.  Arguably that one might belong
+.\"     back in the _ATTACH camp.
+.\"
+Для операций  «записи» или других более опасных операций: присоединение
+ptrace (\fBPTRACE_ATTACH\fP) к другому процессу или вызов
+\fBprocess_vm_writev\fP(2) (\fBPTRACE_MODE_ATTACH\fP было эффективным значением по
+умолчанию до Linux 2.6.27).
+.PP
+.\" commit caaee6234d05a58c5b4d05e7bf766131b810a657
+Начиная с Linux 4.5 приведённые выше проверки режима доступа объединяются
+(ИЛИ) с одним из следующих модификаторов:
+.TP 
+\fBPTRACE_MODE_FSCREDS\fP
+Использовать UID и GID файловой системы у вызывающего (смотрите
+\fBcredentials\fP(7)) или эффективные мандаты для проверок LSM.
+.TP 
+\fBPTRACE_MODE_REALCREDS\fP
+Использовать реальные UID и GID у вызывающего или разрешающие мандаты для
+проверок LSM. Это было эффективным значением по умолчанию до Linux 4.5.
+.PP
+Так как объединение модификаторов мандатов с одной из вышеупомянутых режимов
+доступа часто используется, то в исходном коде ядра было определено
+несколько макросов:
+.TP 
+\fBPTRACE_MODE_READ_FSCREDS\fP
+Определён как \fBPTRACE_MODE_READ | PTRACE_MODE_FSCREDS\fP.
+.TP 
+\fBPTRACE_MODE_READ_REALCREDS\fP
+Определён как \fBPTRACE_MODE_READ | PTRACE_MODE_REALCREDS\fP.
+.TP 
+\fBPTRACE_MODE_ATTACH_FSCREDS\fP
+Определён как \fBPTRACE_MODE_ATTACH | PTRACE_MODE_FSCREDS\fP.
+.TP 
+\fBPTRACE_MODE_ATTACH_REALCREDS\fP
+Определён как \fBPTRACE_MODE_ATTACH | PTRACE_MODE_REALCREDS\fP.
+.PP
+Один из следующих модификаторов может быть объединённых с режимом доступа:
+.TP 
+\fBPTRACE_MODE_NOAUDIT\fP (начиная с Linux 3.3)
+.\" commit 69f594a38967f4540ce7a29b3fd214e68a8330bd
+.\" Just for /proc/pid/stat
+Не протоколировать (audit) проверку режима доступа. Данный модификатор
+применяется для проверок режима доступа ptrace (например, проверки при
+чтении \fI/proc/[pid]/stat\fP), которые просто фильтруют или цензурируют вывод,
+вместо возврата ошибки вызывающему. В этих случаях, доступ к файлу не
+нарушает правила безопасности и нет причины генерировать запись о
+нарушении. Данный модификатор отключает создание подобных протокольных
+записей для определённых проверок доступа.
+.PP
+Заметим, что все константы \fBPTRACE_MODE_*\fP, описанные в данном разделе,
+доступны только для ядра и не видны из пользовательского пространства. Имена
+упомянутых констант служат обозначением различных видов проверок режима
+доступа ptrace, которые выполняются для разных системных вызовов и получении
+доступа к разным псевдо\-файлам (например, в каталоге \fI/proc\fP). Эти имена
+используются в других справочных страницах как простые сокращения различных
+проверок ядра.
+.PP
+Задействуемый алгоритм проверок режима доступа ptrace определяется по
+разрешению вызывающему процессу выполнять соответствующее действие над
+процессом назначения (в случае открытия файлов \fI/proc/[pid]\fP «вызывающий
+процесс» это открывающий файл, а процесс с соответствующим PID — «процесс
+назначения»). Возможные алгоритмы:
+.IP 1. 3
+Если вызывающая нить и нить назначения в одной группе нитей, то доступ
+всегда разрешён.
+.IP 2.
+Если режим доступа равен \fBPTRACE_MODE_FSCREDS\fP, то для проверки на
+следующем шаге используется UID и GID файловой системы у вызывающего (как
+упомянуто в \fBcredentials\fP(7), UID и GID файловой системы почти всегда равны
+значениям соответствующих эффективных идентификаторов).
+.IP
+В противном случае режим доступа равен \fBPTRACE_MODE_REALCREDS\fP, и на
+следующем шаге проверок используются реальные UID и GID вызывающего
+(большинство программных интерфейсов, которые проверяют UID и GID
+вызывающего, используют эффективные идентификаторы. В проверке
+\fBPTRACE_MODE_REALCREDS\fP используются реальные ID только в силу исторических
+причин).
+.IP 3.
+Запрещается доступ, если срабатывает \fIлюбое\fP из этих правил:
+.RS
+.IP \(bu 2
+Реальные, эффективные и сохранённые пользовательские ID назначения совпадают
+с пользовательским ID вызывающего, \fIи\fP Реальные, эффективные и сохранённые
+групповые ID назначения совпадают с групповым ID вызывающего.
+.IP \(bu
+Вызывающий имеет мандат \fBCAP_SYS_PTRACE\fP в пользовательском пространстве
+имён назначения.
+.RE
+.IP 4.
+Доступ запрещается, если у процесса назначения значение атрибута
+«возможности дампа» не равно 1 (\fBSUID_DUMP_USER\fP; смотрите обсуждение
+\fBPR_SET_DUMPABLE\fP в \fBprctl\fP(2)), и вызывающий не имеет мандата
+\fBCAP_SYS_PTRACE\fP в пользовательском пространстве имён назначения.
+.IP 5.
+.\" (in cap_ptrace_access_check()):
+Для проверки того, что доступ ptrace разрешён, вызывается интерфейс ядра LSM
+\fIsecurity_ptrace_access_check\fP(). Результат зависит от LSM. Реализация
+интерфейса в commoncap LSM выполняет следующие шаги:
+.RS
+.IP а) 3
+Если режим доступа включает \fBPTRACE_MODE_FSCREDS\fP, то используется
+\fIэффективный\fP набор мандатов вызывающего в последующей проверке; в
+противном случае (режим доступа равен \fBPTRACE_MODE_REALCREDS\fP) используется
+\fIдопускающий\fP набор мандатов.
+.IP б)
+Запрещается доступ, если срабатывает \fIлюбое\fP из этих правил:
+.RS
+.IP \(bu 2
+Вызывающий и процесс назначения находятся в одном пользовательском
+пространстве имён, и мандаты вызывающего составляют покрывающий набор
+\fIдопускающих\fP мандатов процесса назначения.
+.IP \(bu
+Вызывающий имеет мандат \fBCAP_SYS_PTRACE\fP в пользовательском пространстве
+имён процесса назначения.
+.RE
+.IP
+Заметим, что commoncap LSM не различает \fBPTRACE_MODE_READ\fP и
+\fBPTRACE_MODE_ATTACH\fP.
+.RE
+.IP 6.
+.\"
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\"
+Если доступ не был запрещён в предыдущих шагах, то доступ разрешается.
+.SS /proc/sys/kernel/yama/ptrace_scope
+.\" commit 2d514487faf188938a4ee4fb3464eeecfbdcf8eb
+В системах с установленным модулем Yama Linux Security Module (LSM) (т. е.,
+ядро было настроено с параметром \fBCONFIG_SECURITY_YAMA\fP) можно использовать
+файл \fI/proc/sys/kernel/yama/ptrace_scope\fP (доступен, начиная с Linux 3.4)
+для того, чтобы огранить возможность трассировки процесса с помощью
+\fBptrace\fP() (то есть ограничить использование таких инструментов как
+\fBstrace\fP(1) и \fBgdb\fP(1)). Целью ограничения является предотвращение
+возможности атаки, посредством которой скомпроментированный процесс
+подключается через ptrace к другим ответственным процессам (например, к
+агенту GPG или сеансу SSH), принадлежащим пользователю, чтобы получить
+дополнительные полномочия (которые могут существовать в памяти) и, таким
+образом, расширить атакуемое пространство.
+.PP
+Более точно, Yama LSM ограничивает два типа операций:
+.IP * 3
+Все операции, которые выполняют проверку режима доступа ptrace
+\fBPTRACE_MODE_ATTACH\fP, например, \fBptrace\fP() \fBPTRACE_ATTACH\fP (смотрите
+«Проверка режима доступа ptrace» выше).
+.IP
+.IP *
+\fBptrace\fP()  \fBPTRACE_TRACEME\fP.
+.PP
+Процесс, имеющий мандат \fBCAP_SYS_PTRACE\fP, может записать в файл
+\fI/proc/sys/kernel/yama/ptrace_scope\fP одно из следующих значений:
+.TP 
+0 («обычные права ptrace»)
+Без дополнительных ограничений на операции, выполняющие проверки
+\fBPTRACE_MODE_ATTACH\fP (кроме накладываемых commoncap и другими LSM).
+.IP
+Использование \fBPTRACE_TRACEME\fP не изменяется.
+.TP 
+1 («ограниченный ptrace») [значение по умолчанию]
+Когда выполняется операция, требующая проверки \fBPTRACE_MODE_ATTACH\fP,
+вызывающий процесс должен иметь мандат \fBCAP_SYS_PTRACE\fP в пользовательском
+пространстве имён процесса назначения или должен иметь предопределённые
+отношения с процессом назначения. По умолчанию, предопределённые отношения
+это когда процесс назначения должен быть потомком вызывающего.
+.IP
+.\" commit 90bb766440f2147486a2acc3e793d7b8348b0c22
+Процесс назначения может выполнить операцию \fBprctl\fP(2) \fBPR_SET_PTRACER\fP
+для объявления дополнительного PID, которому разрешено выполнять операции
+\fBPTRACE_MODE_ATTACH\fP над процессом назначения. Подробности смотрите в файле
+исходного кода ядра \fIDocumentation/admin\-guide/LSM/Yama.rst\fP (или
+\fIDocumentation/security/Yama.txt\fP до Linux 4.13).
+.IP
+Использование \fBPTRACE_TRACEME\fP не изменяется.
+.TP 
+2 («только администраторское присоединение»)
+Только процессы с мандатом \fBCAP_SYS_PTRACE\fP в пользовательском пространстве
+имён процесса назначения могут выполнять операции \fBPTRACE_MODE_ATTACH\fP или
+трассировать потомков, выполнивших \fBPTRACE_TRACEME\fP.
+.TP 
+3 («присоединение заблокировано»)
+Никакие процессы не могут выполнять операции \fBPTRACE_MODE_ATTACH\fP или
+трассировать потомков, выполнивших \fBPTRACE_TRACEME\fP.
+.IP
+После записи такого значения в файл, его нельзя изменить.
+.PP
+.\"
+.\"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+.\"
+Относительно значений 1 и 2 заметим, что создание нового пользовательского
+пространства имён фактически удаляет защиту, предлагаемую Yama. Это
+происходит из\-за того, что процесс в родительском пользовательском
+пространстве имён, у которого эффективный UID совпадает с UID создателя
+дочернего пространства имён, имеет все мандаты (включая \fBCAP_SYS_PTRACE\fP)
+при выполнении им операций внутри дочернего пользовательского пространства
+имён (вплоть до удаления потомков этого пространства имён). В результате,
+когда процесс сам пытается использовать пользовательские пространства имён
+для песочницы, это непреднамеренно ослабляет защиту, предлагаемую Yama LSM.
+.SS "Отличия между библиотекой C и ядром"
+На уровне системных вызовов запросы \fBPTRACE_PEEKTEXT\fP, \fBPTRACE_PEEKDATA\fP и
+\fBPTRACE_PEEKUSER\fP имеют разный программный интерфейс: они сохраняют
+результат по адресу, указанному в параметре \fIdata\fP, а возвращаемое значение
+является индикатором ошибки. Обёрточная функция glibc предоставляет
+программный интерфейс, описанные ОПИСАНИЕ выше, а результат возвращается в
+виде возвращаемого значения функции.
+.SH ДЕФЕКТЫ
+На машинах с заголовочными файлами ядра 2.6 значение \fBPTRACE_SETOPTIONS\fP
+отличается от использованного в версии 2.4. Это приводит к тому, что
+приложения, скомпилированные с такими заголовочными файлами, не работают при
+использовании ядер 2.4. Этого можно избежать сделав \fBPTRACE_SETOPTIONS\fP
+равным \fBPTRACE_OLDSETOPTIONS\fP, если данная константа определена.
+.PP
+Уведомления group\-stop посылаются трассировщику, но не реальному
+родителю. Последнее подтверждение в версии 2.6.38.6.
+.PP
+.\" Note from Denys Vlasenko:
+.\"     Here "exits" means any kind of death - _exit, exit_group,
+.\"     signal death. Signal death and exit_group cases are trivial,
+.\"     though: since signal death and exit_group kill all other threads
+.\"     too, "until all other threads exit" thing happens rather soon
+.\"     in these cases. Therefore, only _exit presents observably
+.\"     puzzling behavior to ptrace users: thread leader _exit's,
+.\"     but WIFEXITED isn't reported! We are trying to explain here
+.\"     why it is so.
+.\"  FIXME . need to test/verify this scenario
+Если трассируется лидер группы нитей и завершается с помощью вызова
+\fB_exit\fP(2), то происходит его останов \fBPTRACE_EVENT_EXIT\fP (если это
+запрашивалось), но последующее уведомление \fBWIFEXITED\fP не будет доставлено
+пока все остальные нити не завершат работу. Как объяснялось выше, если одна
+из остальных нитей вызывает \fBexecve\fP(2), то о завершении лидера группы
+\fIникогда\fP не будет сообщено. Если исполняемая нить не трассируется этим
+трассировщиком, то трассировщик никогда не узнает, что происходил
+\fBexecve\fP(2). Одним из обходных вариантов решения  в этом случае является
+выполнение \fBPTRACE_DETACH\fP для лидера группы вместо перезапуска. Последнее
+подтверждение в версии 2.6.38.6.
+.PP
+Сигнал \fBSIGKILL\fP всё ещё может вызвать остановку \fBPTRACE_EVENT_EXIT\fP перед
+настоящем завершением процесса по сигналу. Это поведение может измениться в
+будущем; \fBSIGKILL\fP всегда подразумевает немедленное завершение задач даже
+под ptrace. Последняя подтверждённая версия Linux — 3.13.
+.PP
+Некоторые системные вызовы возвращаются с \fBEINTR\fP, если сигнал был послан
+трассируемой нити, но доставка была подавлена трассировщиком (это очень
+распространённая операция: она обычно выполняется отладчиками при каждом
+присоединении, чтобы не вызывать ненужный \fBSIGSTOP\fP). Начиная с Linux
+3.2.9, подвержены следующие системные вызовы (вероятно, это не полный
+список): \fBepoll_wait\fP(2) и \fBread\fP(2) из файлового дескриптора
+\fBinotify\fP(7). Обычный симптом этой ошибки: когда вы присоединяетесь к
+неактивному процессу с помощью команды
+.PP
+.in +4n
+.EX
+strace \-p <process\-ID>
+.EE
+.in
+.PP
+то вместо обычного и ожидаемого вывода одной строки
+.PP
+.in +4n
+.EX
+restart_syscall(<... resuming interrupted call ...>_
+.EE
+.in
+.PP
+или
+.PP
+.in +4n
+.EX
+select(6, [5], NULL, [5], NULL_
+.EE
+.in
+.PP
+(«_» означает позицию курсора), вы видите несколько строк. Пример:
+.PP
+.in +4n
+.EX
+    clock_gettime(CLOCK_MONOTONIC, {15370, 690928118}) = 0
+    epoll_wait(4,_
+.EE
+.in
+.PP
+Здесь не видно, что процесс был заблокирован в \fBepoll_wait\fP(2) до того, как
+\fBstrace\fP(1) присоединился к нему. Присоединение заставляет \fBepoll_wait\fP(2)
+вернуться в пользовательское пространство с ошибкой \fBEINTR\fP. В этом частном
+случае, программа отвечает на \fBEINTR\fP проверкой текущего времени и затем
+вызывает \fBepoll_wait\fP(2) снова (программы, которые не ожидают таких
+«побочных» ошибок \fBEINTR\fP, при присоединении \fBstrace\fP(1) могут повести
+себя непредсказуемо).
+.PP
+В отличие от обычных правил, обёрточная функция glibc для \fBptrace\fP() может
+присваивать \fIerrno\fP значение нуля.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgdb\fP(1), \fBltrace\fP(1), \fBstrace\fP(1), \fBclone\fP(2), \fBexecve\fP(2),
+\fBfork\fP(2), \fBgettid\fP(2), \fBprctl\fP(2), \fBseccomp\fP(2), \fBsigaction\fP(2),
+\fBtgkill\fP(2), \fBvfork\fP(2), \fBwaitpid\fP(2), \fBexec\fP(3), \fBcapabilities\fP(7),
+\fBsignal\fP(7)

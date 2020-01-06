@@ -1,0 +1,155 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2009, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\" a few pieces remain from an earlier version
+.\" Copyright (C) 2008, Nanno Langstraat <nal@ii.nl>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH ENDIAN 3 2019\-03\-06 GNU "Руководство программиста Linux"
+.SH ИМЯ
+htobe16, htole16, be16toh, le16toh, htobe32, htole32, be32toh, le32toh,
+htobe64, htole64, be64toh, le64toh \- изменяет порядок байт у целого числа
+.SH ОБЗОР
+.nf
+\fB#include <endian.h>\fP
+.PP
+\fBuint16_t htobe16(uint16_t \fP\fIhost_16bits\fP\fB);\fP
+\fBuint16_t htole16(uint16_t \fP\fIhost_16bits\fP\fB);\fP
+\fBuint16_t be16toh(uint16_t \fP\fIbig_endian_16bits\fP\fB);\fP
+\fBuint16_t le16toh(uint16_t \fP\fIlittle_endian_16bits\fP\fB);\fP
+.PP
+\fBuint32_t htobe32(uint32_t \fP\fIhost_32bits\fP\fB);\fP
+\fBuint32_t htole32(uint32_t \fP\fIhost_32bits\fP\fB);\fP
+\fBuint32_t be32toh(uint32_t \fP\fIbig_endian_32bits\fP\fB);\fP
+\fBuint32_t le32toh(uint32_t \fP\fIlittle_endian_32bits\fP\fB);\fP
+.PP
+\fBuint64_t htobe64(uint64_t \fP\fIhost_64bits\fP\fB);\fP
+\fBuint64_t htole64(uint64_t \fP\fIhost_64bits\fP\fB);\fP
+\fBuint64_t be64toh(uint64_t \fP\fIbig_endian_64bits\fP\fB);\fP
+\fBuint64_t le64toh(uint64_t \fP\fIlittle_endian_64bits\fP\fB);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBhtobe16\fP(), \fBhtole16\fP(), \fBbe16toh\fP(), \fBle16toh\fP(), \fBhtobe32\fP(),
+\fBhtole32\fP(), \fBbe32toh\fP(), \fBle32toh\fP(), \fBhtobe64\fP(), \fBhtole64\fP(),
+\fBbe64toh\fP(), \fBle64toh\fP():
+.nf
+    начиная с glibc 2.19:
+        _DEFAULT_SOURCE
+    в glibc до версии 2.19 включительно:
+        _BSD_SOURCE
+.fi
+.SH ОПИСАНИЕ
+Эти функции преобразуют кодирование байт целых значений из/в порядок байт,
+используемом в работающем ЦП («порядок байт узла»), от младшего к старшему
+(little\-endian) и от старшего к младшему (big\-endian).
+.PP
+Число \fInn\fP в имени каждой функции показывает размер целого, с которым
+работает функция — может быть 16, 32 или 64 бита.
+.PP
+Функции с именами вида «htobe\fInn\fP» преобразуют число с порядком байт узла в
+число с порядком байт от старшего к младшему.
+.PP
+Функции с именами вида «htole\fInn\fP» преобразуют число с порядком байт узла в
+число с порядком байт от младшего к старшему.
+.PP
+Функции с именами вида «be\fInn\fPtoh» преобразуют число с порядком байт от
+старшего к младшему в число с порядком байт узла.
+.PP
+Функции с именами вида «le\fInn\fPtoh» преобразуют число с порядком байт от
+младшего к старшему в число с порядком байт узла.
+.SH ВЕРСИИ
+Эти функции добавлены в glibc версии 2.9.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Это нестандартные функции. Подобные функции есть в BSD, где вместо
+\fI<endian.h>\fP для них требуется заголовочный файл
+\fI<sys/endian.h>\fP. К сожалению, NetBSD, FreeBSD и glibc не следуют
+изначальному соглашению об именах функций в OpenBSD, где часть \fInn\fP всегда
+находится в конце имени функции (то есть, например, в NetBSD, FreeBSD и
+glibc используется «be32toh» вместо эквивалентной «betoh32» из OpenBSD).
+.SH ЗАМЕЧАНИЯ
+Данные функции похожи на функции старого семейства
+\fBbyteorder\fP(3). Например, \fBbe32toh\fP() идентична \fBntohl\fP().
+.PP
+Преимущество функций \fBbyteorder\fP(3) в том, что они являются стандартными и
+доступны во всех системах UNIX. С другой стороны, тот факт, что они
+разрабатывались для использования в контексте TCP/IP означает, что среди них
+нет функций для 64\-битных значений и чисел с порядком байт от младшего к
+старшему, описанных в этой странице.
+.SH ПРИМЕР
+Ниже представлена программа, которая выводит результаты преобразования
+целого с порядком байт узла в целое с порядком байт от младшего к старшему и
+от старшего к младшему. Так как порядок байт узла будет эквивалентен порядку
+от младшего к старшему или от старшего к младшему, то реально выполняется
+только одно преобразование. Если эта программа запускается на системе с
+порядком байт от младшего к старшему, например x86\-32, то мы увидим
+следующее:
+.PP
+.in +4n
+.EX
+$ \fB./a.out\fP
+x.u32 = 0x44332211
+htole32(x.u32) = 0x44332211
+htobe32(x.u32) = 0x11223344
+.EE
+.in
+.SS "Исходный код программы"
+\&
+.EX
+#include <endian.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int
+main(int argc, char *argv[])
+{
+    union {
+        uint32_t u32;
+        uint8_t arr[4];
+    } x;
+
+    x.arr[0] = 0x11;	/* низший адресуемый байт */
+    x.arr[1] = 0x22;
+    x.arr[2] = 0x33;
+    x.arr[3] = 0x44;	/* высший адресуемый байт */
+
+    printf("x.u32 = 0x%x\en", x.u32);
+    printf("htole32(x.u32) = 0x%x\en", htole32(x.u32));
+    printf("htobe32(x.u32) = 0x%x\en", htobe32(x.u32));
+
+    exit(EXIT_SUCCESS);
+}
+.EE
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBbswap\fP(3), \fBbyteorder\fP(3)

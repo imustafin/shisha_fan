@@ -1,0 +1,124 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\"Copyright (c) 2010 Novell Inc., written by Robert Schweikert
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH PTHREAD_RWLOCKATTR_SETKIND_NP 3 2019\-03\-06 "Руководство программиста Linux" 
+.SH ИМЯ
+pthread_rwlockattr_setkind_np, pthread_rwlockattr_getkind_np \-
+изменяет/возвращает вид блокировки чтения\-записи у объекта\-атрибута
+блокировки чтения\-записи нити
+.SH ОБЗОР
+.nf
+\fB#include <pthread.h>\fP
+.PP
+\fBint pthread_rwlockattr_setkind_np(pthread_rwlockattr_t *\fP\fIattr\fP\fB,\fP
+\fB                                   int \fP\fIpref\fP\fB);\fP
+\fBint pthread_rwlockattr_getkind_np(const pthread_rwlockattr_t *\fP\fIattr\fP\fB,\fP
+\fB                                   int *\fP\fIpref\fP\fB);\fP
+.PP
+Компилируется и компонуется вместе с \fI\-pthread\fP.
+.PP
+.fi
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBpthread_rwlockattr_setkind_np\fP(), \fBpthread_rwlockattr_getkind_np\fP():
+.br
+.RS 4
+.ad l
+_XOPEN_SOURCE\ >=\ 500 || _POSIX_C_SOURCE >= 200809L
+.RE
+.ad
+.SH ОПИСАНИЕ
+Функция \fBpthread_rwlockattr_setkind_np\fP() изменяет атрибут «вида
+блокировки» у объекта\-атрибута блокировки чтения\-записи, на который
+указывает \fIattr\fP, в значение \fIpref\fP. Значением \fIpref\fP может быть одно из:
+.TP 
+\fBPTHREAD_RWLOCK_PREFER_READER_NP\fP
+Значение по умолчанию. Нить может удерживать многократную блокировку чтения;
+то есть блокировки чтения рекурсивны. Согласно Single Unix Specification,
+поведение не определено, если читатель пытается установить блокировку и
+отсутствует блокировка записи, но писатели ждут. Давая преимущество читателю
+установкой \fBPTHREAD_RWLOCK_PREFER_READER_NP\fP подразумевается, что читатель
+будет получать запрашиваемую блокировку даже, если ждёт писатель. Пока есть
+читатели писатель будет ждать.
+.TP 
+\fBPTHREAD_RWLOCK_PREFER_WRITER_NP\fP
+.\" ---
+.\" Here is the relevant wording:
+.\"
+.\"     A thread may hold multiple concurrent read locks on rwlock (that is,
+.\"     successfully call the pthread_rwlock_rdlock() function n times). If
+.\"     so, the thread must perform matching unlocks (that is, it must call
+.\"     the pthread_rwlock_unlock() function n times).
+.\"
+.\" By making write-priority work correctly, I broke the above requirement,
+.\" because I had no clue that recursive read locks are permissible.
+.\"
+.\" If a thread which holds a read lock tries to acquire another read lock,
+.\" and now one or more writers is waiting for a write lock, then the algorithm
+.\" will lead to an obvious deadlock. The reader will be suspended, waiting for
+.\" the writers to acquire and release the lock, and the writers will be
+.\" suspended waiting for every existing read lock to be released.
+.\" ---
+.\" http://sources.redhat.com/ml/libc-alpha/2000-01/msg00055.html
+.\" https://sourceware.org/bugzilla/show_bug.cgi?id=7057
+Аналог \fBPTHREAD_RWLOCK_PREFER_READER_NP\fP, но для блокировки
+записи. Игнорируется glibc, так как с учётом требований POSIX рекурсивная
+блокировка записи, привела был к созданию вечной блокировки (deadlocks);
+вместо неё используется \fBPTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP\fP,
+которая не позволяет разработчику приложения получить рекурсивную блокировку
+чтения, и поэтому вечной блокировки не случится.
+.TP 
+\fBPTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP\fP
+Данный вид блокировки помогает избежать ожидания писателя всё время пока не
+освободится рекурсивная блокировка чтения.
+.PP
+Функция \fBpthread_rwlockattr_getkind_np\fP() сохраняет атрибут «вида
+блокировки» у объекта\-атрибута блокировки чтения\-записи, на который
+указывает \fIattr\fP, в указатель \fIpref\fP.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении эти функции возвращают 0. При корректных аргументах
+указателей \fBpthread_rwlockattr_getkind_np\fP() всегда выполняется
+успешно. При ошибке \fBpthread_rwlockattr_setkind_np\fP() возвращает ненулевой
+номер ошибки.
+.SH ОШИБКИ
+.TP 
+\fBEINVAL\fP
+Неподдерживаемое значение \fIpref\fP.
+.SH ВЕРСИИ
+Функции \fBpthread_rwlockattr_getkind_np\fP() и
+\fBpthread_rwlockattr_setkind_np\fP() впервые появились в glibc 2.1.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данные функции являются не стандартизированными расширениями GNU, о чем
+свидетельствует суффикс «_np» (nonportable).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBpthreads\fP(7)

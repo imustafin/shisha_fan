@@ -1,0 +1,76 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright (C) 2003 Free Software Foundation, Inc.
+.\"
+.\" %%%LICENSE_START(GPL_NOVERSION_ONELINE)
+.\" This file is distributed according to the GNU General Public License.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH IO_CANCEL 2 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+io_cancel \- отменяет невыполненную асинхронную операцию ввода\-вывода
+.SH ОБЗОР
+.nf
+\fB#include <linux/aio_abi.h>\fP          /* определяет необходимые типы */
+.PP
+\fBint io_cancel(aio_context_t \fP\fIctx_id\fP\fB, struct iocb *\fP\fIiocb\fP\fB,\fP
+\fB              struct io_event *\fP\fIresult\fP\fB);\fP
+.fi
+.PP
+\fIЗамечание\fP: В glibc нет обёрточной функции для данного системного вызова;
+смотрите ЗАМЕЧАНИЯ.
+.SH ОПИСАНИЕ
+.PP
+Системный вызов \fBio_cancel\fP() пытается отменить асинхронную операцию
+ввода\-вывода, ранее отправленную системным вызовом \fBio_submit\fP(2). В В
+параметре \fIiocb\fP указывается отменяемая операция, а в параметре \fIctx_id\fP
+задаётся идентификатор контекста AIO отправленной операции. Если операция
+успешно отменена, то событие будет скопировано в память, куда указывает
+\fIresult\fP, без помещения в очередь выполнения.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+В случае успешного завершения \fBio_cancel\fP() возвращает 0. В случае ошибки
+смотрите ЗАМЕЧАНИЯ.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+Указанный \fIiocb\fP не был отменен.
+.TP 
+\fBEFAULT\fP
+Одна из структур данных указывает на некорректные данные.
+.TP 
+\fBEINVAL\fP
+Некорректен контекст AIO, указанный \fIctx_id\fP.
+.TP 
+\fBENOSYS\fP
+Вызов \fBio_cancel\fP() не реализован для этой архитектуры.
+.SH ВЕРСИИ
+.PP
+Асинхронные системные вызовы ввода\-вывода впервые появились в Linux 2.5.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+.PP
+Вызов \fBio_cancel\fP() есть только в Linux, и он не должен использоваться в
+переносимых программах.
+.SH ЗАМЕЧАНИЯ
+.\" http://git.fedorahosted.org/git/?p=libaio.git
+В glibc нет обёрточной функции для данного системного вызова. Вы можете
+вызвать его с помощью \fBsyscall\fP(2). Но лучше воспользоваться обёрточной
+функцией \fBio_cancel\fP() из библиотеки \fIlibaio\fP.
+.PP
+.\" But glibc is confused, since <libaio.h> uses 'io_context_t' to declare
+.\" the system call.
+Заметим, что в обёрточной функции \fIlibaio\fP используется другой тип
+(\fIio_context_t\fP) аргумента \fIctx_id\fP. Также заметим, что \fIlibaio\fP не
+следует соглашениям обычной библиотеки C для возврата ошибок: при ошибке она
+возвращает отрицательный номер ошибки (из списка в разделе ОШИБКИ). Если
+системный вызов вызывается с помощью \fBsyscall\fP(2), то возвращаемое значение
+следует обычным соглашениям для указания на ошибку: возвращается \-1 и в
+\fIerrno\fP записывается (положительное) значение возникшей ошибки.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBio_destroy\fP(2), \fBio_getevents\fP(2), \fBio_setup\fP(2), \fBio_submit\fP(2),
+\fBaio\fP(7)
+.\" .SH AUTHOR
+.\" Kent Yoder.

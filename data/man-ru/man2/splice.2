@@ -1,0 +1,191 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" This manpage is Copyright (C) 2006 Jens Axboe
+.\" and Copyright (C) 2006 Michael Kerrisk <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SPLICE 2 2019\-05\-09 Linux "Руководство программиста Linux"
+.SH ИМЯ
+splice \- подключает данные к каналу/выбирает данные из канала
+.SH ОБЗОР
+.nf
+\fB#define _GNU_SOURCE\fP         /* см. feature_test_macros(7) */
+\fB#include <fcntl.h>\fP
+.PP
+.\" Return type was long before glibc 2.7
+\fBssize_t splice(int \fP\fIfd_in\fP\fB, loff_t *\fP\fIoff_in\fP\fB, int \fP\fIfd_out\fP\fB,\fP
+\fB               loff_t *\fP\fIoff_out\fP\fB, size_t \fP\fIlen\fP\fB, unsigned int \fP\fIflags\fP\fB);\fP
+.fi
+.SH ОПИСАНИЕ
+Вызов \fBsplice\fP() перемещает данные между двумя файловыми дескрипторами не
+выполняя при этом копирование между адресным пространством пользователя и
+ядра. Он пересылает до \fIlen\fP байт данных из файлового дескриптора \fIfd_in\fP
+в файловый дескриптор \fIfd_out\fP, где один из файловых дескрипторов должен
+ссылаться на канал.
+.PP
+К \fIfd_in\fP и \fIoff_in\fP применяются следующие правила:
+.IP * 3
+Если \fIfd_in\fP указывает на канал, то значение \fIoff_in\fP должно быть NULL.
+.IP *
+Если \fIfd_in\fP не указывает на канал и \fIoff_in\fP равно NULL, то из \fIfd_in\fP
+читаются байты начиная с смещения файла и это смещение соответственно
+изменяется.
+.IP *
+Если \fIfd_in\fP не указывает на канал и \fIoff_in\fP не равно NULL, то \fIoff_in\fP
+должен указывать на буфер, в котором задаётся начальное смещение для чтения
+байтов из \fIfd_in\fP; в этом случае файловое смещение \fIfd_in\fP не изменяется.
+.PP
+Аналогичные правила относятся и к \fIfd_out\fP и \fIoff_out\fP.
+.PP
+Аргумент \fIflags\fP представляет собой битовую маску, которая составляется
+логическим сложением (OR) следующих значений:
+.TP 
+\fBSPLICE_F_MOVE\fP
+Пытаться переместить страницы, а не копировать их. Используется только как
+подсказка ядру: страницы всё равно будут копироваться, если ядро не сможет
+переместить страницы из канала, или если буферы канала не ссылаются на
+полные страницы. Первая реализация этого флага была с дефектами: поэтому
+начиная с Linux 2.6.21 этот флаг ни на что не влияет (но по прежнему
+разрешён в вызове \fBsplice\fP()); в будущем, возможно появится корректная
+реализация.
+.TP 
+\fBSPLICE_F_NONBLOCK\fP
+Не блокировать при вводе\-выводе. Это делает операции соединения с каналом
+неблокируемыми, но \fBsplice\fP(), тем не менее, может заблокироваться, так как
+файловые дескрипторы, с которыми ведётся работа, могут блокироваться (если у
+них не установлен флаг \fBO_NONBLOCK\fP).
+.TP 
+\fBSPLICE_F_MORE\fP
+В следующем подключении будут дополнительные данные. Полезно указывать,
+когда \fIfd_out\fP ссылается на сокет (смотрите также описание \fBMSG_MORE\fP в
+\fBsend\fP(2) и описание \fBTCP_CORK\fP в \fBtcp\fP(7)).
+.TP 
+\fBSPLICE_F_GIFT\fP
+Не используется в \fBsplice\fP(); смотрите \fBvmsplice\fP(2).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+При успешном выполнении \fBsplice\fP() возвращает количество байт, которые были
+записаны или получены из канала.
+.PP
+Возвращаемое значение 0 означает конец ввода. Если \fIfd_in\fP указывает на
+канал, то это означает, что нет данных для передачи и и блокировка не имела
+бы смысла, так как нет писателей, подключённых к пишущему концу канала.
+.PP
+В случае ошибки \fBsplice\fP() возвращает \-1, а \fIerrno\fP устанавливается в
+соответствующее значение.
+.SH ОШИБКИ
+.TP 
+\fBEAGAIN\fP
+В \fIflags\fP указан \fBSPLICE_F_NONBLOCK\fP или один из файловых дескрипторов был
+помечен как неблокирующий (\fBO_NONBLOCK\fP)\fB,\fP и операция вызвала бы
+блокировку.
+.TP 
+\fBEBADF\fP
+Один или оба файловых дескриптора недействительны или в неправильном режиме
+чтения\-записи.
+.TP 
+\fBEINVAL\fP
+Целевая файловая система не поддерживает подключение данных (splicing).
+.TP 
+\fBEINVAL\fP
+.\" The append-mode error is given since 2.6.27; in earlier kernels,
+.\" splice() in append mode was broken
+Файл назначения открыт в режиме добавления.
+.TP 
+\fBEINVAL\fP
+Ни один из файловых дескрипторов не ссылается на канал.
+.TP 
+\fBEINVAL\fP
+Указано смещение для устройства этого не поддерживающего (например, канала).
+.TP 
+\fBEINVAL\fP
+Значение \fIfd_in\fP и \fIfd_out\fP указывают на один и тот же канал.
+.TP 
+\fBENOMEM\fP
+Не хватает памяти.
+.TP 
+\fBESPIPE\fP
+Значение \fIoff_in\fP или \fIoff_out\fP не равно NULL, но соответствующий файловый
+дескриптор ссылается на канал.
+.SH ВЕРСИИ
+Системный вызов \fBsplice\fP() впервые появился в Linux 2.6.17; поддержка в
+glibc добавлена в версии 2.5.
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Данный вызов есть только в Linux.
+.SH ЗАМЕЧАНИЯ
+Три системных вызова — \fBsplice\fP(), \fBvmsplice\fP(2), and \fBtee\fP(2),
+предоставляют пользовательским программам полный контроль над произвольным
+буфером ядра; они реализованы в ядре на базе того же типа буферов, который
+используется для канала. Эти системные вызовы выполняют следующие задачи:
+.TP  1.2i
+\fBsplice\fP()
+перемещает данные из буфера в произвольный файловый дескриптор или наоборот,
+и из одного буфера в другой.
+.TP 
+\fBtee\fP(2)
+«копирует» данные из одного буфера в другой.
+.TP 
+\fBvmsplice\fP(2)
+«копирует» данные из пользовательского пространства в буфер.
+.PP
+.\"
+.\" Linus: Now, imagine using the above in a media server, for example.
+.\" Let's say that a year or two has passed, so that the video drivers
+.\" have been updated to be able to do the splice thing, and what can
+.\" you do? You can:
+.\"
+.\" - splice from the (mpeg or whatever - let's just assume that the video
+.\"   input is either digital or does the encoding on its own - like they
+.\"   pretty much all do) video input into a pipe (remember: no copies - the
+.\"   video input will just DMA directly into memory, and splice will just
+.\"   set up the pages in the pipe buffer)
+.\" - tee that pipe to split it up
+.\" - splice one end to a file (ie "save the compressed stream to disk")
+.\" - splice the other end to a real-time video decoder window for your
+.\"   real-time viewing pleasure.
+.\"
+.\" Linus: Now, the advantage of splice()/tee() is that you can
+.\" do zero-copy movement of data, and unlike sendfile() you can
+.\" do it on _arbitrary_ data (and, as shown by "tee()", it's more
+.\" than just sending the data to somebody else: you can duplicate
+.\" the data and choose to forward it to two or more different
+.\" users - for things like logging etc.).
+.\"
+Хотя мы говорим о копировании, на самом деле копирования, обычно, не
+происходит. Ядро реализует канальный буфер как набор указателей со счётчиком
+ссылок на страницы памяти ядра. Ядро создаёт «копии» страниц в буфере
+посредством создания новых указателей (для выходного буфера), указывающих на
+страницы, и увеличивает счётчики ссылок страниц: копируются только
+указатели, а не страницы буфера.
+.PP
+.\" commit 7c77f0b3f9208c339a4b40737bb2cb0f0319bb8d
+В Linux 2.6.30 и старее, только один из \fIfd_in\fP и \fIfd_out\fP должен быть
+каналом. Начиная с Linux 2.6.31 оба параметра должны быть каналами.
+.SH ПРИМЕР
+См. \fBtee\fP(2).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBcopy_file_range\fP(2), \fBsendfile\fP(2), \fBtee\fP(2), \fBvmsplice\fP(2), \fBpipe\fP(7)

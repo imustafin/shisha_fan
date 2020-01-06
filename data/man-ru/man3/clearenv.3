@@ -1,0 +1,106 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2001 John Levon <moz@compsoc.man.ac.uk>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Additions, aeb, 2001-10-17.
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH CLEARENV 3 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+clearenv \- очищает окружение
+.SH ОБЗОР
+.nf
+\fB#include <stdlib.h>\fP
+.PP
+\fBint clearenv(void);\fP
+.fi
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+\fBclearenv\fP():
+    /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+        || /* версии glibc <= 2.19: */ _SVID_SOURCE || _BSD_SOURCE
+.SH ОПИСАНИЕ
+Функция \fBclearenv\fP() очищает окружение от всех пар имя\-значение и
+устанавливает значение внешней переменной \fIenviron\fP равным NULL. После
+этого вызова новые переменные можно добавлять в окружение с помощью
+\fBputenv\fP(3) и \fBsetenv\fP(3).
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+.\" Most versions of UNIX return -1 on error, or do not even have errors.
+.\" Glibc info and the Watcom C library document "a nonzero value".
+Функция \fBclearenv\fP() возвращает ноль при успешном выполнении и ненулевое
+значение при ошибках.
+.SH ВЕРСИИ
+Доступна в glibc с версии 2.0.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lb lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBclearenv\fP()
+T}	Безвредность в нитях	MT\-Unsafe const:env
+.TE
+.sp 1
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Есть в различных версиях UNIX (DG/UX, HP\-UX, QNX, …) В POSIX.9 (привязки для
+FORTRAN77). В POSIX.1\-1996 функции \fBclearenv\fP() и \fBputenv\fP() не приняты,
+но указано, что они войдут в следующие версии стандарта (смотрите
+\[sc]B.4.6.1). Однако, в POSIX.1\-2001 добавлена только \fBputenv\fP(), а
+\fBclearenv\fP() — отклонена.
+.SH ЗАМЕЧАНИЯ
+В системах, где \fBclearenv\fP() отсутствует, присваивайте
+.PP
+.in +4n
+.EX
+environ = NULL;
+.EE
+.in
+.PP
+самостоятельно.
+.PP
+Функция \fBclearenv\fP() может пригодиться в приложениях, которые для
+безопасности полностью контролирую окружение, передаваемое программам,
+запускающимся посредством \fBexec\fP(3). Для этого приложение сначала очищает
+окружение, а затем добавляет выборочные переменные окружения.
+.PP
+Заметим, что главным свойством \fBclearenv\fP() является присвоение значения
+указателю \fBenviron\fP(7); эта функция не стирает содержимое буферов,
+содержащих само окружение.
+.PP
+.\" .LP
+.\" HP-UX has a ENOMEM error return.
+В справочных страницах DG/UX и Tru64 написано: если \fIenviron\fP изменялась не
+с помощью функций \fBputenv\fP(3), \fBgetenv\fP(3) или \fBclearenv\fP(), то
+\fBclearenv\fP() возвратит ошибку и окружение процесса не будет изменено.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBgetenv\fP(3), \fBputenv\fP(3), \fBsetenv\fP(3), \fBunsetenv\fP(3), \fBenviron\fP(7)

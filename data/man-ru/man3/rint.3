@@ -1,0 +1,132 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.\" Copyright 2001 Andries Brouwer <aeb@cwi.nl>.
+.\" and Copyright 2008, Linux Foundation, written by Michael Kerrisk
+.\"     <mtk.manpages@gmail.com>
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH RINT 3 2017\-09\-15 "" "Руководство программиста Linux"
+.SH ИМЯ
+nearbyint, nearbyintf, nearbyintl, rint, rintf, rintl \- округление до
+ближайшего целого
+.SH ОБЗОР
+.nf
+\fB#include <math.h>\fP
+.PP
+\fBdouble nearbyint(double \fP\fIx\fP\fB);\fP
+\fBfloat nearbyintf(float \fP\fIx\fP\fB);\fP
+\fBlong double nearbyintl(long double \fP\fIx\fP\fB);\fP
+.PP
+\fBdouble rint(double \fP\fIx\fP\fB);\fP
+\fBfloat rintf(float \fP\fIx\fP\fB);\fP
+\fBlong double rintl(long double \fP\fIx\fP\fB);\fP
+.fi
+.PP
+Компонуется при указании параметра \fI\-lm\fP.
+.PP
+.in -4n
+Требования макроса тестирования свойств для glibc
+(см. \fBfeature_test_macros\fP(7)):
+.in
+.PP
+.ad l
+\fBnearbyint\fP(), \fBnearbyintf\fP(), \fBnearbyintl\fP():
+.RS 4
+_POSIX_C_SOURCE\ >=\ 200112L || _ISOC99_SOURCE
+.RE
+.br
+\fBrint\fP():
+.RS 4
+.\"    || _XOPEN_SOURCE\ &&\ _XOPEN_SOURCE_EXTENDED
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || _XOPEN_SOURCE\ >=\ 500
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.br
+\fBrintf\fP(), \fBrintl\fP():
+.RS 4
+_ISOC99_SOURCE || _POSIX_C_SOURCE\ >=\ 200112L
+    || /* начиная с glibc 2.19: */ _DEFAULT_SOURCE
+    || /* версии glibc <= 2.19: */ _BSD_SOURCE || _SVID_SOURCE
+.RE
+.ad b
+.SH ОПИСАНИЕ
+Функции \fBnearbyint\fP(), \fBnearbyintf\fP() и \fBnearbyintl\fP() округляют
+переданный аргумент до целого значения в формате с плавающей запятой в
+соответствии с текущим направлением округления (смотрите \fBfesetround\fP(3)) и
+не генерируют исключение о \fIнеточности\fP. Когда текущее округление
+направлено к ближайшему целому, то в случае нахождения посереди между
+значениями эти функции округляют до чётного целого, в соответствии с
+IEEE\-754.
+.PP
+Функции \fBrint\fP(), \fBrintf\fP() и \fBrintl\fP() делают то же самое, но генерируют
+исключение о \fIнеточности\fP (\fBFE_INEXACT\fP, проверяется с помощью
+\fBfetestexcept\fP(3)), если результат отличается в значении от аргумента.
+.SH "ВОЗВРАЩАЕМОЕ ЗНАЧЕНИЕ"
+Данные функции возвращают округлённое целое число.
+.PP
+Если \fIx\fP целое, +0, \-0, NaN или стремится к бесконечности, то будет
+возвращено значение \fIx\fP.
+.SH ОШИБКИ
+Ошибки не возникают. В документах POSIX.1\-2001 описывается ошибка диапазона
+при переполнениях, однако смотрите ЗАМЕЧАНИЯ.
+.SH АТРИБУТЫ
+Описание терминов данного раздела смотрите в \fBattributes\fP(7).
+.TS
+allbox;
+lbw26 lb lb
+l l l.
+Интерфейс	Атрибут	Значение
+T{
+\fBnearbyint\fP(),
+\fBnearbyintf\fP(),
+.br
+\fBnearbyintl\fP(),
+\fBrint\fP(),
+.br
+\fBrintf\fP(),
+\fBrintl\fP()
+T}	Безвредность в нитях	MT\-Safe
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+C99, POSIX.1\-2001, POSIX.1\-2008.
+.SH ЗАМЕЧАНИЯ
+В SUSv2 и POSIX.1\-2001 есть текст о переполнении (которое может установить
+\fIerrno\fP в \fBERANGE\fP или вызвать исключение \fBFE_OVERFLOW\fP). На практике,
+результат не может выйти за диапазон ни на каком компьютере, поэтому
+обработка этой ошибки не имеет смысла (точнее говоря, переполнение возможно
+только в том случае, когда максимальное значение экспоненты меньше числа бит
+мантиссы. В стандарте IEEE\-754 для 32\- и 64\-битных чисел с плавающей точкой
+максимальное значение экспоненты равно 128 и 1024 соответственно, а число
+бит мантиссы \(em 24 и 53 соответственно).
+.PP
+Если вы хотите сохранить округлённое значение в целочисленном типе, то лучше
+использовать одну из функций, описанных в \fBlrint\fP(3).
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBceil\fP(3), \fBfloor\fP(3), \fBlrint\fP(3), \fBround\fP(3), \fBtrunc\fP(3)

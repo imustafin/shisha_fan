@@ -1,0 +1,285 @@
+.\" -*- mode: troff; coding: UTF-8 -*-
+.if " n .pl 1000v"
+.\" Copyright (c) 1993 by Thomas Koenig (ig25@rz.uni-karlsruhe.de)
+.\"
+.\" %%%LICENSE_START(VERBATIM)
+.\" Permission is granted to make and distribute verbatim copies of this
+.\" manual provided the copyright notice and this permission notice are
+.\" preserved on all copies.
+.\"
+.\" Permission is granted to copy and distribute modified versions of this
+.\" manual under the conditions for verbatim copying, provided that the
+.\" entire resulting derived work is distributed under the terms of a
+.\" permission notice identical to this one.
+.\"
+.\" Since the Linux kernel and libraries are constantly changing, this
+.\" manual page may be incorrect or out-of-date.  The author(s) assume no
+.\" responsibility for errors or omissions, or for damages resulting from
+.\" the use of the information contained herein.  The author(s) may not
+.\" have taken the same level of care in the production of this manual,
+.\" which is licensed free of charge, as they might when working
+.\" professionally.
+.\"
+.\" Formatted or processed versions of this manual, if unaccompanied by
+.\" the source, must acknowledge the copyright and authors of this work.
+.\" %%%LICENSE_END
+.\"
+.\" Modified Sat Jul 24 17:35:15 1993 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Sun Feb 19 22:02:32 1995 by Rik Faith <faith@cs.unc.edu>
+.\" Modified Tue Oct 22 23:28:12 1996 by Eric S. Raymond <esr@thyrsus.com>
+.\" Modified Sun Jan 26 21:56:56 1997 by Ralph Schleicher
+.\"    <rs@purple.UL.BaWue.DE>
+.\" Modified Mon Jun 16 20:24:58 1997 by Nicolás Lichtmaier <nick@debian.org>
+.\" Modified Sun Oct 18 22:11:28 1998 by Joseph S. Myers <jsm28@cam.ac.uk>
+.\" Modified Mon Nov 16 17:24:47 1998 by Andries Brouwer <aeb@cwi.nl>
+.\" Modified Thu Nov 16 23:28:25 2000 by David A. Wheeler
+.\"    <dwheeler@dwheeler.com>
+.\"
+.\" "nroff" ("man") (or "tbl") needs a long page to avoid warnings
+.\" from "grotty" (at imagined page breaks).  Bug in grotty?
+.\"*******************************************************************
+.\"
+.\" This file was generated with po4a. Translate the source file.
+.\"
+.\"*******************************************************************
+.TH SUFFIXES 7 2017\-09\-15 Linux "Руководство программиста Linux"
+.SH ИМЯ
+suffixes \- список суффиксов имён файлов
+.SH ОПИСАНИЕ
+Обычно, чтобы указать на содержимое файла, в конец имени добавляют суффикс,
+который состоит из точки и одной или нескольких букв. Многие стандартные
+утилиты, такие как компиляторы, используют это, чтобы распознать тип файла,
+который им передан. Утилита \fBmake\fP(1) работает по правилам на основе
+суффиксов файлов.
+.PP
+Ниже представлен список суффиксов, которые, вероятно, можно найти в системе
+Linux.
+.PP
+.TS
+l | l
+_ | _
+lI |  l .
+Суффикс	Тип файла
+ ,v	файлы RCS (Revision Control System)
+ \-	резервная копия файла
+ .C	исходный код C++, эквивалент \fI.cc\fP
+ .F	исходный код Fortran с директивами \fBcpp\fP(1)
+	или файл, сжатый с помощью freeze
+ .S	исходный код ассемблера с директивами \fBcpp\fP(1)
+ .Y	файл, сжатый с помощью yabba
+ .Z	файл, сжатый с помощью \fBcompress\fP(1)
+ .[0\-\9]+gf	файлы обычных шрифтов TeX
+ .[0\-9]+pk	файлы упакованных шрифтов TeX
+ .[1\-9]	справочная страница из соответствующего раздела
+ .[1\-9][a\-z]	справочная страница из раздела плюс подраздел
+ .a	библиотека статического объектного кода
+ .ad	файл ресурсов по умолчанию приложения для X
+ .ada	исходный код на языке Ада (тело, спецификация или оба сразу)
+ .adb	исходный код тела на языке Ада
+ .ads	исходный код спецификации на языке Ада
+ .afm	метрика шрифта PostScript
+ .al	автозагружаемый файл Perl
+ .am	входной файл для \fBautomake\fP(1)
+ .arc	архив \fBarc\fP(1)
+ .arj	архив \fBarj\fP(1)
+ .asc	данные в кодировке ASCII, защищённые PGP
+ .asm	файл исходного кода на ассемблере (GNU)
+ .au	Звуковой файл
+ .aux	вспомогательный файл LaTeX
+ .avi	видео (msvideo)
+ .awk	программа на языке AWK
+ .b	образ системного загрузчика LILO
+ .bak	резервная копия файла
+ .bash	сценарий оболочки \fBbash\fP(1)
+ .bb	данные простого блочного листинга, созданные
+	gcc \-ftest\-coverage
+ .bbg	данные простого блочного графа, созданные
+	gcc \-ftest\-coverage
+ .bbl	вывод BibTeX
+ .bdf	файл шрифта X
+ .bib	библиографическая база данных TeX, входные данные BibTeX
+ .bm	исходный текст для растровых изображений
+ .bmp	bitmap
+ .bz2	файл, сжатый с помощью \fBbzip2\fP(1)
+ .c	исходный код на языке Си
+ .cat	файлы каталога сообщений
+ .cc	исходный код на языке Си++
+ .cf	файл с настройками
+ .cfg	файл с настройками
+ .cgi	сценарий или программа, генерирующая информацию для WWW
+ .cls	определение класса LaTeX
+ .class	скомпилированный байт\-код Java
+ .conf	файл с настройками
+ .config	файл с настройками
+ .cpp	эквивалентно \fI.cc\fP
+ .csh	сценарий оболочки \fBcsh\fP(1)
+ .cxx	эквивалентно \fI.cc\fP
+ .dat	файл данных
+ .deb	пакет ПО Debian
+ .def	исходный код Modula\-2 для определения модулей
+ .def	файлы других определений
+ .desc	начальная часть почтового сообщения, распакованного
+	\fBmunpack\fP(1)
+ .diff	файл различий (результат команды \fBdiff\fP(1))
+ .dir	каталожный файл базы данных dbm
+ .doc	файл документации
+ .dsc	Debian Source Control (пакет с исходным кодом)
+ .dtx	исходный файл пакета LaTeX
+ .dvi	вывод TeX для независимого устройства
+ .el	исходный код на языке Emacs\-Lisp
+ .elc	скомпилированный код на языке Emacs\-Lisp
+ .eps	инкапсулированный PostScript
+ .exp	исходный код на языке Expect
+ .f	исходный код на языке Фортран
+ .f77	исходный код на языке Фортран77
+ .f90	исходный код на языке Фортран90
+ .fas	прекомпилированный Common\-Lisp
+ .fi	включаемые файлы на языке Фортран
+ .fig	файл изображения FIG (используется \fBxfig\fP(1))
+ .fmt	форматный файл TeX
+ .gif	файл в формате Compuserve Graphics Image File
+ .gmo	каталог сообщений в формате GNU
+ .gsf	шрифты Ghostscript
+ .gz	файл, сжатый с помощью \fBgzip\fP(1)
+ .h	заголовочные файлы C или C++
+ .help	файл справки
+ .hf	эквивалентно \fI.help\fP
+ .hlp	эквивалентно \fI.help\fP
+ .htm	сокращение \fI.html\fP
+ .html	документ HTML, используемый в World Wide Web
+ .hqx	файл Macintosh в 7\-битной кодировке
+ .i	файл исходного кода на C после предварительной обработки
+ .icon	исходный текст для растровых изображений
+ .idx	файл ссылок или список данных для гипертекста
+	или системы базы данных
+ .image	исходный текст для растровых изображений
+ .in	шаблон конфигурации, в частности для GNU Autoconf
+ .info	файлы для навигатора по информации Emacs
+ .info\-[0\-9]+	раздельные файлы info
+ .ins	файл установочного пакета LaTeX для docstrip
+ .itcl	файл исходного кода для itcl;
+	itcl ([incr Tcl]) — объектно\-ориентированное расширение tcl
+ .java	файл исходного кода на языке Java
+ .jpeg	формат Joint Photographic Experts Group
+ .jpg	сокращение \fI.jpeg\fP
+ .kmap	клавиатурная раскладка \fBlyx\fP(1)
+ .l	эквивалентно файлам \fI.lex\fP или \fI.lisp\fP
+ .lex	\fBlex\fP(1) или \fBflex\fP(1)
+ .lha	архив lharc
+ .lib	библиотека Common\-Lisp
+ .lisp	исходный код на языке Lisp
+ .ln	файлы для \fBlint\fP(1)
+ .log	файл журнала, в частности, создаваемый TeX
+ .lsm	запись для Linux Software Map
+ .lsp	исходный код на языке Common\-Lisp
+ .lzh	архив lharc
+ .m	исходный код на языке Objective\-C
+ .m4	исходный код на языке \fBm4\fP(1)
+ .mac	файлы макросов для различных программ
+ .man	справочная страница (обычно, исходный текст, а не отформатированная)
+ .map	файлы карт для различных программ
+ .me	исходный код для nroff, в котором используется пакет макросов me
+ .mf	исходный код для metafont (генератор шрифтов для TeX)
+ .mgp	файл MagicPoint
+ .mm	исходный код для \fBgroff\fP(1) в формате mm
+ .mo	двоичный файл каталога сообщений
+ .mod	исходный код на языке Modula\-2 для реализации модулей
+ .mov	видео (quicktime)
+ .mp	исходный код для Metapost
+ .mp2	файл MPEG Layer 2 (аудио)
+ .mp3	файл MPEG Layer 3 (аудио)
+ .mpeg	видео файл
+ .o	объектный файл
+ .old	старый файл или резервная копия
+ .orig	резервная версия файла (до изменений), созданная \fBpatch\fP(1)
+ .out	файл результата, часто исполняемая программа (a.out)
+ .p	файл исходного кода на языке Pascal
+ .pag	файл базы данный dbm
+ .patch	файл различий для \fBpatch\fP(1)
+ .pbm	переносимый формат растровой графики
+ .pcf	файлы шрифтов X11
+ .pdf	переносимый формат данных Adobe
+	(используется в Acrobat/\fBacroread\fP или \fBxpdf\fP)
+ .perl	исходный код на языке Perl (смотрите .ph, .pl и .pm)
+ .pfa	файлы описания шрифтов PostScript в формате ASCII
+ .pfb	файлы описания шрифтов PostScript в двоичном формате
+ .pgm	переносимый формат полутонов
+ .pgp	двоичные данные PGP
+ .ph	файл заголовка Perl
+ .php	файл программы на языке PHP
+ .php3	файл программы на языке PHP3
+ .pid	файл для хранения PID службы (например, crond.pid)
+ .pl	файл списка свойств TeX или библиотечный файл Perl
+ .pm	модуль Perl
+ .png	файл в формате Portable Network Graphics
+ .po	исходный файл каталога сообщений
+ .pod	файл для \fBperldoc\fP(1)
+ .ppm	переносимый формат pixmap
+ .pr	исходный текст для растровых изображений
+ .ps	файл PostScript
+ .py	файл исходного кода на языке Python
+ .pyc	скомпилированный python
+ .qt	видео quicktime
+ .r	исходный код для RATFOR (устарел)
+ .rej	заплаты, которые \fBpatch\fP(1) не удалось наложить
+ .rpm	ПО в пакете RPM
+ .rtf	файл в формате Rich Text Format
+ .rules	правила чего\-нибудь
+ .s	исходный код на ассемблере
+ .sa	библиотеки\-заглушки для общих библиотек a.out
+ .sc	электронная таблица с командами \fBsc\fP(1)
+ .scm	исходный код на языке Scheme
+ .sed	файл исходного кода для sed
+ .sgml	файл исходного кода на языке SGML
+ .sh	сценарии \fBsh\fP(1)
+ .shar	архив, созданный утилитой \fBshar\fP(1)
+ .so	общая библиотека или динамически загружаемый объект
+ .sql	исходный код на языке SQL
+ .sqml	схема SQML или программа\-запрос
+ .sty	файлы стилей LaTeX
+ .sym	скомпилированные модули определений Modula\-2
+ .tar	архив, созданный утилитой \fBtar\fP(1)
+ .tar.Z	архив tar(1), сжатый с помощью \fBcompress\fP(1)
+ .tar.bz2	архив tar(1), сжатый с помощью \fBbzip2\fP(1)
+ .tar.gz	архив tar(1), сжатый с помощью \fBgzip\fP(1)
+ .taz	архив tar(1), сжатый с помощью \fBcompress\fP(1)
+ .tcl	исходный код на языке tcl
+ .tex	исходный код на языке TeX или LaTeX
+ .texi	эквивалентно \fI.texinfo\fP
+ .texinfo	исходный код документации в формате Texinfo
+ .text	текстовый файл
+ .tfm	файл метрики шрифта TeX
+ .tgz	архив tar, сжатый с помощью \fBgzip\fP(1)
+ .tif	сокращение \fI.tiff\fP
+ .tiff	размеченный формат файлов изображений (TIFF)
+ .tk	сценарий на tcl/tk
+ .tmp	временный файл
+ .tmpl	файлы шаблонов
+ .txt	эквивалентно \fI.text\fP
+ .uu	эквивалентно \fI.uue\fP
+ .uue	двоичный файл, закодированный с помощью \fBuuencode\fP(1)
+ .vf	файл виртуального шрифта TeX
+ .vpl	файл виртуального списка свойств TeX
+ .w	CWEB Сильвио Леви
+ .wav	звуковой файл
+ .web	WEB Дональда Кнута
+ .wml	исходный файл для Web Meta Language
+ .xbm	исходный текст для растровых изображений X11
+ .xcf	графика GIMP
+ .xml	файл на языке eXtended Markup Language
+ .xpm	исходный код изображений X11
+ .xs	файл Perl xsub, создаваемый h2xs
+ .xsl	таблица стилей XSL
+ .y	файлы для \fByacc\fP(1) или \fBbison\fP(1) (генератор разборщика)
+ .z	файл, сжатый с помощью \fBpack\fP(1) (или старой версией \fBgzip\fP(1))
+ .zip	архив \fBzip\fP(1)
+ .zoo	архив \fBzoo\fP(1)
+ ~	резервная копия файла Emacs или \fBpatch\fP(1)
+ rc	файл запуска («run control»), например \fI.newsrc\fP
+.TE
+.SH "СООТВЕТСТВИЕ СТАНДАРТАМ"
+Условные обозначения UNIX.
+.SH ДЕФЕКТЫ
+Этот список далеко не полон.
+.SH "СМОТРИТЕ ТАКЖЕ"
+\fBfile\fP(1), \fBmake\fP(1)
